@@ -146,7 +146,7 @@ export default function DealerRegistrationPage() {
         dealerType: formData.dealerType === 'chain' ? 'Chain' : 'Independent',
         email: sanitizedEmail,
         phone: formData.phone,
-        website: formData.website ? (sanitizeUrl(formData.website) || undefined) : undefined,
+        website: formData.website ? sanitizeUrl(formData.website) || undefined : undefined,
         address: sanitizeText(formData.address, { maxLength: 300 }),
         city: sanitizeText(formData.city, { maxLength: 100 }),
         state: formData.province,

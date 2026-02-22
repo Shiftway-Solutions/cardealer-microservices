@@ -204,6 +204,7 @@ function DealerDashboard() {
     dealer?.id ?? '',
     4
   );
+  const { canSell, isLoading: kycLoading } = useCanSell();
 
   return (
     <div className="space-y-6">
@@ -218,13 +219,27 @@ function DealerDashboard() {
           )}
           <p className="text-muted-foreground">Panel de control del concesionario</p>
         </div>
-        <Link href="/dealer/inventario/nuevo">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nuevo Vehículo
-          </Button>
-        </Link>
+        {!kycLoading && (
+          canSell ? (
+            <Link href="/dealer/inventario/nuevo">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nuevo Vehículo
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/cuenta/verificacion">
+              <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+                <Shield className="h-4 w-4" />
+                Verificar para publicar
+              </Button>
+            </Link>
+          )
+        )}
       </div>
+
+      {/* Verification banner — shown while unverified */}
+      <DealerVerificationBanner />
 
       {dealerLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -415,6 +430,7 @@ function SellerDashboard() {
   const { data: sellerStats, isLoading: statsLoading } = useSellerStats(sellerProfile?.id);
   const [recentVehicles, setRecentVehicles] = React.useState<UserVehicleDto[]>([]);
   const [vehiclesLoading, setVehiclesLoading] = React.useState(true);
+  const { canSell, isLoading: kycLoading } = useCanSell();
 
   React.useEffect(() => {
     userService
@@ -433,13 +449,27 @@ function SellerDashboard() {
           <h1 className="text-foreground text-2xl font-bold">Mi Panel de Vendedor</h1>
           <p className="text-muted-foreground">Gestiona tus publicaciones y consultas</p>
         </div>
-        <Link href="/vender/publicar">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Publicar Vehículo
-          </Button>
-        </Link>
+        {!kycLoading && (
+          canSell ? (
+            <Link href="/vender/publicar">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Publicar Vehículo
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/cuenta/verificacion">
+              <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+                <Shield className="h-4 w-4" />
+                Verificar para publicar
+              </Button>
+            </Link>
+          )
+        )}
       </div>
+
+      {/* Verification banner — shown while unverified */}
+      <VerificationBanner />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -961,8 +991,6 @@ function VerificationBanner() {
 
   // Don't show anything while loading or if verified
   if (isLoading || canSell) return null;
-
-  // Verification pending/under review
   if (isPending) {
     return (
       <Card className="border-purple-200 bg-purple-50">
@@ -1040,6 +1068,114 @@ function VerificationBanner() {
                 <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700">
                   <Shield className="h-4 w-4" />
                   Verificar ahora
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return null;
+}
+// Dealer-specific Verification Banner (requires RNC + business docs)
+function DealerVerificationBanner() {
+  const { canSell, isPending, isRejected, needsVerification, isLoading, rejectionReason } =
+    useCanSell();
+
+  if (isLoading || canSell) return null;
+
+  if (isPending) {
+    return (
+      <Card className="border-purple-200 bg-purple-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-purple-100">
+              <Clock className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="mb-1 font-semibold text-purple-900">Verificación del dealer en proceso</h3>
+              <p className="text-sm text-purple-700">
+                Tu documentación está siendo revisada por nuestro equipo. Te notificaremos por
+                correo electrónico cuando sea aprobada (24–48 horas hábiles).
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isRejected) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="mb-1 font-semibold text-red-900">Verificación rechazada</h3>
+              <p className="mb-3 text-sm text-red-700">
+                La verificación de tu concesionario fue rechazada. Revisa los motivos y vuelve a
+                enviar tu documentación.
+              </p>
+              {rejectionReason && (
+                <p className="mb-3 rounded bg-red-100 px-3 py-2 text-sm text-red-700">
+                  <strong>Motivo:</strong> {rejectionReason}
+                </p>
+              )}
+              <Link href="/cuenta/verificacion">
+                <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                  Reintentar verificación
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (needsVerification) {
+    return (
+      <Card className="border-amber-200 bg-amber-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+              <Shield className="h-6 w-6 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="mb-1 font-semibold text-amber-900">
+                Verifica tu concesionario para publicar vehículos
+              </h3>
+              <p className="mb-2 text-sm text-amber-700">
+                Antes de publicar tu inventario debes verificar tu identidad y los documentos de tu
+                negocio. Necesitarás:
+              </p>
+              <ul className="mb-3 space-y-1 text-sm text-amber-700">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  Cédula de identidad del representante legal
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  RNC del negocio
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  Registro Mercantil o licencia comercial
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  Selfie de verificación biométrica
+                </li>
+              </ul>
+              <Link href="/cuenta/verificacion">
+                <Button size="sm" className="gap-2 bg-amber-600 hover:bg-amber-700 text-white">
+                  <Shield className="h-4 w-4" />
+                  Iniciar verificación del dealer
                 </Button>
               </Link>
             </div>

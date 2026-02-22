@@ -88,15 +88,15 @@ export interface DayHours {
 export interface CreateDealerRequest {
   // Basic info
   businessName: string;
-  tradeName?: string;                   // Trade/display name (was: legalName)
+  tradeName?: string; // Trade/display name (was: legalName)
   description?: string;
-  dealerType?: string;                  // 'Independent' | 'Chain' | 'Franchise' (was: type)
+  dealerType?: string; // 'Independent' | 'Chain' | 'Franchise' (was: type)
 
   // Contact
   email: string;
   phone: string;
   mobilePhone?: string;
-  whatsApp?: string;                    // WhatsApp number (was: whatsAppNumber)
+  whatsApp?: string; // WhatsApp number (was: whatsAppNumber)
   website?: string;
   facebookUrl?: string;
   instagramUrl?: string;
@@ -104,12 +104,12 @@ export interface CreateDealerRequest {
   // Location — fields must match UserService backend field names
   address: string;
   city: string;
-  state: string;                        // Province/state (was: province)
+  state: string; // Province/state (was: province)
   zipCode?: string;
   country?: string;
 
   // Legal
-  businessRegistrationNumber?: string;  // RNC (was: rnc)
+  businessRegistrationNumber?: string; // RNC (was: rnc)
   taxId?: string;
   dealerLicenseNumber?: string;
 

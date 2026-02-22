@@ -27,16 +27,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { useAuth } from '@/hooks/use-auth';
 import { useConvertToSeller, useCreateSellerProfile } from '@/hooks/use-seller';
-import { useCreateVehicle } from '@/hooks/use-vehicles';
 
 import { StepIndicator } from '@/components/seller-wizard/step-indicator';
 import { AccountStep } from '@/components/seller-wizard/account-step';
 import { ProfileStep } from '@/components/seller-wizard/profile-step';
-import { VehicleStep } from '@/components/seller-wizard/vehicle-step';
-import { SuccessScreen } from '@/components/seller-wizard/success-screen';
-import type { UploadedImage } from '@/components/seller-wizard/photo-uploader';
 
-import type { CreateVehicleRequest, CreateVehicleImage } from '@/services/vehicles';
 import type { RegisterRequest } from '@/services/auth';
 
 // =============================================================================
@@ -48,7 +43,6 @@ const DRAFT_STORAGE_KEY = 'okla-seller-wizard-draft';
 const STEPS = [
   { id: 'account', label: 'Cuenta', description: 'Crea tu cuenta' },
   { id: 'profile', label: 'Perfil', description: 'Tu perfil de vendedor' },
-  { id: 'vehicle', label: 'Vehículo', description: 'Publica tu vehículo' },
 ] as const;
 
 // =============================================================================
@@ -76,41 +70,11 @@ interface ProfileData {
   specialties: string[];
 }
 
-interface VehicleData {
-  make: string;
-  model: string;
-  year: number;
-  trim: string;
-  mileage: number;
-  vin: string;
-  transmission: string;
-  fuelType: string;
-  bodyType: string;
-  exteriorColor: string;
-  condition: 'new' | 'used' | 'certified';
-  price: number;
-  currency: 'DOP' | 'USD';
-  description: string;
-  features: string[];
-  city: string;
-  province: string;
-  isNegotiable: boolean;
-  sellerPhone: string;
-  sellerEmail: string;
-}
-
 interface WizardDraft {
   step: number;
   account: Partial<AccountData>;
   profile: Partial<ProfileData>;
-  vehicle: Partial<VehicleData>;
   savedAt: string;
-}
-
-interface PublishedVehicle {
-  id: string;
-  slug: string;
-  title: string;
 }
 
 // =============================================================================
@@ -138,29 +102,6 @@ const initialProfile: ProfileData = {
   specialties: [],
 };
 
-const initialVehicle: VehicleData = {
-  make: '',
-  model: '',
-  year: 0,
-  trim: '',
-  mileage: 0,
-  vin: '',
-  transmission: '',
-  fuelType: '',
-  bodyType: '',
-  exteriorColor: '',
-  condition: 'used' as const,
-  price: 0,
-  currency: 'DOP',
-  description: '',
-  features: [],
-  city: '',
-  province: '',
-  isNegotiable: false,
-  sellerPhone: '',
-  sellerEmail: '',
-};
-
 // =============================================================================
 // DRAFT PERSISTENCE HELPERS
 // =============================================================================
@@ -186,7 +127,7 @@ function loadDraft(): WizardDraft | null {
   }
 }
 
-function saveDraft(step: number, account: AccountData, profile: ProfileData, vehicle: VehicleData) {
+function saveDraft(step: number, account: AccountData, profile: ProfileData) {
   if (typeof window === 'undefined') return;
   try {
     // Never save passwords
@@ -195,7 +136,6 @@ function saveDraft(step: number, account: AccountData, profile: ProfileData, veh
       step,
       account: safeAccount,
       profile,
-      vehicle,
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -220,17 +160,13 @@ export default function SellerRegistrationPage() {
   // ── Mutations ──
   const convertToSeller = useConvertToSeller();
   const createSellerProfile = useCreateSellerProfile();
-  const createVehicle = useCreateVehicle();
 
   // ── Wizard State ──
   const [currentStep, setCurrentStep] = React.useState(0);
   const [accountData, setAccountData] = React.useState<AccountData>(initialAccount);
   const [profileData, setProfileData] = React.useState<ProfileData>(initialProfile);
-  const [vehicleData, setVehicleData] = React.useState<VehicleData>(initialVehicle);
-  const [uploadedImages, setUploadedImages] = React.useState<UploadedImage[]>([]);
   const [globalError, setGlobalError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [publishedVehicle, setPublishedVehicle] = React.useState<PublishedVehicle | null>(null);
   const [, setSellerProfileId] = React.useState<string | null>(null);
   const [draftLoaded, setDraftLoaded] = React.useState(false);
 
@@ -244,7 +180,6 @@ export default function SellerRegistrationPage() {
     if (draft) {
       if (draft.account) setAccountData(prev => ({ ...prev, ...draft.account }));
       if (draft.profile) setProfileData(prev => ({ ...prev, ...draft.profile }));
-      if (draft.vehicle) setVehicleData(prev => ({ ...prev, ...draft.vehicle }));
 
       // If user is logged in, ensure we start at at least step 1
       const startStep = isLoggedIn ? Math.max(draft.step, 1) : draft.step;
@@ -259,7 +194,6 @@ export default function SellerRegistrationPage() {
             setCurrentStep(effectiveStartStep);
             setAccountData(initialAccount);
             setProfileData(initialProfile);
-            setVehicleData(initialVehicle);
           },
         },
       });
@@ -272,8 +206,8 @@ export default function SellerRegistrationPage() {
   // ── Auto-save draft on data changes ──
   React.useEffect(() => {
     if (!draftLoaded) return;
-    saveDraft(currentStep, accountData, profileData, vehicleData);
-  }, [currentStep, accountData, profileData, vehicleData, draftLoaded]);
+    saveDraft(currentStep, accountData, profileData);
+  }, [currentStep, accountData, profileData, draftLoaded]);
 
   // ── Pre-fill profile if user data available ──
   React.useEffect(() => {
@@ -282,11 +216,6 @@ export default function SellerRegistrationPage() {
         ...prev,
         displayName: prev.displayName || `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
         phone: prev.phone || user.phone || '',
-      }));
-      setVehicleData(prev => ({
-        ...prev,
-        sellerEmail: prev.sellerEmail || user.email || '',
-        sellerPhone: prev.sellerPhone || user.phone || '',
       }));
     }
   }, [isLoggedIn, user]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -453,82 +382,18 @@ export default function SellerRegistrationPage() {
         setSellerProfileId(profile.id);
       }
 
-      // Only advance if no error occurred
+      // Redirect to portal — user must verify identity before publishing
       if (!globalError) {
-        toast.success('¡Perfil de vendedor creado!');
-        setCurrentStep(2);
+        clearDraft();
+        toast.success('¡Perfil de vendedor creado!', {
+          description: 'Verifica tu identidad para comenzar a publicar vehículos.',
+        });
+        router.push('/cuenta?registro=completado');
       }
     } catch (err) {
       const error = err as { message?: string; status?: number };
       console.error('❌ handleProfileSubmit caught error:', error);
       setGlobalError(error.message || 'Error al crear el perfil de vendedor.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  /**
-   * Step 3: Publish the first vehicle
-   */
-  const handleVehicleSubmit = async () => {
-    setGlobalError(null);
-    setIsSubmitting(true);
-    try {
-      // Build vehicle images from uploaded files
-      const vehicleImages: CreateVehicleImage[] = uploadedImages
-        .filter(img => img.status === 'done' && img.url)
-        .map((img, index) => ({
-          url: img.url!,
-          order: index,
-          isPrimary: img.isPrimary,
-          alt: `${vehicleData.make} ${vehicleData.model} ${vehicleData.year} - Foto ${index + 1}`,
-        }));
-
-      if (vehicleImages.length < 3) {
-        setGlobalError('Necesitas al menos 3 fotos para publicar tu vehículo.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const request: CreateVehicleRequest = {
-        make: vehicleData.make,
-        model: vehicleData.model,
-        year: vehicleData.year,
-        trim: vehicleData.trim || undefined,
-        mileage: vehicleData.mileage || 0,
-        vin: vehicleData.vin || undefined,
-        transmission: vehicleData.transmission,
-        fuelType: vehicleData.fuelType,
-        bodyType: vehicleData.bodyType,
-        exteriorColor: vehicleData.exteriorColor || undefined,
-        condition: vehicleData.condition,
-        price: vehicleData.price,
-        currency: vehicleData.currency,
-        description: vehicleData.description || undefined,
-        features: vehicleData.features,
-        images: vehicleImages,
-        city: vehicleData.city,
-        province: vehicleData.province,
-        sellerPhone: vehicleData.sellerPhone || undefined,
-        sellerEmail: vehicleData.sellerEmail || undefined,
-        isNegotiable: vehicleData.isNegotiable,
-      };
-
-      const result = await createVehicle.mutateAsync(request);
-
-      setPublishedVehicle({
-        id: result.id,
-        slug: result.slug,
-        title: `${vehicleData.make} ${vehicleData.model} ${vehicleData.year}`,
-      });
-
-      // Clear draft on success
-      clearDraft();
-
-      toast.success('¡Vehículo publicado exitosamente!');
-    } catch (err) {
-      const error = err as { message?: string };
-      setGlobalError(error.message || 'Error al publicar el vehículo. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -558,23 +423,6 @@ export default function SellerRegistrationPage() {
           <p className="mt-4 text-gray-500">Cargando...</p>
         </div>
       </div>
-    );
-  }
-
-  // Show success screen after vehicle is published
-  if (publishedVehicle) {
-    return (
-      <SuccessScreen
-        vehicleId={publishedVehicle.id}
-        vehicleSlug={publishedVehicle.slug}
-        vehicleTitle={publishedVehicle.title}
-        sellerDisplayName={
-          profileData.displayName ||
-          `${accountData.firstName} ${accountData.lastName}`.trim() ||
-          user?.firstName ||
-          'Vendedor'
-        }
-      />
     );
   }
 
@@ -643,20 +491,6 @@ export default function SellerRegistrationPage() {
               isDealer={accountData.accountType === 'dealer' || user?.accountType === 'dealer'}
               onSubmit={handleProfileSubmit}
               onBack={!isLoggedIn ? handleBack : () => {}}
-              isLoading={isSubmitting}
-              error={globalError}
-            />
-          )}
-
-          {/* Step 3: Vehicle Publication */}
-          {currentStep === 2 && (
-            <VehicleStep
-              data={vehicleData}
-              onChange={partial => setVehicleData(prev => ({ ...prev, ...partial }))}
-              images={uploadedImages}
-              onSubmit={handleVehicleSubmit}
-              onBack={handleBack}
-              onImagesChange={setUploadedImages}
               isLoading={isSubmitting}
               error={globalError}
             />

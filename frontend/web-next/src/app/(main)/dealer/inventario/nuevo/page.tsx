@@ -38,7 +38,10 @@ import {
   CheckCircle,
   Loader2,
   AlertCircle,
+  Shield,
+  Clock,
 } from 'lucide-react';
+import { useCanSell } from '@/hooks/use-kyc';
 import { toast } from 'sonner';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import {
@@ -140,6 +143,9 @@ function NewVehicleSkeleton() {
 
 export default function NewVehiclePage() {
   const router = useRouter();
+
+  // KYC verification check
+  const { canSell, isPending, isRejected, needsVerification, isLoading: kycLoading, rejectionReason } = useCanSell();
 
   // API hooks
   const { data: dealer, isLoading: dealerLoading } = useCurrentDealer();
@@ -307,9 +313,113 @@ export default function NewVehiclePage() {
     }
   };
 
-  // Loading state
-  if (dealerLoading || makesLoading) {
+  // Loading state (dealer data or KYC check)
+  if (dealerLoading || makesLoading || kycLoading) {
     return <NewVehicleSkeleton />;
+  }
+
+  // KYC: Verification pending / under review
+  if (isPending) {
+    return (
+      <div className="flex min-h-[500px] items-center justify-center">
+        <Card className="mx-auto max-w-md">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
+              <Clock className="h-8 w-8 text-purple-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold">Verificación del dealer en proceso</h2>
+            <p className="mb-6 text-muted-foreground">
+              La documentación del dealer está siendo revisada por el equipo de OKLA. Recibirás
+              una notificación cuando sea aprobada (24–48 horas hábiles).
+            </p>
+            <Link href="/dealer">
+              <Button variant="outline">Volver al Dashboard</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // KYC: Verification rejected
+  if (isRejected) {
+    return (
+      <div className="flex min-h-[500px] items-center justify-center">
+        <Card className="mx-auto max-w-md border-red-200">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-red-700">Verificación rechazada</h2>
+            <p className="mb-3 text-muted-foreground">
+              La verificación del dealer fue rechazada. Debes volver a verificar la documentación.
+            </p>
+            {rejectionReason && (
+              <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                <strong>Motivo:</strong> {rejectionReason}
+              </p>
+            )}
+            <div className="flex justify-center gap-3">
+              <Link href="/cuenta/verificacion">
+                <Button className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  Verificar de nuevo
+                </Button>
+              </Link>
+              <Link href="/dealer">
+                <Button variant="outline">Volver</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // KYC: Not verified yet
+  if (needsVerification || !canSell) {
+    return (
+      <div className="flex min-h-[500px] items-center justify-center">
+        <Card className="mx-auto max-w-md border-amber-200">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+              <Shield className="h-8 w-8 text-amber-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-amber-800">
+              Verifica tu dealer antes de publicar
+            </h2>
+            <p className="mb-4 text-muted-foreground">
+              Para agregar vehículos al inventario, el dealer debe estar verificado con:
+            </p>
+            <ul className="mb-6 space-y-1 text-left text-sm text-gray-600">
+              <li className="flex items-center gap-2">
+                <span className="text-amber-500">•</span> Cédula del representante legal
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-amber-500">•</span> RNC del negocio
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-amber-500">•</span> Registro Mercantil o licencia comercial
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-amber-500">•</span> Selfie de verificación biométrica
+              </li>
+            </ul>
+            <div className="flex justify-center gap-3">
+              <Link href="/cuenta/verificacion">
+                <Button className="gap-2 bg-amber-600 hover:bg-amber-700">
+                  <Shield className="h-4 w-4" />
+                  Iniciar verificación del dealer
+                </Button>
+              </Link>
+              <Link href="/dealer">
+                <Button variant="outline">Volver</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // No dealer access
