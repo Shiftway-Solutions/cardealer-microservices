@@ -2701,7 +2701,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -2753,7 +2753,7 @@
       "UpstreamHttpMethod": ["OPTIONS", "POST"],
       "DownstreamPathTemplate": "/api/leads",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "leadscoringservice", "Port": 80 }],
+      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -3893,13 +3893,6 @@
 
     // ── Leads (VehiclesSaleService) ──
     {
-      "UpstreamPathTemplate": "/api/leads",
-      "UpstreamHttpMethod": ["POST"],
-      "DownstreamPathTemplate": "/api/leads",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }]
-    },
-    {
       "UpstreamPathTemplate": "/api/leads/seller/{sellerId}",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/leads/seller/{sellerId}",
@@ -3911,14 +3904,6 @@
       "UpstreamPathTemplate": "/api/leads/seller/{sellerId}/stats",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/leads/seller/{sellerId}/stats",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-    },
-    {
-      "UpstreamPathTemplate": "/api/leads/dealer/{dealerId}",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 80 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }

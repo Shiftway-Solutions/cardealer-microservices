@@ -118,12 +118,14 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
         {
             var factory = new ConnectionFactory
             {
-                HostName = _configuration["RabbitMQ:HostName"] ?? "localhost",
+                HostName = _configuration["RabbitMQ:Host"]
+                           ?? _configuration["RabbitMQ:HostName"]
+                           ?? "localhost",
                 Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
                 UserName = _configuration["RabbitMQ:UserName"]
-                           ?? throw new InvalidOperationException("RabbitMQ:UserName is required"),
-                Password = _configuration["RabbitMQ:Password"]
-                           ?? throw new InvalidOperationException("RabbitMQ:Password is required"),
+                           ?? _configuration["RabbitMQ:User"]
+                           ?? "guest",
+                Password = _configuration["RabbitMQ:Password"] ?? "guest",
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)

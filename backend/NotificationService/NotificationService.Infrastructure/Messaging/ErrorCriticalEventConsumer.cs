@@ -156,10 +156,14 @@ public class ErrorCriticalEventConsumer : BackgroundService
     {
         try
         {
-            var hostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
+            var hostName = _configuration["RabbitMQ:Host"]
+                          ?? _configuration["RabbitMQ:HostName"]
+                          ?? "localhost";
             var port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672");
-            var userName = _configuration["RabbitMQ:UserName"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured");
-            var password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
+            var userName = _configuration["RabbitMQ:UserName"]
+                           ?? _configuration["RabbitMQ:User"]
+                           ?? "guest";
+            var password = _configuration["RabbitMQ:Password"] ?? "guest";
             var exchangeName = _configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
             var queueName = "notification-service.error-critical";
 
