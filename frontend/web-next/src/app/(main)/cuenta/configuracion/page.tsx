@@ -25,6 +25,10 @@ import {
   Loader2,
   Check,
   AlertCircle,
+  Trash2,
+  AlertTriangle,
+  ShieldAlert,
+  Download,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +36,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
   settingsService,
@@ -39,7 +45,15 @@ import {
   type NotificationSettings,
   type Theme,
 } from '@/services/settings';
+import {
+  requestAccountDeletion,
+  confirmAccountDeletion,
+  cancelAccountDeletion,
+  type DeletionReasonString,
+  DeletionReasonMap,
+} from '@/services/auth';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 type ThemeOption = Theme;
 
@@ -114,7 +128,8 @@ function NotificationToggle({
 }
 
 export default function SettingsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
@@ -133,6 +148,20 @@ export default function SettingsPage() {
   const [originalApp, setOriginalApp] = React.useState<AppSettings | null>(null);
   const [originalNotifications, setOriginalNotifications] =
     React.useState<NotificationSettings | null>(null);
+
+  // ── Account Deletion State ──────────────────────────────────────────────────
+  type DeletionStep = 'idle' | 'selecting' | 'confirming' | 'success';
+  const [deletionStep, setDeletionStep] = React.useState<DeletionStep>('idle');
+  const [deletionReason, setDeletionReason] = React.useState<DeletionReasonString>('NoLongerNeeded');
+  const [deletionFeedback, setDeletionFeedback] = React.useState('');
+  const [deletionOtherReason, setDeletionOtherReason] = React.useState('');
+  const [confirmationCode, setConfirmationCode] = React.useState('');
+  const [deletionPassword, setDeletionPassword] = React.useState('');
+  const [deletionRequestId, setDeletionRequestId] = React.useState('');
+  const [gracePeriodEndsAt, setGracePeriodEndsAt] = React.useState('');
+  const [isDeletionLoading, setIsDeletionLoading] = React.useState(false);
+  const [deletionError, setDeletionError] = React.useState<string | null>(null);
+  const [isCancellingDeletion, setIsCancellingDeletion] = React.useState(false);
 
   // Load settings on mount
   React.useEffect(() => {
@@ -208,6 +237,69 @@ export default function SettingsPage() {
       ...prev,
       push: { ...prev.push, [key]: value },
     }));
+  };
+
+  // ── Account Deletion Handlers ───────────────────────────────────────────────
+
+  const handleRequestDeletion = async () => {
+    setIsDeletionLoading(true);
+    setDeletionError(null);
+    try {
+      const response = await requestAccountDeletion({
+        reason: deletionReason,
+        otherReason: deletionReason === 'Other' ? deletionOtherReason : undefined,
+        feedback: deletionFeedback || undefined,
+      });
+      setDeletionRequestId(response.requestId);
+      setGracePeriodEndsAt(response.gracePeriodEndsAt);
+      setDeletionStep('confirming');
+    } catch (err) {
+      const e = err as { message?: string };
+      setDeletionError(e.message || 'Error al solicitar eliminación. Intenta de nuevo.');
+    } finally {
+      setIsDeletionLoading(false);
+    }
+  };
+
+  const handleConfirmDeletion = async () => {
+    if (!confirmationCode || !deletionPassword) {
+      setDeletionError('Ingresa el código de confirmación y tu contraseña.');
+      return;
+    }
+    setIsDeletionLoading(true);
+    setDeletionError(null);
+    try {
+      await confirmAccountDeletion({ confirmationCode, password: deletionPassword });
+      setDeletionStep('success');
+      // Log user out after confirming deletion
+      setTimeout(async () => {
+        try { await logout(); } catch { /* ignore */ }
+        router.push('/');
+      }, 5000);
+    } catch (err) {
+      const e = err as { message?: string };
+      setDeletionError(e.message || 'Código inválido o contraseña incorrecta. Intenta de nuevo.');
+    } finally {
+      setIsDeletionLoading(false);
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    setIsCancellingDeletion(true);
+    try {
+      await cancelAccountDeletion();
+      setDeletionStep('idle');
+      setDeletionRequestId('');
+      setGracePeriodEndsAt('');
+      setConfirmationCode('');
+      setDeletionPassword('');
+      setDeletionError(null);
+    } catch (err) {
+      const e = err as { message?: string };
+      setDeletionError(e.message || 'Error al cancelar. Intenta de nuevo.');
+    } finally {
+      setIsCancellingDeletion(false);
+    }
   };
 
   // Show loading skeleton
@@ -466,17 +558,19 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Datos y Privacidad</CardTitle>
-          <CardDescription>Gestiona tus datos personales</CardDescription>
+          <CardDescription>Gestiona tus datos personales y el acceso a tu cuenta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Download data */}
           <div className="flex items-center justify-between py-2">
             <div>
               <p className="font-medium text-foreground dark:text-gray-100">Descargar mis datos</p>
               <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Obtén una copia de toda tu información
+                Obtén una copia de toda tu información (ARCO)
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Download className="h-4 w-4" />
               Solicitar
             </Button>
           </div>
@@ -489,9 +583,7 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/privacidad" target="_blank">
-                Ver
-              </a>
+              <a href="/privacidad" target="_blank">Ver</a>
             </Button>
           </div>
           <Separator />
@@ -501,11 +593,243 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground dark:text-muted-foreground">Condiciones de uso de OKLA</p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/terminos" target="_blank">
-                Ver
-              </a>
+              <a href="/terminos" target="_blank">Ver</a>
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Delete Account */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <ShieldAlert className="h-5 w-5" />
+            Zona de Peligro
+          </CardTitle>
+          <CardDescription>
+            Acciones irreversibles que afectan permanentemente tu cuenta
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* STEP: idle */}
+          {deletionStep === 'idle' && (
+            <div className="flex items-start justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+              <div>
+                <p className="font-medium text-foreground dark:text-gray-100">Eliminar cuenta</p>
+                <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
+                  Elimina permanentemente tu cuenta y todos tus datos. Tendrás 15 días para cancelar
+                  esta acción.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="ml-4 shrink-0 gap-1.5"
+                onClick={() => setDeletionStep('selecting')}
+              >
+                <Trash2 className="h-4 w-4" />
+                Eliminar
+              </Button>
+            </div>
+          )}
+
+          {/* STEP: selecting reason */}
+          {deletionStep === 'selecting' && (
+            <div className="space-y-4">
+              <Alert variant="destructive" className="border-destructive/40">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>¿Estás seguro?</strong> Esta acción eliminará permanentemente tu cuenta,
+                  publicaciones, historial y todos tus datos. Tendrás 15 días para cancelarla.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">¿Por qué quieres eliminar tu cuenta?</Label>
+                <div className="space-y-2">
+                  {(Object.keys(DeletionReasonMap) as DeletionReasonString[]).map(reason => (
+                    <label
+                      key={reason}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
+                        deletionReason === reason
+                          ? 'border-destructive bg-destructive/5'
+                          : 'border-border hover:bg-muted/50 dark:border-gray-700'
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="deletionReason"
+                        value={reason}
+                        checked={deletionReason === reason}
+                        onChange={() => setDeletionReason(reason)}
+                        className="accent-destructive"
+                      />
+                      <span className="text-sm">
+                        {{
+                          PrivacyConcerns: 'Preocupaciones de privacidad',
+                          NoLongerNeeded: 'Ya no necesito la cuenta',
+                          FoundAlternative: 'Encontré una alternativa',
+                          BadExperience: 'Mala experiencia con el servicio',
+                          TooManyEmails: 'Recibo demasiados correos',
+                          Other: 'Otro motivo',
+                        }[reason]}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {deletionReason === 'Other' && (
+                <div className="space-y-1">
+                  <Label className="text-sm">Especifica el motivo</Label>
+                  <Input
+                    value={deletionOtherReason}
+                    onChange={e => setDeletionOtherReason(e.target.value)}
+                    placeholder="Escribe tu motivo..."
+                    maxLength={200}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <Label className="text-sm">Comentarios adicionales (opcional)</Label>
+                <Textarea
+                  value={deletionFeedback}
+                  onChange={e => setDeletionFeedback(e.target.value)}
+                  placeholder="Ayúdanos a mejorar..."
+                  rows={3}
+                  maxLength={500}
+                />
+              </div>
+
+              {deletionError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{deletionError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => { setDeletionStep('idle'); setDeletionError(null); }}
+                  disabled={isDeletionLoading}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleRequestDeletion}
+                  disabled={isDeletionLoading || (deletionReason === 'Other' && !deletionOtherReason)}
+                  className="flex-1 gap-1.5"
+                >
+                  {isDeletionLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</>
+                  ) : (
+                    <><Trash2 className="h-4 w-4" />Continuar</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: confirming (code + password) */}
+          {deletionStep === 'confirming' && (
+            <div className="space-y-4">
+              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20">
+                <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-300">
+                  Hemos enviado un código de 6 dígitos a tu correo electrónico. Ingresa el código
+                  para confirmar la eliminación. Tu cuenta será eliminada el{' '}
+                  <strong>
+                    {gracePeriodEndsAt
+                      ? new Date(gracePeriodEndsAt).toLocaleDateString('es-DO', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : 'en 15 días'}
+                  </strong>{' '}
+                  si no cancelas.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Código de confirmación</Label>
+                <Input
+                  value={confirmationCode}
+                  onChange={e => setConfirmationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength={6}
+                  inputMode="numeric"
+                  className="tracking-widest"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Contraseña actual</Label>
+                <Input
+                  type="password"
+                  value={deletionPassword}
+                  onChange={e => setDeletionPassword(e.target.value)}
+                  placeholder="Ingresa tu contraseña para confirmar"
+                />
+              </div>
+
+              {deletionError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{deletionError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelDeletion}
+                  disabled={isDeletionLoading || isCancellingDeletion}
+                  className="flex-1"
+                >
+                  {isCancellingDeletion ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Cancelar solicitud'
+                  )}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDeletion}
+                  disabled={isDeletionLoading || confirmationCode.length < 6 || !deletionPassword}
+                  className="flex-1 gap-1.5"
+                >
+                  {isDeletionLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Confirmando...</>
+                  ) : (
+                    <><Trash2 className="h-4 w-4" />Confirmar eliminación</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: success */}
+          {deletionStep === 'success' && (
+            <div className="space-y-3">
+              <Alert className="border-green-200 bg-green-50 dark:border-green-900/40 dark:bg-green-950/20">
+                <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <AlertDescription className="text-green-800 dark:text-green-300">
+                  <strong>Solicitud confirmada.</strong> Tu cuenta ha sido marcada para eliminación.
+                  Serás desconectado automáticamente en unos segundos.
+                </AlertDescription>
+              </Alert>
+              <p className="text-sm text-muted-foreground">
+                Si cambias de opinión, puedes cancelar la eliminación iniciando sesión antes de la
+                fecha límite. Recibirás un recordatorio por email.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

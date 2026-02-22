@@ -31,12 +31,38 @@ export interface ActionResult<T = void> {
   code?: string;
 }
 
+/**
+ * User profile data returned alongside tokens after a successful login.
+ * Matches UserResponse / UserDto from AuthService and UserService.
+ * Exported so services/auth.ts can use it with transformUser().
+ */
+export interface UserProfileResult {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  avatarUrl?: string;
+  phone?: string;
+  accountType: string;
+  userIntent?: string;
+  isVerified: boolean;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  preferredLocale?: string;
+  preferredCurrency?: string;
+  createdAt?: string;
+  lastLoginAt?: string;
+}
+
 interface LoginResult {
   accessToken: string;
   refreshToken: string;
   requiresTwoFactor?: boolean;
   tempToken?: string;
   twoFactorType?: string;
+  /** User profile fetched server-side — avoids cross-origin cookie issues in dev */
+  user?: UserProfileResult;
 }
 
 interface RegisterResult {
@@ -192,11 +218,28 @@ export async function serverLogin(
       await setAuthCookiesFromServerAction(loginData.accessToken, loginData.refreshToken);
     }
 
+    // Fetch user profile server-side using the access token.
+    // This avoids the cross-origin cookie problem in development where the
+    // auth cookie (set for localhost:3000) can't be read by apiClient calls
+    // directed at localhost:18443 (different origin).
+    let userProfile: UserProfileResult | undefined;
+    try {
+      const meResponse = await internalFetch<{ success: boolean; data: UserProfileResult }>(
+        '/api/auth/me',
+        { token: loginData.accessToken }
+      );
+      userProfile = meResponse.data ?? (meResponse as unknown as UserProfileResult);
+    } catch {
+      // Non-critical — login already succeeded and cookies are set.
+      // The auth context will retry getCurrentUser() on next page load.
+    }
+
     return {
       success: true,
       data: {
         accessToken: loginData.accessToken,
         refreshToken: loginData.refreshToken,
+        user: userProfile,
       },
     };
   } catch (error: unknown) {
@@ -235,11 +278,24 @@ export async function serverVerify2FA(
       await setAuthCookiesFromServerAction(result.accessToken, result.refreshToken);
     }
 
+    // Fetch user profile server-side (same cross-origin fix as serverLogin)
+    let userProfile: UserProfileResult | undefined;
+    try {
+      const meResponse = await internalFetch<{ success: boolean; data: UserProfileResult }>(
+        '/api/auth/me',
+        { token: result.accessToken }
+      );
+      userProfile = meResponse.data ?? (meResponse as unknown as UserProfileResult);
+    } catch {
+      // Non-critical
+    }
+
     return {
       success: true,
       data: {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
+        user: userProfile,
       },
     };
   } catch (error: unknown) {
@@ -555,21 +611,25 @@ export async function serverDisable2FA(
 
 /**
  * Request account deletion — Step 1
+ * Reads auth token from HttpOnly cookie — no token parameter needed.
  */
 export async function serverRequestAccountDeletion(
   reason: number,
-  accessToken: string,
+  _accessToken: string, // kept for API compat but cookie is used instead
   otherReason?: string,
   feedback?: string
 ): Promise<ActionResult<{ requestId: string; gracePeriodEndsAt: string }>> {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value || _accessToken;
+
     const response = await internalFetch<{
       requestId: string;
       gracePeriodEndsAt: string;
     }>('/api/privacy/delete-account/request', {
       method: 'POST',
       body: { reason, otherReason, feedback },
-      token: accessToken,
+      token,
     });
 
     return {
@@ -591,18 +651,25 @@ export async function serverRequestAccountDeletion(
 
 /**
  * Confirm account deletion — Step 2
+ * Reads auth token from HttpOnly cookie — no token parameter needed.
  */
 export async function serverConfirmAccountDeletion(
   confirmationCode: string,
   password: string,
-  accessToken: string
+  _accessToken: string // kept for API compat but cookie is used instead
 ): Promise<ActionResult> {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value || _accessToken;
+
     await internalFetch('/api/privacy/delete-account/confirm', {
       method: 'POST',
       body: { confirmationCode, password },
-      token: accessToken,
+      token,
     });
+
+    // Clear auth cookies — account is now queued for deletion
+    await clearAuthCookiesFromServerAction();
 
     return { success: true };
   } catch (error: unknown) {

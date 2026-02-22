@@ -24,6 +24,7 @@ import {
   serverDisable2FA,
   serverRequestAccountDeletion,
   serverConfirmAccountDeletion,
+  type UserProfileResult,
 } from '@/actions/auth';
 
 // ============================================================
@@ -279,8 +280,14 @@ export async function login(data: LoginRequest): Promise<{ user: User }> {
   // Store tokens client-side (Server Actions can't access localStorage)
   authTokens.setTokens(result.data!.accessToken, result.data!.refreshToken);
 
-  // Fetch full user profile after login
-  const user = await getCurrentUser();
+  // Use the user profile fetched server-side inside serverLogin().
+  // This avoids calling getCurrentUser() (which uses apiClient pointing at
+  // localhost:18443 in dev — a different origin from localhost:3000, so the
+  // auth cookie would not be sent cross-origin even with withCredentials:true).
+  const user = result.data?.user
+    ? transformUser(result.data.user as UserProfileResult & UserDto)
+    : await getCurrentUser();
+
   if (!user) {
     throw new Error('Failed to load user profile after login');
   }
@@ -307,8 +314,11 @@ export async function verifyTwoFactorLogin(
   // Store tokens client-side
   authTokens.setTokens(result.data.accessToken, result.data.refreshToken);
 
-  // Fetch full user profile
-  const user = await getCurrentUser();
+  // Use user profile embedded by serverVerify2FA (same cross-origin fix as login)
+  const user = result.data.user
+    ? transformUser(result.data.user as UserProfileResult & UserDto)
+    : await getCurrentUser();
+
   if (!user) {
     throw new Error('Failed to load user profile after 2FA verification');
   }
