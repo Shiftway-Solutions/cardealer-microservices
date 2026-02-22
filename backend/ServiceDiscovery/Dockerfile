@@ -7,19 +7,19 @@ COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Sha
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
 # Copy csproj files and restore dependencies
-COPY ["ServiceDiscovery.Api/ServiceDiscovery.Api.csproj", "ServiceDiscovery.Api/"]
-COPY ["ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery.Application/"]
-COPY ["ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery.Domain/"]
-COPY ["ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery.Infrastructure/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Api/ServiceDiscovery.Api.csproj", "ServiceDiscovery/ServiceDiscovery.Api/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
+COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
 
-RUN dotnet restore "ServiceDiscovery.Api/ServiceDiscovery.Api.csproj"
+RUN dotnet restore "ServiceDiscovery/ServiceDiscovery.Api/ServiceDiscovery.Api.csproj"
 
 # Copy shared source files
 COPY ["_Shared/", "_Shared/"]
 
 # Copy everything else and build
 COPY . .
-WORKDIR "/src/ServiceDiscovery.Api"
+WORKDIR "/src/ServiceDiscovery/ServiceDiscovery.Api"
 RUN dotnet build "ServiceDiscovery.Api.csproj" -c Release -o /app/build
 
 # Publish stage
