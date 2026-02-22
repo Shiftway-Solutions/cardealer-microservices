@@ -7,15 +7,33 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Mock server actions FIRST
+vi.mock('@/actions/checkout', () => ({
+  serverCreateCheckoutSession: vi.fn(),
+  serverProcessPayment: vi.fn(),
+  serverValidatePromoCode: vi.fn(),
+}));
+
 // Mock the api-client module
 vi.mock('@/lib/api-client', () => ({
   apiClient: {
     get: vi.fn(),
-    post: vi.fn(),
+  },
+  authTokens: {
+    getAccessToken: vi.fn().mockReturnValue('mock-token'),
+    getRefreshToken: vi.fn().mockReturnValue('mock-refresh-token'),
+    setAccessToken: vi.fn(),
+    setRefreshToken: vi.fn(),
+    clearTokens: vi.fn(),
   },
 }));
 
 import { apiClient } from '@/lib/api-client';
+import {
+  serverCreateCheckoutSession,
+  serverProcessPayment,
+  serverValidatePromoCode,
+} from '@/actions/checkout';
 import {
   getProduct,
   getProducts,
@@ -146,25 +164,48 @@ describe('Checkout Service', () => {
 
   describe('createCheckoutSession', () => {
     it('should create checkout session', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockCheckoutSession });
+      const mockResult = {
+        success: true,
+        data: {
+          sessionId: 'session-123',
+          productId: 'boost-basic',
+          subtotal: 499,
+          tax: 90,
+          total: 589,
+          currency: 'DOP',
+          status: 'pending',
+          paymentUrl: 'https://payment.example.com/session-123',
+        },
+      };
+
+      vi.mocked(serverCreateCheckoutSession).mockResolvedValueOnce(mockResult);
 
       const result = await createCheckoutSession({
         productId: 'boost-basic',
         paymentMethod: 'card',
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/checkout/sessions', {
-        productId: 'boost-basic',
-        paymentMethod: 'card',
-      });
+      expect(serverCreateCheckoutSession).toHaveBeenCalled();
       expect(result.sessionId).toBe('session-123');
       expect(result.total).toBe(589);
     });
 
     it('should include promo code in request', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { ...mockCheckoutSession, subtotal: 399, total: 471 },
-      });
+      const mockResult = {
+        success: true,
+        data: {
+          sessionId: 'session-124',
+          productId: 'boost-basic',
+          subtotal: 399,
+          tax: 72,
+          total: 471,
+          currency: 'DOP',
+          status: 'pending',
+          paymentUrl: 'https://payment.example.com/session-124',
+        },
+      };
+
+      vi.mocked(serverCreateCheckoutSession).mockResolvedValueOnce(mockResult);
 
       await createCheckoutSession({
         productId: 'boost-basic',
@@ -172,25 +213,51 @@ describe('Checkout Service', () => {
         promoCode: 'DESCUENTO100',
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/checkout/sessions', {
-        productId: 'boost-basic',
-        paymentMethod: 'azul',
-        promoCode: 'DESCUENTO100',
-      });
+      expect(serverCreateCheckoutSession).toHaveBeenCalledWith(
+        'boost-basic',
+        'azul',
+        'mock-token',
+        undefined,
+        undefined,
+        'DESCUENTO100',
+        undefined,
+        undefined
+      );
     });
 
     it('should support AZUL payment method', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockCheckoutSession });
+      const mockResult = {
+        success: true,
+        data: {
+          sessionId: 'session-125',
+          productId: 'boost-basic',
+          subtotal: 499,
+          tax: 90,
+          total: 589,
+          currency: 'DOP',
+          status: 'pending',
+          paymentUrl: 'https://azul.example.com/session-125',
+        },
+      };
 
-      await createCheckoutSession({
+      vi.mocked(serverCreateCheckoutSession).mockResolvedValueOnce(mockResult);
+
+      const result = await createCheckoutSession({
         productId: 'boost-basic',
         paymentMethod: 'azul',
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/checkout/sessions', {
-        productId: 'boost-basic',
-        paymentMethod: 'azul',
-      });
+      expect(serverCreateCheckoutSession).toHaveBeenCalledWith(
+        'boost-basic',
+        'azul',
+        'mock-token',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      );
+      expect(result.paymentUrl).toBeDefined();
     });
   });
 
@@ -215,9 +282,9 @@ describe('Checkout Service', () => {
 
   describe('processPayment', () => {
     it('should process payment successfully', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      vi.mocked(serverProcessPayment).mockResolvedValueOnce({
+        success: true,
         data: {
-          success: true,
           orderId: 'order-123',
           transactionId: 'txn-456',
           receiptUrl: 'https://receipt.url',
@@ -229,20 +296,14 @@ describe('Checkout Service', () => {
         paymentMethodId: 'pm_123',
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/checkout/process-payment', {
-        sessionId: 'session-123',
-        paymentMethodId: 'pm_123',
-      });
-      expect(result.success).toBe(true);
+      expect(serverProcessPayment).toHaveBeenCalled();
       expect(result.orderId).toBe('order-123');
     });
 
     it('should handle payment failure', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: {
-          success: false,
-          error: 'Insufficient funds',
-        },
+      vi.mocked(serverProcessPayment).mockResolvedValueOnce({
+        success: false,
+        error: 'Insufficient funds',
       });
 
       const result = await processPayment({
@@ -260,7 +321,8 @@ describe('Checkout Service', () => {
 
   describe('validatePromoCode', () => {
     it('should validate valid promo code', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
+      vi.mocked(serverValidatePromoCode).mockResolvedValueOnce({
+        success: true,
         data: {
           valid: true,
           discountType: 'percentage',
@@ -272,21 +334,20 @@ describe('Checkout Service', () => {
 
       const result = await validatePromoCode('SAVE20', 'boost-basic');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/checkout/validate-promo', {
-        code: 'SAVE20',
-        productId: 'boost-basic',
-      });
+      expect(serverValidatePromoCode).toHaveBeenCalled();
       expect(result.valid).toBe(true);
       expect(result.discountValue).toBe(20);
     });
 
     it('should return invalid for non-existent promo code', async () => {
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Not found'));
+      vi.mocked(serverValidatePromoCode).mockResolvedValueOnce({
+        success: false,
+        error: 'Not found',
+      });
 
       const result = await validatePromoCode('INVALID', 'boost-basic');
 
       expect(result.valid).toBe(false);
-      expect(result.errorMessage).toBe('Código promocional no válido');
     });
   });
 

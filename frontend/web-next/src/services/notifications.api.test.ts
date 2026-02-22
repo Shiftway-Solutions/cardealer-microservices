@@ -13,6 +13,7 @@ vi.mock('@/lib/api-client', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -177,21 +178,21 @@ describe('Notifications Service', () => {
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} });
+      vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: {} });
 
       await markAsRead('notif-1');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/notifications/notif-1/read');
+      expect(apiClient.patch).toHaveBeenCalledWith('/api/notifications/notif-1/read');
     });
   });
 
   describe('markAllAsRead', () => {
     it('should mark all notifications as read', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} });
+      vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: {} });
 
       await markAllAsRead();
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/notifications/read-all');
+      expect(apiClient.patch).toHaveBeenCalledWith('/api/notifications/read-all');
     });
   });
 
@@ -215,7 +216,7 @@ describe('Notifications Service', () => {
 
       await deleteAllNotifications();
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/api/notifications');
+      expect(apiClient.delete).toHaveBeenCalledWith('/api/notifications/read');
     });
   });
 

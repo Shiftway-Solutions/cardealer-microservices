@@ -99,6 +99,7 @@ builder.Services.AddHostedService<ErrorCriticalEventConsumer>();
 builder.Services.AddHostedService<UserRegisteredNotificationConsumer>();
 builder.Services.AddHostedService<VehicleCreatedNotificationConsumer>();
 builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
+builder.Services.AddHostedService<KYCStatusChangedNotificationConsumer>();
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");

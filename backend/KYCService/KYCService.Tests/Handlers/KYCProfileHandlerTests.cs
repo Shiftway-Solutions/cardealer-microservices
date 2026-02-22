@@ -1,5 +1,7 @@
 using Moq;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using CarDealer.Contracts.Events.KYC;
 using KYCService.Application.Commands;
 using KYCService.Application.Handlers;
 using KYCService.Domain.Entities;
@@ -260,12 +262,19 @@ public class UpdateKYCProfileHandlerTests
 public class ApproveKYCProfileHandlerTests
 {
     private readonly Mock<IKYCProfileRepository> _repositoryMock;
+    private readonly Mock<IKYCEventPublisher> _eventPublisherMock;
+    private readonly Mock<ILogger<ApproveKYCProfileHandler>> _loggerMock;
     private readonly ApproveKYCProfileHandler _handler;
 
     public ApproveKYCProfileHandlerTests()
     {
         _repositoryMock = new Mock<IKYCProfileRepository>();
-        _handler = new ApproveKYCProfileHandler(_repositoryMock.Object);
+        _eventPublisherMock = new Mock<IKYCEventPublisher>();
+        _loggerMock = new Mock<ILogger<ApproveKYCProfileHandler>>();
+        _handler = new ApproveKYCProfileHandler(
+            _repositoryMock.Object,
+            _eventPublisherMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -371,12 +380,19 @@ public class ApproveKYCProfileHandlerTests
 public class RejectKYCProfileHandlerTests
 {
     private readonly Mock<IKYCProfileRepository> _repositoryMock;
+    private readonly Mock<IKYCEventPublisher> _eventPublisherMock;
+    private readonly Mock<ILogger<RejectKYCProfileHandler>> _loggerMock;
     private readonly RejectKYCProfileHandler _handler;
 
     public RejectKYCProfileHandlerTests()
     {
         _repositoryMock = new Mock<IKYCProfileRepository>();
-        _handler = new RejectKYCProfileHandler(_repositoryMock.Object);
+        _eventPublisherMock = new Mock<IKYCEventPublisher>();
+        _loggerMock = new Mock<ILogger<RejectKYCProfileHandler>>();
+        _handler = new RejectKYCProfileHandler(
+            _repositoryMock.Object,
+            _eventPublisherMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]

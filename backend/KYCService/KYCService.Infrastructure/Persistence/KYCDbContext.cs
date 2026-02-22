@@ -16,6 +16,9 @@ public class KYCDbContext : DbContext
     public DbSet<SuspiciousTransactionReport> SuspiciousTransactionReports => Set<SuspiciousTransactionReport>();
     public DbSet<WatchlistEntry> WatchlistEntries => Set<WatchlistEntry>();
     
+    // Draft (autosave del wizard frontend)
+    public DbSet<KYCProfileDraft> KYCProfileDrafts => Set<KYCProfileDraft>();
+
     // Security entities
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
     public DbSet<KYCAuditLog> KYCAuditLogs => Set<KYCAuditLog>();
@@ -274,6 +277,29 @@ public class KYCDbContext : DbContext
             entity.HasIndex(e => e.FullName);
             entity.HasIndex(e => e.DocumentNumber);
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // ============================================================================
+        // KYC Profile Drafts (autosave wizard)
+        // ============================================================================
+
+        modelBuilder.Entity<KYCProfileDraft>(entity =>
+        {
+            entity.ToTable("kyc_profile_drafts");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.CurrentStep).HasColumnName("current_step");
+            entity.Property(e => e.FormData).HasColumnName("form_data").HasColumnType("jsonb");
+            entity.Property(e => e.IsSubmitted).HasColumnName("is_submitted");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.ExpiresAt);
+            entity.HasIndex(e => e.IsSubmitted);
         });
 
         // ============================================================================

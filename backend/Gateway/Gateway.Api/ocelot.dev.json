@@ -1913,6 +1913,33 @@
       "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }]
     },
     {
+      "UpstreamPathTemplate": "/api/sellers/convert",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/sellers/convert",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/sellers/user/{userId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/sellers/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/sellers/{sellerId}/stats",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/sellers/{sellerId}/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
       "UpstreamPathTemplate": "/api/sellers/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/sellers/{everything}",
@@ -2083,6 +2110,105 @@
       }
     },
 
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/user/{userId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/document/{documentNumber}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kycprofiles/document/{documentNumber}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "RouteClaimsRequirement": { "account_type": "4, 5" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/submit",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/submit",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/approve",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/approve",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "RouteClaimsRequirement": { "account_type": "4, 5" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/reject",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/reject",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "RouteClaimsRequirement": { "account_type": "4, 5" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/draft",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kycprofiles/draft",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/kycprofiles/draft/{userId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "DownstreamPathTemplate": "/api/kycprofiles/draft/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/profiles/{profileId}/documents",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "DownstreamPathTemplate": "/api/kyc/profiles/{profileId}/documents",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/documents/{documentId}/verify",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kyc/documents/{documentId}/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "RouteClaimsRequirement": { "account_type": "4, 5" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/documents/{documentId}/url",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/kyc/documents/{documentId}/url",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 30000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/kyc/identity-verification/verify",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/kyc/identity-verification/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "kycservice", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 60000 }
+    },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],

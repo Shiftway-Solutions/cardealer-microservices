@@ -797,6 +797,57 @@ export async function getDocumentFreshUrl(documentId: string): Promise<DocumentU
   return response.data;
 }
 
+// =============================================================================
+// KYC PROFILE DRAFTS (wizard autosave)
+// =============================================================================
+
+export interface KYCProfileDraft {
+  id: string;
+  userId: string;
+  currentStep: number;
+  formData: string; // JSON string
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+}
+
+export interface UpsertDraftRequest {
+  currentStep: number;
+  formData: string; // JSON string with all wizard form data
+}
+
+/**
+ * Save or update a KYC draft (upsert). Called onStep + every 30 seconds.
+ */
+export async function upsertKYCDraft(request: UpsertDraftRequest): Promise<KYCProfileDraft> {
+  const response = await apiClient.post<KYCProfileDraft>(
+    `${KYC_BASE_URL}/kycprofiles/draft`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Load existing KYC draft for a user. Returns null if no draft.
+ */
+export async function getKYCDraft(userId: string): Promise<KYCProfileDraft | null> {
+  try {
+    const response = await apiClient.get<KYCProfileDraft>(
+      `${KYC_BASE_URL}/kycprofiles/draft/${userId}`
+    );
+    return response.data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete the KYC draft for a user (on successful submit or manual discard).
+ */
+export async function deleteKYCDraft(userId: string): Promise<void> {
+  await apiClient.delete(`${KYC_BASE_URL}/kycprofiles/draft/${userId}`);
+}
+
 // Export default service object for backwards compatibility
 export const kycService = {
   getProfileByUserId: getKYCProfileByUserId,
@@ -821,6 +872,10 @@ export const kycService = {
   getStatistics: getKYCStatistics,
   approveProfile: approveKYCProfile,
   rejectProfile: rejectKYCProfile,
+  // Draft functions (autosave)
+  upsertDraft: upsertKYCDraft,
+  getDraft: getKYCDraft,
+  deleteDraft: deleteKYCDraft,
 };
 
 export default kycService;

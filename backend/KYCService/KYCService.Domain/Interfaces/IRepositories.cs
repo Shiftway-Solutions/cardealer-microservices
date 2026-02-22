@@ -133,3 +133,14 @@ public class WatchlistMatchResult
     public List<string> MatchedFields { get; set; } = new();
     public bool IsExactMatch { get; set; }
 }
+
+/// <summary>
+/// Repositorio para borradores de perfil KYC (autosave del wizard)
+/// </summary>
+public interface IKYCProfileDraftRepository
+{
+    Task<KYCProfileDraft?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<KYCProfileDraft> UpsertAsync(KYCProfileDraft draft, CancellationToken cancellationToken = default);
+    Task<bool> DeleteByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<int> DeleteExpiredAsync(CancellationToken cancellationToken = default);
+}

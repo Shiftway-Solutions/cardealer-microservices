@@ -10,6 +10,7 @@ using KYCService.Domain.Interfaces;
 using KYCService.Application.Validators;
 using KYCService.Application.Services;
 using KYCService.Application.Clients;
+using KYCService.Infrastructure.Messaging;
 using KYCService.Api.Middleware;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -85,6 +86,9 @@ builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
 builder.Services.AddScoped<IRateLimitRepository, RateLimitRepository>();
 builder.Services.AddScoped<IKYCSagaRepository, KYCSagaRepository>();
 
+// Draft Repository (KYC wizard autosave)
+builder.Services.AddScoped<IKYCProfileDraftRepository, KYCProfileDraftRepository>();
+
 // ==========================================================================
 // External Microservice Clients (AuditService, IdempotencyService)
 // ==========================================================================
@@ -116,6 +120,9 @@ builder.Services.AddHttpClient<IMediaServiceClient, MediaServiceClient>(client =
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
 });
+
+// KYC Event Publisher — publishes RabbitMQ events consumed by NotificationService
+builder.Services.AddSingleton<IKYCEventPublisher, KYCEventPublisher>();
 
 // Saga Orchestrator (uses local DB for saga state)
 builder.Services.AddScoped<IKYCSagaOrchestrator, KYCSagaOrchestrator>();

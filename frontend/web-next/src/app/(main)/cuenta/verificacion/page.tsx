@@ -30,6 +30,7 @@ import {
   type LivenessData,
 } from '@/services/kyc';
 import { useAuth } from '@/hooks/use-auth';
+import { useKYCDraft, type KYCWizardFormData } from '@/hooks/useKYCDraft';
 import { sanitizeText, sanitizePhone } from '@/lib/security/sanitize';
 
 // Local type for captured documents
@@ -152,6 +153,29 @@ export default function VerificacionPage() {
   const [documentStep, setDocumentStep] = useState<'front' | 'back' | 'liveness' | 'complete'>(
     'front'
   );
+
+  // ============================================================================
+  // KYC Draft Autosave Hook
+  // ============================================================================
+
+  const handleDraftLoaded = useCallback((data: KYCWizardFormData, step: string) => {
+    if (data.personalInfo) {
+      setPersonalInfo(prev => ({ ...prev, ...data.personalInfo }));
+    }
+    if (data.address) {
+      setAddress(prev => ({ ...prev, ...data.address }));
+    }
+    setCurrentStep(step as Step);
+    toast.info('Se restauró tu progreso anterior');
+  }, []);
+
+  const { saveDraft, clearDraft } = useKYCDraft({
+    userId: user?.id,
+    currentStep,
+    formData: { personalInfo, address },
+    onDraftLoaded: handleDraftLoaded,
+    enabled: !isSubmitting && !existingProfile,
+  });
 
   // ============================================================================
   // Effects
@@ -442,6 +466,9 @@ export default function VerificacionPage() {
 
       // 6. Submit for review
       await kycService.submitForReview(profile.id);
+
+      // 7. Clear draft after successful submission
+      await clearDraft();
 
       toast.success('¡Verificación enviada! Te notificaremos cuando sea aprobada.');
       router.push('/cuenta?verification=submitted');

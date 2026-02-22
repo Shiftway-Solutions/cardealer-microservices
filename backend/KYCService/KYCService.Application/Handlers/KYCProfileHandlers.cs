@@ -1,9 +1,11 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using KYCService.Domain.Entities;
 using KYCService.Domain.Interfaces;
 using KYCService.Application.Commands;
 using KYCService.Application.DTOs;
 using KYCService.Application.Exceptions;
+using CarDealer.Contracts.Events.KYC;
 
 namespace KYCService.Application.Handlers;
 
@@ -371,16 +373,25 @@ public class SubmitKYCForReviewHandler : IRequestHandler<SubmitKYCForReviewComma
 public class ApproveKYCProfileHandler : IRequestHandler<ApproveKYCProfileCommand, KYCProfileDto>
 {
     private readonly IKYCProfileRepository _repository;
+    private readonly IKYCEventPublisher _eventPublisher;
+    private readonly ILogger<ApproveKYCProfileHandler> _logger;
 
-    public ApproveKYCProfileHandler(IKYCProfileRepository repository)
+    public ApproveKYCProfileHandler(
+        IKYCProfileRepository repository,
+        IKYCEventPublisher eventPublisher,
+        ILogger<ApproveKYCProfileHandler> logger)
     {
         _repository = repository;
+        _eventPublisher = eventPublisher;
+        _logger = logger;
     }
 
     public async Task<KYCProfileDto> Handle(ApproveKYCProfileCommand request, CancellationToken cancellationToken)
     {
         var profile = await _repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"KYC Profile with ID {request.Id} not found");
+
+        var previousStatus = profile.Status.ToString();
 
         profile.Status = KYCStatus.Approved;
         profile.ApprovedAt = DateTime.UtcNow;
@@ -392,6 +403,22 @@ public class ApproveKYCProfileHandler : IRequestHandler<ApproveKYCProfileCommand
         profile.LastReviewAt = DateTime.UtcNow;
 
         var updated = await _repository.UpdateAsync(profile, cancellationToken);
+
+        // Publish RabbitMQ event (NotificationService consumes it)
+        await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
+        {
+            ProfileId    = profile.Id,
+            UserId       = profile.UserId,
+            Email        = profile.Email ?? string.Empty,
+            FullName     = profile.FullName,
+            PreviousStatus = previousStatus,
+            NewStatus    = "Approved",
+            Reason       = request.Notes,
+            ChangedBy    = request.ApprovedBy,
+            ChangedAt    = DateTime.UtcNow,
+            ValidityDays = request.ValidityDays
+        }, cancellationToken);
+
         return MapToDto(updated);
     }
 
@@ -418,16 +445,25 @@ public class ApproveKYCProfileHandler : IRequestHandler<ApproveKYCProfileCommand
 public class RejectKYCProfileHandler : IRequestHandler<RejectKYCProfileCommand, KYCProfileDto>
 {
     private readonly IKYCProfileRepository _repository;
+    private readonly IKYCEventPublisher _eventPublisher;
+    private readonly ILogger<RejectKYCProfileHandler> _logger;
 
-    public RejectKYCProfileHandler(IKYCProfileRepository repository)
+    public RejectKYCProfileHandler(
+        IKYCProfileRepository repository,
+        IKYCEventPublisher eventPublisher,
+        ILogger<RejectKYCProfileHandler> logger)
     {
         _repository = repository;
+        _eventPublisher = eventPublisher;
+        _logger = logger;
     }
 
     public async Task<KYCProfileDto> Handle(RejectKYCProfileCommand request, CancellationToken cancellationToken)
     {
         var profile = await _repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"KYC Profile with ID {request.Id} not found");
+
+        var previousStatus = profile.Status.ToString();
 
         profile.Status = KYCStatus.Rejected;
         profile.RejectedAt = DateTime.UtcNow;
@@ -436,6 +472,21 @@ public class RejectKYCProfileHandler : IRequestHandler<RejectKYCProfileCommand, 
         profile.UpdatedAt = DateTime.UtcNow;
 
         var updated = await _repository.UpdateAsync(profile, cancellationToken);
+
+        // Publish RabbitMQ event (NotificationService consumes it)
+        await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
+        {
+            ProfileId      = profile.Id,
+            UserId         = profile.UserId,
+            Email          = profile.Email ?? string.Empty,
+            FullName       = profile.FullName,
+            PreviousStatus = previousStatus,
+            NewStatus      = "Rejected",
+            Reason         = request.RejectionReason,
+            ChangedBy      = request.RejectedBy,
+            ChangedAt      = DateTime.UtcNow
+        }, cancellationToken);
+
         return MapToDto(updated);
     }
 

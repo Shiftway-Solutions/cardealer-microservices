@@ -83,7 +83,9 @@ function ThemeButton({
       <Icon
         className={cn(
           'h-6 w-6',
-          currentTheme === theme ? 'text-primary' : 'text-muted-foreground dark:text-muted-foreground'
+          currentTheme === theme
+            ? 'text-primary'
+            : 'text-muted-foreground dark:text-muted-foreground'
         )}
       />
       <span
@@ -113,7 +115,7 @@ function NotificationToggle({
 }) {
   return (
     <div className="flex items-start gap-4 py-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground dark:bg-gray-800 dark:text-muted-foreground">
+      <div className="bg-muted text-muted-foreground dark:text-muted-foreground flex h-10 w-10 items-center justify-center rounded-lg dark:bg-gray-800">
         <Icon className="h-5 w-5" />
       </div>
       <div className="flex-1">
@@ -121,7 +123,9 @@ function NotificationToggle({
           <Label className="cursor-pointer font-medium">{label}</Label>
           <Switch checked={checked} onCheckedChange={onCheckedChange} />
         </div>
-        <p className="mt-0.5 text-sm text-muted-foreground dark:text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-0.5 text-sm">
+          {description}
+        </p>
       </div>
     </div>
   );
@@ -152,7 +156,8 @@ export default function SettingsPage() {
   // ── Account Deletion State ──────────────────────────────────────────────────
   type DeletionStep = 'idle' | 'selecting' | 'confirming' | 'success';
   const [deletionStep, setDeletionStep] = React.useState<DeletionStep>('idle');
-  const [deletionReason, setDeletionReason] = React.useState<DeletionReasonString>('NoLongerNeeded');
+  const [deletionReason, setDeletionReason] =
+    React.useState<DeletionReasonString>('NoLongerNeeded');
   const [deletionFeedback, setDeletionFeedback] = React.useState('');
   const [deletionOtherReason, setDeletionOtherReason] = React.useState('');
   const [confirmationCode, setConfirmationCode] = React.useState('');
@@ -273,7 +278,11 @@ export default function SettingsPage() {
       setDeletionStep('success');
       // Log user out after confirming deletion
       setTimeout(async () => {
-        try { await logout(); } catch { /* ignore */ }
+        try {
+          await logout();
+        } catch {
+          /* ignore */
+        }
         router.push('/');
       }, 5000);
     } catch (err) {
@@ -308,19 +317,19 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="h-8 w-40 animate-pulse rounded bg-muted dark:bg-gray-700" />
-            <div className="mt-2 h-4 w-60 animate-pulse rounded bg-muted dark:bg-gray-700" />
+            <div className="bg-muted h-8 w-40 animate-pulse rounded dark:bg-gray-700" />
+            <div className="bg-muted mt-2 h-4 w-60 animate-pulse rounded dark:bg-gray-700" />
           </div>
         </div>
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="h-6 w-32 animate-pulse rounded bg-muted dark:bg-gray-700" />
+              <div className="bg-muted h-6 w-32 animate-pulse rounded dark:bg-gray-700" />
               <div className="grid grid-cols-3 gap-3">
                 {[1, 2, 3].map(i => (
                   <div
                     key={i}
-                    className="h-24 animate-pulse rounded-lg bg-muted dark:bg-gray-800"
+                    className="bg-muted h-24 animate-pulse rounded-lg dark:bg-gray-800"
                   />
                 ))}
               </div>
@@ -336,8 +345,10 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground dark:text-gray-100">Configuración</h1>
-          <p className="text-muted-foreground dark:text-muted-foreground">Personaliza tu experiencia en OKLA</p>
+          <h1 className="text-foreground text-2xl font-bold dark:text-gray-100">Configuración</h1>
+          <p className="text-muted-foreground dark:text-muted-foreground">
+            Personaliza tu experiencia en OKLA
+          </p>
         </div>
         <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
           {isSaving ? (
@@ -411,7 +422,7 @@ export default function SettingsPage() {
                 label="Sistema"
               />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground dark:text-muted-foreground">
+            <p className="text-muted-foreground dark:text-muted-foreground mt-2 text-xs">
               El tema se guarda localmente en tu navegador.
             </p>
           </div>
@@ -421,12 +432,12 @@ export default function SettingsPage() {
           {/* Language */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground dark:bg-gray-800 dark:text-muted-foreground">
+              <div className="bg-muted text-muted-foreground dark:text-muted-foreground flex h-10 w-10 items-center justify-center rounded-lg dark:bg-gray-800">
                 <Globe className="h-5 w-5" />
               </div>
               <div>
                 <Label className="font-medium">Idioma</Label>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                   Selecciona tu idioma preferido
                 </p>
               </div>
@@ -436,7 +447,7 @@ export default function SettingsPage() {
               onChange={e =>
                 setAppSettings({ ...appSettings, language: e.target.value as 'es' | 'en' })
               }
-              className="focus:ring-primary/20 focus:border-primary rounded-lg border border-border px-3 py-2 focus:ring-2 focus:outline-none"
+              className="focus:ring-primary/20 focus:border-primary border-border rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
             >
               <option value="es">Español</option>
               <option value="en">English</option>
@@ -448,12 +459,12 @@ export default function SettingsPage() {
           {/* Currency */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground dark:bg-gray-800 dark:text-muted-foreground">
+              <div className="bg-muted text-muted-foreground dark:text-muted-foreground flex h-10 w-10 items-center justify-center rounded-lg dark:bg-gray-800">
                 <DollarSign className="h-5 w-5" />
               </div>
               <div>
                 <Label className="font-medium">Moneda</Label>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                   Moneda para mostrar precios
                 </p>
               </div>
@@ -463,7 +474,7 @@ export default function SettingsPage() {
               onChange={e =>
                 setAppSettings({ ...appSettings, currency: e.target.value as 'DOP' | 'USD' })
               }
-              className="focus:ring-primary/20 focus:border-primary bg-background text-foreground rounded-lg border border-border px-3 py-2 focus:ring-2 focus:outline-none dark:border-gray-600"
+              className="focus:ring-primary/20 focus:border-primary bg-background text-foreground border-border rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none dark:border-gray-600"
             >
               <option value="DOP">RD$ (Pesos Dominicanos)</option>
               <option value="USD">US$ (Dólares)</option>
@@ -564,8 +575,8 @@ export default function SettingsPage() {
           {/* Download data */}
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="font-medium text-foreground dark:text-gray-100">Descargar mis datos</p>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+              <p className="text-foreground font-medium dark:text-gray-100">Descargar mis datos</p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                 Obtén una copia de toda tu información (ARCO)
               </p>
             </div>
@@ -577,23 +588,31 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="font-medium text-foreground dark:text-gray-100">Política de privacidad</p>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+              <p className="text-foreground font-medium dark:text-gray-100">
+                Política de privacidad
+              </p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm">
                 Lee cómo protegemos tus datos
               </p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/privacidad" target="_blank">Ver</a>
+              <a href="/privacidad" target="_blank">
+                Ver
+              </a>
             </Button>
           </div>
           <Separator />
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="font-medium text-foreground dark:text-gray-100">Términos de servicio</p>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">Condiciones de uso de OKLA</p>
+              <p className="text-foreground font-medium dark:text-gray-100">Términos de servicio</p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm">
+                Condiciones de uso de OKLA
+              </p>
             </div>
             <Button variant="link" size="sm" asChild>
-              <a href="/terminos" target="_blank">Ver</a>
+              <a href="/terminos" target="_blank">
+                Ver
+              </a>
             </Button>
           </div>
         </CardContent>
@@ -602,7 +621,7 @@ export default function SettingsPage() {
       {/* Delete Account */}
       <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
+          <CardTitle className="text-destructive flex items-center gap-2">
             <ShieldAlert className="h-5 w-5" />
             Zona de Peligro
           </CardTitle>
@@ -613,10 +632,10 @@ export default function SettingsPage() {
         <CardContent>
           {/* STEP: idle */}
           {deletionStep === 'idle' && (
-            <div className="flex items-start justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+            <div className="border-destructive/20 bg-destructive/5 flex items-start justify-between rounded-lg border p-4">
               <div>
-                <p className="font-medium text-foreground dark:text-gray-100">Eliminar cuenta</p>
-                <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
+                <p className="text-foreground font-medium dark:text-gray-100">Eliminar cuenta</p>
+                <p className="text-muted-foreground dark:text-muted-foreground mt-1 text-sm">
                   Elimina permanentemente tu cuenta y todos tus datos. Tendrás 15 días para cancelar
                   esta acción.
                 </p>
@@ -666,14 +685,16 @@ export default function SettingsPage() {
                         className="accent-destructive"
                       />
                       <span className="text-sm">
-                        {{
-                          PrivacyConcerns: 'Preocupaciones de privacidad',
-                          NoLongerNeeded: 'Ya no necesito la cuenta',
-                          FoundAlternative: 'Encontré una alternativa',
-                          BadExperience: 'Mala experiencia con el servicio',
-                          TooManyEmails: 'Recibo demasiados correos',
-                          Other: 'Otro motivo',
-                        }[reason]}
+                        {
+                          {
+                            PrivacyConcerns: 'Preocupaciones de privacidad',
+                            NoLongerNeeded: 'Ya no necesito la cuenta',
+                            FoundAlternative: 'Encontré una alternativa',
+                            BadExperience: 'Mala experiencia con el servicio',
+                            TooManyEmails: 'Recibo demasiados correos',
+                            Other: 'Otro motivo',
+                          }[reason]
+                        }
                       </span>
                     </label>
                   ))}
@@ -713,7 +734,10 @@ export default function SettingsPage() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => { setDeletionStep('idle'); setDeletionError(null); }}
+                  onClick={() => {
+                    setDeletionStep('idle');
+                    setDeletionError(null);
+                  }}
                   disabled={isDeletionLoading}
                   className="flex-1"
                 >
@@ -722,13 +746,21 @@ export default function SettingsPage() {
                 <Button
                   variant="destructive"
                   onClick={handleRequestDeletion}
-                  disabled={isDeletionLoading || (deletionReason === 'Other' && !deletionOtherReason)}
+                  disabled={
+                    isDeletionLoading || (deletionReason === 'Other' && !deletionOtherReason)
+                  }
                   className="flex-1 gap-1.5"
                 >
                   {isDeletionLoading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Enviando...</>
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
                   ) : (
-                    <><Trash2 className="h-4 w-4" />Continuar</>
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Continuar
+                    </>
                   )}
                 </Button>
               </div>
@@ -805,9 +837,15 @@ export default function SettingsPage() {
                   className="flex-1 gap-1.5"
                 >
                   {isDeletionLoading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Confirmando...</>
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Confirmando...
+                    </>
                   ) : (
-                    <><Trash2 className="h-4 w-4" />Confirmar eliminación</>
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Confirmar eliminación
+                    </>
                   )}
                 </Button>
               </div>
@@ -824,7 +862,7 @@ export default function SettingsPage() {
                   Serás desconectado automáticamente en unos segundos.
                 </AlertDescription>
               </Alert>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Si cambias de opinión, puedes cancelar la eliminación iniciando sesión antes de la
                 fecha límite. Recibirás un recordatorio por email.
               </p>
