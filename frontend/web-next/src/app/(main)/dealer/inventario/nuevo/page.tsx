@@ -145,7 +145,14 @@ export default function NewVehiclePage() {
   const router = useRouter();
 
   // KYC verification check
-  const { canSell, isPending, isRejected, needsVerification, isLoading: kycLoading, rejectionReason } = useCanSell();
+  const {
+    canSell,
+    isPending,
+    isRejected,
+    needsVerification,
+    isLoading: kycLoading,
+    rejectionReason,
+  } = useCanSell();
 
   // API hooks
   const { data: dealer, isLoading: dealerLoading } = useCurrentDealer();
@@ -328,9 +335,9 @@ export default function NewVehiclePage() {
               <Clock className="h-8 w-8 text-purple-600" />
             </div>
             <h2 className="mb-2 text-xl font-bold">Verificación del dealer en proceso</h2>
-            <p className="mb-6 text-muted-foreground">
-              La documentación del dealer está siendo revisada por el equipo de OKLA. Recibirás
-              una notificación cuando sea aprobada (24–48 horas hábiles).
+            <p className="text-muted-foreground mb-6">
+              La documentación del dealer está siendo revisada por el equipo de OKLA. Recibirás una
+              notificación cuando sea aprobada (24–48 horas hábiles).
             </p>
             <Link href="/dealer">
               <Button variant="outline">Volver al Dashboard</Button>
@@ -351,7 +358,7 @@ export default function NewVehiclePage() {
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
             <h2 className="mb-2 text-xl font-bold text-red-700">Verificación rechazada</h2>
-            <p className="mb-3 text-muted-foreground">
+            <p className="text-muted-foreground mb-3">
               La verificación del dealer fue rechazada. Debes volver a verificar la documentación.
             </p>
             {rejectionReason && (
@@ -388,7 +395,7 @@ export default function NewVehiclePage() {
             <h2 className="mb-2 text-xl font-bold text-amber-800">
               Verifica tu dealer antes de publicar
             </h2>
-            <p className="mb-4 text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               Para agregar vehículos al inventario, el dealer debe estar verificado con:
             </p>
             <ul className="mb-6 space-y-1 text-left text-sm text-gray-600">
@@ -471,7 +478,7 @@ export default function NewVehiclePage() {
                     isCompleted
                       ? 'bg-primary text-white'
                       : isCurrent
-                        ? 'border-2 border-primary bg-primary/10 text-primary'
+                        ? 'border-primary bg-primary/10 text-primary border-2'
                         : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -479,7 +486,7 @@ export default function NewVehiclePage() {
                 </div>
                 <span
                   className={`mt-1 text-xs ${
-                    isCurrent ? 'font-medium text-primary' : 'text-muted-foreground'
+                    isCurrent ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}
                 >
                   {step.title}
@@ -487,9 +494,7 @@ export default function NewVehiclePage() {
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`mx-2 h-0.5 w-16 sm:w-24 ${
-                    isCompleted ? 'bg-primary' : 'bg-muted'
-                  }`}
+                  className={`mx-2 h-0.5 w-16 sm:w-24 ${isCompleted ? 'bg-primary' : 'bg-muted'}`}
                 />
               )}
             </div>
@@ -807,7 +812,7 @@ export default function NewVehiclePage() {
                         <X className="h-4 w-4" />
                       </button>
                       {index === 0 && (
-                        <span className="absolute bottom-2 left-2 rounded bg-primary px-2 py-0.5 text-xs text-white">
+                        <span className="bg-primary absolute bottom-2 left-2 rounded px-2 py-0.5 text-xs text-white">
                           Principal
                         </span>
                       )}
@@ -818,7 +823,7 @@ export default function NewVehiclePage() {
 
               {/* Upload area */}
               <div
-                className="border-border cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-primary"
+                className="border-border hover:border-primary cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
@@ -891,7 +896,7 @@ export default function NewVehiclePage() {
       {currentStep === 4 && formData.make && formData.model && (
         <Card className="border-primary bg-primary/10">
           <CardContent className="p-6">
-            <h3 className="mb-4 font-semibold text-primary">Resumen</h3>
+            <h3 className="text-primary mb-4 font-semibold">Resumen</h3>
             <div className="space-y-2 text-sm">
               <p>
                 <span className="text-primary">Vehículo:</span> {formData.year} {formData.make}{' '}

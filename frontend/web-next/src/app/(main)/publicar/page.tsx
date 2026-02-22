@@ -15,7 +15,8 @@ import { useCanSell } from '@/hooks/use-kyc';
 import { Button } from '@/components/ui/button';
 
 export default function PublicarPage() {
-  const { canSell, isPending, isRejected, needsVerification, isLoading, rejectionReason } = useCanSell();
+  const { canSell, isPending, isRejected, needsVerification, isLoading, rejectionReason } =
+    useCanSell();
 
   // Show loading state while KYC data loads
   if (isLoading) {
@@ -29,15 +30,15 @@ export default function PublicarPage() {
   // Verification pending / under review
   if (isPending) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center bg-muted/50">
+      <div className="bg-muted/50 flex min-h-[500px] items-center justify-center">
         <div className="mx-auto max-w-md px-4 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
             <Clock className="h-8 w-8 text-purple-600" />
           </div>
           <h2 className="mb-2 text-xl font-bold text-gray-900">Verificación en proceso</h2>
           <p className="mb-6 text-gray-600">
-            Tu solicitud de verificación está siendo revisada por nuestro equipo. Te
-            notificaremos cuando sea aprobada.
+            Tu solicitud de verificación está siendo revisada por nuestro equipo. Te notificaremos
+            cuando sea aprobada.
           </p>
           <Link href="/cuenta">
             <Button variant="outline">Volver a mi portal</Button>
@@ -50,7 +51,7 @@ export default function PublicarPage() {
   // Verification rejected — prompt to retry
   if (isRejected) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center bg-muted/50">
+      <div className="bg-muted/50 flex min-h-[500px] items-center justify-center">
         <div className="mx-auto max-w-md px-4 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
             <AlertCircle className="h-8 w-8 text-red-600" />
@@ -84,7 +85,7 @@ export default function PublicarPage() {
   // Not verified — prompt to verify first
   if (needsVerification) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center bg-muted/50">
+      <div className="bg-muted/50 flex min-h-[500px] items-center justify-center">
         <div className="mx-auto max-w-md px-4 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             <Shield className="h-8 w-8 text-blue-600" />
@@ -112,13 +113,11 @@ export default function PublicarPage() {
 
   // Verified — show publish wizard
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-foreground">
-            Publicar Vehículo
-          </h1>
+          <h1 className="text-foreground mb-2 text-3xl font-bold">Publicar Vehículo</h1>
           <p className="text-muted-foreground">
             Publica tu vehículo de forma rápida con detección automática por VIN
           </p>

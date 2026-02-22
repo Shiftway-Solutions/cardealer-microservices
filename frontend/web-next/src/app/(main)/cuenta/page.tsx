@@ -219,8 +219,8 @@ function DealerDashboard() {
           )}
           <p className="text-muted-foreground">Panel de control del concesionario</p>
         </div>
-        {!kycLoading && (
-          canSell ? (
+        {!kycLoading &&
+          (canSell ? (
             <Link href="/dealer/inventario/nuevo">
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -229,13 +229,15 @@ function DealerDashboard() {
             </Link>
           ) : (
             <Link href="/cuenta/verificacion">
-              <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Button
+                variant="outline"
+                className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+              >
                 <Shield className="h-4 w-4" />
                 Verificar para publicar
               </Button>
             </Link>
-          )
-        )}
+          ))}
       </div>
 
       {/* Verification banner — shown while unverified */}
@@ -449,8 +451,8 @@ function SellerDashboard() {
           <h1 className="text-foreground text-2xl font-bold">Mi Panel de Vendedor</h1>
           <p className="text-muted-foreground">Gestiona tus publicaciones y consultas</p>
         </div>
-        {!kycLoading && (
-          canSell ? (
+        {!kycLoading &&
+          (canSell ? (
             <Link href="/vender/publicar">
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -459,13 +461,15 @@ function SellerDashboard() {
             </Link>
           ) : (
             <Link href="/cuenta/verificacion">
-              <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Button
+                variant="outline"
+                className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+              >
                 <Shield className="h-4 w-4" />
                 Verificar para publicar
               </Button>
             </Link>
-          )
-        )}
+          ))}
       </div>
 
       {/* Verification banner — shown while unverified */}
@@ -1095,7 +1099,9 @@ function DealerVerificationBanner() {
               <Clock className="h-6 w-6 text-purple-600" />
             </div>
             <div className="flex-1">
-              <h3 className="mb-1 font-semibold text-purple-900">Verificación del dealer en proceso</h3>
+              <h3 className="mb-1 font-semibold text-purple-900">
+                Verificación del dealer en proceso
+              </h3>
               <p className="text-sm text-purple-700">
                 Tu documentación está siendo revisada por nuestro equipo. Te notificaremos por
                 correo electrónico cuando sea aprobada (24–48 horas hábiles).
@@ -1127,7 +1133,11 @@ function DealerVerificationBanner() {
                 </p>
               )}
               <Link href="/cuenta/verificacion">
-                <Button size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-100"
+                >
                   Reintentar verificación
                 </Button>
               </Link>
@@ -1173,7 +1183,7 @@ function DealerVerificationBanner() {
                 </li>
               </ul>
               <Link href="/cuenta/verificacion">
-                <Button size="sm" className="gap-2 bg-amber-600 hover:bg-amber-700 text-white">
+                <Button size="sm" className="gap-2 bg-amber-600 text-white hover:bg-amber-700">
                   <Shield className="h-4 w-4" />
                   Iniciar verificación del dealer
                 </Button>
