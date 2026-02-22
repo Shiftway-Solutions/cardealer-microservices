@@ -50,7 +50,12 @@ builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: t
 
 // 3. Configuración esencial
 builder.Services.AddResponseCompression();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Clean Architecture - Domain Services

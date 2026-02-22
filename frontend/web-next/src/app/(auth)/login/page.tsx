@@ -29,10 +29,10 @@ import type { User } from '@/types';
  * Authenticated users landing on these get redirected to their role-based portal.
  */
 const MARKETING_PAGES = new Set([
-  '/vender',           // Seller marketing landing
-  '/dealer',           // Dealer marketing landing
-  '/dealer/landing',   // Dealer landing variant
-  '/dealer/pricing',   // Dealer pricing page
+  '/vender', // Seller marketing landing
+  '/dealer', // Dealer marketing landing
+  '/dealer/landing', // Dealer landing variant
+  '/dealer/pricing', // Dealer pricing page
 ]);
 
 /**

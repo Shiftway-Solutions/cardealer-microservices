@@ -143,7 +143,9 @@ export async function getCurrentProfile(): Promise<UserProfileDto> {
     // If 404, user exists in AuthService but not in UserService (common with OAuth users)
     const axiosError = error as { response?: { status: number } };
     if (axiosError.response?.status === 404) {
-      throw Object.assign(new Error('Profile not found in UserService'), { code: 'PROFILE_NOT_FOUND' });
+      throw Object.assign(new Error('Profile not found in UserService'), {
+        code: 'PROFILE_NOT_FOUND',
+      });
     }
     throw error;
   }

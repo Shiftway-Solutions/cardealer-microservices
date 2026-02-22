@@ -104,10 +104,15 @@ export async function convertToSeller(
     // Enhance error with additional context
     const axiosError = error as { response?: { status: number } };
     if (axiosError?.response?.status === 401) {
-      throw Object.assign(new Error('Authentication required. Please log in again.'), { status: 401 });
+      throw Object.assign(new Error('Authentication required. Please log in again.'), {
+        status: 401,
+      });
     }
     if (axiosError?.response?.status === 404) {
-      throw Object.assign(new Error('Seller conversion endpoint not found. Service may be unavailable.'), { status: 404 });
+      throw Object.assign(
+        new Error('Seller conversion endpoint not found. Service may be unavailable.'),
+        { status: 404 }
+      );
     }
     throw error;
   }
