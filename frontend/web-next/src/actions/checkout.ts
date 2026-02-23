@@ -84,12 +84,14 @@ async function internalFetch<T>(
   }
 
   // SECURITY: Add CSRF token from cookie for mutations (POST, PUT, PATCH, DELETE)
-  // The middleware requires both X-CSRF-Token header and csrf_token cookie
+  // Gateway's CsrfValidationMiddleware uses Double Submit Cookie pattern:
+  // it checks BOTH X-CSRF-Token header AND csrf_token cookie in the same request.
   if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
     const cookieStore = await cookies();
     const csrfToken = cookieStore.get('csrf_token')?.value;
     if (csrfToken) {
       headers['X-CSRF-Token'] = csrfToken;
+      headers['Cookie'] = `csrf_token=${csrfToken}`;
     }
   }
 
