@@ -86,7 +86,43 @@ import {
 // =============================================================================
 
 export default function AdminKycPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Admin role validation
+  const isAdmin = user?.accountType === 'admin';
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center p-8">
+        <AlertTriangle className="mb-4 h-12 w-12 text-amber-600" />
+        <h1 className="text-xl font-bold">Acceso Requerido</h1>
+        <p className="text-muted-foreground mt-2">
+          Debes iniciar sesión para acceder a esta página
+        </p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center p-8">
+        <Shield className="mb-4 h-12 w-12 text-red-600" />
+        <h1 className="text-xl font-bold">Acceso Denegado</h1>
+        <p className="text-muted-foreground mt-2">
+          Solo los administradores pueden acceder al panel de KYC
+        </p>
+      </div>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -221,11 +257,22 @@ export default function AdminKycPage() {
       setLoadingDocumentId(documentId);
 
       const response = await getDocumentFreshUrl(documentId);
+      if (!response.url) {
+        toast.error('URL del documento no disponible');
+        return;
+      }
       window.open(response.url, '_blank', 'noopener,noreferrer');
     } catch (error: unknown) {
-      console.error('[KYC] Error getting document URL');
+      const err = error as { response?: { status?: number }; message?: string };
+      console.error('[KYC] Error getting document URL:', err);
 
-      toast.error('Error al obtener el documento. Intente nuevamente.');
+      if (err.response?.status === 404) {
+        toast.error('El documento no existe en el almacenamiento');
+      } else if (err.response?.status === 403) {
+        toast.error('No tienes permiso para acceder a este documento');
+      } else {
+        toast.error('Error al obtener el documento. Intente nuevamente.');
+      }
     } finally {
       setLoadingDocumentId(null);
     }
@@ -236,6 +283,11 @@ export default function AdminKycPage() {
     try {
       setLoadingDocumentId(documentId);
       const response = await getDocumentFreshUrl(documentId);
+
+      if (!response.url) {
+        toast.error('URL del documento no disponible');
+        return;
+      }
 
       // Create a temporary link and trigger download
       const link = document.createElement('a');
@@ -248,8 +300,16 @@ export default function AdminKycPage() {
 
       toast.success('Descarga iniciada');
     } catch (error: unknown) {
-      console.error('[KYC Debug] Error downloading document:', error);
-      toast.error('Error al descargar el documento');
+      const err = error as { response?: { status?: number }; message?: string };
+      console.error('[KYC Debug] Error downloading document:', err);
+
+      if (err.response?.status === 404) {
+        toast.error('El documento no existe en el almacenamiento');
+      } else if (err.response?.status === 403) {
+        toast.error('No tienes permiso para descargar este documento');
+      } else {
+        toast.error('Error al descargar el documento');
+      }
     } finally {
       setLoadingDocumentId(null);
     }
@@ -258,6 +318,16 @@ export default function AdminKycPage() {
   // Handle approve
   const handleApprove = async () => {
     if (!selectedProfile || !user) return;
+
+    // Check if verification checklist is complete
+    const checklistComplete =
+      Object.keys(verificationChecks).length > 0 &&
+      VERIFICATION_ITEMS.every(item => verificationChecks[item.key] === true);
+
+    if (!checklistComplete) {
+      toast.error('Debes completar el checklist de verificación antes de aprobar');
+      return;
+    }
 
     try {
       setProcessingAction(true);
@@ -443,7 +513,7 @@ export default function AdminKycPage() {
           <ScrollArea className="flex-1">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <Loader2 className="text-primary h-6 w-6 animate-spin" />
               </div>
             ) : filteredProfiles.length === 0 ? (
               <div className="p-6 text-center">
@@ -464,26 +534,35 @@ export default function AdminKycPage() {
 
           {/* List Footer */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between bg-white p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-              >
-                Ant.
-              </Button>
-              <span className="text-muted-foreground text-xs">
-                {page}/{totalPages}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-              >
-                Sig.
-              </Button>
+            <div className="flex flex-col gap-2 border-t border-gray-100 bg-white p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">
+                  Página {page} de {totalPages}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {filteredProfiles.length} perfiles
+                </span>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                  ← Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                >
+                  Siguiente →
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -500,7 +579,7 @@ export default function AdminKycPage() {
               <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/30 p-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-14 w-14">
-                    <AvatarFallback className="bg-primary/10 text-lg text-primary">
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
                       {getInitials(selectedProfile.fullName)}
                     </AvatarFallback>
                   </Avatar>
@@ -805,7 +884,7 @@ export default function AdminKycPage() {
                             </div>
                             <div className="h-2 w-full rounded-full bg-gray-200">
                               <div
-                                className="h-2 rounded-full bg-primary transition-all"
+                                className="bg-primary h-2 rounded-full transition-all"
                                 style={{
                                   width: `${(Object.values(verificationChecks).filter(Boolean).length / FIELD_VALIDATION_KEYS.length) * 100}%`,
                                 }}
@@ -902,7 +981,7 @@ export default function AdminKycPage() {
                                     }
                                     disabled={loadingDocumentId === doc.id}
                                     title="Descargar documento"
-                                    className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
+                                    className="hover:bg-primary/10 hover:text-primary h-7 w-7 p-0"
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                   </Button>
@@ -1002,9 +1081,12 @@ export default function AdminKycPage() {
 
                   <div className="flex gap-3">
                     <Button
-                      className="flex-1 bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 flex-1"
                       onClick={handleApprove}
-                      disabled={processingAction}
+                      disabled={
+                        processingAction ||
+                        !VERIFICATION_ITEMS.every(item => verificationChecks[item.key])
+                      }
                     >
                       {processingAction ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
