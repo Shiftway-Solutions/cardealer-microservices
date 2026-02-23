@@ -1,3 +1,4 @@
+#nullable disable
 using System.Text;
 using System.Text.Json;
 using CarDealer.Contracts.Events.Billing;
@@ -17,8 +18,8 @@ namespace BillingService.Tests.Integration.Events;
 /// </summary>
 public class PaymentCompletedEventConsumerTests : IDisposable
 {
-    private readonly IConnection? _connection;
-    private readonly IModel? _channel;
+    private readonly IConnection _connection;
+    private readonly IModel _channel;
     private readonly string _queueName;
     private readonly Mock<ILogger<PaymentCompletedEventConsumerTests>> _loggerMock;
     private readonly bool _rabbitMqAvailable;

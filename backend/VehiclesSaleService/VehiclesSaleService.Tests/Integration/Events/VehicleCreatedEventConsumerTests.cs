@@ -1,3 +1,4 @@
+#nullable disable
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -18,8 +19,8 @@ namespace VehiclesSaleService.Tests.Integration.Events;
 public class VehicleCreatedEventConsumerTests : IDisposable
 {
     private readonly Mock<ILogger<VehicleCreatedEventConsumerTests>> _loggerMock;
-    private readonly IConnection? _connection;
-    private readonly IModel? _channel;
+    private readonly IConnection _connection;
+    private readonly IModel _channel;
     private readonly string _queueName;
     private readonly bool _rabbitMqAvailable;
     private const string ExchangeName = "test.events.exchange";
