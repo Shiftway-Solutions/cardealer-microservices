@@ -165,14 +165,25 @@ export default function VerificacionPage() {
   // ============================================================================
 
   const handleDraftLoaded = useCallback((data: KYCWizardFormData, step: string) => {
-    if (data.personalInfo) {
+    const hasPersonal =
+      !!data.personalInfo &&
+      Object.values(data.personalInfo).some(v => v !== undefined && String(v).trim() !== '');
+    const hasAddress =
+      !!data.address &&
+      Object.values(data.address).some(v => v !== undefined && String(v).trim() !== '');
+
+    // Only populate fields and notify the user when the draft actually contains meaningful data
+    if (hasPersonal) {
       setPersonalInfo(prev => ({ ...prev, ...data.personalInfo }));
     }
-    if (data.address) {
+    if (hasAddress) {
       setAddress(prev => ({ ...prev, ...data.address }));
     }
-    setCurrentStep(step as Step);
-    toast.info('Se restauró tu progreso anterior');
+
+    if (hasPersonal || hasAddress) {
+      setCurrentStep(step as Step);
+      toast.info('Se restauró tu progreso anterior');
+    }
   }, []);
 
   const { saveDraft, clearDraft } = useKYCDraft({
