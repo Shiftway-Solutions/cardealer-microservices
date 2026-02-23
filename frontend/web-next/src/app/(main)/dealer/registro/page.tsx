@@ -36,10 +36,16 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import { apiClient, authTokens } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { useAuth } from '@/hooks/use-auth';
 import { getCurrentDealer } from '@/services/dealers';
-import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeRNC, sanitizeUrl } from '@/lib/security/sanitize';
+import {
+  sanitizeText,
+  sanitizeEmail,
+  sanitizePhone,
+  sanitizeRNC,
+  sanitizeUrl,
+} from '@/lib/security/sanitize';
 
 const steps = [
   { id: 1, title: 'Tipo de Dealer', icon: Building2 },
@@ -206,8 +212,12 @@ export default function DealerProfileSetupPage() {
         phone: sanitizePhone(formData.phone),
         facebookUrl: formData.facebookUrl ? sanitizeUrl(formData.facebookUrl) : undefined,
         instagramUrl: formData.instagramUrl ? sanitizeUrl(formData.instagramUrl) : undefined,
-        whatsAppNumber: formData.whatsappNumber ? sanitizePhone(formData.whatsappNumber) : undefined,
-        description: formData.description ? sanitizeText(formData.description, { maxLength: 2000 }) : undefined,
+        whatsAppNumber: formData.whatsappNumber
+          ? sanitizePhone(formData.whatsappNumber)
+          : undefined,
+        description: formData.description
+          ? sanitizeText(formData.description, { maxLength: 2000 })
+          : undefined,
         address: sanitizeText(formData.address.trim(), { maxLength: 500 }),
         city: sanitizeText(formData.city.trim(), { maxLength: 100 }),
         province: formData.province,
@@ -220,21 +230,11 @@ export default function DealerProfileSetupPage() {
         await apiClient.post('/api/auth/set-dealer-id', { dealerId: newDealerId });
 
         // 3. Force token refresh to get updated JWT with dealerId claim
-        const refreshToken = authTokens.getRefreshToken();
-        if (refreshToken) {
-          try {
-            const refreshResponse = await apiClient.post('/api/auth/refresh-token', {
-              refreshToken,
-            });
-            const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-              refreshResponse.data;
-            if (newAccessToken && newRefreshToken) {
-              authTokens.setTokens(newAccessToken, newRefreshToken);
-            }
-          } catch (refreshErr) {
-            // Token refresh failed - user will need to re-login, but dealer was created
-            console.warn('Token refresh failed after dealer creation:', refreshErr);
-          }
+        // HttpOnly cookies are sent automatically via withCredentials — no manual token needed
+        try {
+          await apiClient.post('/api/auth/refresh-token');
+        } catch {
+          // Refresh failed silently — the api-client interceptor will handle it on next 401
         }
       }
 

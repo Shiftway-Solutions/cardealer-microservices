@@ -36,22 +36,22 @@ console.table([
 
 ## 📊 Matriz de verificación (30 segundos)
 
-| Elemento | Esperado | Estado |
-|----------|----------|--------|
-| Sección ⭐ Destacados | Visible | ✅ / ❌ |
-| Sección 💎 Premium | Visible | ✅ / ❌ |
-| Tarjeta: Imagen | 200x125px o 🚗 | ✅ / ❌ |
-| Tarjeta: Título | "Toyota Corolla..." | ✅ / ❌ |
-| Tarjeta: Precio | "RD$900,000" | ✅ / ❌ |
-| Tarjeta: Ubicación | "📍 Santo Domingo" | ✅ / ❌ |
-| Badge ⭐ | Solo si isFeatured=true | ✅ / ❌ |
-| Badge 💎 | Solo si isPremium=true | ✅ / ❌ |
-| Click tarjeta | Navega a /vehiculos/{slug} | ✅ / ❌ |
-| Console | Sin Uncaught errors | ✅ / ❌ |
-| Network calls | 200 OK | ✅ / ❌ |
-| Responsive móvil | 2 cols, sin overflow | ✅ / ❌ |
-| Responsive tablet | 3 cols | ✅ / ❌ |
-| Responsive desktop | 4 cols | ✅ / ❌ |
+| Elemento              | Esperado                   | Estado  |
+| --------------------- | -------------------------- | ------- |
+| Sección ⭐ Destacados | Visible                    | ✅ / ❌ |
+| Sección 💎 Premium    | Visible                    | ✅ / ❌ |
+| Tarjeta: Imagen       | 200x125px o 🚗             | ✅ / ❌ |
+| Tarjeta: Título       | "Toyota Corolla..."        | ✅ / ❌ |
+| Tarjeta: Precio       | "RD$900,000"               | ✅ / ❌ |
+| Tarjeta: Ubicación    | "📍 Santo Domingo"         | ✅ / ❌ |
+| Badge ⭐              | Solo si isFeatured=true    | ✅ / ❌ |
+| Badge 💎              | Solo si isPremium=true     | ✅ / ❌ |
+| Click tarjeta         | Navega a /vehiculos/{slug} | ✅ / ❌ |
+| Console               | Sin Uncaught errors        | ✅ / ❌ |
+| Network calls         | 200 OK                     | ✅ / ❌ |
+| Responsive móvil      | 2 cols, sin overflow       | ✅ / ❌ |
+| Responsive tablet     | 3 cols                     | ✅ / ❌ |
+| Responsive desktop    | 4 cols                     | ✅ / ❌ |
 
 **Todo ✅?** → Auditoría exitosa  
 **Algún ❌?** → Ir a PROMPT_QA_FRONTEND_DESTACADOS.md para debug detallado
@@ -61,17 +61,19 @@ console.table([
 ## 🔧 Debugging rápido
 
 ### "No veo las secciones"
+
 ```javascript
 // En Console:
-fetch('/api/advertising/rotation/FeaturedSpot')
-  .then(r => r.json())
-  .then(d => console.log(d));
+fetch("/api/advertising/rotation/FeaturedSpot")
+  .then((r) => r.json())
+  .then((d) => console.log(d));
 ```
 
 Si retorna error 404 o 500 → Problema backend (revisar logs del servicio)  
 Si retorna datos → Problema en componente frontend
 
 ### "Los badges están mal"
+
 ```javascript
 // En Console:
 // Abre DevTools → Elements → busca <div> con clase "badge"
@@ -81,6 +83,7 @@ Si retorna datos → Problema en componente frontend
 Si no está → Problema en lógica de renderizado (ver PASO 2 del prompt)
 
 ### "Precio no formatea"
+
 ```javascript
 // En Console:
 // Haz clic derecho en el elemento <p> del precio
@@ -89,6 +92,7 @@ Si no está → Problema en lógica de renderizado (ver PASO 2 del prompt)
 ```
 
 ### "Errores de red"
+
 ```javascript
 // En Console:
 // Network tab → filtra "XHR"
@@ -142,14 +146,15 @@ Selecciona: Laptop L o quita DevTools
 
 ## 💡 "¿Cuál es el archivo más importante?"
 
-| Archivo | Rol |
-|---------|-----|
-| `featured-vehicles.tsx` | Renderiza las tarjetas (UI visual) |
-| `use-advertising.ts` | Hook que obtiene datos + tracking |
-| `advertising.ts` | Llamadas HTTP a la API |
-| `advertising.ts` (types) | Interfaces TypeScript |
+| Archivo                  | Rol                                |
+| ------------------------ | ---------------------------------- |
+| `featured-vehicles.tsx`  | Renderiza las tarjetas (UI visual) |
+| `use-advertising.ts`     | Hook que obtiene datos + tracking  |
+| `advertising.ts`         | Llamadas HTTP a la API             |
+| `advertising.ts` (types) | Interfaces TypeScript              |
 
 **Si hay bug en:**
+
 - **Visual (imagen, precio, badge)** → `featured-vehicles.tsx`
 - **Datos faltantes** → `use-advertising.ts` o `advertising.ts`
 - **Tracking no funciona** → `use-advertising.ts`
@@ -225,6 +230,6 @@ open PROMPT_QA_FRONTEND_DESTACADOS.md
 
 ---
 
-*⏱️ Tiempo: 5 min setup + 2-3 horas auditoría completa*
+_⏱️ Tiempo: 5 min setup + 2-3 horas auditoría completa_
 
-*📍 Para dudas → Ver PROMPT_QA_FRONTEND_DESTACADOS.md sección "PREGUNTAS FRECUENTES"*
+_📍 Para dudas → Ver PROMPT_QA_FRONTEND_DESTACADOS.md sección "PREGUNTAS FRECUENTES"_

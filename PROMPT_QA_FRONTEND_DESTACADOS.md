@@ -13,7 +13,7 @@
 Este prompt es para **QA Frontend / Ingeniería Frontend** que necesita validar que:
 
 1. ✅ La sección "⭐ Vehículos Destacados" se renderiza correctamente
-2. ✅ La sección "💎 Vehículos Premium" se renderiza correctamente  
+2. ✅ La sección "💎 Vehículos Premium" se renderiza correctamente
 3. ✅ Los badges aparecen según `isFeatured` / `isPremium`
 4. ✅ Las imágenes cargan correctamente (o muestran placeholder 🚗)
 5. ✅ El precio se formatea adecuadamente (ej: RD$900,000)
@@ -31,14 +31,15 @@ Este prompt es para **QA Frontend / Ingeniería Frontend** que necesita validar 
 
 ### Componentes clave:
 
-| Archivo | Responsabilidad | Estado |
-|---------|-----------------|--------|
-| `featured-vehicles.tsx` | Renderiza secciones FeaturedSpot / PremiumSpot | ✅ Implementado |
-| `use-advertising.ts` | Hooks React Query para datos de rotación | ✅ Implementado |
-| `advertising.ts` | API client (HTTP) | ✅ Implementado |
-| `advertising.ts` (types) | Interfaces TypeScript | ✅ Implementado |
+| Archivo                  | Responsabilidad                                | Estado          |
+| ------------------------ | ---------------------------------------------- | --------------- |
+| `featured-vehicles.tsx`  | Renderiza secciones FeaturedSpot / PremiumSpot | ✅ Implementado |
+| `use-advertising.ts`     | Hooks React Query para datos de rotación       | ✅ Implementado |
+| `advertising.ts`         | API client (HTTP)                              | ✅ Implementado |
+| `advertising.ts` (types) | Interfaces TypeScript                          | ✅ Implementado |
 
 ### Stack frontend:
+
 - **Framework:** Next.js 16 (App Router)
 - **Queries:** TanStack Query v5
 - **UI:** shadcn/ui (Card, Badge, Skeleton)
@@ -54,18 +55,18 @@ interface RotatedVehicle {
   campaignId: string;
   position: number;
   qualityScore: number;
-  title?: string;           // Título del vehículo
-  slug?: string;            // URL slug (ej: "toyota-corolla-2022")
-  imageUrl?: string;        // URL imagen (200x125, lazy-loaded)
-  price?: number;           // Precio en DOP/USD
-  currency?: string;        // "DOP" o "USD"
-  location?: string;        // Ciudad/Provincia
-  isFeatured?: boolean;     // true = mostrar ⭐ Destacado
-  isPremium?: boolean;      // true = mostrar 💎 Premium
+  title?: string; // Título del vehículo
+  slug?: string; // URL slug (ej: "toyota-corolla-2022")
+  imageUrl?: string; // URL imagen (200x125, lazy-loaded)
+  price?: number; // Precio en DOP/USD
+  currency?: string; // "DOP" o "USD"
+  location?: string; // Ciudad/Provincia
+  isFeatured?: boolean; // true = mostrar ⭐ Destacado
+  isPremium?: boolean; // true = mostrar 💎 Premium
 }
 
 interface HomepageRotation {
-  section: 'FeaturedSpot' | 'PremiumSpot';
+  section: "FeaturedSpot" | "PremiumSpot";
   items: RotatedVehicle[];
   generatedAt: string;
   nextRotationAt: string;
@@ -129,11 +130,12 @@ En **Console**, ejecuta:
 
 ```javascript
 // Ver si hay errores
-console.log('Checking for errors...');
+console.log("Checking for errors...");
 // Deberías ver "No errors" o mensajes informativos normales
 ```
 
 **Esperas:**
+
 - ❌ No debe haber `Uncaught Error` o `Uncaught TypeError`
 - ✅ Pueden haber warnings normales de React o librerías
 
@@ -149,6 +151,7 @@ En **Network**, filtra por `Fetch/XHR`:
 4. Busca peticiones a `/api/advertising/tracking/impression`
 
 **Esperas por cada petición:**
+
 - **Status:** `200 OK` ✅
 - **Response Type:** `json`
 - **Size:** > 0 bytes
@@ -175,7 +178,7 @@ En **Network**, filtra por `Fetch/XHR`:
         "location": "Santo Domingo",
         "isFeatured": true,
         "isPremium": false
-      },
+      }
       // ... más vehículos
     ],
     "generatedAt": "2026-02-23T14:30:00Z",
@@ -213,7 +216,7 @@ En **Network**, filtra por `Fetch/XHR`:
 ```tsx
 function FeaturedVehicleCard({ vehicle, placementType }) {
   const recordImpression = useRecordImpression();
-  
+
   useEffect(() => {
     // Registrar impresión una sola vez
     recordImpression.mutate({
@@ -259,6 +262,7 @@ export function useHomepageRotation(section: AdPlacementType) {
 ```
 
 **Checklist:**
+
 - [ ] ¿Existe la función `useHomepageRotation`?
 - [ ] ¿Recibe `section` como parámetro?
 - [ ] ¿Usa `useQuery` de TanStack Query?
@@ -273,18 +277,20 @@ Busca:
 
 ```typescript
 export async function getHomepageRotation(section: AdPlacementType) {
-  const response = await apiClient.get<{ success: boolean; data: HomepageRotation }>(
-    `/api/advertising/rotation/${section}`
-  );
+  const response = await apiClient.get<{
+    success: boolean;
+    data: HomepageRotation;
+  }>(`/api/advertising/rotation/${section}`);
   return response.data.data;
 }
 
 export async function recordImpression(data: RecordImpressionRequest) {
-  await apiClient.post('/api/advertising/tracking/impression', data);
+  await apiClient.post("/api/advertising/tracking/impression", data);
 }
 ```
 
 **Checklist:**
+
 - [ ] ¿La función construye la URL correctamente: `/api/advertising/rotation/${section}`?
 - [ ] ¿Retorna `response.data.data` (desenvuelve la respuesta)?
 - [ ] ¿`recordImpression` y `recordClick` existen?
@@ -302,33 +308,35 @@ Cuando necesites probar sin depender del backend en vivo, puedes crear un mock l
 
 ```typescript
 export const MOCK_FEATURED_ROTATION = {
-  section: 'FeaturedSpot',
+  section: "FeaturedSpot",
   items: [
     {
-      vehicleId: '1',
-      campaignId: 'camp-1',
+      vehicleId: "1",
+      campaignId: "camp-1",
       position: 1,
       qualityScore: 0.95,
-      title: '🚗 Toyota Corolla 2022 - Automático',
-      slug: 'toyota-corolla-2022',
-      imageUrl: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=400',
+      title: "🚗 Toyota Corolla 2022 - Automático",
+      slug: "toyota-corolla-2022",
+      imageUrl:
+        "https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=400",
       price: 900000,
-      currency: 'DOP',
-      location: 'Santo Domingo',
+      currency: "DOP",
+      location: "Santo Domingo",
       isFeatured: true,
       isPremium: false,
     },
     {
-      vehicleId: '2',
-      campaignId: 'camp-2',
+      vehicleId: "2",
+      campaignId: "camp-2",
       position: 2,
       qualityScore: 0.92,
-      title: 'Honda Civic 2021 - Deportivo',
-      slug: 'honda-civic-2021',
-      imageUrl: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400',
+      title: "Honda Civic 2021 - Deportivo",
+      slug: "honda-civic-2021",
+      imageUrl:
+        "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400",
       price: 750000,
-      currency: 'DOP',
-      location: 'Santiago',
+      currency: "DOP",
+      location: "Santiago",
       isFeatured: true,
       isPremium: false,
     },
@@ -338,19 +346,20 @@ export const MOCK_FEATURED_ROTATION = {
 };
 
 export const MOCK_PREMIUM_ROTATION = {
-  section: 'PremiumSpot',
+  section: "PremiumSpot",
   items: [
     {
-      vehicleId: '3',
-      campaignId: 'camp-3',
+      vehicleId: "3",
+      campaignId: "camp-3",
       position: 1,
       qualityScore: 0.98,
-      title: '💎 Mercedes-Benz C-Class 2023 Luxury',
-      slug: 'mercedes-c-class-2023',
-      imageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
+      title: "💎 Mercedes-Benz C-Class 2023 Luxury",
+      slug: "mercedes-c-class-2023",
+      imageUrl:
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400",
       price: 2500000,
-      currency: 'DOP',
-      location: 'Punta Cana',
+      currency: "DOP",
+      location: "Punta Cana",
       isFeatured: false,
       isPremium: true,
     },
@@ -365,17 +374,21 @@ export const MOCK_PREMIUM_ROTATION = {
 En `use-advertising.ts`, temporalmente:
 
 ```typescript
-import { MOCK_FEATURED_ROTATION, MOCK_PREMIUM_ROTATION } from './use-advertising.mock';
+import {
+  MOCK_FEATURED_ROTATION,
+  MOCK_PREMIUM_ROTATION,
+} from "./use-advertising.mock";
 
 export function useHomepageRotation(section: AdPlacementType) {
   // COMENTAR EN PRODUCCIÓN — SOLO PARA DESARROLLO LOCAL
-  const mockData = section === 'FeaturedSpot' ? MOCK_FEATURED_ROTATION : MOCK_PREMIUM_ROTATION;
-  
+  const mockData =
+    section === "FeaturedSpot" ? MOCK_FEATURED_ROTATION : MOCK_PREMIUM_ROTATION;
+
   return useQuery({
     queryKey: advertisingKeys.rotationSection(section),
     queryFn: async () => {
       // Simular delay de red
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       return mockData;
     },
     staleTime: 5 * 60 * 1000,
@@ -396,6 +409,7 @@ Prueba cada caso límite:
 **Esperado:** Mostrar emoji 🚗 como placeholder
 
 **Verifica:**
+
 ```tsx
 {vehicle.imageUrl ? (
   <Image src={vehicle.imageUrl} ... />
@@ -409,8 +423,11 @@ Prueba cada caso límite:
 **Esperado:** No mostrar nada (o "Consultar precio")
 
 **Verifica:**
+
 ```tsx
-{vehicle.price ? formatPrice(vehicle.price, vehicle.currency) : 'Consultar'}
+{
+  vehicle.price ? formatPrice(vehicle.price, vehicle.currency) : "Consultar";
+}
 ```
 
 #### 5.3 Caso: Vehículo sin ubicación
@@ -418,8 +435,11 @@ Prueba cada caso límite:
 **Esperado:** No mostrar línea de ubicación
 
 **Verifica:**
+
 ```tsx
-{vehicle.location && <p>📍 {vehicle.location}</p>}
+{
+  vehicle.location && <p>📍 {vehicle.location}</p>;
+}
 ```
 
 #### 5.4 Caso: Sin datos (lista vacía)
@@ -427,6 +447,7 @@ Prueba cada caso límite:
 **Esperado:** No renderizar nada (o mostrar "No hay vehículos destacados")
 
 **Verifica:**
+
 ```tsx
 if (vehicles.length === 0) return null;
 // O:
@@ -438,6 +459,7 @@ if (vehicles.length === 0) return <p>No hay vehículos destacados</p>;
 **Esperado:** Mostrar mensaje de error amigable
 
 **Verifica en use-advertising.ts:**
+
 ```typescript
 export function useHomepageRotation(section: AdPlacementType) {
   return useQuery({
@@ -465,6 +487,7 @@ Prueba en diferentes tamaños de pantalla:
 ```
 
 **Checklist:**
+
 - [ ] Las tarjetas caben en 2 columnas?
 - [ ] El texto no se desborda?
 - [ ] Las imágenes cargan correctamente?
@@ -480,6 +503,7 @@ Prueba en diferentes tamaños de pantalla:
 ```
 
 **Checklist:**
+
 - [ ] 3 columnas?
 - [ ] Espaciado simétrico?
 
@@ -492,6 +516,7 @@ Prueba en diferentes tamaños de pantalla:
 ```
 
 **Checklist:**
+
 - [ ] 4 columnas?
 - [ ] Máx-width respetado?
 - [ ] Hover effects funcionan?
@@ -553,6 +578,7 @@ Si tienes la extensión **axe DevTools**:
    - **Moderate:** Missing labels
 
 **Checklist:**
+
 - [ ] Todas las imágenes tienen `alt` text? ✅ (Next.js Image component lo requiere)
 - [ ] Colores con contraste suficiente (WCAG AA)?
 - [ ] Elementos interactivos son focusables (tab)?
@@ -600,15 +626,25 @@ Simula el flujo de un usuario:
 **Síntoma:** Ambos badges (⭐ Destacado y 💎 Premium) aparecen en la misma tarjeta.
 
 **Causa probable:** Lógica `AND` en lugar de `XOR`:
+
 ```tsx
-{vehicle.isFeatured && <Badge>⭐</Badge>}
-{vehicle.isPremium && <Badge>💎</Badge>}
+{
+  vehicle.isFeatured && <Badge>⭐</Badge>;
+}
+{
+  vehicle.isPremium && <Badge>💎</Badge>;
+}
 ```
 
 **Corrección esperada:**
+
 ```tsx
-{vehicle.isPremium && <Badge>💎 Premium</Badge>}
-{vehicle.isFeatured && !vehicle.isPremium && <Badge>⭐ Destacado</Badge>}
+{
+  vehicle.isPremium && <Badge>💎 Premium</Badge>;
+}
+{
+  vehicle.isFeatured && !vehicle.isPremium && <Badge>⭐ Destacado</Badge>;
+}
 ```
 
 ✅ **Ya está implementado correctamente en el código actual.**
@@ -622,12 +658,14 @@ Simula el flujo de un usuario:
 **Causa probable:** `imageUrl` es `undefined` o URL inválida.
 
 **Verificación:**
+
 ```javascript
 // En Console:
 console.log(rotationData.items[0].imageUrl);
 ```
 
 **Corrección esperada:**
+
 ```tsx
 {vehicle.imageUrl ? (
   <Image src={vehicle.imageUrl} ... />
@@ -649,6 +687,7 @@ console.log(rotationData.items[0].imageUrl);
 **Causa probable:** `recordImpression.mutate()` se llama varias veces por deps incorrectos.
 
 **Verificación:**
+
 ```typescript
 const impressionRecorded = useRef(false);
 
@@ -671,19 +710,21 @@ useEffect(() => {
 **Causa probable:** `formatPrice()` no se llama o está incorrecto.
 
 **Verificación:**
+
 ```typescript
-function formatPrice(price: number, currency: string = 'DOP') {
-  if (currency === 'DOP') {
-    return `RD$${price.toLocaleString('es-DO')}`;
+function formatPrice(price: number, currency: string = "DOP") {
+  if (currency === "DOP") {
+    return `RD$${price.toLocaleString("es-DO")}`;
   }
-  return `US$${price.toLocaleString('en-US')}`;
+  return `US$${price.toLocaleString("en-US")}`;
 }
 ```
 
 **Test:**
+
 ```javascript
 // En Console:
-formatPrice(900000, 'DOP'); // Debería retornar "RD$900,000"
+formatPrice(900000, "DOP"); // Debería retornar "RD$900,000"
 ```
 
 ✅ **Ya está implementado correctamente.**
@@ -697,6 +738,7 @@ formatPrice(900000, 'DOP'); // Debería retornar "RD$900,000"
 **Causa probable:** `isLoading` no se maneja o el skeleton no se renderiza.
 
 **Verificación:**
+
 ```tsx
 if (isLoading) {
   return (
@@ -726,12 +768,14 @@ if (isLoading) {
 **Causa probable:** `slug` es `undefined` o la ruta es incorrecta.
 
 **Verificación:**
+
 ```typescript
 // En Console:
 console.log(rotationData.items[0].slug); // Debería ser ej: "toyota-corolla-2022"
 ```
 
 **Verificar ruta:**
+
 ```tsx
 <Link href={`/vehiculos/${vehicle.slug || vehicle.vehicleId}`}>
 ```
@@ -745,6 +789,7 @@ console.log(rotationData.items[0].slug); // Debería ser ej: "toyota-corolla-202
 Marca cada punto **antes** de dar por completada la auditoría:
 
 ### Renderizado visual
+
 - [ ] Sección "⭐ Vehículos Destacados" visible
 - [ ] Sección "💎 Vehículos Premium" visible
 - [ ] Cada tarjeta tiene imagen (o placeholder 🚗)
@@ -753,36 +798,42 @@ Marca cada punto **antes** de dar por completada la auditoría:
 - [ ] Cada tarjeta tiene ubicación (📍 Santo Domingo)
 
 ### Badges
+
 - [ ] Badge ⭐ Destacado aparece SOLO cuando `isFeatured = true`
 - [ ] Badge 💎 Premium aparece SOLO cuando `isPremium = true`
 - [ ] Ambos badges NO aparecen en la misma tarjeta
 - [ ] Badges tienen estilos correctos (colores, fuente)
 
 ### Interactividad
+
 - [ ] Tarjeta es un link clickeable
 - [ ] Click navega a `/vehiculos/{slug}`
 - [ ] Hover muestra efectos visuales (sombra, zoom)
 - [ ] No hay errores 404 al navegar
 
 ### Tracking
+
 - [ ] Impresión se registra al cargar (POST `/api/advertising/tracking/impression`)
 - [ ] Click se registra al hacer clic (POST `/api/advertising/tracking/click`)
 - [ ] NO hay impresiones duplicadas
 - [ ] Tracking no genera errores de consola
 
 ### Estados
+
 - [ ] Skeleton de carga aparece mientras `isLoading`
 - [ ] Datos aparecen cuando se cargan
 - [ ] Si no hay datos, retorna `null` o muestra mensaje adecuado
 - [ ] Si hay error, se muestra mensaje de error (u oculta silenciosamente)
 
 ### Responsive
+
 - [ ] Móvil (375px): 2 columnas, sin overflow
 - [ ] Tablet (768px): 3 columnas, espaciado simétrico
 - [ ] Desktop (1280px+): 4 columnas, máx-width respetado
 - [ ] No hay text overflow en ningún tamaño
 
 ### Consola y Network
+
 - [ ] No hay `Uncaught Error` o `Uncaught TypeError`
 - [ ] Petición GET `/api/advertising/rotation/FeaturedSpot`: `200 OK`
 - [ ] Petición GET `/api/advertising/rotation/PremiumSpot`: `200 OK`
@@ -790,6 +841,7 @@ Marca cada punto **antes** de dar por completada la auditoría:
 - [ ] Petición POST `/api/advertising/tracking/click`: `200 OK` o `204 No Content`
 
 ### Código
+
 - [ ] `featured-vehicles.tsx` importa todos los hooks necesarios
 - [ ] `useHomepageRotation` se usa correctamente
 - [ ] `useRecordImpression` y `useRecordClick` se usan correctamente
@@ -848,6 +900,7 @@ git push origin fix/homepage-featured-ui
 
 ```markdown
 ## 🎯 Título
+
 Fix: Correcciones UI en secciones de vehículos destacados y premium
 
 ## 📋 Cambios
@@ -860,12 +913,15 @@ Fix: Correcciones UI en secciones de vehículos destacados y premium
 ## 🖼️ Screenshots
 
 ### Antes
+
 [antes_screenshot.png]
 
 ### Después
+
 [despues_screenshot.png]
 
 ## ✅ Checklist
+
 - [x] Verificado en móvil 375px
 - [x] Verificado en tablet 768px
 - [x] Verificado en desktop 1280px+
@@ -874,6 +930,7 @@ Fix: Correcciones UI en secciones de vehículos destacados y premium
 - [x] Tracking registrado correctamente
 
 ## 🔗 Relacionado
+
 Cierra #4 (PR original de featured vehicles)
 ```
 
@@ -881,15 +938,15 @@ Cierra #4 (PR original de featured vehicles)
 
 ## ⏱️ TIEMPO ESTIMADO
 
-| Fase | Tiempo |
-|------|--------|
-| Preparación (Paso 0-1) | 15 min |
-| Análisis código (Paso 2-3) | 20 min |
-| Testing con mock (Paso 4-5) | 30 min |
-| Responsive (Paso 6) | 25 min |
-| Tracking (Paso 7) | 20 min |
-| Bugs & fixes (Paso 8-9) | 40 min |
-| **TOTAL** | **~2.5 horas** |
+| Fase                        | Tiempo         |
+| --------------------------- | -------------- |
+| Preparación (Paso 0-1)      | 15 min         |
+| Análisis código (Paso 2-3)  | 20 min         |
+| Testing con mock (Paso 4-5) | 30 min         |
+| Responsive (Paso 6)         | 25 min         |
+| Tracking (Paso 7)           | 20 min         |
+| Bugs & fixes (Paso 8-9)     | 40 min         |
+| **TOTAL**                   | **~2.5 horas** |
 
 ---
 
@@ -918,7 +975,7 @@ Crea archivo: `REVISION_FRONTEND_DESTACADOS_20260223.md`
 
 ## Resumen ejecutivo
 
-Se verificó la visualización de secciones "⭐ Vehículos Destacados" y "💎 Vehículos Premium" en la homepage de https://okla.com.do/. 
+Se verificó la visualización de secciones "⭐ Vehículos Destacados" y "💎 Vehículos Premium" en la homepage de https://okla.com.do/.
 
 **Hallazgos:** [OK / X bugs encontrados]
 
@@ -927,35 +984,42 @@ Se verificó la visualización de secciones "⭐ Vehículos Destacados" y "💎 
 ## Checklist de verificación
 
 ### Renderizado
+
 - [x] Sección Destacados visible
 - [x] Sección Premium visible
 - [ ] BUG: Badges superpuestos
 
 ### Badges
+
 - [x] ⭐ Destacado correcto
 - [x] 💎 Premium correcto
 
 ### Interactividad
+
 - [x] Links funcionales
 - [x] Hover effects
 
 ### Tracking
+
 - [x] Impresiones registradas
 - [x] Clicks registrados
 - [ ] BUG: Impresiones duplicadas
 
 ### Responsive
+
 - [x] Móvil (375px)
 - [x] Tablet (768px)
 - [x] Desktop (1280px+)
 
 ### Consola & Network
+
 - [x] Sin errores críticos
 - [x] Todas las peticiones 200 OK
 
 ## Bugs encontrados
 
 ### [🔴 CRÍTICA] Bug: Badges superpuestos
+
 **Descripción:** Ambos badges aparecen en la misma tarjeta.  
 **Reproducción:** Carga homepage con vehículo que tiene isFeatured=true Y isPremium=true.  
 **Causa:** Lógica OR en lugar de XOR.  
@@ -965,6 +1029,7 @@ Se verificó la visualización de secciones "⭐ Vehículos Destacados" y "💎 
 ---
 
 ### [🟡 MEDIA] Bug: Imagen no carga
+
 **Descripción:** Para algunos vehículos, la imagen muestra broken link.  
 **Reproducción:** Recargar página varias veces.  
 **Causa:** `imageUrl` no siempre presente en respuesta del backend.  
@@ -1003,36 +1068,43 @@ Se verificó la visualización de secciones "⭐ Vehículos Destacados" y "💎 
 
 ## 🎓 REFERENCIAS Y RECURSOS
 
-| Recurso | Link |
-|---------|------|
-| Next.js Image Optimization | https://nextjs.org/docs/api-reference/next/image |
-| TanStack Query (React Query) | https://tanstack.com/query/latest |
-| shadcn/ui Components | https://ui.shadcn.com/ |
-| Tailwind CSS Responsive Design | https://tailwindcss.com/docs/responsive-design |
-| Conventional Commits | https://www.conventionalcommits.org/ |
-| axe DevTools Accesibilidad | https://www.deque.com/axe/devtools/ |
+| Recurso                        | Link                                             |
+| ------------------------------ | ------------------------------------------------ |
+| Next.js Image Optimization     | https://nextjs.org/docs/api-reference/next/image |
+| TanStack Query (React Query)   | https://tanstack.com/query/latest                |
+| shadcn/ui Components           | https://ui.shadcn.com/                           |
+| Tailwind CSS Responsive Design | https://tailwindcss.com/docs/responsive-design   |
+| Conventional Commits           | https://www.conventionalcommits.org/             |
+| axe DevTools Accesibilidad     | https://www.deque.com/axe/devtools/              |
 
 ---
 
 ## ❓ PREGUNTAS FRECUENTES
 
 ### P: ¿Necesito tocar el backend?
+
 **R:** No. Este prompt es **solo frontend**. Si hay un bug de datos del backend, repórtalo como issue, pero la solución la hace el equipo backend.
 
 ### P: ¿Qué pasa si el endpoint retorna 500?
+
 **R:** Documentá el error con screenshot de Network. Repórtalo en GitHub Issues con etiqueta `backend`.
 
 ### P: ¿Puedo usar datos reales vs mock?
+
 **R:** Sí. Usa ambos:
+
 - **Mock** para pruebas de casos límite
 - **Real** para validación final en staging/producción
 
 ### P: ¿Los badges pueden tener ambos emojis?
+
 **R:** No. Debe ser SOLO uno:
+
 - ⭐ Destacado (si `isFeatured=true` Y `isPremium=false`)
 - 💎 Premium (si `isPremium=true`)
 
 ### P: ¿El tracking debe ser síncrono?
+
 **R:** No. Usa `useMutation` de TanStack Query para asincronía. Los errores de tracking no deben romper la UI.
 
 ---
@@ -1055,4 +1127,4 @@ Cualquier pregunta → abre GitHub Issue o comenta en el PR.
 
 ---
 
-*Actualizado: 2026-02-23 | Versión: 2.0 | Adaptado a contexto real OKLA*
+_Actualizado: 2026-02-23 | Versión: 2.0 | Adaptado a contexto real OKLA_

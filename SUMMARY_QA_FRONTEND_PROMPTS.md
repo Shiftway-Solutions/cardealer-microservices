@@ -10,6 +10,7 @@
 Se crearon **3 documentos complementarios** específicamente adaptados a tu contexto:
 
 ### 1️⃣ **QUICKSTART_QA_FRONTEND.md** (5 minutos)
+
 - ⚡ Setup inmediato (pnpm install + pnpm dev)
 - 📊 Checklist visual de 14 elementos
 - 🔧 Debugging rápido (errores comunes)
@@ -21,6 +22,7 @@ Se crearon **3 documentos complementarios** específicamente adaptados a tu cont
 ---
 
 ### 2️⃣ **PROMPT_QA_FRONTEND_DESTACADOS.md** (2-3 horas)
+
 - 🚀 9 pasos de auditoría completa (PASO 0 → PASO 9)
 - 📸 Especificación exacta de 8 screenshots a capturar
 - ✅ Checklist de verificación de 30+ puntos
@@ -33,6 +35,7 @@ Se crearon **3 documentos complementarios** específicamente adaptados a tu cont
 ---
 
 ### 3️⃣ **INDEX_AUDITORÍA_FRONTEND_QA.md** (Mapa de navegación)
+
 - 🗺️ Matriz de documentos (backend ✅ + frontend 🔄)
 - 📊 Progreso global (100% backend, pending frontend)
 - 💡 Mapeo: "Necesito X" → Documento Y
@@ -50,17 +53,17 @@ Se crearon **3 documentos complementarios** específicamente adaptados a tu cont
 
 Cada documento menciona:
 
-| Elemento | Referencia específica |
-|----------|----------------------|
+| Elemento               | Referencia específica                                                             |
+| ---------------------- | --------------------------------------------------------------------------------- |
 | **Archivo componente** | `frontend/web-next/src/components/advertising/featured-vehicles.tsx` (200 líneas) |
-| **Hook de datos** | `useHomepageRotation()` en `use-advertising.ts` |
-| **API client** | `getHomepageRotation()` en `services/advertising.ts` |
-| **Tipos** | `RotatedVehicle`, `HomepageRotation` en `types/advertising.ts` |
-| **Endpoints** | `/api/advertising/rotation/{section}`, `/api/advertising/tracking/*` |
-| **Stack** | Next.js 16, TanStack Query v5, shadcn/ui, Tailwind v4 |
-| **Package manager** | pnpm (NO npm/yarn) |
-| **UI badges** | ⭐ Destacado (isFeatured) y 💎 Premium (isPremium) |
-| **Formato precio** | RD$900,000 (es-DO locale) o US$X (en-US) |
+| **Hook de datos**      | `useHomepageRotation()` en `use-advertising.ts`                                   |
+| **API client**         | `getHomepageRotation()` en `services/advertising.ts`                              |
+| **Tipos**              | `RotatedVehicle`, `HomepageRotation` en `types/advertising.ts`                    |
+| **Endpoints**          | `/api/advertising/rotation/{section}`, `/api/advertising/tracking/*`              |
+| **Stack**              | Next.js 16, TanStack Query v5, shadcn/ui, Tailwind v4                             |
+| **Package manager**    | pnpm (NO npm/yarn)                                                                |
+| **UI badges**          | ⭐ Destacado (isFeatured) y 💎 Premium (isPremium)                                |
+| **Formato precio**     | RD$900,000 (es-DO locale) o US$X (en-US)                                          |
 
 ### ✅ Casos límite validados
 
@@ -110,6 +113,7 @@ Referencia de 6 bugs que ya fueron identificados + soluciones:
 ## 🚀 CUÁL DOCUMENTO USAR (DECISIÓN RÁPIDA)
 
 ### Si tienes **10-15 minutos**
+
 → **QUICKSTART_QA_FRONTEND.md**
 
 ```bash
@@ -120,6 +124,7 @@ Referencia de 6 bugs que ya fueron identificados + soluciones:
 ```
 
 ### Si tienes **2-3 horas** (recomendado para entrega)
+
 → **PROMPT_QA_FRONTEND_DESTACADOS.md**
 
 ```bash
@@ -130,6 +135,7 @@ Referencia de 6 bugs que ya fueron identificados + soluciones:
 ```
 
 ### Si no sabes por dónde empezar
+
 → **INDEX_AUDITORÍA_FRONTEND_QA.md**
 
 ```bash
@@ -182,7 +188,7 @@ El **PROMPT_QA_FRONTEND_DESTACADOS.md** está organizado así:
 2. ⚡ Ejecutas: pnpm dev + http://localhost:3000
 3. 📋 Haces: Checklist visual (14 puntos, 10 min)
 4. 📸 Capturas: 1 screenshot
-5. ✅ Resultado: 
+5. ✅ Resultado:
    - Si TODO ✅: "VERDE - Ready for production"
    - Si ❌ bug: "Rojo - Bug en featured-vehicles.tsx línea XX"
 6. 📝 Reportas: En GitHub Issues con screenshot
@@ -202,6 +208,7 @@ Este es un conjunto completo de **prompts auditables**:
 - ✅ **Este documento** — Resumen ejecutivo
 
 Todos están en el **repo principal** del proyecto:
+
 ```
 /cardealer-microservices/
 ├── QUICKSTART_QA_FRONTEND.md
@@ -215,32 +222,40 @@ Todos están en el **repo principal** del proyecto:
 ## ✨ VENTAJAS DE ESTOS DOCUMENTOS
 
 ### ✅ Contexto específico
+
 No es un prompt genérico. Todo está adaptado a:
+
 - Tu codebase OKLA (nombres de archivos, funciones, tipos)
 - Tu stack (Next.js 16, TanStack Query v5, shadcn/ui)
 - Tu arquitectura (BFF, microservicios .NET 8)
 - Tu CI/CD (GitHub Actions, Kubernetes DOKS)
 
 ### ✅ Múltiples niveles de profundidad
+
 - 5 min (QUICKSTART)
 - 2-3 horas (FULL AUDIT)
 - Mapa de navegación (INDEX)
 
 ### ✅ Documentación ejecutable
+
 No solo describe QUÉ hacer, sino exactamente CÓMO y DÓNDE:
+
 - Líneas de código específicas
 - Nombres de archivos completos
 - URLs exactas
 - Comandos copiar-pegar
 
 ### ✅ Trazabilidad completa
+
 Cada paso genera artefactos:
+
 - 8 screenshots específicas
 - Checklist de 30+ puntos
 - Template de informe
 - Template de PR
 
 ### ✅ Referencia de bugs
+
 No necesitas adivinar. Aquí están los 6 bugs más comunes del proyecto con soluciones.
 
 ---
@@ -248,6 +263,7 @@ No necesitas adivinar. Aquí están los 6 bugs más comunes del proyecto con sol
 ## 🎯 PRÓXIMOS PASOS
 
 ### Opción 1: QA Inmediata (30 min)
+
 ```
 1. Abre: QUICKSTART_QA_FRONTEND.md
 2. Lee: Primera sección (2 min)
@@ -256,6 +272,7 @@ No necesitas adivinar. Aquí están los 6 bugs más comunes del proyecto con sol
 ```
 
 ### Opción 2: Auditoría Completa (2-3 horas)
+
 ```
 1. Abre: PROMPT_QA_FRONTEND_DESTACADOS.md
 2. Sigue: PASO 0 → PASO 9
@@ -266,6 +283,7 @@ No necesitas adivinar. Aquí están los 6 bugs más comunes del proyecto con sol
 ```
 
 ### Opción 3: Entender Primero (10 min)
+
 ```
 1. Abre: INDEX_AUDITORÍA_FRONTEND_QA.md
 2. Lee: Sección "CÓMO USAR"
@@ -286,17 +304,17 @@ No necesitas adivinar. Aquí están los 6 bugs más comunes del proyecto con sol
 
 ## 📊 ESTADÍSTICAS
 
-| Métrica | Valor |
-|---------|-------|
-| Documentos creados | 3 + 1 (este) |
-| Pasos auditables | 9 (PASO 0 → 9) |
-| Screenshots esperadas | 8 específicas |
-| Bugs referenciados | 6 (con soluciones) |
-| Checklist items | 30+ puntos |
-| Tiempo quick audit | 5-15 min |
-| Tiempo full audit | 2-3 horas |
-| Stack frontend | Next.js 16, TanStack Query v5, shadcn/ui |
-| Archivos auditables | 4 específicos (featured-vehicles, use-advertising, advertising, types) |
+| Métrica               | Valor                                                                  |
+| --------------------- | ---------------------------------------------------------------------- |
+| Documentos creados    | 3 + 1 (este)                                                           |
+| Pasos auditables      | 9 (PASO 0 → 9)                                                         |
+| Screenshots esperadas | 8 específicas                                                          |
+| Bugs referenciados    | 6 (con soluciones)                                                     |
+| Checklist items       | 30+ puntos                                                             |
+| Tiempo quick audit    | 5-15 min                                                               |
+| Tiempo full audit     | 2-3 horas                                                              |
+| Stack frontend        | Next.js 16, TanStack Query v5, shadcn/ui                               |
+| Archivos auditables   | 4 específicos (featured-vehicles, use-advertising, advertising, types) |
 
 ---
 
@@ -320,4 +338,4 @@ Todo está listo. Solo falta que hagas clic y comiences.
 
 ---
 
-*Generado: 2026-02-23 | Status: ✅ READY TO USE*
+_Generado: 2026-02-23 | Status: ✅ READY TO USE_

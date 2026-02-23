@@ -11,12 +11,13 @@
 
 ### 🔴 BACKEND (Completado - CI Verde)
 
-| Documento | Propósito | Audiencia | Estado |
-|-----------|-----------|-----------|--------|
+| Documento                                                                                      | Propósito                                                                                                  | Audiencia                    | Estado        |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------- |
 | [REPORT_IMPLEMENTACION_DESTACADOS_20260223.md](./REPORT_IMPLEMENTACION_DESTACADOS_20260223.md) | Reporte completo de implementación backend: 4 GAPs resueltos, 3 bugs corregidos, checklist de arquitectura | Desarrolladores, Arquitectos | ✅ COMPLETADO |
-| [.github/copilot-instructions.md](./.github/copilot-instructions.md) | Guía OKLA para Copilot: stack, reglas de nombrado, estructura de proyectos, health checks críticos | Todos los devs | ✅ REFERENCIA |
+| [.github/copilot-instructions.md](./.github/copilot-instructions.md)                           | Guía OKLA para Copilot: stack, reglas de nombrado, estructura de proyectos, health checks críticos         | Todos los devs               | ✅ REFERENCIA |
 
 **Microservicios implementados:**
+
 - ✅ AdvertisingService (rotación, campañas, tracking)
 - ✅ VehiclesSaleService (enriquecimiento de datos en rotación)
 - ✅ BillingService (integración de pagos)
@@ -26,13 +27,13 @@
 
 ### 🟡 FRONTEND (En Auditoría)
 
-| Documento | Propósito | Audiencia | Acción |
-|-----------|-----------|-----------|--------|
-| **[PROMPT_QA_FRONTEND_DESTACADOS.md](./PROMPT_QA_FRONTEND_DESTACADOS.md)** | **Auditoría completa de UI:** 9 pasos, checklist de verificación (renderizado, badges, tracking, responsive, accesibilidad), referencias de bugs comunes | QA Frontend, Desarrolladores | 🔄 INICIAR AHORA |
-| **[QUICKSTART_QA_FRONTEND.md](./QUICKSTART_QA_FRONTEND.md)** | **Setup en 5 minutos:** checklist visual rápida, debugging tips, casos de uso comunes | Todos | 🔄 LEER PRIMERO |
-| [frontend/web-next/src/components/advertising/featured-vehicles.tsx](./frontend/web-next/src/components/advertising/featured-vehicles.tsx) | Componente React que renderiza tarjetas destacadas/premium | Frontend devs | 📖 REFERENCIA |
-| [frontend/web-next/src/hooks/use-advertising.ts](./frontend/web-next/src/hooks/use-advertising.ts) | Hooks TanStack Query para datos de rotación y tracking | Frontend devs | 📖 REFERENCIA |
-| [frontend/web-next/src/services/advertising.ts](./frontend/web-next/src/services/advertising.ts) | Cliente HTTP para AdvertisingService | Frontend devs | 📖 REFERENCIA |
+| Documento                                                                                                                                  | Propósito                                                                                                                                                | Audiencia                    | Acción           |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------- |
+| **[PROMPT_QA_FRONTEND_DESTACADOS.md](./PROMPT_QA_FRONTEND_DESTACADOS.md)**                                                                 | **Auditoría completa de UI:** 9 pasos, checklist de verificación (renderizado, badges, tracking, responsive, accesibilidad), referencias de bugs comunes | QA Frontend, Desarrolladores | 🔄 INICIAR AHORA |
+| **[QUICKSTART_QA_FRONTEND.md](./QUICKSTART_QA_FRONTEND.md)**                                                                               | **Setup en 5 minutos:** checklist visual rápida, debugging tips, casos de uso comunes                                                                    | Todos                        | 🔄 LEER PRIMERO  |
+| [frontend/web-next/src/components/advertising/featured-vehicles.tsx](./frontend/web-next/src/components/advertising/featured-vehicles.tsx) | Componente React que renderiza tarjetas destacadas/premium                                                                                               | Frontend devs                | 📖 REFERENCIA    |
+| [frontend/web-next/src/hooks/use-advertising.ts](./frontend/web-next/src/hooks/use-advertising.ts)                                         | Hooks TanStack Query para datos de rotación y tracking                                                                                                   | Frontend devs                | 📖 REFERENCIA    |
+| [frontend/web-next/src/services/advertising.ts](./frontend/web-next/src/services/advertising.ts)                                           | Cliente HTTP para AdvertisingService                                                                                                                     | Frontend devs                | 📖 REFERENCIA    |
 
 ---
 
@@ -195,29 +196,29 @@ pnpm dev
 
 ## 💡 MAPEO: "¿Qué documento necesito?"
 
-| Necesidad | Documento |
-|-----------|-----------|
-| Setup en 5 min | QUICKSTART_QA_FRONTEND.md |
-| Auditoría completa | PROMPT_QA_FRONTEND_DESTACADOS.md |
-| Ver qué se implementó (backend) | REPORT_IMPLEMENTACION_DESTACADOS_20260223.md |
-| Reglas del proyecto | .github/copilot-instructions.md |
-| Código a revisar | featured-vehicles.tsx (línea 1-200) |
-| Datos esperados | advertising.ts (types) + use-advertising.ts (hooks) |
-| Bug reference | PROMPT_QA_FRONTEND_DESTACADOS.md sección "POSIBLES BUGS" |
-| Final report template | PROMPT_QA_FRONTEND_DESTACADOS.md sección "PLANTILLA DE INFORME" |
+| Necesidad                       | Documento                                                       |
+| ------------------------------- | --------------------------------------------------------------- |
+| Setup en 5 min                  | QUICKSTART_QA_FRONTEND.md                                       |
+| Auditoría completa              | PROMPT_QA_FRONTEND_DESTACADOS.md                                |
+| Ver qué se implementó (backend) | REPORT_IMPLEMENTACION_DESTACADOS_20260223.md                    |
+| Reglas del proyecto             | .github/copilot-instructions.md                                 |
+| Código a revisar                | featured-vehicles.tsx (línea 1-200)                             |
+| Datos esperados                 | advertising.ts (types) + use-advertising.ts (hooks)             |
+| Bug reference                   | PROMPT_QA_FRONTEND_DESTACADOS.md sección "POSIBLES BUGS"        |
+| Final report template           | PROMPT_QA_FRONTEND_DESTACADOS.md sección "PLANTILLA DE INFORME" |
 
 ---
 
 ## 🔗 COMMITS RELACIONADOS
 
-| Hash | Mensaje | Fecha |
-|------|---------|-------|
-| `64f5abe0` | fix(ci): resolve remaining test failures | 2026-02-23 |
-| `a4775b16` | fix(ci): align MediaService.Workers DI | 2026-02-23 |
-| `3adb74f2` | fix(ci): remove orphaned NestedProjects GUIDs | 2026-02-23 |
-| `e6a55cf6` | fix(ci): resolve pre-existing test failures | 2026-02-23 |
-| `766217e7` | fix(ci): re2-safe gitleaks + RabbitMQ-optional | 2026-02-23 |
-| `0ea376f4` | docs(qa): add frontend QA audit prompts | 2026-02-23 |
+| Hash       | Mensaje                                          | Fecha      |
+| ---------- | ------------------------------------------------ | ---------- |
+| `64f5abe0` | fix(ci): resolve remaining test failures         | 2026-02-23 |
+| `a4775b16` | fix(ci): align MediaService.Workers DI           | 2026-02-23 |
+| `3adb74f2` | fix(ci): remove orphaned NestedProjects GUIDs    | 2026-02-23 |
+| `e6a55cf6` | fix(ci): resolve pre-existing test failures      | 2026-02-23 |
+| `766217e7` | fix(ci): re2-safe gitleaks + RabbitMQ-optional   | 2026-02-23 |
+| `0ea376f4` | docs(qa): add frontend QA audit prompts          | 2026-02-23 |
 | `e9714a5b` | feat(homepage): enrich rotation + premium badges | 2026-02-22 |
 
 **PR Relacionado:** [#4 - feat: homepage featured vehicles enrichment](https://github.com/gregorymorenoiem/cardealer-microservices/pull/4)
@@ -227,38 +228,45 @@ pnpm dev
 ## 📞 PREGUNTAS FRECUENTES
 
 ### P: ¿Cuánto tiempo tarda la auditoría?
-**R:** 
+
+**R:**
+
 - Quick check: 30 min
 - Full audit: 2-3 horas (con screenshots y informe)
 
 ### P: ¿Necesito conocer de backend?
+
 **R:** No. Este prompt es **solo frontend**. Backend ya está hecho (CI verde).
 
 ### P: ¿Qué pasa si encuentro un bug?
-**R:** 
+
+**R:**
+
 1. Documenta con screenshot
 2. Sigue "Debugging rápido" en QUICKSTART_QA_FRONTEND.md
 3. Abre issue en GitHub con etiqueta `frontend-bug`
 4. O corrige tú mismo si eres dev
 
 ### P: ¿Puedo testear sin backend corriendo?
+
 **R:** Sí, crea mock en `use-advertising.ts` (ver PASO 4 del prompt principal).
 
 ### P: ¿Necesito axe DevTools para accesibilidad?
+
 **R:** Opcional. Solo si quieres validación profunda.
 
 ---
 
 ## 🎓 STACK DE REFERENCIA
 
-| Componente | Versión | Docs |
-|-----------|---------|------|
-| Next.js | 16 (App Router) | https://nextjs.org/docs |
-| TanStack Query | v5 | https://tanstack.com/query/latest |
-| shadcn/ui | Latest | https://ui.shadcn.com/ |
-| Tailwind CSS | v4 | https://tailwindcss.com/docs |
-| TypeScript | 5.x | https://www.typescriptlang.org/ |
-| pnpm | 9.x | https://pnpm.io/es/ |
+| Componente     | Versión         | Docs                              |
+| -------------- | --------------- | --------------------------------- |
+| Next.js        | 16 (App Router) | https://nextjs.org/docs           |
+| TanStack Query | v5              | https://tanstack.com/query/latest |
+| shadcn/ui      | Latest          | https://ui.shadcn.com/            |
+| Tailwind CSS   | v4              | https://tailwindcss.com/docs      |
+| TypeScript     | 5.x             | https://www.typescriptlang.org/   |
+| pnpm           | 9.x             | https://pnpm.io/es/               |
 
 ---
 
@@ -272,5 +280,5 @@ pnpm dev
 
 ---
 
-*Índice actualizado: 2026-02-23 | Versión: 1.0*  
-*Para cambios o preguntas → GitHub Issues con etiqueta `qa-frontend`*
+_Índice actualizado: 2026-02-23 | Versión: 1.0_  
+_Para cambios o preguntas → GitHub Issues con etiqueta `qa-frontend`_
