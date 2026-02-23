@@ -284,12 +284,16 @@ app.UseAuditMiddleware();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Apply migrations on startup in development
-if (app.Environment.IsDevelopment())
+// Apply migrations on startup in development OR when explicitly enabled via Database__AutoMigrate=true
+// BUG-D005 fix: was only running in Development, missing production migrations
+var autoMigrate = builder.Configuration.GetValue<bool>("Database:AutoMigrate", false)
+    || app.Environment.IsDevelopment();
+if (autoMigrate)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<BillingDbContext>();
     db.Database.Migrate();
+    Log.Information("BillingService database migrations applied successfully");
 }
 
 app.Run();

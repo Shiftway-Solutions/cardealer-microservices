@@ -123,6 +123,26 @@ public class BillingController : ControllerBase
     // ========================================
 
     /// <summary>
+    /// Obtiene la suscripción del usuario autenticado (dealer).
+    /// BUG-D004 fix: was missing GET subscriptions without dealerId — returned 405.
+    /// Reads dealerId from JWT claim and delegates to GetSubscription.
+    /// </summary>
+    [HttpGet("subscriptions")]
+    public async Task<ActionResult<SubscriptionResponse>> GetMySubscription(
+        CancellationToken cancellationToken = default)
+    {
+        var dealerIdClaim = User.FindFirst("dealerId")?.Value;
+        if (string.IsNullOrEmpty(dealerIdClaim) || !Guid.TryParse(dealerIdClaim, out var dealerId))
+            return BadRequest(new { error = "dealerId claim missing or invalid in token" });
+
+        var subscription = await _billingService.GetSubscriptionByDealerIdAsync(dealerId, cancellationToken);
+        if (subscription == null)
+            return NotFound(new { error = $"No active subscription found for your account" });
+
+        return Ok(subscription);
+    }
+
+    /// <summary>
     /// Obtiene la suscripción actual de un dealer
     /// </summary>
     [HttpGet("subscriptions/{dealerId:guid}")]

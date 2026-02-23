@@ -787,8 +787,11 @@ public class VehiclesController : ControllerBase
     [HttpPost("{id:guid}/images")]
     public async Task<ActionResult<List<VehicleImage>>> AddImages(Guid id, [FromBody] AddVehicleImagesRequest request)
     {
+        // BUG-D003 fix: use AsNoTracking() so the Vehicle entity is NOT tracked and its
+        // ConcurrencyStamp does not participate in SaveChangesAsync, preventing
+        // DbUpdateConcurrencyException when only VehicleImage rows are being inserted.
         var vehicle = await _context.Vehicles
-            .Include(v => v.Images)
+            .AsNoTracking()
             .FirstOrDefaultAsync(v => v.Id == id);
 
         if (vehicle == null)
@@ -796,11 +799,16 @@ public class VehiclesController : ControllerBase
 
         // Enforce max images per listing from ConfigurationService
         var maxImages = await _configClient.GetIntAsync("vehicles.max_images_per_listing", 30);
-        var totalAfterAdd = vehicle.Images.Count + request.Images.Count;
+        var existingImageCount = await _context.VehicleImages.CountAsync(i => i.VehicleId == id);
+        var totalAfterAdd = existingImageCount + request.Images.Count;
         if (totalAfterAdd > maxImages)
-            return BadRequest(new { message = $"Cannot exceed {maxImages} images per listing. Current: {vehicle.Images.Count}, Adding: {request.Images.Count}" });
+            return BadRequest(new { message = $"Cannot exceed {maxImages} images per listing. Current: {existingImageCount}, Adding: {request.Images.Count}" });
 
-        var existingMaxOrder = vehicle.Images.Any() ? vehicle.Images.Max(i => i.SortOrder) : -1;
+        var existingMaxOrder = await _context.VehicleImages
+            .Where(i => i.VehicleId == id)
+            .Select(i => (int?)i.SortOrder)
+            .MaxAsync() ?? -1;
+
         var addedImages = new List<VehicleImage>();
 
         foreach (var imageDto in request.Images)
@@ -816,12 +824,13 @@ public class VehiclesController : ControllerBase
                 Caption = imageDto.Caption,
                 ImageType = imageDto.ImageType ?? ImageType.Exterior,
                 SortOrder = imageDto.SortOrder ?? existingMaxOrder,
-                IsPrimary = imageDto.IsPrimary ?? (!vehicle.Images.Any() && existingMaxOrder == 0),
+                IsPrimary = imageDto.IsPrimary ?? (existingImageCount == 0 && existingMaxOrder == 0),
                 MimeType = imageDto.MimeType ?? "image/jpeg",
                 CreatedAt = DateTime.UtcNow
             };
 
-            vehicle.Images.Add(image);
+            // Add directly to the DbSet to avoid Vehicle entity tracking
+            _context.VehicleImages.Add(image);
             addedImages.Add(image);
         }
 
