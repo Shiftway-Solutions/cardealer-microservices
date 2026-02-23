@@ -17,6 +17,7 @@ import {
   serverProcessIdentityVerification,
   serverApproveKYCProfile,
   serverRejectKYCProfile,
+  serverUpsertKYCDraft,
 } from '@/actions/kyc';
 
 // =============================================================================
@@ -810,11 +811,13 @@ export interface UpsertDraftRequest {
  * Save or update a KYC draft (upsert). Called onStep + every 30 seconds.
  */
 export async function upsertKYCDraft(request: UpsertDraftRequest): Promise<KYCProfileDraft> {
-  const response = await apiClient.post<KYCProfileDraft>(
-    `${KYC_BASE_URL}/kycprofiles/draft`,
-    request
-  );
-  return response.data;
+  const result = await serverUpsertKYCDraft(request);
+
+  if (!result.success || !result.data) {
+    throw new Error(result.error || 'Error al guardar el borrador KYC');
+  }
+
+  return result.data as unknown as KYCProfileDraft;
 }
 
 /**

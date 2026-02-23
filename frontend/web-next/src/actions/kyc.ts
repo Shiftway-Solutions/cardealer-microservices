@@ -59,6 +59,16 @@ interface IdentityVerificationResult {
   passed: boolean;
 }
 
+interface KYCProfileDraft {
+  id: string;
+  userId: string;
+  currentStep: number;
+  formData: string;
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: unknown;
+}
+
 // =============================================================================
 // INTERNAL HELPERS
 // =============================================================================
@@ -323,6 +333,47 @@ export async function serverUpdateKYCProfile(
       success: false,
       error: err.message || 'Error al actualizar el perfil KYC',
       code: 'KYC_UPDATE_FAILED',
+    };
+  }
+}
+
+/**
+ * Upsert (save or update) KYC profile draft — server-side
+ * Called on each step change and auto-save (every 30s).
+ * Browser NEVER sees: /api/kyc/kycprofiles/draft, form data
+ */
+export async function serverUpsertKYCDraft(data: {
+  currentStep: number;
+  formData: string; // JSON string with all wizard form data
+}): Promise<ActionResult<KYCProfileDraft>> {
+  try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required — please login again',
+        code: 'KYC_AUTH_REQUIRED',
+      };
+    }
+
+    const idempotencyKey = generateIdempotencyKey();
+
+    const response = await internalFetch<KYCProfileDraft>(`${KYC_BASE}/kycprofiles/draft`, {
+      method: 'POST',
+      body: data,
+      token: accessToken,
+      headers: { 'X-Idempotency-Key': idempotencyKey },
+    });
+
+    return { success: true, data: response };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return {
+      success: false,
+      error: err.message || 'Error al guardar el borrador KYC',
+      code: 'KYC_DRAFT_SAVE_FAILED',
     };
   }
 }
