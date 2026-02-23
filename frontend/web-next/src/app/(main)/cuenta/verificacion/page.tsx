@@ -32,6 +32,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useKYCDraft, type KYCWizardFormData } from '@/hooks/useKYCDraft';
 import { sanitizeText, sanitizePhone } from '@/lib/security/sanitize';
+import { getCsrfToken } from '@/lib/security/csrf';
 
 // Local type for captured documents
 interface CapturedDocuments {
@@ -118,6 +119,11 @@ const PROVINCES_RD = [
 export default function VerificacionPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // SECURITY: Initialize CSRF token on component load
+  useEffect(() => {
+    getCsrfToken();
+  }, []);
 
   // State
   const [currentStep, setCurrentStep] = useState<Step>('info');
@@ -417,7 +423,9 @@ export default function VerificacionPage() {
         city: sanitizeText(address.city.trim(), { maxLength: 100 }),
         province: sanitizeText(address.province.trim(), { maxLength: 100 }),
         phoneNumber: sanitizePhone(personalInfo.phoneNumber) || personalInfo.phoneNumber,
+        sourceOfFunds: 'Ingresos laborales',
         occupation: sanitizeText(personalInfo.occupation.trim(), { maxLength: 100 }),
+        expectedMonthlyTransaction: 10000,
       };
 
       const profile = await kycService.createProfile(profileRequest);
