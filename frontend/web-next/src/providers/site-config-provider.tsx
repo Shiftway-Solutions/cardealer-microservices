@@ -183,14 +183,15 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
         (process.env.NODE_ENV === 'production' ? 'Production' : 'Development');
 
       // Use _silentAuth so a 401 (unauthenticated pages) does NOT trigger
-      // the global refresh-token interceptor — avoids 401→429 rate-limit cascade
+      // the global refresh-token interceptor — avoids 401→429 rate-limit cascade.
+      // Config is cast through `unknown` to attach the custom flag without
+      // breaking TypeScript's generic resolution on `apiClient.get<T>()`.
+      const silentConfig = { params: { environment }, _silentAuth: true } as unknown as Parameters<
+        typeof apiClient.get
+      >[1];
       const response = await apiClient.get<Array<{ key: string; value: string }>>(
         '/api/configurations/category/general',
-        {
-          params: { environment },
-          // @ts-expect-error — custom flag read by api-client interceptor
-          _silentAuth: true,
-        }
+        silentConfig
       );
 
       const raw: Record<string, string> = {};
