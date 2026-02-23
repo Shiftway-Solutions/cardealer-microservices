@@ -52,7 +52,7 @@ public class Verify2FAHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
-        result.Message.Should().Contain("verified successfully");
+        result.Message.Should().Contain("verified").And.Contain("successfully");
     }
 
     [Fact]

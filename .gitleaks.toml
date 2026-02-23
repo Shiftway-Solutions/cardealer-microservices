@@ -68,10 +68,18 @@ title = "OKLA Gitleaks Config"
 [[rules]]
   id = "connection-string-password"
   description = "Database connection string with real password"
-  regex = '''Password=(?!postgres|password|devpassword|guest|\$\{)[^\s;]+'''
+  # Note: go-re2 does NOT support lookaheads/lookbehinds. Use allowlist regexes instead.
+  regex = '''Password=[^\s;]{4,}'''
   tags = ["database", "password"]
   [rules.allowlist]
     paths = [
       '''appsettings\.Development\.json''',
       '''appsettings\.Docker\.json''',
+    ]
+    regexes = [
+      '''Password=postgres''',
+      '''Password=password''',
+      '''Password=devpassword''',
+      '''Password=guest''',
+      '''\$\{[A-Z_]+\}''',
     ]

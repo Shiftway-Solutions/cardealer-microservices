@@ -51,6 +51,7 @@ import {
   sanitizeRNC,
   sanitizeUrl,
 } from '@/lib/security/sanitize';
+import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
 
 const steps = [
   { id: 1, title: 'Tipo de Cuenta', icon: Building2 },
@@ -117,6 +118,22 @@ export default function DealerRegistrationPage() {
     }
     if (formData.password.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('La contraseña debe tener al menos una letra mayúscula.');
+      return;
+    }
+    if (!/[a-z]/.test(formData.password)) {
+      setError('La contraseña debe tener al menos una letra minúscula.');
+      return;
+    }
+    if (!/\d/.test(formData.password)) {
+      setError('La contraseña debe tener al menos un número.');
+      return;
+    }
+    if (!/[^a-zA-Z0-9]/.test(formData.password)) {
+      setError('La contraseña debe tener al menos un carácter especial (ej: !@#$%).');
       return;
     }
     if (!formData.businessName.trim()) {
@@ -499,13 +516,11 @@ export default function DealerRegistrationPage() {
                             <SelectValue placeholder="Seleccionar provincia" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="dn">Distrito Nacional</SelectItem>
-                            <SelectItem value="sd">Santo Domingo</SelectItem>
-                            <SelectItem value="stgo">Santiago</SelectItem>
-                            <SelectItem value="pn">Puerto Plata</SelectItem>
-                            <SelectItem value="lv">La Vega</SelectItem>
-                            <SelectItem value="spm">San Pedro de Macorís</SelectItem>
-                            <SelectItem value="lr">La Romana</SelectItem>
+                            {RD_PROVINCES.map(p => (
+                              <SelectItem key={p} value={p}>
+                                {p}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>

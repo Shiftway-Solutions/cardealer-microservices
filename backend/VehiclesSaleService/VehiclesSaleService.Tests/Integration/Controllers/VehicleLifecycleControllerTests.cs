@@ -46,6 +46,17 @@ public class VehicleLifecycleControllerTests : IDisposable
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _configClientMock = new Mock<IConfigurationServiceClient>();
 
+        // Return the default value for any config key so validation uses production-safe defaults
+        _configClientMock
+            .Setup(c => c.GetDecimalAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string key, decimal defaultValue, CancellationToken _) => defaultValue);
+        _configClientMock
+            .Setup(c => c.GetIntAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string key, int defaultValue, CancellationToken _) => defaultValue);
+        _configClientMock
+            .Setup(c => c.GetValueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string key, string defaultValue, CancellationToken _) => defaultValue);
+
         _controller = new VehiclesController(
             _vehicleRepositoryMock.Object,
             _categoryRepositoryMock.Object,

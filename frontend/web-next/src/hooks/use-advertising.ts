@@ -175,6 +175,7 @@ export function useHomepageRotation(section: AdPlacementType) {
     queryKey: advertisingKeys.rotationSection(section),
     queryFn: () => getHomepageRotation(section),
     staleTime: 5 * 60 * 1000, // 5 minutes (matches backend cache)
+    retry: 2, // 2 retries before silently hiding the section
   });
 }
 

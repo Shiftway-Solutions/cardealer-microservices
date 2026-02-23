@@ -156,6 +156,50 @@ public class Vehicle : ITenantEntity
     public bool IsDeleted { get; set; } = false;
     public bool IsFeatured { get; set; } = false;
 
+    // ── Propiedades de Campaña Publicitaria (AdvertisingService sync) ─────────
+    /// <summary>Vehículo tiene una campaña PremiumSpot activa.</summary>
+    public bool IsPremium { get; set; } = false;
+
+    /// <summary>Referencia a la campaña activa que origina la promoción.</summary>
+    public Guid? LinkedCampaignId { get; set; }
+
+    /// <summary>Fecha de expiración de la promoción (null = sin fecha fija).</summary>
+    public DateTime? FeaturedUntil { get; set; }
+
+    /// <summary>Prioridad de aparición: 100 = Premium, 50 = Featured, 0 = Normal.</summary>
+    public int FeaturedPriority { get; set; } = 0;
+
+    // ── Métodos de dominio ────────────────────────────────────────────────────
+    /// <summary>Marca el vehículo como Premium (campaña PremiumSpot activa).</summary>
+    public void MarkAsPremium(Guid campaignId, DateTime? until = null, int priority = 100)
+    {
+        IsPremium = true;
+        IsFeatured = false; // Premium excluye Featured simple
+        LinkedCampaignId = campaignId;
+        FeaturedUntil = until;
+        FeaturedPriority = priority;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Marca el vehículo como Destacado (FeaturedSpot o asignación manual del admin).</summary>
+    public void MarkAsFeaturedByAdmin(int priority = 50)
+    {
+        IsFeatured = true;
+        FeaturedPriority = priority;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Limpia todos los flags de promoción cuando la campaña termina.</summary>
+    public void ClearPromotion()
+    {
+        IsFeatured = false;
+        IsPremium = false;
+        LinkedCampaignId = null;
+        FeaturedUntil = null;
+        FeaturedPriority = 0;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // ========================================
     // CONCURRENCY CONTROL
     // ========================================

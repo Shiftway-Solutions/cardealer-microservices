@@ -173,8 +173,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 13. Controllers
-builder.Services.AddControllers();
+// 13. Controllers — camelCase JSON to match TypeScript frontend expectations (E-001 fix)
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy =
+            System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultIgnoreCondition =
+            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // 14. Health checks
 builder.Services.AddHealthChecks()

@@ -114,6 +114,10 @@ builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 // RabbitMQ Event Publisher
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
+// RabbitMQ Campaign Events Consumer — syncs vehicle promotion flags (IsPremium, IsFeatured)
+// when AdvertisingService publishes campaign lifecycle events.
+builder.Services.AddHostedService<CampaignEventsConsumer>();
+
 // ========================================
 // JWT AUTHENTICATION
 // ========================================

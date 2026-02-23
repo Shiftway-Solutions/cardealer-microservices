@@ -153,9 +153,11 @@ public class Enable2FAHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldSendRecoveryCodesByEmail()
+    public async Task Handle_ShouldReturnRecoveryCodesInResponse_NotSendEmail()
     {
         // Arrange
+        // Recovery codes are returned in the response so the user can save them,
+        // but they are NOT emailed yet — that only happens after Verify2FA confirms setup.
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Authenticator);
@@ -169,12 +171,13 @@ public class Enable2FAHandlerTests
             .ReturnsAsync(recoveryCodes);
 
         // Act
-        await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
+        // Assert — codes are in the response but email is deferred to Verify2FA step
+        result.RecoveryCodes.Should().BeEquivalentTo(recoveryCodes);
         _notificationServiceMock.Verify(
-            x => x.SendTwoFactorBackupCodesAsync(user.Email!, recoveryCodes),
-            Times.Once);
+            x => x.SendTwoFactorBackupCodesAsync(It.IsAny<string>(), It.IsAny<List<string>>()),
+            Times.Never);
     }
 
     #region Helper Methods
