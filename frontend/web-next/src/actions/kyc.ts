@@ -197,24 +197,22 @@ async function internalFetchFormData<T>(
  * Create KYC profile — server-side
  * Browser NEVER sees: /api/kyc/kycprofiles, personal data, document numbers
  */
-export async function serverCreateKYCProfile(
-  data: {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    documentNumber: string;
-    documentType: number;
-    dateOfBirth: string;
-    nationality: string;
-    address: string;
-    city: string;
-    province: string;
-    phoneNumber: string;
-    sourceOfFunds?: string;
-    occupation?: string;
-    expectedMonthlyTransaction?: number;
-  }
-): Promise<ActionResult<KYCProfileResult>> {
+export async function serverCreateKYCProfile(data: {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  documentNumber: string;
+  documentType: number;
+  dateOfBirth: string;
+  nationality: string;
+  address: string;
+  city: string;
+  province: string;
+  phoneNumber: string;
+  sourceOfFunds?: string;
+  occupation?: string;
+  expectedMonthlyTransaction?: number;
+}): Promise<ActionResult<KYCProfileResult>> {
   try {
     // SECURITY: Read access token from HttpOnly cookie (set by AuthController on login)
     const cookieStore = await cookies();
@@ -429,7 +427,12 @@ export async function serverSubmitKYCForReview(
  * Browser NEVER sees: media upload URLs, storage keys, S3 paths
  */
 export async function serverUploadKYCDocument(
-  formData: FormData
+  profileId: string,
+  documentType: number,
+  fileBase64: string,
+  fileName: string,
+  fileType: string,
+  side?: string
 ): Promise<ActionResult<KYCDocumentResult>> {
   try {
     const cookieStore = await cookies();
@@ -442,12 +445,8 @@ export async function serverUploadKYCDocument(
         code: 'KYC_AUTH_REQUIRED',
       };
     }
-    const profileId = formData.get('profileId') as string;
-    const documentType = parseInt(formData.get('documentType') as string, 10);
-    const side = formData.get('side') as string | null;
-    const file = formData.get('file') as File;
 
-    if (!profileId || !file || isNaN(documentType)) {
+    if (!profileId || !fileBase64 || isNaN(documentType)) {
       return {
         success: false,
         error: 'Datos incompletos para la carga del documento',
@@ -457,7 +456,15 @@ export async function serverUploadKYCDocument(
 
     // Step 1: Upload file to MediaService via internal network
     const mediaFormData = new FormData();
-    mediaFormData.append('file', file);
+    // Convert base64 back to Blob
+    const byteString = Buffer.from(fileBase64, 'base64').toString('binary');
+    const bytes = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      bytes[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: fileType });
+
+    mediaFormData.append('file', blob, fileName);
     mediaFormData.append('folder', 'kyc-documents');
 
     const uploadResult = await internalFetchFormData<{
@@ -477,12 +484,12 @@ export async function serverUploadKYCDocument(
     const docPayload = {
       kycProfileId: profileId,
       type: documentType,
-      documentName: file.name,
+      documentName: fileName,
       fileName: storageKey,
       storageKey: storageKey,
       fileUrl: fileUrl,
-      fileType: file.type,
-      fileSize: file.size,
+      fileType: fileType,
+      fileSize: Buffer.from(fileBase64, 'base64').length,
       uploadedBy: profileId,
       side: side || undefined,
     };
@@ -511,9 +518,7 @@ export async function serverUploadKYCDocument(
 /**
  * Delete KYC document — server-side
  */
-export async function serverDeleteKYCDocument(
-  documentId: string
-): Promise<ActionResult<void>> {
+export async function serverDeleteKYCDocument(documentId: string): Promise<ActionResult<void>> {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;

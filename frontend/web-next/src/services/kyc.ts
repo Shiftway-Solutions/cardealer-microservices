@@ -423,24 +423,22 @@ export async function getKYCProfileById(id: string): Promise<KYCProfile> {
  */
 export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<KYCProfile> {
   // ── Server Action: KYC profile creation server-side, personal data invisible to browser ──
-  const result = await serverCreateKYCProfile(
-    {
-      userId: data.userId,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      documentNumber: data.documentNumber,
-      documentType: data.documentType,
-      dateOfBirth: data.dateOfBirth,
-      nationality: data.nationality,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      phoneNumber: data.phoneNumber,
-      sourceOfFunds: data.sourceOfFunds,
-      occupation: data.occupation,
-      expectedMonthlyTransaction: data.expectedMonthlyTransaction,
-    }
-  );
+  const result = await serverCreateKYCProfile({
+    userId: data.userId,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    documentNumber: data.documentNumber,
+    documentType: data.documentType,
+    dateOfBirth: data.dateOfBirth,
+    nationality: data.nationality,
+    address: data.address,
+    city: data.city,
+    province: data.province,
+    phoneNumber: data.phoneNumber,
+    sourceOfFunds: data.sourceOfFunds,
+    occupation: data.occupation,
+    expectedMonthlyTransaction: data.expectedMonthlyTransaction,
+  });
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al crear el perfil KYC');
@@ -457,24 +455,21 @@ export async function updateKYCProfile(
   data: Partial<CreateKYCProfileRequest>
 ): Promise<KYCProfile> {
   // ── Server Action: KYC profile update server-side ──
-  const result = await serverUpdateKYCProfile(
-    id,
-    {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      documentNumber: data.documentNumber,
-      documentType: data.documentType,
-      dateOfBirth: data.dateOfBirth,
-      nationality: data.nationality,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      phoneNumber: data.phoneNumber,
-      sourceOfFunds: data.sourceOfFunds,
-      occupation: data.occupation,
-      expectedMonthlyTransaction: data.expectedMonthlyTransaction,
-    }
-  );
+  const result = await serverUpdateKYCProfile(id, {
+    firstName: data.firstName,
+    lastName: data.lastName,
+    documentNumber: data.documentNumber,
+    documentType: data.documentType,
+    dateOfBirth: data.dateOfBirth,
+    nationality: data.nationality,
+    address: data.address,
+    city: data.city,
+    province: data.province,
+    phoneNumber: data.phoneNumber,
+    sourceOfFunds: data.sourceOfFunds,
+    occupation: data.occupation,
+    expectedMonthlyTransaction: data.expectedMonthlyTransaction,
+  });
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al actualizar el perfil KYC');
@@ -489,15 +484,25 @@ export async function updateKYCProfile(
 export async function uploadKYCDocument(request: UploadDocumentRequest): Promise<KYCDocument> {
   // ── Server Action: document upload server-side, file data & storage keys invisible ──
 
-  const formData = new FormData();
-  formData.append('profileId', request.profileId);
-  formData.append('documentType', request.documentType.toString());
-  formData.append('file', request.file);
-  if (request.side) {
-    formData.append('side', request.side);
-  }
+  // Convert File to base64 for Server Action (Files cannot be passed directly)
+  const fileBase64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1]); // Remove "data:...;base64," prefix
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(request.file);
+  });
 
-  const result = await serverUploadKYCDocument(formData);
+  const result = await serverUploadKYCDocument(
+    request.profileId,
+    request.documentType,
+    fileBase64,
+    request.file.name,
+    request.file.type,
+    request.side
+  );
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al cargar el documento');
@@ -737,12 +742,7 @@ export async function approveKYCProfile(
   notes?: string
 ): Promise<KYCProfile> {
   // ── Server Action: admin approval processed server-side ──
-  const result = await serverApproveKYCProfile(
-    profileId,
-    approvedBy,
-    approvedByName,
-    notes
-  );
+  const result = await serverApproveKYCProfile(profileId, approvedBy, approvedByName, notes);
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Error al aprobar el perfil KYC');
