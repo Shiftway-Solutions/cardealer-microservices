@@ -65,6 +65,24 @@ export const formatDate = (date: string | null | undefined): string => {
   });
 };
 
+/**
+ * UTC-safe date formatter for date-only fields (e.g. dateOfBirth).
+ * Avoids off-by-one day errors caused by UTC midnight → local timezone conversion.
+ * Example: "1989-12-12T00:00:00Z" → "12 dic de 1989" (not "11 dic de 1989" in UTC-4).
+ */
+export const formatDateOnly = (date: string | null | undefined): string => {
+  if (!date) return 'N/A';
+  const datePart = date.split('T')[0];
+  if (!datePart) return 'N/A';
+  const [year, month, day] = datePart.split('-').map(Number);
+  if (!year || !month || !day) return 'N/A';
+  return new Date(year, month - 1, day).toLocaleDateString('es-DO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
 // =============================================================================
 // CONSTANTS
 // =============================================================================

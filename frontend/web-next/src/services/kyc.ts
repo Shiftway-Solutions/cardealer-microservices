@@ -286,6 +286,7 @@ export function extractBiometricScores(verifications: KYCVerification[]): Biomet
 
 export interface CreateKYCProfileRequest {
   userId: string;
+  email?: string;
   firstName: string;
   lastName: string;
   documentNumber: string;
@@ -425,6 +426,7 @@ export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<K
   // ── Server Action: KYC profile creation server-side, personal data invisible to browser ──
   const result = await serverCreateKYCProfile({
     userId: data.userId,
+    email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
     documentNumber: data.documentNumber,

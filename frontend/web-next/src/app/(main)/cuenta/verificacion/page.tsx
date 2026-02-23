@@ -422,6 +422,7 @@ export default function VerificacionPage() {
       // 1. Create KYC Profile — SECURITY: Sanitize all user inputs
       const profileRequest: CreateKYCProfileRequest = {
         userId: user.id,
+        email: user.email, // Save email so admins can see it in the KYC review panel
         firstName: sanitizeText(personalInfo.firstName.trim(), { maxLength: 50 }),
         lastName: sanitizeText(personalInfo.lastName.trim(), { maxLength: 50 }),
         dateOfBirth: personalInfo.dateOfBirth,

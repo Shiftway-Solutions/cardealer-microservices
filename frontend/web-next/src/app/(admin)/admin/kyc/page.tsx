@@ -66,6 +66,7 @@ import {
   statusToFilterKey,
   getInitials,
   formatDate,
+  formatDateOnly,
   FIELD_VALIDATION_KEYS,
   VERIFICATION_ITEMS,
 } from './helpers';
@@ -653,7 +654,7 @@ export default function AdminKycPage() {
                           <ValidatableField
                             icon={Calendar}
                             label="Fecha de Nacimiento"
-                            value={formatDate(selectedProfile.dateOfBirth)}
+                            value={formatDateOnly(selectedProfile.dateOfBirth)}
                             checkKey="dobValid"
                             checked={verificationChecks['dobValid']}
                             onToggle={() => handleToggleCheck('dobValid')}

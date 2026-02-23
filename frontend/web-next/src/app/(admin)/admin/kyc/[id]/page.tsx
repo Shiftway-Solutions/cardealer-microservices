@@ -154,6 +154,19 @@ export default function KYCDetailPage() {
     });
   };
 
+  // UTC-safe date-only formatter: prevents off-by-one day from UTC→local conversion
+  const formatDateOnly = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+    const datePart = dateString.split('T')[0];
+    const [year, month, day] = datePart.split('-').map(Number);
+    if (!year || !month || !day) return 'N/A';
+    return new Date(year, month - 1, day).toLocaleDateString('es-DO', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -232,11 +245,7 @@ export default function KYCDetailPage() {
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    {profile.dateOfBirth
-                      ? new Date(profile.dateOfBirth).toLocaleDateString('es-DO')
-                      : 'N/A'}
-                  </span>
+                  <span>{formatDateOnly(profile.dateOfBirth)}</span>
                 </div>
                 <div className="text-muted-foreground flex items-center gap-2">
                   <Clock className="h-4 w-4" />
@@ -274,11 +283,7 @@ export default function KYCDetailPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm">Fecha de Nacimiento</p>
-                  <p className="font-medium">
-                    {profile.dateOfBirth
-                      ? new Date(profile.dateOfBirth).toLocaleDateString('es-DO')
-                      : 'N/A'}
-                  </p>
+                  <p className="font-medium">{formatDateOnly(profile.dateOfBirth)}</p>
                 </div>
               </div>
             </CardContent>

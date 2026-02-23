@@ -199,6 +199,7 @@ async function internalFetchFormData<T>(
  */
 export async function serverCreateKYCProfile(data: {
   userId: string;
+  email?: string;
   firstName: string;
   lastName: string;
   documentNumber: string;
@@ -228,6 +229,7 @@ export async function serverCreateKYCProfile(data: {
 
     const mappedData = {
       userId: data.userId,
+      email: data.email,
       fullName: `${data.firstName} ${data.lastName}`.trim(),
       lastName: data.lastName,
       primaryDocumentNumber: data.documentNumber,
