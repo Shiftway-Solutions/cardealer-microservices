@@ -15,6 +15,7 @@ public class BillingPaymentCompletedConsumer : BackgroundService
     private readonly IConnection _connection;
     private readonly ILogger<BillingPaymentCompletedConsumer> _logger;
     private IModel? _channel;
+    private IModel? _publishChannel;  // separate channel for outbound events
 
     private const string ExchangeName = "cardealer.events";
     private const string QueueName = "advertising.billing.payment.completed";
@@ -40,6 +41,9 @@ public class BillingPaymentCompletedConsumer : BackgroundService
             _channel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, durable: true);
             _channel.QueueDeclare(QueueName, durable: true, exclusive: false, autoDelete: false);
             _channel.QueueBind(QueueName, ExchangeName, RoutingKey);
+
+            // Separate channel for publishing campaign-activated events
+            _publishChannel = _connection.CreateModel();
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
             consumer.Received += async (_, ea) =>
@@ -113,10 +117,50 @@ public class BillingPaymentCompletedConsumer : BackgroundService
         _logger.LogInformation(
             "Campaign {CampaignId} activated via billing payment {PaymentId}",
             campaign.Id, paymentEvent.PaymentId);
+
+        // Publish advertising.campaign.activated so VehiclesSaleService can sync IsPremium
+        PublishCampaignActivatedEvent(campaign.Id, campaign.VehicleId,
+            campaign.PlacementType.ToString());
+    }
+
+    private void PublishCampaignActivatedEvent(Guid campaignId, Guid vehicleId, string placementType)
+    {
+        if (_publishChannel == null) return;
+
+        try
+        {
+            var payload = JsonSerializer.Serialize(new
+            {
+                CampaignId = campaignId,
+                VehicleId  = vehicleId,
+                PlacementType = placementType,
+                ActivatedAt = DateTime.UtcNow
+            });
+
+            var props = _publishChannel.CreateBasicProperties();
+            props.Persistent    = true;
+            props.ContentType   = "application/json";
+
+            _publishChannel.BasicPublish(
+                exchange:   ExchangeName,
+                routingKey: "advertising.campaign.activated",
+                basicProperties: props,
+                body:       Encoding.UTF8.GetBytes(payload));
+
+            _logger.LogInformation(
+                "Published advertising.campaign.activated for campaign {CampaignId}", campaignId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to publish advertising.campaign.activated for campaign {CampaignId}", campaignId);
+        }
     }
 
     public override void Dispose()
     {
+        _publishChannel?.Close();
+        _publishChannel?.Dispose();
         _channel?.Close();
         _channel?.Dispose();
         base.Dispose();
