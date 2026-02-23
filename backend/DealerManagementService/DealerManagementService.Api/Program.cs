@@ -124,11 +124,14 @@ builder.Services.AddCors(options =>
         .AddNpgSql(connectionString, name: "database");
 
     // ========== JWT AUTHENTICATION ==========
-    var jwtKey = builder.Configuration["Jwt:SecretKey"]
-              ?? builder.Configuration["Jwt:Key"]
-              ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
-    var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
-    var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+    // Key is provided via K8s secret jwt-secrets as Jwt__Key env var (maps to Jwt:Key).
+    // NOTE: Do NOT add Jwt:SecretKey to appsettings.json — it would shadow the env var via ?? fallback.
+    var jwtKey = builder.Configuration["Jwt:Key"]
+              ?? throw new InvalidOperationException("JWT Key must be configured via Jwt__Key env var / K8s secret. Do NOT use hardcoded keys.");
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+              ?? throw new InvalidOperationException("JWT Issuer must be configured via Jwt__Issuer env var / K8s secret.");
+    var jwtAudience = builder.Configuration["Jwt:Audience"]
+              ?? throw new InvalidOperationException("JWT Audience must be configured via Jwt__Audience env var / K8s secret.");
 
     builder.Services.AddAuthentication(options =>
     {
