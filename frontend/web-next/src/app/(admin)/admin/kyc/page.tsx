@@ -76,7 +76,6 @@ import {
   LoadingDetailPanel,
   DocumentImage,
   ValidatableField,
-  VerificationChecklist,
   BiometricResultsCard,
   ImageViewer,
 } from './components';
@@ -88,41 +87,7 @@ import {
 export default function AdminKycPage() {
   const { user, isLoading: authLoading } = useAuth();
 
-  // Admin role validation
-  const isAdmin = user?.accountType === 'admin';
-
-  if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center p-8">
-        <AlertTriangle className="mb-4 h-12 w-12 text-amber-600" />
-        <h1 className="text-xl font-bold">Acceso Requerido</h1>
-        <p className="text-muted-foreground mt-2">
-          Debes iniciar sesión para acceder a esta página
-        </p>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center p-8">
-        <Shield className="mb-4 h-12 w-12 text-red-600" />
-        <h1 className="text-xl font-bold">Acceso Denegado</h1>
-        <p className="text-muted-foreground mt-2">
-          Solo los administradores pueden acceder al panel de KYC
-        </p>
-      </div>
-    );
-  }
-
+  // Declare all hooks FIRST, before any conditional returns
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -445,6 +410,41 @@ export default function AdminKycPage() {
       selectedProfile.status === KYCStatus.UnderReview ||
       selectedProfile.status === KYCStatus.InProgress)
   );
+
+  // Admin role validation (after all hooks declared)
+  const isAdmin = user?.accountType === 'admin';
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center p-8">
+        <AlertTriangle className="mb-4 h-12 w-12 text-amber-600" />
+        <h1 className="text-xl font-bold">Acceso Requerido</h1>
+        <p className="text-muted-foreground mt-2">
+          Debes iniciar sesión para acceder a esta página
+        </p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center p-8">
+        <Shield className="mb-4 h-12 w-12 text-red-600" />
+        <h1 className="text-xl font-bold">Acceso Denegado</h1>
+        <p className="text-muted-foreground mt-2">
+          Solo los administradores pueden acceder al panel de KYC
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
