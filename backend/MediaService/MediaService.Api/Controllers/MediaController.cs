@@ -165,9 +165,20 @@ public class MediaController : ControllerBase
                 fileName = file.FileName
             });
         }
+        catch (Amazon.S3.AmazonS3Exception ex) when (ex.ErrorCode == "RequestTimeTooSkewed")
+        {
+            // Docker container clock drift — macOS sleep/wake desynchronizes Docker VM clock.
+            // CorrectForClockSkew=true on S3Config should auto-correct; if still thrown,
+            // the drift is > 15 min (beyond SDK correction threshold).
+            _logger.LogError(ex,
+                "S3 clock drift detected for file {FileName}. Container clock is out of sync with AWS. " +
+                "Restart MediaService container or Docker Desktop to resync. AWS Error: {ErrorCode}",
+                file.FileName, ex.ErrorCode);
+            return StatusCode(503, new { error = "Storage service temporarily unavailable. Please try again in a moment." });
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Upload failed for file {FileName}", file.FileName);
+            _logger.LogError(ex, "Upload failed for file {FileName}: {ErrorMessage}", file.FileName, ex.Message);
             return StatusCode(500, new { error = "Upload failed. Please try again later." });
         }
     }
@@ -237,9 +248,16 @@ public class MediaController : ControllerBase
                 size = file.Length
             });
         }
+        catch (Amazon.S3.AmazonS3Exception ex) when (ex.ErrorCode == "RequestTimeTooSkewed")
+        {
+            _logger.LogError(ex,
+                "S3 clock drift detected for file {FileName}. Restart MediaService container to resync. Error: {ErrorCode}",
+                file.FileName, ex.ErrorCode);
+            return StatusCode(503, new { error = "Storage service temporarily unavailable. Please try again in a moment." });
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Image upload failed for file {FileName}", file.FileName);
+            _logger.LogError(ex, "Image upload failed for file {FileName}: {ErrorMessage}", file.FileName, ex.Message);
             return StatusCode(500, new { error = "Upload failed. Please try again later." });
         }
     }

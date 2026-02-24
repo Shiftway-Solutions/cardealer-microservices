@@ -52,6 +52,11 @@ const nextConfig: NextConfig = {
       'sonner',
       'recharts',
     ],
+    // KYC documents (cedula front/back/selfie) can be up to ~1MB each after base64 encoding.
+    // Default Next.js limit is 1MB; raise to 10MB to handle higher-res camera captures.
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 
   // Compiler options

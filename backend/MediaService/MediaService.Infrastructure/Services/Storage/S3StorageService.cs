@@ -41,7 +41,14 @@ public class S3StorageService : IMediaStorageService
         
         // Parse region string to RegionEndpoint
         var region = Amazon.RegionEndpoint.GetBySystemName(_options.Region);
-        _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, region);
+
+        // AWS SDK v3.7+ handles clock skew correction automatically via its retry mechanism.
+        // See UploadFileAsync for explicit retry handling when Docker clock drift is extreme.
+        var s3Config = new AmazonS3Config
+        {
+            RegionEndpoint = region,
+        };
+        _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, s3Config);
         
         _logger.LogInformation("S3StorageService initialized successfully with bucket: {Bucket}, region: {Region}", 
             _options.BucketName, _options.Region);
@@ -146,7 +153,24 @@ public class S3StorageService : IMediaStorageService
             AutoCloseStream = false
         };
 
-        await transferUtility.UploadAsync(request);
+        try
+        {
+            await transferUtility.UploadAsync(request);
+        }
+        catch (AmazonS3Exception ex) when (ex.ErrorCode == "RequestTimeTooSkewed")
+        {
+            // Docker VM clock drift on macOS after sleep/wake cycles can cause AWS to reject
+            // requests (>5 min diff). The SDK should auto-correct on the retry attempt since
+            // it captures the server's Date header from the error response and adjusts.
+            _logger.LogWarning(
+                "S3 RequestTimeTooSkewed on first attempt for {StorageKey}. " +
+                "Retrying — SDK will apply corrected timestamp. " +
+                "If this recurs, restart the MediaService container to resync Docker VM clock.",
+                storageKey);
+
+            fileStream.Position = 0; // Reset stream before retry
+            await transferUtility.UploadAsync(request);
+        }
     }
 
     public async Task<Stream> DownloadFileAsync(string storageKey)
