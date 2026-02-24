@@ -155,6 +155,11 @@ try
     })
     .AddJwtBearer(options =>
     {
+        // Map long Microsoft claim URIs (e.g. http://schemas.microsoft.com/ws/2008/.../role)
+        // to short names ("role", "email", etc.) so Ocelot's RouteClaimsRequirement
+        // entries like { "role": "Compliance" } match the ClaimsPrincipal correctly.
+        options.MapInboundClaims = true;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
