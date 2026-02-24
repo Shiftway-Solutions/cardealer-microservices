@@ -219,25 +219,14 @@ function DealerDashboard() {
           )}
           <p className="text-muted-foreground">Panel de control del concesionario</p>
         </div>
-        {!kycLoading &&
-          (canSell ? (
-            <Link href="/dealer/inventario/nuevo">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Nuevo Vehículo
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/cuenta/verificacion">
-              <Button
-                variant="outline"
-                className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
-              >
-                <Shield className="h-4 w-4" />
-                Verificar para publicar
-              </Button>
-            </Link>
-          ))}
+        {!kycLoading && canSell && (
+          <Link href="/dealer/inventario/nuevo">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nuevo Vehículo
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Verification banner — shown while unverified */}
@@ -463,6 +452,9 @@ function SellerDashboard() {
 
       {/* Verification banner — shown while unverified with "Verificar ahora" button inside */}
       <VerificationBanner />
+
+      {/* Seller profile setup banner — shown after KYC approval when profile not yet configured */}
+      <SellerProfileBanner />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -1072,6 +1064,45 @@ function VerificationBanner() {
 
   return null;
 }
+
+// Seller Profile Setup Banner — shown when KYC is approved but seller profile not yet configured
+function SellerProfileBanner() {
+  const { user } = useAuth();
+  const { canSell, isLoading: kycLoading } = useCanSell();
+  const sellerQuery = useSellerByUserId(canSell ? user?.id : undefined);
+
+  // Only show when verified AND seller profile doesn't exist yet
+  if (kycLoading || !canSell || sellerQuery.isLoading) return null;
+  if (sellerQuery.data) return null; // Profile already configured
+
+  return (
+    <Card className="border-amber-200 bg-amber-50">
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+            <ShieldCheck className="h-6 w-6 text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="mb-1 font-semibold text-amber-900">
+              Perfil de vendedor pendiente de configuración
+            </h3>
+            <p className="mb-3 text-sm text-amber-700">
+              Tu identidad fue verificada con éxito. Ahora configura tu perfil de vendedor para
+              comenzar a publicar vehículos.
+            </p>
+            <Link href="/vender/registro">
+              <Button size="sm" className="gap-2 bg-amber-600 hover:bg-amber-700">
+                <ArrowRight className="h-4 w-4" />
+                Completar ahora
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Dealer-specific Verification Banner (requires RNC + business docs)
 function DealerVerificationBanner() {
   const { canSell, isPending, isRejected, needsVerification, isLoading, rejectionReason } =

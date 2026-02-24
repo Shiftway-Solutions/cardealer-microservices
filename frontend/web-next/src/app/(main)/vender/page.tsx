@@ -21,7 +21,13 @@ import {
   Star,
   Zap,
 } from 'lucide-react';
-import { VenderKycBanner, HeroCTA, FinalCTA, VenderPricing } from './vender-cta';
+import {
+  VenderKycBanner,
+  HeroCTA,
+  FinalCTA,
+  VenderPricing,
+  VenderSellerRedirect,
+} from './vender-cta';
 
 // =============================================================================
 // METADATA (SEO)
@@ -113,6 +119,11 @@ const stats = [
 export default function VenderPage() {
   return (
     <div className="bg-background min-h-screen">
+      {/* Seller redirect — if already registered, redirect to /cuenta (Client Island) */}
+      <Suspense fallback={null}>
+        <VenderSellerRedirect />
+      </Suspense>
+
       {/* KYC Verification Banner (Client Island) */}
       <Suspense fallback={null}>
         <VenderKycBanner />

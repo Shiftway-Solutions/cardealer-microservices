@@ -7,7 +7,9 @@
 
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
@@ -297,4 +299,21 @@ export function VenderPricing() {
       </Card>
     </div>
   );
+}
+
+// =============================================================================
+// SELLER REDIRECT — redirects already-registered sellers away from /vender
+// =============================================================================
+
+export function VenderSellerRedirect() {
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.accountType === 'seller') {
+      router.replace('/cuenta');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  return null;
 }

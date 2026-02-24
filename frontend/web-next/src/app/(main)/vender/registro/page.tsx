@@ -33,6 +33,7 @@ import { AccountStep } from '@/components/seller-wizard/account-step';
 import { ProfileStep } from '@/components/seller-wizard/profile-step';
 
 import type { RegisterRequest } from '@/services/auth';
+import * as userService from '@/services/users';
 
 // =============================================================================
 // CONSTANTS
@@ -380,6 +381,15 @@ export default function SellerRegistrationPage() {
 
         const profile = await createSellerProfile.mutateAsync(profilePayload);
         setSellerProfileId(profile.id);
+      }
+
+      // Save phone to UserService if provided (non-fatal — phone can be updated later)
+      if (profileData.phone) {
+        try {
+          await userService.updateProfile({ phone: profileData.phone });
+        } catch {
+          // Non-fatal: phone will show empty in /cuenta/perfil but can be added manually
+        }
       }
 
       // Redirect to portal — user must verify identity before publishing
