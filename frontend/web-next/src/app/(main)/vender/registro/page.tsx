@@ -26,7 +26,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { useAuth } from '@/hooks/use-auth';
-import { useConvertToSeller, useCreateSellerProfile } from '@/hooks/use-seller';
+import { useConvertToSeller, useCreateSellerProfile, useSellerByUserId } from '@/hooks/use-seller';
+import { useKYCProfile } from '@/hooks/use-kyc';
 
 import { StepIndicator } from '@/components/seller-wizard/step-indicator';
 import { AccountStep } from '@/components/seller-wizard/account-step';
@@ -158,9 +159,24 @@ export default function SellerRegistrationPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading, login, register } = useAuth();
 
+  // ── Determine if user is logged in (needed by hooks below) ──
+  const isLoggedIn = isAuthenticated && !!user;
+  const effectiveStartStep = isLoggedIn ? 1 : 0;
+
   // ── Mutations ──
   const convertToSeller = useConvertToSeller();
   const createSellerProfile = useCreateSellerProfile();
+
+  // ── Existing seller profile guard: redirect if user already has a profile ──
+  const existingSellerQuery = useSellerByUserId(isLoggedIn ? user?.id : undefined);
+  const { data: kycProfile } = useKYCProfile();
+
+  // ── Redirect to /cuenta if seller profile already completed ──
+  React.useEffect(() => {
+    if (existingSellerQuery.data && !existingSellerQuery.isLoading) {
+      router.replace('/cuenta');
+    }
+  }, [existingSellerQuery.data, existingSellerQuery.isLoading, router]);
 
   // ── Wizard State ──
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -170,10 +186,6 @@ export default function SellerRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [, setSellerProfileId] = React.useState<string | null>(null);
   const [draftLoaded, setDraftLoaded] = React.useState(false);
-
-  // ── Determine effective step: skip account step if already logged in ──
-  const isLoggedIn = isAuthenticated && !!user;
-  const effectiveStartStep = isLoggedIn ? 1 : 0;
 
   // ── Load draft on mount ──
   React.useEffect(() => {
@@ -210,16 +222,17 @@ export default function SellerRegistrationPage() {
     saveDraft(currentStep, accountData, profileData);
   }, [currentStep, accountData, profileData, draftLoaded]);
 
-  // ── Pre-fill profile if user data available ──
+  // ── Pre-fill profile if user data available (including KYC phone fallback) ──
   React.useEffect(() => {
     if (isLoggedIn && user && !profileData.displayName) {
       setProfileData(prev => ({
         ...prev,
         displayName: prev.displayName || `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
-        phone: prev.phone || user.phone || '',
+        // Fallback chain: draft phone → user profile phone → KYC phone
+        phone: prev.phone || user.phone || kycProfile?.phone || '',
       }));
     }
-  }, [isLoggedIn, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, user, kycProfile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STEP HANDLERS
@@ -281,6 +294,8 @@ export default function SellerRegistrationPage() {
   const handleProfileSubmit = async () => {
     setGlobalError(null);
     setIsSubmitting(true);
+    // Use a local flag instead of reading `globalError` state (stale closure bug)
+    let submissionFailed = false;
     try {
       // Validate based on account type (check both wizard state and actual user accountType)
       const { sellerProfileSchema, sellerProfileDealerSchema } =
@@ -352,6 +367,7 @@ export default function SellerRegistrationPage() {
             error?.message || error?.response?.data?.detail || 'Error al convertirse a vendedor.';
           console.error('❌ Profile submit error:', { error, userID: user.id });
           setGlobalError(message);
+          submissionFailed = true;
         }
       } else {
         // New user just registered → create seller profile
@@ -393,7 +409,7 @@ export default function SellerRegistrationPage() {
       }
 
       // Redirect to portal — user must verify identity before publishing
-      if (!globalError) {
+      if (!submissionFailed) {
         clearDraft();
         toast.success('¡Perfil de vendedor creado!', {
           description: 'Verifica tu identidad para comenzar a publicar vehículos.',
@@ -404,6 +420,7 @@ export default function SellerRegistrationPage() {
       const error = err as { message?: string; status?: number };
       console.error('❌ handleProfileSubmit caught error:', error);
       setGlobalError(error.message || 'Error al crear el perfil de vendedor.');
+      submissionFailed = true;
     } finally {
       setIsSubmitting(false);
     }
@@ -424,13 +441,25 @@ export default function SellerRegistrationPage() {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────────
 
-  // Loading state while auth initializes
-  if (authLoading || !draftLoaded) {
+  // Loading state while auth initializes or checking for existing seller profile
+  if (authLoading || !draftLoaded || (isLoggedIn && existingSellerQuery.isLoading)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00A870]" />
           <p className="mt-4 text-gray-500">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render form while redirect is in progress (existing seller profile found)
+  if (isLoggedIn && existingSellerQuery.data) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00A870]" />
+          <p className="mt-4 text-gray-500">Redirigiendo...</p>
         </div>
       </div>
     );
