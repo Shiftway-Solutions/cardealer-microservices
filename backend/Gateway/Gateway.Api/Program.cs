@@ -1,3 +1,4 @@
+// Gateway entry point — v2026.02.24
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
