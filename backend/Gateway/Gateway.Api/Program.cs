@@ -195,6 +195,12 @@ try
         };
     });
 
+    // Register ClaimsTransformation to map long URI role claims to short "role" claims.
+    // Ocelot's ClaimsAuthorizer looks for "role" (short name), but JWTs from AuthService
+    // store roles as ClaimTypes.Role (long Microsoft URI). This bridges the gap.
+    builder.Services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation,
+        Gateway.Api.Middleware.RoleClaimsTransformation>();
+
     Log.Information("JWT Authentication configured successfully for Gateway");
 }
 catch (InvalidOperationException ex)
