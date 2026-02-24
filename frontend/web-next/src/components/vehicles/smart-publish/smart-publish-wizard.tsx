@@ -11,7 +11,7 @@ import type { PhotoItem } from '@/components/vehicles/photos/photo-card';
 import { PricingStep } from './pricing-step';
 import { ReviewStep } from './review-step';
 import { CsvImportWizard } from './csv-import-wizard';
-import { useCreateVehicle } from '@/hooks/use-vehicles';
+import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehicles';
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
@@ -167,6 +167,7 @@ export function SmartPublishWizard({
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
   const createVehicle = useCreateVehicle();
+  const publishVehicle = usePublishVehicle();
   const draftKey = `${DRAFT_KEY_PREFIX}${userId || dealerId || 'anonymous'}`;
 
   // Check for existing draft on mount
@@ -379,15 +380,20 @@ export function SmartPublishWizard({
     };
 
     try {
-      const result = await createVehicle.mutateAsync(request);
+      // Step 1: Create vehicle as Draft
+      const created = await createVehicle.mutateAsync(request);
+
+      // Step 2: Publish it (Draft → Active) so it appears in listings
+      await publishVehicle.mutateAsync(created.id);
+
       localStorage.removeItem(draftKey);
       toast.success('¡Vehículo publicado exitosamente!');
-      router.push(`/vehiculos/${result.slug || result.id}`);
+      router.push(`/vehiculos/${created.slug}`);
     } catch (error: unknown) {
       const err = error as { message?: string };
       toast.error(err.message || 'Error al publicar el vehículo');
     }
-  }, [formData, createVehicle, draftKey, router]);
+  }, [formData, createVehicle, publishVehicle, draftKey, router]);
 
   const handleSaveDraft = useCallback(() => {
     try {
@@ -526,13 +532,13 @@ export function SmartPublishWizard({
 
         {currentStep === 'photos' && (
           <PhotoUploadManager
-            initialPhotos={formData.images.map((img) => ({
+            initialPhotos={formData.images.map(img => ({
               id: img.id,
               file: img.file ?? new File([], img.url),
               url: img.preview || img.url,
               order: img.order,
               isPrimary: img.isPrimary,
-              status: img.url ? 'uploaded' as const : 'pending' as const,
+              status: img.url ? ('uploaded' as const) : ('pending' as const),
               progress: img.progress ?? (img.url ? 100 : 0),
               mediaId: img.id,
             }))}

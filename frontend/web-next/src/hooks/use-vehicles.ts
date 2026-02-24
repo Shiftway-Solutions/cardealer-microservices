@@ -9,6 +9,7 @@ import {
   getVehiclesByDealer,
   getVehiclesByIds,
   createVehicle,
+  publishVehicle,
   updateVehicle,
   deleteVehicle,
   getMakes,
@@ -169,6 +170,21 @@ export function useCreateVehicle() {
     mutationFn: (data: CreateVehicleRequest) => createVehicle(data),
     onSuccess: () => {
       // Invalidate vehicle lists to refetch
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.featured() });
+    },
+  });
+}
+
+/**
+ * Publish a vehicle (Draft → Active)
+ */
+export function usePublishVehicle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => publishVehicle(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() });
       queryClient.invalidateQueries({ queryKey: vehicleKeys.featured() });
     },

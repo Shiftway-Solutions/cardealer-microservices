@@ -80,7 +80,7 @@ function VehicleCard({
     <Card className="overflow-hidden">
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
-        <div className="relative h-40 w-full flex-shrink-0 bg-muted sm:h-auto sm:w-48">
+        <div className="bg-muted relative h-40 w-full flex-shrink-0 sm:h-auto sm:w-48">
           {vehicle.imageUrl ? (
             <img
               src={vehicle.imageUrl}
@@ -89,7 +89,7 @@ function VehicleCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <Car className="h-12 w-12 text-muted-foreground" />
+              <Car className="text-muted-foreground h-12 w-12" />
             </div>
           )}
           {/* Status overlay for paused/expired */}
@@ -115,12 +115,12 @@ function VehicleCard({
                 )}
               </div>
 
-              <h3 className="truncate font-semibold text-foreground">{vehicle.title}</h3>
+              <h3 className="text-foreground truncate font-semibold">{vehicle.title}</h3>
 
               <p className="text-primary mt-1 text-xl font-bold">{formatPrice(vehicle.price)}</p>
 
               {/* Stats */}
-              <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
                   <span>{vehicle.viewCount} vistas</span>
@@ -223,14 +223,14 @@ function EmptyState({ status }: { status: VehicleStatus }) {
 
   return (
     <div className="py-12 text-center">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-        <Car className="h-8 w-8 text-muted-foreground" />
+      <div className="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+        <Car className="text-muted-foreground h-8 w-8" />
       </div>
-      <h3 className="mb-1 font-medium text-foreground">{title}</h3>
-      <p className="mb-6 text-muted-foreground">{description}</p>
+      <h3 className="text-foreground mb-1 font-medium">{title}</h3>
+      <p className="text-muted-foreground mb-6">{description}</p>
       {status === 'all' && (
         <Button asChild>
-          <Link href="/vender">
+          <Link href="/publicar">
             <Plus className="mr-2 h-4 w-4" />
             Publicar vehículo
           </Link>
@@ -321,11 +321,11 @@ export default function MyVehiclesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mis Vehículos</h1>
+          <h1 className="text-foreground text-2xl font-bold">Mis Vehículos</h1>
           <p className="text-muted-foreground">{vehicles.length} publicaciones en total</p>
         </div>
         <Button asChild>
-          <Link href="/vender">
+          <Link href="/publicar">
             <Plus className="mr-2 h-4 w-4" />
             Publicar vehículo
           </Link>
@@ -336,7 +336,7 @@ export default function MyVehiclesPage() {
       <div className="flex flex-col gap-4 sm:flex-row">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
           <Input
             type="text"
             placeholder="Buscar por título..."
@@ -348,7 +348,7 @@ export default function MyVehiclesPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="border-b border-border">
+      <div className="border-border border-b">
         <div className="-mb-px flex gap-2 overflow-x-auto">
           {tabs.map(tab => (
             <button
@@ -358,12 +358,14 @@ export default function MyVehiclesPage() {
                 'border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                 selectedStatus === tab.value
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
+                  : 'text-muted-foreground hover:border-border hover:text-foreground border-transparent'
               )}
             >
               {tab.label}
               {statusCounts[tab.value] > 0 && (
-                <span className="ml-1.5 text-xs text-muted-foreground">({statusCounts[tab.value]})</span>
+                <span className="text-muted-foreground ml-1.5 text-xs">
+                  ({statusCounts[tab.value]})
+                </span>
               )}
             </button>
           ))}

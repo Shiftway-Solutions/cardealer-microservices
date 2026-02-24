@@ -960,6 +960,11 @@ jobs:
           # Deploy ChatbotService + LLM Server (separate manifest)
           kubectl apply -f k8s/chatbotservice.yaml
 
+          # Force rollout restart for all deployments so pods pull the new :latest images
+          # (kubectl apply alone won't trigger re-pull when image name/tag hasn't changed)
+          echo "🔄 Restarting deployments to pick up new images..."
+          kubectl rollout restart deployment -n okla || true
+
       - name: ✅ Verify deployment
         run: |
           kubectl rollout status deployment/frontend-web -n okla --timeout=300s

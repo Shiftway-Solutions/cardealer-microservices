@@ -9,17 +9,29 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Clock, AlertCircle } from 'lucide-react';
+import { Shield, Clock, AlertCircle, User } from 'lucide-react';
 import { SmartPublishWizard } from '@/components/vehicles/smart-publish';
 import { useCanSell } from '@/hooks/use-kyc';
+import { useSellerByUserId } from '@/hooks/use-seller';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 
 export default function PublicarPage() {
+  const { user } = useAuth();
   const { canSell, isPending, isRejected, needsVerification, isLoading, rejectionReason } =
     useCanSell();
 
-  // Show loading state while KYC data loads
-  if (isLoading) {
+  // For seller account type, also check if seller profile is configured
+  const isSeller = user?.accountType === 'seller';
+  const sellerQuery = useSellerByUserId(isSeller ? user?.id : undefined);
+  const sellerProfileMissing =
+    isSeller &&
+    !sellerQuery.isLoading &&
+    canSell &&
+    (!sellerQuery.data || !sellerQuery.data.displayName);
+
+  // Show loading state while KYC + seller profile data loads
+  if (isLoading || (isSeller && sellerQuery.isLoading)) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
@@ -111,7 +123,36 @@ export default function PublicarPage() {
     );
   }
 
-  // Verified — show publish wizard
+  // Seller profile not configured — prompt to complete it before publishing
+  if (sellerProfileMissing) {
+    return (
+      <div className="bg-muted/50 flex min-h-[500px] items-center justify-center">
+        <div className="mx-auto max-w-md px-4 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+            <User className="h-8 w-8 text-amber-600" />
+          </div>
+          <h2 className="mb-2 text-xl font-bold text-gray-900">Perfil de vendedor requerido</h2>
+          <p className="mb-6 text-gray-600">
+            Para publicar vehículos debes completar tu perfil de vendedor primero. Tu información
+            aparecerá públicamente en tus anuncios.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Link href="/cuenta/perfil">
+              <Button className="gap-2 bg-amber-600 hover:bg-amber-700">
+                <User className="h-4 w-4" />
+                Completar perfil
+              </Button>
+            </Link>
+            <Link href="/cuenta">
+              <Button variant="outline">Volver</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Verified + seller profile complete — show publish wizard
   return (
     <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -124,7 +165,7 @@ export default function PublicarPage() {
         </div>
 
         {/* Smart Publish Wizard */}
-        <SmartPublishWizard mode="individual" />
+        <SmartPublishWizard mode="individual" userId={user?.id} />
       </div>
     </div>
   );

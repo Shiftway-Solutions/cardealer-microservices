@@ -335,10 +335,66 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
+    /// Get similar vehicles (same make, similar price range, active status)
+    /// </summary>
+    [HttpGet("{id:guid}/similar")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<object>>> GetSimilar(Guid id, [FromQuery] int limit = 4)
+    {
+        var vehicle = await _vehicleRepository.GetByIdAsync(id);
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        var parameters = new VehicleSearchParameters
+        {
+            Make = vehicle.Make,
+            Skip = 0,
+            Take = limit + 1, // +1 to exclude the current vehicle
+            SortBy = "CreatedAt",
+            SortDescending = true
+        };
+
+        var similar = await _vehicleRepository.SearchAsync(parameters);
+        var results = similar
+            .Where(v => v.Id != id && v.Status == VehicleStatus.Active)
+            .Take(limit)
+            .Select(v => new
+            {
+                v.Id,
+                Slug = GenerateSlug(v),
+                v.Title,
+                v.Make,
+                v.Model,
+                v.Year,
+                v.Trim,
+                v.Price,
+                v.Currency,
+                v.Mileage,
+                v.MileageUnit,
+                v.Transmission,
+                v.FuelType,
+                v.City,
+                v.State,
+                v.Status,
+                v.Condition,
+                v.IsFeatured,
+                v.ViewCount,
+                v.FavoriteCount,
+                v.CreatedAt,
+                Images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
+                {
+                    i.Id, i.Url, i.ThumbnailUrl, i.SortOrder, i.IsPrimary
+                })
+            });
+
+        return Ok(results);
+    }
+
+    /// <summary>
     /// Create a new vehicle listing
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<Vehicle>> Create([FromBody] CreateVehicleRequest request)
+    public async Task<ActionResult<CreateVehicleResult>> Create([FromBody] CreateVehicleRequest request)
     {
         if (request.CategoryId.HasValue)
         {
@@ -347,12 +403,34 @@ public class VehiclesController : ControllerBase
                 return BadRequest(new { message = "Category not found" });
         }
 
+        // Build title from make/model/year if not provided
+        var title = string.IsNullOrWhiteSpace(request.Title)
+            ? $"{request.Year} {request.Make} {request.Model}{(string.IsNullOrWhiteSpace(request.Trim) ? "" : " " + request.Trim)}"
+            : request.Title;
+
+        // Accept province as alias for state (frontend uses province)
+        var state = request.State ?? request.Province;
+
+        // Convert FeaturesJson: accept either a JSON string or build from Features list
+        var featuresJson = request.FeaturesJson;
+        if (string.IsNullOrWhiteSpace(featuresJson) && request.Features != null && request.Features.Count > 0)
+        {
+            featuresJson = System.Text.Json.JsonSerializer.Serialize(request.Features);
+        }
+        featuresJson ??= "[]";
+
+        // Map bodyStyle: accept BodyStyle enum or BodyType string alias
+        var bodyStyle = request.BodyStyle ?? MapBodyTypeToBodyStyle(request.BodyType);
+
+        // Currency default to DOP for DR market
+        var currency = string.IsNullOrWhiteSpace(request.Currency) ? "DOP" : request.Currency;
+
         var vehicle = new Vehicle
         {
-            Title = request.Title,
+            Title = title,
             Description = request.Description ?? string.Empty,
             Price = request.Price,
-            Currency = request.Currency ?? "USD",
+            Currency = currency,
             Status = VehicleStatus.Draft,
             VIN = request.VIN,
             Make = request.Make,
@@ -360,9 +438,9 @@ public class VehiclesController : ControllerBase
             Trim = request.Trim,
             Year = request.Year,
             Mileage = request.Mileage,
-            MileageUnit = request.MileageUnit ?? MileageUnit.Miles,
+            MileageUnit = request.MileageUnit ?? MileageUnit.Kilometers,
             VehicleType = request.VehicleType,
-            BodyStyle = request.BodyStyle ?? BodyStyle.Sedan,
+            BodyStyle = bodyStyle ?? BodyStyle.Sedan,
             Doors = request.Doors ?? 4,
             Seats = request.Seats ?? 5,
             FuelType = request.FuelType ?? FuelType.Gasoline,
@@ -377,9 +455,9 @@ public class VehiclesController : ControllerBase
             IsCertified = request.IsCertified ?? false,
             HasCleanTitle = request.HasCleanTitle ?? true,
             City = request.City,
-            State = request.State,
+            State = state,
             ZipCode = request.ZipCode,
-            Country = request.Country ?? "USA",
+            Country = request.Country ?? "DO",
             SellerId = request.SellerId ?? Guid.Empty,
             SellerName = request.SellerName ?? string.Empty,
             SellerPhone = request.SellerPhone,
@@ -387,12 +465,25 @@ public class VehiclesController : ControllerBase
             SellerWhatsApp = request.SellerWhatsApp,
             DealerId = request.DealerId ?? Guid.Empty,
             CategoryId = request.CategoryId,
-            FeaturesJson = request.FeaturesJson ?? "[]",
+            FeaturesJson = featuresJson,
             HomepageSections = request.HomepageSections ?? HomepageSection.None
         };
 
-        // Add images
-        if (request.Images != null)
+        // Add images — accept either List<string> (legacy) or List<VehicleImageDto> (new)
+        if (request.ImageObjects != null && request.ImageObjects.Count > 0)
+        {
+            foreach (var img in request.ImageObjects.OrderBy(i => i.SortOrder ?? 0))
+            {
+                vehicle.Images.Add(new VehicleImage
+                {
+                    Url = img.Url,
+                    ThumbnailUrl = img.ThumbnailUrl,
+                    SortOrder = img.SortOrder ?? vehicle.Images.Count,
+                    IsPrimary = img.IsPrimary ?? vehicle.Images.Count == 0
+                });
+            }
+        }
+        else if (request.Images != null)
         {
             var sortOrder = 0;
             foreach (var imageUrl in request.Images)
@@ -434,7 +525,38 @@ public class VehiclesController : ControllerBase
             // Don't fail the request if event publishing fails
         }
 
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var slug = GenerateSlug(created);
+
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, new CreateVehicleResult
+        {
+            Id = created.Id,
+            Slug = slug,
+            Status = created.Status,
+            Message = "Vehicle created successfully. Call /publish to make it visible."
+        });
+    }
+
+    /// <summary>
+    /// Maps a frontend bodyType string to BodyStyle enum (case-insensitive)
+    /// </summary>
+    private static BodyStyle? MapBodyTypeToBodyStyle(string? bodyType)
+    {
+        if (string.IsNullOrWhiteSpace(bodyType)) return null;
+        return bodyType.ToLowerInvariant() switch
+        {
+            "sedan" => BodyStyle.Sedan,
+            "coupe" => BodyStyle.Coupe,
+            "hatchback" => BodyStyle.Hatchback,
+            "wagon" => BodyStyle.Wagon,
+            "suv" => BodyStyle.SUV,
+            "crossover" => BodyStyle.Crossover,
+            "pickup" or "truck" => BodyStyle.Pickup,
+            "van" => BodyStyle.Van,
+            "minivan" => BodyStyle.Minivan,
+            "convertible" => BodyStyle.Convertible,
+            "sports" or "sportscar" or "sport" => BodyStyle.SportsCar,
+            _ => null
+        };
     }
 
     /// <summary>
@@ -959,24 +1081,27 @@ public record VehicleSearchResult
 
 public record CreateVehicleRequest
 {
-    public string Title { get; init; } = string.Empty;
+    public string? Title { get; init; }
     public string? Description { get; init; }
     public decimal Price { get; init; }
     public string? Currency { get; init; }
-    public string VIN { get; init; } = string.Empty;
+    public string? VIN { get; init; }
     public string Make { get; init; } = string.Empty;
     public string Model { get; init; } = string.Empty;
-    public string? Trim { get; init; } // LE, SE, XLE, Sport
+    public string? Trim { get; init; }
     public int Year { get; init; }
     public int Mileage { get; init; }
     public MileageUnit? MileageUnit { get; init; }
     public VehicleType VehicleType { get; init; }
+    /// <summary>BodyStyle enum (accepts string enum values)</summary>
     public BodyStyle? BodyStyle { get; init; }
-    public int? Doors { get; init; } // Número de puertas (default: 4)
-    public int? Seats { get; init; } // Número de asientos (default: 5)
-    public FuelType? FuelType { get; init; } // Opcional - VIN no siempre tiene datos
-    public TransmissionType? Transmission { get; init; } // Opcional - VIN no siempre tiene datos
-    public Entities.DriveType? DriveType { get; init; } // Opcional - VIN no siempre tiene datos
+    /// <summary>Alias for BodyStyle used by frontend (sedan, suv, pickup, etc.)</summary>
+    public string? BodyType { get; init; }
+    public int? Doors { get; init; }
+    public int? Seats { get; init; }
+    public FuelType? FuelType { get; init; }
+    public TransmissionType? Transmission { get; init; }
+    public Entities.DriveType? DriveType { get; init; }
     public string? EngineSize { get; init; }
     public int? Cylinders { get; init; }
     public int? Horsepower { get; init; }
@@ -987,6 +1112,8 @@ public record CreateVehicleRequest
     public bool? HasCleanTitle { get; init; }
     public string? City { get; init; }
     public string? State { get; init; }
+    /// <summary>Alias for State used by frontend</summary>
+    public string? Province { get; init; }
     public string? ZipCode { get; init; }
     public string? Country { get; init; }
     public Guid? SellerId { get; init; }
@@ -996,15 +1123,32 @@ public record CreateVehicleRequest
     public string? SellerWhatsApp { get; init; }
     public Guid? DealerId { get; init; }
     public Guid? CategoryId { get; init; }
+    /// <summary>Legacy: list of image URLs as strings</summary>
     public List<string>? Images { get; init; }
-    public string? FeaturesJson { get; init; } // JSON array de características
-
-    /// <summary>
-    /// Secciones del homepage donde mostrar este vehículo.
-    /// Valores: None=0, Carousel=1, Sedanes=2, SUVs=4, Camionetas=8, Deportivos=16, Destacados=32, Lujo=64
-    /// Se pueden combinar sumando los valores (ej: Carousel + Destacados = 33)
-    /// </summary>
+    /// <summary>New: list of image objects with url, order, isPrimary</summary>
+    public List<CreateVehicleImageDto>? ImageObjects { get; init; }
+    /// <summary>Features as JSON string (e.g. ["GPS","Sunroof"])</summary>
+    public string? FeaturesJson { get; init; }
+    /// <summary>Features as list (alternative to FeaturesJson)</summary>
+    public List<string>? Features { get; init; }
     public HomepageSection? HomepageSections { get; init; }
+}
+
+public record CreateVehicleImageDto
+{
+    public required string Url { get; init; }
+    public string? ThumbnailUrl { get; init; }
+    public int? SortOrder { get; init; }
+    public bool? IsPrimary { get; init; }
+    public string? Alt { get; init; }
+}
+
+public record CreateVehicleResult
+{
+    public Guid Id { get; init; }
+    public string Slug { get; init; } = string.Empty;
+    public VehicleStatus Status { get; init; }
+    public string Message { get; init; } = string.Empty;
 }
 
 public record UpdateVehicleRequest

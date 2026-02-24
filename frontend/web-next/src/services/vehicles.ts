@@ -6,6 +6,7 @@
 import { apiClient } from '@/lib/api-client';
 import type {
   Vehicle,
+  VehicleImage,
   VehicleCardData,
   VehicleSearchParams,
   PaginatedResponse,
@@ -133,87 +134,361 @@ export interface SellerVehiclesResponse {
 // TRANSFORM FUNCTIONS
 // ============================================================
 
-export const transformVehicle = (dto: VehicleDto): Vehicle => ({
-  id: dto.id,
-  slug: dto.slug,
-  make: dto.make,
-  model: dto.model,
-  year: dto.year,
-  trim: dto.trim,
-  bodyType: dto.bodyType as Vehicle['bodyType'],
-  price: dto.price,
-  originalPrice: dto.originalPrice,
-  marketPrice: dto.marketPrice,
-  currency: (dto.currency || 'DOP') as 'DOP' | 'USD',
-  dealRating: calculateDealRating(dto.price, dto.marketPrice),
-  mileage: dto.mileage,
-  transmission: dto.transmission as Vehicle['transmission'],
-  fuelType: dto.fuelType as Vehicle['fuelType'],
-  drivetrain: dto.drivetrain as Vehicle['drivetrain'],
-  engineSize: dto.engineSize,
-  horsepower: dto.horsepower,
-  exteriorColor: dto.exteriorColor,
-  interiorColor: dto.interiorColor,
-  doors: dto.doors,
-  seats: dto.seats,
-  features: dto.features || [],
-  images: dto.images.map(img => ({
-    id: img.id,
-    url: img.url,
-    thumbnailUrl: img.thumbnailUrl,
-    alt: img.alt,
-    order: img.order,
-    isPrimary: img.isPrimary,
-  })),
-  has360View: dto.has360View,
-  hasVideo: dto.hasVideo,
-  status: dto.status as Vehicle['status'],
-  condition: dto.condition as Vehicle['condition'],
-  isFeatured: dto.isFeatured,
-  viewCount: dto.viewCount,
-  favoriteCount: dto.favoriteCount,
-  sellerId: dto.sellerId,
-  sellerType: dto.sellerType as Vehicle['sellerType'],
-  location: {
-    city: dto.city,
-    province: dto.province,
-    country: dto.country || 'DO',
-    coordinates:
-      dto.latitude && dto.longitude
-        ? { latitude: dto.latitude, longitude: dto.longitude }
-        : undefined,
-  },
-  createdAt: dto.createdAt,
-  updatedAt: dto.updatedAt,
-  publishedAt: dto.publishedAt,
-});
+/**
+ * Compute slug from Vehicle entity fields (mirrors backend GenerateSlug logic)
+ * Backend: "{year}-{make}-{model}-{id[..8]}"
+ */
+function computeSlugFromEntity(entity: {
+  year?: number;
+  make?: string;
+  model?: string;
+  id?: string;
+}): string {
+  const year = entity.year || '';
+  const make = (entity.make || '').toLowerCase().replace(/\s+/g, '-');
+  const model = (entity.model || '').toLowerCase().replace(/\s+/g, '-');
+  const shortId = (entity.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+  return `${year}-${make}-${model}-${shortId}`.replace(/--+/g, '-');
+}
 
-export const transformToCardData = (dto: VehicleDto): VehicleCardData => ({
-  id: dto.id,
-  slug: dto.slug,
-  make: dto.make,
-  model: dto.model,
-  year: dto.year,
-  price: dto.price,
-  currency: (dto.currency as 'DOP' | 'USD') || 'DOP',
-  mileage: dto.mileage,
-  transmission: dto.transmission,
-  fuelType: dto.fuelType,
-  imageUrl: dto.images[0]?.url || '/placeholder-car.jpg',
-  dealRating: calculateDealRating(dto.price, dto.marketPrice),
-  location: `${dto.city}, ${dto.province}`,
-  trim: dto.trim,
-  photoCount: dto.images.length,
-  isNew: dto.condition === 'new',
-  isCertified: dto.isCertified,
-  monthlyPayment: calculateMonthlyPayment(dto.price),
-  dealerName: dto.seller?.name,
-  dealerRating: dto.seller?.rating,
-  // Status and metadata
-  status: (dto.status as VehicleCardData['status']) || 'active',
-  viewCount: dto.viewCount,
-  createdAt: dto.createdAt,
-});
+/**
+ * Map backend BodyStyle enum string to frontend VehicleBodyType
+ */
+function mapBodyStyle(bodyStyle: string | number | undefined): Vehicle['bodyType'] {
+  if (bodyStyle === undefined || bodyStyle === null) return 'sedan';
+  const s = String(bodyStyle).toLowerCase().replace(/\s+/g, '');
+  const map: Record<string, Vehicle['bodyType']> = {
+    '0': 'sedan',
+    sedan: 'sedan',
+    '1': 'coupe',
+    coupe: 'coupe',
+    '2': 'hatchback',
+    hatchback: 'hatchback',
+    '3': 'wagon',
+    wagon: 'wagon',
+    '4': 'suv',
+    suv: 'suv',
+    '5': 'crossover',
+    crossover: 'crossover',
+    '6': 'pickup',
+    pickup: 'pickup',
+    truck: 'pickup',
+    '7': 'sedan',
+    van: 'sedan',
+    '8': 'minivan',
+    minivan: 'minivan',
+    '9': 'convertible',
+    convertible: 'convertible',
+    '10': 'sports',
+    sportscar: 'sports',
+    sports: 'sports',
+    sport: 'sports',
+  };
+  return map[s] || 'sedan';
+}
+
+/**
+ * Map backend VehicleCondition enum string to frontend condition
+ */
+function mapCondition(condition: string | number | undefined): Vehicle['condition'] {
+  if (condition === undefined || condition === null) return 'used';
+  const s = String(condition).toLowerCase().replace(/\s+/g, '');
+  const map: Record<string, Vehicle['condition']> = {
+    '0': 'new',
+    new: 'new',
+    '1': 'certified',
+    certifiedpreowned: 'certified',
+    certified: 'certified',
+    '2': 'used',
+    used: 'used',
+    salvage: 'used',
+    rebuilt: 'used',
+    '3': 'used',
+    '4': 'used',
+  };
+  return map[s] || 'used';
+}
+
+/**
+ * Map backend SellerType enum string to frontend sellerType
+ */
+function mapSellerType(sellerType: string | number | undefined): Vehicle['sellerType'] {
+  if (sellerType === undefined || sellerType === null) return 'seller';
+  const s = String(sellerType).toLowerCase();
+  if (s === '1' || s === 'dealer' || s === 'franchise' || s === 'wholesale') return 'dealer';
+  return 'seller';
+}
+
+/**
+ * Map backend VehicleStatus enum string to frontend VehicleStatus
+ */
+function mapStatus(status: string | number | undefined): Vehicle['status'] {
+  if (status === undefined || status === null) return 'active';
+  const s = String(status).toLowerCase();
+  const map: Record<string, Vehicle['status']> = {
+    '0': 'draft',
+    draft: 'draft',
+    '1': 'pending',
+    pendingreview: 'pending',
+    '2': 'active',
+    active: 'active',
+    '3': 'reserved',
+    reserved: 'reserved',
+    '4': 'sold',
+    sold: 'sold',
+    '5': 'paused',
+    archived: 'paused',
+    '6': 'rejected',
+    rejected: 'rejected',
+    expired: 'expired',
+    paused: 'paused',
+  };
+  return map[s] || 'active';
+}
+
+/**
+ * Map backend transmission enum to frontend string
+ */
+function mapTransmission(val: string | number | undefined): string {
+  const s = String(val ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, '');
+  const map: Record<string, string> = {
+    '0': 'automatic',
+    automatic: 'automatic',
+    '1': 'manual',
+    manual: 'manual',
+    '2': 'cvt',
+    cvt: 'cvt',
+    '3': 'semi-automatic',
+    automated: 'semi-automatic',
+    '4': 'semi-automatic',
+    dualclutch: 'semi-automatic',
+  };
+  return map[s] || s || 'automatic';
+}
+
+/**
+ * Map backend fuelType enum to frontend string
+ */
+function mapFuelType(val: string | number | undefined): string {
+  const s = String(val ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, '');
+  const map: Record<string, string> = {
+    '0': 'gasoline',
+    gasoline: 'gasoline',
+    '1': 'diesel',
+    diesel: 'diesel',
+    '2': 'electric',
+    electric: 'electric',
+    '3': 'hybrid',
+    hybrid: 'hybrid',
+    '4': 'hybrid',
+    pluginhybrid: 'hybrid',
+    '5': 'gasoline',
+    hydrogen: 'gasoline',
+    '6': 'gasoline',
+    flexfuel: 'gasoline',
+    '7': 'gasoline',
+    naturalgas: 'gasoline',
+  };
+  return map[s] || s || 'gasoline';
+}
+
+/**
+ * Parse FeaturesJson string to array
+ */
+function parseFeaturesJson(featuresJson: string | string[] | undefined): string[] {
+  if (!featuresJson) return [];
+  if (Array.isArray(featuresJson)) return featuresJson;
+  try {
+    const parsed = JSON.parse(featuresJson);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Transform backend Vehicle entity or VehicleDto to frontend Vehicle type.
+ * Handles both old VehicleDto shape and raw Vehicle entity from backend.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle => {
+  const raw = dto as Record<string, unknown>;
+
+  // Compute slug: use existing slug field or compute from entity fields
+  const slug =
+    (raw.slug as string) ||
+    computeSlugFromEntity({
+      year: raw.year as number,
+      make: raw.make as string,
+      model: raw.model as string,
+      id: raw.id as string,
+    });
+
+  // Handle images: VehicleImageDto or VehicleImage entity
+  const rawImages = (raw.images as Record<string, unknown>[]) || [];
+  const images: VehicleImage[] = rawImages.map(img => ({
+    id: (img.id as string) || '',
+    url: (img.url as string) || '',
+    thumbnailUrl: (img.thumbnailUrl as string) || undefined,
+    alt: (img.alt as string) || (img.caption as string) || undefined,
+    order: (img.order as number) ?? (img.sortOrder as number) ?? 0,
+    isPrimary: (img.isPrimary as boolean) ?? false,
+  }));
+
+  // Location: handle both {city, province} and {city, state} shapes
+  const city = (raw.city as string) || '';
+  const province = (raw.province as string) || (raw.state as string) || '';
+  const country = (raw.country as string) || 'DO';
+
+  // Features: handle both array and JSON string
+  const features = parseFeaturesJson(
+    (raw.features as string[] | string) || (raw.featuresJson as string)
+  );
+
+  // Seller info
+  const sellerRaw = raw.seller as Record<string, unknown> | undefined;
+
+  return {
+    id: raw.id as string,
+    slug,
+    make: raw.make as string,
+    model: raw.model as string,
+    year: raw.year as number,
+    trim: raw.trim as string | undefined,
+    bodyType: mapBodyStyle((raw.bodyType as string) || (raw.bodyStyle as string)),
+    description: raw.description as string | undefined,
+    price: raw.price as number,
+    originalPrice: raw.originalPrice as number | undefined,
+    marketPrice: raw.marketPrice as number | undefined,
+    currency: ((raw.currency as string) || 'DOP') as 'DOP' | 'USD',
+    dealRating: calculateDealRating(raw.price as number, raw.marketPrice as number | undefined),
+    isNegotiable: raw.isNegotiable as boolean | undefined,
+    mileage: raw.mileage as number,
+    transmission: mapTransmission(raw.transmission as string | number) as Vehicle['transmission'],
+    fuelType: mapFuelType(raw.fuelType as string | number) as Vehicle['fuelType'],
+    drivetrain: undefined,
+    engineSize: raw.engineSize as string | undefined,
+    horsepower: raw.horsepower as number | undefined,
+    exteriorColor: raw.exteriorColor as string | undefined,
+    interiorColor: raw.interiorColor as string | undefined,
+    doors: raw.doors as number | undefined,
+    seats: raw.seats as number | undefined,
+    features,
+    images,
+    has360View: raw.has360View as boolean | undefined,
+    hasVideo: raw.hasVideo as boolean | undefined,
+    status: mapStatus(raw.status as string | number),
+    condition: mapCondition(raw.condition as string | number),
+    isFeatured: raw.isFeatured as boolean | undefined,
+    viewCount: raw.viewCount as number | undefined,
+    favoriteCount: raw.favoriteCount as number | undefined,
+    sellerId: (raw.sellerId as string) || '',
+    sellerType: mapSellerType(raw.sellerType as string | number),
+    location: {
+      city,
+      province,
+      country,
+      coordinates:
+        raw.latitude && raw.longitude
+          ? { latitude: raw.latitude as number, longitude: raw.longitude as number }
+          : undefined,
+    },
+    createdAt: raw.createdAt as string,
+    updatedAt: raw.updatedAt as string,
+    publishedAt: raw.publishedAt as string | undefined,
+    // Attach seller info: prefer nested seller object, fall back to flat fields on entity
+    ...(sellerRaw
+      ? {
+          seller: {
+            id: (sellerRaw.id as string) || (raw.sellerId as string) || '',
+            name: (sellerRaw.name as string) || '',
+            type: mapSellerType(sellerRaw.type as string) as 'seller' | 'dealer',
+            avatar: sellerRaw.avatar as string | undefined,
+            phone: sellerRaw.phone as string | undefined,
+            email: sellerRaw.email as string | undefined,
+            city: sellerRaw.city as string | undefined,
+            rating: sellerRaw.rating as number | undefined,
+            reviewCount: sellerRaw.reviewCount as number | undefined,
+            isVerified: sellerRaw.isVerified as boolean | undefined,
+          },
+        }
+      : {
+          // Flat seller fields from raw Vehicle entity
+          seller: {
+            id: (raw.sellerId as string) || '',
+            name: (raw.sellerName as string) || '',
+            type: mapSellerType(raw.sellerType as string) as 'seller' | 'dealer',
+            phone: (raw.sellerPhone as string) || undefined,
+            email: (raw.sellerEmail as string) || undefined,
+            city,
+            isVerified: undefined,
+          },
+        }),
+  } as Vehicle;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const transformToCardData = (dto: VehicleDto | Record<string, any>): VehicleCardData => {
+  const raw = dto as Record<string, unknown>;
+  // Compute slug if not present (raw entity from backend)
+  const slug =
+    (raw.slug as string) ||
+    computeSlugFromEntity({
+      year: raw.year as number,
+      make: raw.make as string,
+      model: raw.model as string,
+      id: raw.id as string,
+    });
+  // Handle images: entity uses sortOrder, DTO uses order
+  const rawImages = (raw.images as Record<string, unknown>[]) || [];
+  const firstImage = rawImages.slice().sort((a, b) => {
+    const aOrder = (a.sortOrder as number) ?? (a.order as number) ?? 99;
+    const bOrder = (b.sortOrder as number) ?? (b.order as number) ?? 99;
+    return aOrder - bOrder;
+  })[0];
+  const imageUrl = (firstImage?.url as string) || '/placeholder-car.jpg';
+  // Location: backend entity uses state, DTO uses province
+  const city = (raw.city as string) || '';
+  const province = (raw.province as string) || (raw.state as string) || '';
+  const location = [city, province].filter(Boolean).join(', ');
+  // Seller info
+  const seller = raw.seller as Record<string, unknown> | undefined;
+  // Condition: map to boolean isNew
+  const conditionStr = String(raw.condition ?? '').toLowerCase();
+  const isNew = conditionStr === 'new' || conditionStr === '0';
+  const isCertified =
+    conditionStr === 'certified' || conditionStr === 'certifiedpreowned' || conditionStr === '1';
+
+  return {
+    id: raw.id as string,
+    slug,
+    make: raw.make as string,
+    model: raw.model as string,
+    year: raw.year as number,
+    price: raw.price as number,
+    currency: ((raw.currency as string) || 'DOP') as 'DOP' | 'USD',
+    mileage: raw.mileage as number,
+    transmission: mapTransmission(raw.transmission as string | number),
+    fuelType: mapFuelType(raw.fuelType as string | number),
+    imageUrl,
+    dealRating: calculateDealRating(raw.price as number, raw.marketPrice as number | undefined),
+    location,
+    trim: raw.trim as string | undefined,
+    photoCount: rawImages.length,
+    isNew,
+    isCertified,
+    monthlyPayment: calculateMonthlyPayment(raw.price as number),
+    dealerName: seller?.name as string | undefined,
+    dealerRating: seller?.rating as number | undefined,
+    status: mapStatus(raw.status as string | number) as VehicleCardData['status'],
+    viewCount: raw.viewCount as number | undefined,
+    createdAt: raw.createdAt as string,
+  };
+};
 
 function calculateDealRating(price: number, marketPrice?: number): DealRating | undefined {
   if (!marketPrice || marketPrice === 0) return undefined;
@@ -264,8 +539,34 @@ export async function getVehicleById(id: string): Promise<Vehicle> {
 export async function searchVehicles(
   params: VehicleSearchParams
 ): Promise<PaginatedResponse<VehicleCardData>> {
+  // Map frontend VehicleSearchParams → backend VehicleSearchRequest
+  // Backend uses: Search, Page, PageSize, SortBy, SortDescending, Make, Model,
+  //   MinYear, MaxYear, MinPrice, MaxPrice, MaxMileage, BodyStyle, FuelType,
+  //   Transmission, Condition, State
+  const backendParams: Record<string, unknown> = {
+    Page: params.page ?? 1,
+    PageSize: params.pageSize ?? 12,
+  };
+  if (params.q) backendParams.Search = params.q;
+  if (params.make) backendParams.Make = params.make;
+  if (params.model) backendParams.Model = params.model;
+  if (params.yearMin) backendParams.MinYear = params.yearMin;
+  if (params.yearMax) backendParams.MaxYear = params.yearMax;
+  if (params.priceMin) backendParams.MinPrice = params.priceMin;
+  if (params.priceMax) backendParams.MaxPrice = params.priceMax;
+  if (params.mileageMax) backendParams.MaxMileage = params.mileageMax;
+  if (params.bodyType) backendParams.BodyStyle = params.bodyType;
+  if (params.fuelType) backendParams.FuelType = params.fuelType;
+  if (params.transmission) backendParams.Transmission = params.transmission;
+  if (params.condition) backendParams.Condition = params.condition;
+  if (params.province) backendParams.State = params.province;
+  if (params.sortBy) {
+    backendParams.SortBy = params.sortBy;
+    backendParams.SortDescending = params.sortOrder === 'desc';
+  }
+
   const response = await apiClient.get<VehicleSearchResponse>('/api/vehicles', {
-    params,
+    params: backendParams,
   });
 
   return {
@@ -308,7 +609,7 @@ export async function getFeaturedVehicles(limit: number = 8): Promise<VehicleCar
  * Track vehicle view
  */
 export async function trackVehicleView(vehicleId: string): Promise<void> {
-  await apiClient.post(`/api/vehicles/${vehicleId}/view`);
+  await apiClient.post(`/api/vehicles/${vehicleId}/views`);
 }
 
 /**
@@ -688,10 +989,76 @@ export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
 // ============================================================
 
 /**
- * Create a new vehicle listing
+ * Create a new vehicle listing (creates as Draft).
+ * Maps frontend field names to backend expected names.
  */
 export async function createVehicle(data: CreateVehicleRequest): Promise<CreateVehicleResponse> {
-  const response = await apiClient.post<CreateVehicleResponse>('/api/vehicles', data);
+  // Auto-generate title if not set (backend may require it for publish)
+  const titleParts = [data.year, data.make, data.model, data.trim].filter(Boolean);
+  const title = titleParts.join(' ');
+
+  // Map images: send as imageObjects (array of {url, sortOrder, isPrimary})
+  const imageObjects = data.images
+    .filter(img => img.url)
+    .map(img => ({
+      url: img.url,
+      thumbnailUrl: undefined as string | undefined,
+      sortOrder: img.order,
+      isPrimary: img.isPrimary ?? false,
+      alt: img.alt,
+    }));
+
+  // Map features array to JSON string (backend FeaturesJson field)
+  const featuresJson = data.features?.length ? JSON.stringify(data.features) : undefined;
+
+  const payload = {
+    // Required fields
+    title,
+    make: data.make,
+    model: data.model,
+    year: data.year,
+    trim: data.trim,
+    mileage: data.mileage ?? 0,
+    vin: data.vin,
+    // Enums — send as lowercase strings, backend accepts them case-insensitively
+    transmission: data.transmission,
+    fuelType: data.fuelType,
+    bodyType: data.bodyType, // backend alias for BodyStyle
+    condition: data.condition,
+    // Pricing
+    price: data.price,
+    currency: data.currency ?? 'DOP',
+    isNegotiable: data.isNegotiable ?? false,
+    // Description + features
+    description: data.description,
+    features: data.features ?? [], // backend Features alias for FeaturesJson
+    featuresJson, // redundant but safe
+    // Location — backend uses State field; province is an alias we added
+    province: data.province,
+    state: data.province,
+    city: data.city,
+    country: 'DO',
+    // Images as objects
+    imageObjects,
+    // Seller contact
+    sellerName: data.sellerName,
+    sellerPhone: data.sellerPhone,
+    sellerEmail: data.sellerEmail,
+    // Appearance
+    exteriorColor: data.exteriorColor,
+    interiorColor: data.interiorColor,
+  };
+
+  const response = await apiClient.post<CreateVehicleResponse>('/api/vehicles', payload);
+  return response.data;
+}
+
+/**
+ * Publish a vehicle (change status from Draft → Active).
+ * Must be called after createVehicle once all required fields are filled.
+ */
+export async function publishVehicle(id: string): Promise<CreateVehicleResponse> {
+  const response = await apiClient.post<CreateVehicleResponse>(`/api/vehicles/${id}/publish`);
   return response.data;
 }
 
@@ -989,6 +1356,7 @@ export const vehicleService = {
 
   // Write operations
   create: createVehicle,
+  publish: publishVehicle,
   update: updateVehicle,
   delete: deleteVehicle,
 
