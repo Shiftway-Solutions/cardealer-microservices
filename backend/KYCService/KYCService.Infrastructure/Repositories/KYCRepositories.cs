@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using KYCService.Domain.Entities;
 using KYCService.Domain.Interfaces;
 using KYCService.Infrastructure.Persistence;
