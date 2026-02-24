@@ -78,9 +78,12 @@ export function useCanSell() {
   const canSell = isBypassed || (profile ? isVerifiedForSelling(profile) : false);
   const isPending =
     !isBypassed &&
-    (profile?.status === KYCStatus.UnderReview || profile?.status === KYCStatus.InProgress);
+    (profile?.status === KYCStatus.UnderReview || 
+     profile?.status === KYCStatus.InProgress ||
+     profile?.status === KYCStatus.Pending);
   const isRejected = !isBypassed && profile?.status === KYCStatus.Rejected;
-  const needsVerification = !isBypassed && (!profile || profile.status === KYCStatus.Pending);
+  // Only show "needs verification" if no profile exists at all (never started)
+  const needsVerification = !isBypassed && !profile;
 
   return {
     canSell,
