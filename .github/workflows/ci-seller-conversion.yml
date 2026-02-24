@@ -82,18 +82,18 @@ jobs:
         working-directory: backend/UserService
         run: |
           dotnet test UserService.Tests/UserService.Tests.csproj \
-            --no-build \
             --configuration Release \
             --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" \
-            --collect:"XPlat Code Coverage"
+            --collect:"XPlat Code Coverage" \
+            --results-directory TestResults
 
       - name: 📊 Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: backend/UserService/UserService.Tests/TestResults/
+          path: backend/UserService/TestResults/
 
   # ============================================
   # JOB 2: Migration Dry Run (optional)
