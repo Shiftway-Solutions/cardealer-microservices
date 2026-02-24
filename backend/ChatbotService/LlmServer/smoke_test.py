@@ -376,11 +376,13 @@ def main():
     parser.add_argument("--chatbot-url", default=CHATBOT_DEFAULT_URL, help="ChatbotService base URL")
     parser.add_argument("--gateway-url", default=None, help="Gateway URL (optional, for routing test)")
     parser.add_argument("--quick", action="store_true", help="Quick mode: health checks only")
+    parser.add_argument("--skip-llm", action="store_true",
+                        help="Skip LLM tests (e.g. when llm-server is scaled to 0 replicas)")
     args = parser.parse_args()
 
     print("=" * 60)
     print("  OKLA Chatbot LLM — Production Smoke Test")
-    print(f"  LLM Server:     {args.llm_url}")
+    print(f"  LLM Server:     {args.llm_url if not args.skip_llm else 'skipped (--skip-llm)'}")
     print(f"  ChatbotService:  {args.chatbot_url}")
     print(f"  Gateway:         {args.gateway_url or 'skipped'}")
     print(f"  Mode:            {'quick' if args.quick else 'full'}")
@@ -388,8 +390,12 @@ def main():
 
     # ── Phase 1: Health Checks ──
     print("\n📡 Phase 1: Health Checks")
-    model_loaded = test_llm_health(args.llm_url)
-    test_llm_metrics(args.llm_url)
+    if args.skip_llm:
+        print("⚠️  LLM Server tests skipped (scaled to 0 replicas — GPU cost savings mode)")
+        model_loaded = False
+    else:
+        model_loaded = test_llm_health(args.llm_url)
+        test_llm_metrics(args.llm_url)
     test_chatbot_health(args.chatbot_url)
 
     if args.gateway_url:

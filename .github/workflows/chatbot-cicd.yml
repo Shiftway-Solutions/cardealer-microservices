@@ -387,8 +387,14 @@ jobs:
           kubectl apply -f k8s/chatbotservice.yaml -n okla
           echo "⏳ Waiting for ChatbotService rollout..."
           kubectl rollout status deployment/chatbotservice -n okla --timeout=300s
-          echo "⏳ Waiting for LLM Server rollout..."
-          kubectl rollout status deployment/llm-server -n okla --timeout=600s
+          # Only wait for LLM Server rollout when it actually has replicas
+          LLM_DEPLOY_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
+          if [ "${LLM_DEPLOY_REPLICAS}" != "0" ] && [ -n "${LLM_DEPLOY_REPLICAS}" ]; then
+            echo "⏳ Waiting for LLM Server rollout..."
+            kubectl rollout status deployment/llm-server -n okla --timeout=600s
+          else
+            echo "ℹ️  LLM Server scaled to 0 replicas — skipping rollout wait"
+          fi
 
       - name: ✅ Post-deploy smoke test
         run: |
@@ -397,26 +403,39 @@ jobs:
           # Install smoke test dependencies
           pip install requests > /dev/null 2>&1
 
+          # Check if LLM Server is running (may be scaled to 0 for GPU cost savings)
+          LLM_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
+          echo "ℹ️  LLM Server spec.replicas: ${LLM_REPLICAS}"
+
           # Port-forward ChatbotService
           kubectl port-forward svc/chatbotservice 8080:8080 -n okla &
           PF_CHATBOT=$!
           sleep 3
 
-          # Port-forward LLM Server
-          kubectl port-forward svc/llm-server 8000:8000 -n okla &
-          PF_LLM=$!
-          sleep 5
+          SKIP_LLM_FLAG=""
+          PF_LLM=""
+          if [ "${LLM_REPLICAS}" = "0" ] || [ -z "${LLM_REPLICAS}" ]; then
+            echo "⚠️  LLM Server scaled to 0 replicas — skipping LLM port-forward and tests"
+            SKIP_LLM_FLAG="--skip-llm"
+          else
+            # Port-forward LLM Server only when it has running pods
+            kubectl port-forward svc/llm-server 8000:8000 -n okla &
+            PF_LLM=$!
+            sleep 5
+          fi
 
           # Run smoke test in quick mode (health checks only for CI speed)
+          # shellcheck disable=SC2086
           python backend/ChatbotService/LlmServer/smoke_test.py \
             --llm-url http://localhost:8000 \
             --chatbot-url http://localhost:8080 \
-            --quick
+            --quick \
+            $SKIP_LLM_FLAG
 
           SMOKE_EXIT=$?
 
           # Cleanup
-          kill $PF_CHATBOT $PF_LLM 2>/dev/null || true
+          kill $PF_CHATBOT ${PF_LLM:-} 2>/dev/null || true
 
           if [ $SMOKE_EXIT -eq 1 ]; then
             echo "❌ Smoke test FAILED — critical failures detected"

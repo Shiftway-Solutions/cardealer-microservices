@@ -95,7 +95,7 @@ public class GlobalExceptionMiddleware
         try
         {
             context.Response.ContentType = "application/problem+json";
-            context.Response.StatusCode = problemDetails.Status ?? 500;
+            context.Response.StatusCode = problemDetails.Status == 0 ? 500 : problemDetails.Status;
             await context.Response.WriteAsync(problemDetails.ToJson());
         }
         catch (ObjectDisposedException ode)
