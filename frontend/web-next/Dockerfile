@@ -58,9 +58,11 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy built assets
+# Note: `standalone` output mode creates .next/standalone with everything
+# including .next/static bundled inside. Just copy the whole standalone dir
+# and the public folder. The double-copy of .next/static is unnecessary.
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
 
 # Set ownership
 RUN chown -R nextjs:nodejs /app
