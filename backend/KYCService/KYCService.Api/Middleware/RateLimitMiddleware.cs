@@ -29,24 +29,30 @@ public class RateLimitMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<RateLimitMiddleware> _logger;
 
-    // Endpoint-specific rate limits
+    // Endpoint-specific rate limits (ordered from most-specific to least-specific for prefix matching)
     private static readonly Dictionary<string, RateLimitConfig> EndpointLimits = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Profile creation - very strict (5 per hour)
-        { "/api/kyc/profiles", new RateLimitConfig { MaxRequests = 5, WindowSeconds = 3600 } },
-        
-        // Document upload - moderate (20 per 10 minutes)
-        { "/api/kyc/documents", new RateLimitConfig { MaxRequests = 20, WindowSeconds = 600 } },
-        
-        // Identity verification - strict (10 per hour)
+        // Identity verification process - strict (10 per hour)
         { "/api/identity-verification/process", new RateLimitConfig { MaxRequests = 10, WindowSeconds = 3600 } },
         
         // Submit for review - very strict (3 per day)
         { "/api/kyc/submit-for-review", new RateLimitConfig { MaxRequests = 3, WindowSeconds = 86400 } },
         
-        // Default for other KYC endpoints
+        // Document upload POST - moderate (20 per 10 minutes)
+        // NOTE: This key targets paths like /api/kyc/profiles/{id}/documents only for writes;
+        // the HTTP-method check in GetRateLimitConfig prevents it from hitting GET requests.
+        { "/api/kyc/documents", new RateLimitConfig { MaxRequests = 20, WindowSeconds = 600 } },
+
+        // Default for other KYC endpoints (generous for read operations)
         { "/api/kyc", new RateLimitConfig { MaxRequests = 100, WindowSeconds = 60 } },
         { "/api/identity-verification", new RateLimitConfig { MaxRequests = 50, WindowSeconds = 60 } }
+    };
+
+    // POST-only endpoints that have stricter rate limits checked by HTTP method
+    private static readonly Dictionary<string, RateLimitConfig> PostOnlyLimits = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Profile creation - very strict (5 per hour, POST only)
+        { "/api/kyc/profiles", new RateLimitConfig { MaxRequests = 5, WindowSeconds = 3600 } },
     };
 
     public RateLimitMiddleware(RequestDelegate next, ILogger<RateLimitMiddleware> logger)
@@ -59,8 +65,16 @@ public class RateLimitMiddleware
     {
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
         
+        // Admins and compliance officers bypass rate limiting to allow document review workflows
+        var accountType = context.User.FindFirst("account_type")?.Value;
+        if (accountType == "4" || accountType == "5") // Admin = 4, PlatformEmployee = 5
+        {
+            await _next(context);
+            return;
+        }
+
         // Check if this endpoint has rate limiting
-        var config = GetRateLimitConfig(path);
+        var config = GetRateLimitConfig(path, context.Request.Method);
         if (config == null)
         {
             await _next(context);
@@ -122,9 +136,19 @@ public class RateLimitMiddleware
         await _next(context);
     }
 
-    private RateLimitConfig? GetRateLimitConfig(string path)
+    private RateLimitConfig? GetRateLimitConfig(string path, string method)
     {
-        // Find the most specific matching config
+        // Check POST-only limits first (profile creation, etc.)
+        if (string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var kvp in PostOnlyLimits.OrderByDescending(k => k.Key.Length))
+            {
+                if (path.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                    return kvp.Value;
+            }
+        }
+
+        // Find the most specific matching config for other methods
         foreach (var kvp in EndpointLimits.OrderByDescending(k => k.Key.Length))
         {
             if (path.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
