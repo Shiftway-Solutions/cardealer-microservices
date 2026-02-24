@@ -42,6 +42,7 @@ import {
   rejectKYCProfile,
   getDocumentTypeLabel,
   getDocumentFreshUrl,
+  getKYCDocuments,
 } from '@/services/kyc';
 
 // Map backend status enum to frontend filter keys
@@ -95,6 +96,29 @@ export default function KYCDetailPage() {
       fetchProfile();
     }
   }, [profileId]);
+
+  // Fetch documents separately if not included in profile response
+  // This handles cases where the backend API doesn't include documents in the profile response
+  useEffect(() => {
+    async function fetchDocumentsIfMissing() {
+      if (profile && (!profile.documents || profile.documents.length === 0)) {
+        try {
+          console.log('Documents missing from profile response, fetching separately...');
+          const documents = await getKYCDocuments(profileId);
+          if (documents && documents.length > 0) {
+            setProfile(prev => (prev ? { ...prev, documents } : null));
+          }
+        } catch (error) {
+          console.warn('Failed to fetch documents separately:', error);
+          // Don't show error toast - this is just a fallback
+        }
+      }
+    }
+
+    if (profile) {
+      fetchDocumentsIfMissing();
+    }
+  }, [profile, profileId]);
 
   // Handle approve
   const handleApprove = async () => {
@@ -170,7 +194,7 @@ export default function KYCDetailPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
         <span className="ml-2">Cargando perfil...</span>
       </div>
     );
@@ -536,7 +560,7 @@ export default function KYCDetailPage() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 w-full"
                     onClick={handleApprove}
                     disabled={processingAction}
                   >
