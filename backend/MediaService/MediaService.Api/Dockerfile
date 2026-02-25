@@ -3,7 +3,7 @@
 ############################################
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -35,7 +35,7 @@ RUN dotnet build "MediaService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

@@ -7,7 +7,7 @@ WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -22,17 +22,17 @@ COPY ["ComplianceService.Application/ComplianceService.Application.csproj", "Com
 COPY ["ComplianceService.Domain/ComplianceService.Domain.csproj", "ComplianceService.Domain/"]
 COPY ["ComplianceService.Infrastructure/ComplianceService.Infrastructure.csproj", "ComplianceService.Infrastructure/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ComplianceService.Api/ComplianceService.Api.csproj"
+RUN dotnet restore "ComplianceService.Api/ComplianceService.Api.csproj"
 
 # Copiar todo el código fuente
 COPY . .
 
 # Build de la aplicación
 WORKDIR "/src/ComplianceService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ComplianceService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "ComplianceService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ComplianceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ComplianceService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

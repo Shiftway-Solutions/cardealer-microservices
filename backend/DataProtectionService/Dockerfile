@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,16 +19,16 @@ COPY ["DataProtectionService/DataProtectionService.Application/DataProtectionSer
 COPY ["DataProtectionService/DataProtectionService.Domain/DataProtectionService.Domain.csproj", "DataProtectionService/DataProtectionService.Domain/"]
 COPY ["DataProtectionService/DataProtectionService.Infrastructure/DataProtectionService.Infrastructure.csproj", "DataProtectionService/DataProtectionService.Infrastructure/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "DataProtectionService/DataProtectionService.Api/DataProtectionService.Api.csproj"
+RUN dotnet restore "DataProtectionService/DataProtectionService.Api/DataProtectionService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/DataProtectionService/DataProtectionService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "DataProtectionService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "DataProtectionService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "DataProtectionService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "DataProtectionService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

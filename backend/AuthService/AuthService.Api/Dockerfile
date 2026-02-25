@@ -3,7 +3,7 @@
 ############################################
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 # Speed up dotnet restore and prevent network hangs
 ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
     DOTNET_NOLOGO=1 \
@@ -25,7 +25,7 @@ RUN dotnet build "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AuthService/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

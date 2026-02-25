@@ -6,7 +6,7 @@ EXPOSE 8080
 # Install wget for healthcheck (Alpine uses apk)
 RUN apk add --no-cache wget
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -20,13 +20,13 @@ COPY ["AppointmentService/AppointmentService.Domain/AppointmentService.Domain.cs
 COPY ["AppointmentService/AppointmentService.Infrastructure/AppointmentService.Infrastructure.csproj", "AppointmentService/AppointmentService.Infrastructure/"]
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AppointmentService/AppointmentService.Api/AppointmentService.Api.csproj"
+RUN dotnet restore "AppointmentService/AppointmentService.Api/AppointmentService.Api.csproj"
 COPY . .
 WORKDIR "/src/AppointmentService/AppointmentService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "AppointmentService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "AppointmentService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AppointmentService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

@@ -5,7 +5,7 @@ WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -21,17 +21,17 @@ COPY ["SpyneIntegrationService.Domain/SpyneIntegrationService.Domain.csproj", "S
 COPY ["SpyneIntegrationService.Infrastructure/SpyneIntegrationService.Infrastructure.csproj", "SpyneIntegrationService.Infrastructure/"]
 
 # Restore dependencies
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "SpyneIntegrationService.Api/SpyneIntegrationService.Api.csproj"
+RUN dotnet restore "SpyneIntegrationService.Api/SpyneIntegrationService.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
 WORKDIR "/src/SpyneIntegrationService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "SpyneIntegrationService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "SpyneIntegrationService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "SpyneIntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "SpyneIntegrationService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

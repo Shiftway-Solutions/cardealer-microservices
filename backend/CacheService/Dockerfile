@@ -8,7 +8,7 @@ RUN apk add --no-cache wget
 # Create secrets directory
 RUN mkdir -p /run/secrets
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -32,7 +32,7 @@ COPY ["CacheService/CacheService.Application/CacheService.Application.csproj", "
 COPY ["CacheService/CacheService.Domain/CacheService.Domain.csproj", "CacheService/CacheService.Domain/"]
 COPY ["CacheService/CacheService.Infrastructure/CacheService.Infrastructure.csproj", "CacheService/CacheService.Infrastructure/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "CacheService/CacheService.Api/CacheService.Api.csproj"
+RUN dotnet restore "CacheService/CacheService.Api/CacheService.Api.csproj"
 
 # Copy all source files
 COPY _Shared/ ./_Shared/
@@ -41,11 +41,11 @@ COPY CacheService/ ./CacheService/
 
 # Build the application
 WORKDIR "/src/CacheService/CacheService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "CacheService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "CacheService.Api.csproj" -c Release -o /app/build
 
 # Publish the application
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "CacheService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CacheService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Final stage
 FROM base AS final

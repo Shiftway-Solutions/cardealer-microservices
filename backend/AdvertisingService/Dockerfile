@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,13 +19,13 @@ COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csp
 COPY ["_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj", "_Shared/CarDealer.Shared.Observability/"]
 COPY ["_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj", "_Shared/CarDealer.Shared.Audit/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj"
+RUN dotnet restore "AdvertisingService/AdvertisingService.Api/AdvertisingService.Api.csproj"
 
 COPY . .
 WORKDIR "/src/AdvertisingService/AdvertisingService.Api"
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AdvertisingService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app

@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,17 +19,17 @@ COPY ["Video360Service.Domain/Video360Service.Domain.csproj", "Video360Service.D
 COPY ["Video360Service.Infrastructure/Video360Service.Infrastructure.csproj", "Video360Service.Infrastructure/"]
 
 # Restore dependencies
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "Video360Service.Api/Video360Service.Api.csproj"
+RUN dotnet restore "Video360Service.Api/Video360Service.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
 WORKDIR "/src/Video360Service.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "Video360Service.Api.csproj" -c Release -o /app/build
+RUN dotnet build "Video360Service.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "Video360Service.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Video360Service.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

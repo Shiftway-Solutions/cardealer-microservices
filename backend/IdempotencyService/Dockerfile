@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -17,17 +17,17 @@ COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDeal
 COPY ["IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj", "IdempotencyService/IdempotencyService.Api/"]
 COPY ["IdempotencyService/IdempotencyService.Core/IdempotencyService.Core.csproj", "IdempotencyService/IdempotencyService.Core/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj"
+RUN dotnet restore "IdempotencyService/IdempotencyService.Api/IdempotencyService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "IdempotencyService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "IdempotencyService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
 WORKDIR "/src/IdempotencyService/IdempotencyService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "IdempotencyService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "IdempotencyService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

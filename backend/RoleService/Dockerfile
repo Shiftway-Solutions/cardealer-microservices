@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -23,16 +23,16 @@ COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Applicatio
 COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
 COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
+RUN dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/RoleService/RoleService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "RoleService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "RoleService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "RoleService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "RoleService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -3,7 +3,7 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -20,7 +20,7 @@ WORKDIR "/src/backend/AlertService/AlertService.Api"
 RUN dotnet build "AlertService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "AlertService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AlertService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

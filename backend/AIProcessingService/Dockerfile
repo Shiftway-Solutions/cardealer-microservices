@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,16 +19,16 @@ COPY ["AIProcessingService/AIProcessingService.Application/AIProcessingService.A
 COPY ["AIProcessingService/AIProcessingService.Infrastructure/AIProcessingService.Infrastructure.csproj", "AIProcessingService/AIProcessingService.Infrastructure/"]
 COPY ["AIProcessingService/AIProcessingService.Domain/AIProcessingService.Domain.csproj", "AIProcessingService/AIProcessingService.Domain/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AIProcessingService/AIProcessingService.Api/AIProcessingService.Api.csproj"
+RUN dotnet restore "AIProcessingService/AIProcessingService.Api/AIProcessingService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/AIProcessingService/AIProcessingService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "AIProcessingService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "AIProcessingService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AIProcessingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AIProcessingService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

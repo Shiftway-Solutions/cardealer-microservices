@@ -10,10 +10,10 @@ ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
 
 # Copy everything and restore
 COPY . .
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj"
+RUN dotnet restore "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj"
 
 # Build
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj" -c Release -o /app/build --no-restore
+RUN dotnet build "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj" -c Release -o /app/build --no-restore
 
 # Change to build output directory
 WORKDIR /app/build

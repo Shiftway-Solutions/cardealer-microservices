@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,17 +19,17 @@ COPY ["InventoryManagementService/InventoryManagementService.Application/Invento
 COPY ["InventoryManagementService/InventoryManagementService.Infrastructure/InventoryManagementService.Infrastructure.csproj", "InventoryManagementService/InventoryManagementService.Infrastructure/"]
 COPY ["InventoryManagementService/InventoryManagementService.Domain/InventoryManagementService.Domain.csproj", "InventoryManagementService/InventoryManagementService.Domain/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "InventoryManagementService/InventoryManagementService.Api/InventoryManagementService.Api.csproj"
+RUN dotnet restore "InventoryManagementService/InventoryManagementService.Api/InventoryManagementService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/InventoryManagementService/InventoryManagementService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "InventoryManagementService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "InventoryManagementService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
 WORKDIR "/src/InventoryManagementService/InventoryManagementService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "InventoryManagementService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "InventoryManagementService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

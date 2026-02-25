@@ -9,7 +9,7 @@ RUN mkdir -p /run/secrets
 # Install wget for healthcheck (Alpine uses apk)
 RUN apk add --no-cache wget
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -29,17 +29,17 @@ COPY ["CRMService/CRMService.Domain/CRMService.Domain.csproj", "CRMService/CRMSe
 COPY ["CRMService/CRMService.Infrastructure/CRMService.Infrastructure.csproj", "CRMService/CRMService.Infrastructure/"]
 
 # Restore dependencies
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "CRMService/CRMService.Api/CRMService.Api.csproj"
+RUN dotnet restore "CRMService/CRMService.Api/CRMService.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
 WORKDIR "/src/CRMService/CRMService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "CRMService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "CRMService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "CRMService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CRMService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

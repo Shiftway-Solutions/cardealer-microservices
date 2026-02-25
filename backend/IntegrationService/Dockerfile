@@ -8,7 +8,7 @@ RUN mkdir -p /run/secrets
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Docker
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -25,13 +25,13 @@ COPY ["IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj",
 COPY ["IntegrationService/IntegrationService.Application/IntegrationService.Application.csproj", "IntegrationService/IntegrationService.Application/"]
 COPY ["IntegrationService/IntegrationService.Domain/IntegrationService.Domain.csproj", "IntegrationService/IntegrationService.Domain/"]
 COPY ["IntegrationService/IntegrationService.Infrastructure/IntegrationService.Infrastructure.csproj", "IntegrationService/IntegrationService.Infrastructure/"]
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj"
+RUN dotnet restore "IntegrationService/IntegrationService.Api/IntegrationService.Api.csproj"
 COPY . .
 WORKDIR "/src/IntegrationService/IntegrationService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "IntegrationService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "IntegrationService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "IntegrationService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "IntegrationService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

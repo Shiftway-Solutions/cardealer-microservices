@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -20,16 +20,16 @@ COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Infrastructure/Ve
 COPY ["Vehicle360ProcessingService/Vehicle360ProcessingService.Domain/Vehicle360ProcessingService.Domain.csproj", "Vehicle360ProcessingService/Vehicle360ProcessingService.Domain/"]
 
 # Restore packages
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj"
+RUN dotnet restore "Vehicle360ProcessingService/Vehicle360ProcessingService.Api/Vehicle360ProcessingService.Api.csproj"
 
 # Copy everything and build
 COPY . .
 WORKDIR "/src/Vehicle360ProcessingService/Vehicle360ProcessingService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "Vehicle360ProcessingService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "Vehicle360ProcessingService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "Vehicle360ProcessingService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Vehicle360ProcessingService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

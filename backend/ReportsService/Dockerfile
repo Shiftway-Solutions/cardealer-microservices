@@ -9,7 +9,7 @@ RUN apk add --no-cache wget
 # Create secrets directory
 RUN mkdir -p /run/secrets
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -28,7 +28,7 @@ COPY ["ReportsService/ReportsService.Application/ReportsService.Application.cspr
 COPY ["ReportsService/ReportsService.Domain/ReportsService.Domain.csproj", "ReportsService/ReportsService.Domain/"]
 COPY ["ReportsService/ReportsService.Infrastructure/ReportsService.Infrastructure.csproj", "ReportsService/ReportsService.Infrastructure/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ReportsService/ReportsService.Api/ReportsService.Api.csproj"
+RUN dotnet restore "ReportsService/ReportsService.Api/ReportsService.Api.csproj"
 
 # Copy shared source code
 COPY ["_Shared/", "_Shared/"]
@@ -37,10 +37,10 @@ COPY ["_Shared/", "_Shared/"]
 COPY ["ReportsService/", "ReportsService/"]
 
 WORKDIR "/src/ReportsService/ReportsService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "ReportsService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "ReportsService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ReportsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ReportsService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

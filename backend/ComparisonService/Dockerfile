@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -19,7 +19,7 @@ COPY ["ComparisonService/ComparisonService.Domain/ComparisonService.Domain.cspro
 COPY ["ComparisonService/ComparisonService.Infrastructure/ComparisonService.Infrastructure.csproj", "ComparisonService/ComparisonService.Infrastructure/"]
 
 # Restore dependencies
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "ComparisonService/ComparisonService.Api/ComparisonService.Api.csproj"
+RUN dotnet restore "ComparisonService/ComparisonService.Api/ComparisonService.Api.csproj"
 
 # Copy everything else
 COPY . .
@@ -29,7 +29,7 @@ WORKDIR "/src/ComparisonService/ComparisonService.Api"
 
 # Publish
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "ComparisonService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ComparisonService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

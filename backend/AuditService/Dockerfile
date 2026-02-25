@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -25,16 +25,16 @@ COPY ["AuditService/AuditService.Domain/AuditService.Domain.csproj", "AuditServi
 COPY ["AuditService/AuditService.Infrastructure/AuditService.Infrastructure.csproj", "AuditService/AuditService.Infrastructure/"]
 COPY ["AuditService/AuditService.Shared/AuditService.Shared.csproj", "AuditService/AuditService.Shared/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "AuditService/AuditService.Api/AuditService.Api.csproj"
+RUN dotnet restore "AuditService/AuditService.Api/AuditService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/AuditService/AuditService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "AuditService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "AuditService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "AuditService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AuditService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

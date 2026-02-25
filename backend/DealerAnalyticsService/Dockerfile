@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -24,16 +24,16 @@ COPY ["DealerAnalyticsService/DealerAnalyticsService.Application/DealerAnalytics
 COPY ["DealerAnalyticsService/DealerAnalyticsService.Domain/DealerAnalyticsService.Domain.csproj", "DealerAnalyticsService/DealerAnalyticsService.Domain/"]
 COPY ["DealerAnalyticsService/DealerAnalyticsService.Infrastructure/DealerAnalyticsService.Infrastructure.csproj", "DealerAnalyticsService/DealerAnalyticsService.Infrastructure/"]
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore "DealerAnalyticsService/DealerAnalyticsService.Api/DealerAnalyticsService.Api.csproj"
+RUN dotnet restore "DealerAnalyticsService/DealerAnalyticsService.Api/DealerAnalyticsService.Api.csproj"
 
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/DealerAnalyticsService/DealerAnalyticsService.Api"
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet build "DealerAnalyticsService.Api.csproj" -c Release -o /app/build
+RUN dotnet build "DealerAnalyticsService.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish "DealerAnalyticsService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "DealerAnalyticsService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final

@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -25,7 +25,7 @@ WORKDIR "/src/VehicleIntelligenceService/VehicleIntelligenceService.Api"
 RUN dotnet build "VehicleIntelligenceService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "VehicleIntelligenceService.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "VehicleIntelligenceService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
