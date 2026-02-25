@@ -53,3 +53,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dotnet", "VehiclesSaleService.Api.dll"]
 
 
+# Wed Feb 25 09:48:42 AST 2026
