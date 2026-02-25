@@ -151,7 +151,25 @@ export function VehicleInfoForm({
 
   // Catalog data
   const { data: makes = [], isLoading: makesLoading } = useMakes();
-  const { data: models = [], isLoading: modelsLoading } = useModelsByMake(data.makeId || data.make);
+
+  // Resolve the slug for the models query:
+  // The backend models endpoint accepts the make's slug (e.g. "honda"), UUID, or name.
+  // Prefer slug > UUID > name to maximize compatibility with all pod versions.
+  const makeQueryKey = useMemo(() => {
+    if (!data.makeId && !data.make) return '';
+    if (data.makeId) {
+      // Try to resolve slug from catalog list first (most reliable)
+      const catalogMake = (makes as Array<{ id?: string; name: string; slug?: string }>)
+        .find(m => m.id === data.makeId);
+      if (catalogMake?.slug) return catalogMake.slug;
+      // Fall back to UUID (works with updated backend)
+      return data.makeId;
+    }
+    // Manual entry: use lowercase name as slug fallback
+    return data.make.toLowerCase().replace(/\s+/g, '-');
+  }, [data.makeId, data.make, makes]);
+
+  const { data: models = [], isLoading: modelsLoading } = useModelsByMake(makeQueryKey);
   const { data: bodyTypes = [], isLoading: bodyLoading } = useBodyTypes();
   const { data: fuelTypes = [], isLoading: fuelLoading } = useFuelTypes();
   const { data: transmissions = [], isLoading: transLoading } = useTransmissions();
