@@ -104,6 +104,11 @@ jobs:
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          # Explicitly compare against the SHA before this push.
+          # Without this, paths-filter can compare HEAD against itself
+          # (resulting in 0 changes detected) when the runner already
+          # has the latest commit checked out.
+          base: ${{ github.event.before }}
           filters: |
             # Core services
             authservice:
