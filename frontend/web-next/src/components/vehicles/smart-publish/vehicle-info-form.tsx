@@ -12,7 +12,8 @@ import {
 } from '@/hooks/use-vehicles';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizeText, sanitizeMileage, sanitizeYear } from '@/lib/security/sanitize';
-import { Check, ChevronDown, Sparkles, MapPin, User } from 'lucide-react';
+import { Check, Sparkles, MapPin, User } from 'lucide-react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 // ============================================================
 // Static Data
@@ -71,24 +72,15 @@ function SelectField({
           </span>
         )}
       </label>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          disabled={disabled || isLoading}
-          className={`w-full appearance-none rounded-lg border px-3 py-2.5 text-sm transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none ${
-            isAutoFilled ? 'border-emerald-300 bg-emerald-50/50' : 'border-gray-300 bg-white'
-          } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-        >
-          <option value="">{isLoading ? 'Cargando...' : placeholder}</option>
-          {options.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-      </div>
+      <SearchableSelect
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+        isLoading={isLoading}
+        disabled={disabled}
+        className={`${isAutoFilled ? 'border-emerald-300 bg-emerald-50/50' : ''}`}
+      />
     </div>
   );
 }
