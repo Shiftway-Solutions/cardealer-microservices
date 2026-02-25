@@ -1,11 +1,4 @@
-# =============================================================================
-# TEST: Self-Hosted Runner Verification
-# =============================================================================
-# Workflow para verificar que el runner propio (Gregorys-MacBook-Pro) está
-# funcionando correctamente y que tiene las herramientas necesarias para CI/CD.
-# =============================================================================
-
-name: 🖥️ Test Self-Hosted Runner
+name: "Test Self-Hosted Runner"
 
 on:
   workflow_dispatch:
@@ -16,108 +9,80 @@ on:
 
 jobs:
   verify-runner:
-    name: 🖥️ Verify Self-Hosted Runner
+    name: "Verify Self-Hosted Runner"
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
-      - name: 📥 Checkout
+      - name: "Checkout"
         uses: actions/checkout@v4
 
-      # ── Runner identity ──────────────────────────────────────────────────
-      - name: 🏷️ Runner identity
+      - name: "Runner identity"
         run: |
-          echo "## 🖥️ Runner Info" >> $GITHUB_STEP_SUMMARY
+          echo "## Runner Info" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Name  | \`$RUNNER_NAME\`  |" >> $GITHUB_STEP_SUMMARY
-          echo "| OS    | \`$RUNNER_OS\`    |" >> $GITHUB_STEP_SUMMARY
-          echo "| Arch  | \`$(uname -m)\`   |" >> $GITHUB_STEP_SUMMARY
-          echo "| Host  | \`$(hostname)\`   |" >> $GITHUB_STEP_SUMMARY
-          echo "| User  | \`$(whoami)\`     |" >> $GITHUB_STEP_SUMMARY
-          echo "| Workspace | \`$RUNNER_WORKSPACE\` |" >> $GITHUB_STEP_SUMMARY
-          echo ""
-          echo "✅ Runner: $RUNNER_NAME | OS: $RUNNER_OS | Arch: $(uname -m)"
+          echo "| Name  | $RUNNER_NAME |" >> $GITHUB_STEP_SUMMARY
+          echo "| OS    | $RUNNER_OS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Arch  | $(uname -m) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Host  | $(hostname) |" >> $GITHUB_STEP_SUMMARY
+          echo "Runner: $RUNNER_NAME | OS: $RUNNER_OS | Arch: $(uname -m)"
 
-      # ── .NET SDK ─────────────────────────────────────────────────────────
-      - name: 🔧 Setup .NET
+      - name: "Setup .NET"
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      - name: 🔷 Verify .NET
+      - name: "Verify .NET"
         run: |
-          dotnet --version
-          echo "✅ .NET SDK: $(dotnet --version)"
-          echo "| .NET SDK | \`$(dotnet --version)\` |" >> $GITHUB_STEP_SUMMARY
+          echo "dotnet: $(dotnet --version)"
+          echo "| .NET SDK | $(dotnet --version) |" >> $GITHUB_STEP_SUMMARY
 
-      # ── Node.js + pnpm ───────────────────────────────────────────────────
-      - name: 🔧 Setup Node.js
+      - name: "Setup Node.js"
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: 📦 Setup pnpm
+      - name: "Setup pnpm"
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: 🟢 Verify Node/pnpm
+      - name: "Verify Node/pnpm"
         run: |
-          echo "✅ Node: $(node --version) | pnpm: $(pnpm --version)"
-          echo "| Node.js | \`$(node --version)\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| pnpm    | \`$(pnpm --version)\` |" >> $GITHUB_STEP_SUMMARY
+          echo "Node: $(node --version) | pnpm: $(pnpm --version)"
+          echo "| Node.js | $(node --version) |" >> $GITHUB_STEP_SUMMARY
+          echo "| pnpm    | $(pnpm --version) |" >> $GITHUB_STEP_SUMMARY
 
-      # ── Docker (requiere Docker Desktop corriendo en la Mac) ─────────────
-      - name: 🐳 Check Docker + test linux/amd64 build
+      - name: "Check Docker"
         continue-on-error: true
         run: |
-          if ! docker info --format '{{.ServerVersion}}' 2>/dev/null | grep -q '[0-9]'; then
-            echo "⚠️ Docker Desktop no está corriendo — pasos Docker omitidos."
-            echo "   → Para habilitarlo: abre Docker Desktop → Settings → General → 'Start Docker Desktop when you log in'"
-            echo "| Docker  | ⚠️ Docker Desktop no corriendo (iniciar manualmente) |" >> $GITHUB_STEP_SUMMARY
-            exit 0
+          DOCKER_OK=$(docker info --format "{{.ServerVersion}}" 2>/dev/null || true)
+          if [ -z "$DOCKER_OK" ]; then
+            echo "Docker Desktop no esta corriendo. Iniciar manualmente para habilitar builds Docker."
+            echo "| Docker | no disponible |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Docker: $DOCKER_OK"
+            echo "| Docker | $DOCKER_OK |" >> $GITHUB_STEP_SUMMARY
+            docker buildx create --use --name okla-runner-test 2>/dev/null || true
+            printf 'FROM --platform=linux/amd64 alpine:3.20\nCMD ["echo","ok"]\n' > /tmp/okla_test.dockerfile
+            docker buildx build --platform linux/amd64 --file /tmp/okla_test.dockerfile --tag okla-runner-test:tmp --load /tmp
+            docker run --rm okla-runner-test:tmp
+            docker rmi okla-runner-test:tmp 2>/dev/null || true
+            docker buildx rm okla-runner-test 2>/dev/null || true
+            echo "| Docker linux/amd64 build | OK |" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "✅ Docker: $(docker info --format '{{.ServerVersion}}')"
-          echo "| Docker  | ✅ \`$(docker info --format '{{.ServerVersion}}')\` |" >> $GITHUB_STEP_SUMMARY
 
-          # Setup buildx
-          docker buildx create --use --name okla-test-builder 2>/dev/null || true
-
-          # Build linux/amd64 test image
-          printf 'FROM --platform=linux/amd64 alpine:3.20\nRUN echo "Built by self-hosted runner" > /hello.txt\nCMD ["cat", "/hello.txt"]\n' > /tmp/TestDockerfile
-          docker buildx build \
-            --platform linux/amd64 \
-            --file /tmp/TestDockerfile \
-            --tag okla-self-hosted-test:latest \
-            --load /tmp
-          docker run --rm okla-self-hosted-test:latest
-          docker rmi okla-self-hosted-test:latest 2>/dev/null || true
-          docker buildx rm okla-test-builder 2>/dev/null || true
-          echo "✅ Docker cross-compile linux/amd64 → OK"
-          echo "| Docker linux/amd64 build | ✅ OK |" >> $GITHUB_STEP_SUMMARY
-
-      # ── System resources ─────────────────────────────────────────────────
-      - name: 📊 System resources
+      - name: "System resources"
         run: |
-          echo "## 💻 Recursos del sistema" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "CPU Cores : $(sysctl -n hw.ncpu)"          >> $GITHUB_STEP_SUMMARY
-          echo "RAM total : $(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB" >> $GITHUB_STEP_SUMMARY
-          echo "Disco libre: $(df -h / | tail -1 | awk '{print $4}')" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "| CPU Cores | $(sysctl -n hw.ncpu) |" >> $GITHUB_STEP_SUMMARY
+          echo "| RAM | $(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Free Disk | $(df -h / | tail -1 | awk '{print $4}') |" >> $GITHUB_STEP_SUMMARY
 
-      # ── Final summary ────────────────────────────────────────────────────
-      - name: ✅ Final summary
+      - name: "Final summary"
         run: |
-          DOCKER_VER=$(docker info --format '{{.ServerVersion}}' 2>/dev/null || echo "no disponible")
-          echo ""
-          echo "╔══════════════════════════════════════════════════╗"
-          echo "║   ✅ Self-hosted runner verificado correctamente  ║"
-          echo "╠══════════════════════════════════════════════════╣"
-          echo "║  Runner : $RUNNER_NAME"
-          echo "║  .NET   : $(dotnet --version)"
-          echo "║  Node   : $(node --version)"
-          echo "║  pnpm   : $(pnpm --version)"
-          echo "║  Docker : $DOCKER_VER"
-          echo "║  Arch   : $(uname -m)"
-          echo "╚══════════════════════════════════════════════════╝"
+          echo "Self-hosted runner OK"
+          echo "Runner : $RUNNER_NAME"
+          echo ".NET   : $(dotnet --version)"
+          echo "Node   : $(node --version)"
+          echo "pnpm   : $(pnpm --version)"
+          echo "Arch   : $(uname -m)"
