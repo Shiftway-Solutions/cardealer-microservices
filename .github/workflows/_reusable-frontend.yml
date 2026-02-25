@@ -155,6 +155,26 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: 🩺 Ensure Docker daemon is running
+        timeout-minutes: 3
+        run: |
+          # Try to connect; if daemon is down, (re)start Docker Desktop
+          if ! timeout 10 docker version > /dev/null 2>&1; then
+            echo "⚠️ Docker daemon not responding — starting Docker Desktop..."
+            open /Applications/Docker.app 2>/dev/null || true
+            echo "⏳ Waiting for Docker daemon (up to 2 min)..."
+            for i in $(seq 1 24); do
+              sleep 5
+              if timeout 5 docker version > /dev/null 2>&1; then
+                echo "✅ Docker is ready (attempt $i)"
+                break
+              fi
+              echo "  Still waiting... attempt $i/24"
+            done
+          else
+            echo "✅ Docker daemon is healthy"
+          fi
+
       - name: 🔧 Set up Docker Buildx
         # Docker Desktop on macOS ARM64 already bundles QEMU for linux/amd64 —
         # setup-qemu-action is not needed and causes exit code 1 on Mac runners.
