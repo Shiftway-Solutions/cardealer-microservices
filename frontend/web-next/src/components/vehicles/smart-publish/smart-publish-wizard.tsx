@@ -109,6 +109,95 @@ const STEP_LABELS: Record<string, string> = {
 const DRAFT_KEY_PREFIX = 'okla_draft_vehicle_';
 
 // ============================================================
+// VIN Value Normalizers
+// Maps raw NHTSA / backend strings → catalog option keys
+// ============================================================
+
+/**
+ * Normalize body style from VIN decode to catalog option values.
+ * NHTSA returns verbose strings like "Sport Utility Vehicle (SUV)".
+ */
+function normalizeBodyStyle(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  if (
+    s.includes('sport utility') ||
+    s === 'suv' ||
+    s === 'crossover utility vehicle' ||
+    s === 'cuv'
+  )
+    return 'suv';
+  if (s === 'sedan' || s === 'saloon' || s.includes('4dr sedan') || s.includes('sedan/saloon'))
+    return 'sedan';
+  if (
+    s.includes('pickup') ||
+    s === 'truck' ||
+    s.includes('regular cab') ||
+    s.includes('crew cab') ||
+    s.includes('extended cab')
+  )
+    return 'pickup';
+  if (s === 'hatchback' || s.includes('3dr hatchback') || s.includes('5dr hatchback'))
+    return 'hatchback';
+  if (s === 'coupe' || s === 'coupé' || s.includes('2dr coupe')) return 'coupe';
+  if (s.includes('minivan') || s === 'passenger van') return 'minivan';
+  if (s === 'van' || s === 'cargo van') return 'minivan';
+  if (s === 'crossover') return 'crossover';
+  if (s.includes('wagon') || s === 'estate') return 'wagon';
+  if (s === 'convertible' || s === 'cabriolet' || s === 'roadster') return 'convertible';
+  return s; // lowercase fallback
+}
+
+/**
+ * Normalize fuel type from VIN decode to catalog option values.
+ * NHTSA returns values like "Gasoline", "Regular Unleaded", "Flex Fuel".
+ */
+function normalizeFuelType(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  if (
+    s.includes('gasoline') ||
+    s === 'gas' ||
+    s.includes('unleaded') ||
+    s === 'petrol' ||
+    s.includes('flex fuel') ||
+    s === 'e85'
+  )
+    return 'gasoline';
+  if (s.includes('diesel')) return 'diesel';
+  if (
+    s.includes('plug-in hybrid') ||
+    s === 'phev' ||
+    s.includes('hybrid') ||
+    s === 'hev'
+  )
+    return 'hybrid';
+  if (s === 'electric' || s === 'bev' || s === 'ev' || s.includes('battery electric'))
+    return 'electric';
+  if (s === 'lpg' || s === 'propane' || s === 'cng' || s.includes('natural gas')) return 'lpg';
+  return s;
+}
+
+/**
+ * Normalize transmission from VIN decode to catalog option values.
+ * NHTSA returns values like "6-Speed Automatic", "Manual", "CVT".
+ */
+function normalizeTransmission(raw: string): string {
+  const s = raw.toLowerCase().trim();
+  if (s.includes('cvt') || s.includes('continuously variable')) return 'cvt';
+  if (
+    s.includes('dual clutch') ||
+    s.includes('dct') ||
+    s.includes('dsg') ||
+    s.includes('automated manual') ||
+    s.includes('semi-auto')
+  )
+    return 'semi-automatic';
+  // Must check CVT & dual-clutch BEFORE generic "automatic"
+  if (s.includes('automatic') || s.includes('auto') || /^a\d/.test(s)) return 'automatic';
+  if (s.includes('manual') || /^m\d/.test(s)) return 'manual';
+  return s;
+}
+
+// ============================================================
 // Component
 // ============================================================
 
@@ -312,18 +401,18 @@ export function SmartPublishWizard({
           filled.add('vehicleType');
         }
         if (af.bodyStyle) {
-          // Normalize to lowercase to match catalog option values (e.g. "SUV" → "suv")
-          updates.bodyStyle = af.bodyStyle.toLowerCase();
+          // Normalize to catalog option value (e.g. "Sport Utility Vehicle" → "suv")
+          updates.bodyStyle = normalizeBodyStyle(af.bodyStyle);
           filled.add('bodyStyle');
         }
         if (af.fuelType) {
-          // Normalize to lowercase to match catalog option values (e.g. "Gasoline" → "gasoline")
-          updates.fuelType = af.fuelType.toLowerCase();
+          // Normalize to catalog option value (e.g. "Regular Unleaded" → "gasoline")
+          updates.fuelType = normalizeFuelType(af.fuelType);
           filled.add('fuelType');
         }
         if (af.transmission) {
-          // Normalize to lowercase to match catalog option values (e.g. "CVT" → "cvt")
-          updates.transmission = af.transmission.toLowerCase();
+          // Normalize to catalog option value (e.g. "6-Speed Automatic" → "automatic")
+          updates.transmission = normalizeTransmission(af.transmission);
           filled.add('transmission');
         }
         if (af.driveType) {

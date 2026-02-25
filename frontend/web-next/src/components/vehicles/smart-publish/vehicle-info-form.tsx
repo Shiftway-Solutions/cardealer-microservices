@@ -32,6 +32,8 @@ const MILEAGE_UNITS = [
   { value: 'mi', label: 'Millas' },
 ];
 
+const DOORS_OPTIONS = [2, 3, 4, 5, 6].map(n => ({ value: n.toString(), label: `${n} puertas` }));
+
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 2 }, (_, i) => CURRENT_YEAR + 1 - i);
 
@@ -377,6 +379,30 @@ export function VehicleInfoForm({
               />
             </div>
           </div>
+          <TextField
+            label="Cilindros"
+            value={data.cylinders || ''}
+            onChange={val => onChange({ cylinders: parseInt(val) || 0 })}
+            type="number"
+            placeholder="Ej: 4"
+            isAutoFilled={isAuto('cylinders')}
+          />
+          <TextField
+            label="Caballos de fuerza"
+            value={data.horsepower || ''}
+            onChange={val => onChange({ horsepower: parseInt(val) || 0 })}
+            type="number"
+            placeholder="Ej: 192"
+            isAutoFilled={isAuto('horsepower')}
+          />
+          <SelectField
+            label="Puertas"
+            value={data.doors?.toString() || ''}
+            onChange={val => onChange({ doors: parseInt(val) || 0 })}
+            options={DOORS_OPTIONS}
+            placeholder="Seleccionar..."
+            isAutoFilled={isAuto('doors')}
+          />
         </div>
       </section>
 
