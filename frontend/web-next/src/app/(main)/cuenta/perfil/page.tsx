@@ -51,6 +51,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSellerByUserId, useUpdateSellerProfile } from '@/hooks/use-seller';
 import { useCurrentDealer, useUpdateDealer } from '@/hooks/use-dealers';
 import { sanitizeText, sanitizePhone, sanitizeUrl } from '@/lib/security/sanitize';
+import { cn } from '@/lib/utils';
+import { SELLER_SPECIALTIES } from '@/lib/validations/seller-onboarding';
 
 // ─── Dominican Republic Provinces ────────────────────────────────────────────
 
@@ -183,7 +185,15 @@ export default function ProfilePage() {
   const [sellerSaving, setSellerSaving] = React.useState(false);
   const [sellerSuccess, setSellerSuccess] = React.useState(false);
   const [sellerError, setSellerError] = React.useState<string | null>(null);
-  const [specialtyInput, setSpecialtyInput] = React.useState('');
+
+  const toggleSpecialty = (specialty: string) => {
+    setSellerForm(prev => ({
+      ...prev,
+      specialties: prev.specialties.includes(specialty)
+        ? prev.specialties.filter(s => s !== specialty)
+        : [...prev.specialties, specialty],
+    }));
+  };
 
   // ── Dealer section state (dealer only) ─────────────────────────────────────
   // useCurrentDealer() is internally enabled only when accountType === 'dealer'
@@ -343,10 +353,10 @@ export default function ProfilePage() {
       await updateSellerMutation.mutateAsync({
         sellerId: sellerQuery.data.id,
         data: {
-          fullName: sellerForm.fullName.trim() ? sanitizeText(sellerForm.fullName.trim(), { maxLength: 100 }) : undefined,
-          bio: sellerForm.bio
-            ? sanitizeText(sellerForm.bio, { maxLength: 1000 })
+          fullName: sellerForm.fullName.trim()
+            ? sanitizeText(sellerForm.fullName.trim(), { maxLength: 100 })
             : undefined,
+          bio: sellerForm.bio ? sanitizeText(sellerForm.bio, { maxLength: 1000 }) : undefined,
           city: sellerForm.city
             ? sanitizeText(sellerForm.city.trim(), { maxLength: 100 })
             : undefined,
@@ -456,21 +466,6 @@ export default function ProfilePage() {
     } finally {
       setIsUploadingAvatar(false);
     }
-  };
-
-  // ── Specialty tag helpers ──────────────────────────────────────────────────
-  const addSpecialty = () => {
-    const s = specialtyInput.trim();
-    if (s && !sellerForm.specialties.includes(s)) {
-      setSellerForm(prev => ({ ...prev, specialties: [...prev.specialties, s] }));
-    }
-    setSpecialtyInput('');
-  };
-  const removeSpecialty = (idx: number) => {
-    setSellerForm(prev => ({
-      ...prev,
-      specialties: prev.specialties.filter((_, i) => i !== idx),
-    }));
   };
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
@@ -805,9 +800,7 @@ export default function ProfilePage() {
                         id="sellerFullName"
                         placeholder="Ej: Juan Pérez / JP Autos"
                         value={sellerForm.fullName}
-                        onChange={e =>
-                          setSellerForm(s => ({ ...s, fullName: e.target.value }))
-                        }
+                        onChange={e => setSellerForm(s => ({ ...s, fullName: e.target.value }))}
                         className="pl-10"
                       />
                     </div>
@@ -846,47 +839,32 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Specialties tags */}
-                  <div className="space-y-2">
-                    <Label>Especialidades</Label>
+                  {/* Specialties badges */}
+                  <div className="space-y-3">
+                    <Label>Especialidades <span className="text-muted-foreground font-normal">(opcional)</span></Label>
                     <p className="text-muted-foreground text-xs">
-                      Marcas, tipos de vehículo o servicios en los que te especializas
+                      Toca las especialidades en las que te enfocas
                     </p>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Ej: Toyota, Carros usados, 4x4..."
-                        value={specialtyInput}
-                        onChange={e => setSpecialtyInput(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addSpecialty();
-                          }
-                        }}
-                      />
-                      <Button type="button" variant="outline" size="sm" onClick={addSpecialty}>
-                        Agregar
-                      </Button>
-                    </div>
-                    {sellerForm.specialties.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {sellerForm.specialties.map((s, i) => (
-                          <span
-                            key={i}
-                            className="bg-muted text-foreground flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+                    <div className="flex flex-wrap gap-2">
+                      {SELLER_SPECIALTIES.map(specialty => {
+                        const isSelected = sellerForm.specialties.includes(specialty);
+                        return (
+                          <Badge
+                            key={specialty}
+                            variant={isSelected ? 'default' : 'outline'}
+                            className={cn(
+                              'cursor-pointer transition-colors',
+                              isSelected
+                                ? 'bg-[#00A870] hover:bg-[#009663]'
+                                : 'hover:border-[#00A870] hover:text-[#00A870]'
+                            )}
+                            onClick={() => toggleSpecialty(specialty)}
                           >
-                            {s}
-                            <button
-                              type="button"
-                              onClick={() => removeSpecialty(i)}
-                              className="text-muted-foreground ml-1 hover:text-red-500"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                            {specialty}
+                          </Badge>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div className="flex justify-end pt-2">
