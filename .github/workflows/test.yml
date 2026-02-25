@@ -2,9 +2,9 @@ name: CI/CD - Tests & Deployment
 
 on:
   push:
-    branches: [development]
+    branches: [main]
   pull_request:
-    branches: [main, development]
+    branches: [main]
 
 env:
   NODE_VERSION: "20.x"

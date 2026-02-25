@@ -44,7 +44,7 @@ jobs:
   prepare:
     name: 📋 Prepare Deployment
     runs-on: [self-hosted, macOS, ARM64]
-    if: ${{ (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'development' || github.event.workflow_run.head_branch == 'main')) || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') || github.event_name == 'workflow_dispatch' }}
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
       version: ${{ steps.version.outputs.version }}

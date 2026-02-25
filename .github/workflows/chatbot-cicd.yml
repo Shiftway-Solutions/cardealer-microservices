@@ -19,7 +19,7 @@ name: 🤖 Chatbot MLOps CI/CD
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
     paths:
       - "backend/ChatbotService/**"
       - "backend/_Shared/**"
@@ -27,7 +27,7 @@ on:
       - "k8s/chatbotservice.yaml"
       - "k8s/prometheus-rules-chatbot.yaml"
   pull_request:
-    branches: [main, development]
+    branches: [main]
     paths:
       - "backend/ChatbotService/**"
       - "backend/_Shared/**"

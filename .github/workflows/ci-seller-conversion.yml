@@ -14,13 +14,13 @@ name: 🔄 UserService CI
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
     paths:
       - "backend/UserService/**"
       - "backend/_Shared/**"
       - "k8s/deployments.yaml"
   pull_request:
-    branches: [main, development]
+    branches: [main]
     paths:
       - "backend/UserService/**"
       - "backend/_Shared/**"
