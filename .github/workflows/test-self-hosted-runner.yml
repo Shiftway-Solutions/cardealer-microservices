@@ -1,0 +1,125 @@
+# =============================================================================
+# TEST: Self-Hosted Runner Verification
+# =============================================================================
+# Workflow para verificar que el runner propio (Gregorys-MacBook-Pro) está
+# funcionando correctamente y que tiene las herramientas necesarias para CI/CD.
+# =============================================================================
+
+name: 🖥️ Test Self-Hosted Runner
+
+on:
+  workflow_dispatch: # Solo manual — no se ejecuta en push
+
+jobs:
+  verify-runner:
+    name: 🖥️ Verify Self-Hosted Runner
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # ── Runner identity ──────────────────────────────────────────────────
+      - name: 🏷️ Runner identity
+        run: |
+          echo "## 🖥️ Runner Info" >> $GITHUB_STEP_SUMMARY
+          echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Name  | \`$RUNNER_NAME\`  |" >> $GITHUB_STEP_SUMMARY
+          echo "| OS    | \`$RUNNER_OS\`    |" >> $GITHUB_STEP_SUMMARY
+          echo "| Arch  | \`$(uname -m)\`   |" >> $GITHUB_STEP_SUMMARY
+          echo "| Host  | \`$(hostname)\`   |" >> $GITHUB_STEP_SUMMARY
+          echo "| User  | \`$(whoami)\`     |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workspace | \`$RUNNER_WORKSPACE\` |" >> $GITHUB_STEP_SUMMARY
+          echo ""
+          echo "✅ Runner: $RUNNER_NAME | OS: $RUNNER_OS | Arch: $(uname -m)"
+
+      # ── .NET SDK ─────────────────────────────────────────────────────────
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: 🔷 Verify .NET
+        run: |
+          dotnet --version
+          echo "✅ .NET SDK: $(dotnet --version)"
+          echo "| .NET SDK | \`$(dotnet --version)\` |" >> $GITHUB_STEP_SUMMARY
+
+      # ── Node.js + pnpm ───────────────────────────────────────────────────
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 🟢 Verify Node/pnpm
+        run: |
+          echo "✅ Node: $(node --version) | pnpm: $(pnpm --version)"
+          echo "| Node.js | \`$(node --version)\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| pnpm    | \`$(pnpm --version)\` |" >> $GITHUB_STEP_SUMMARY
+
+      # ── Docker ───────────────────────────────────────────────────────────
+      - name: 🔧 Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Verify Docker (linux/amd64 cross-compile)
+        run: |
+          docker version --format '{{.Server.Version}}'
+          docker buildx ls
+          echo "✅ Docker: $(docker version --format '{{.Server.Version}}')"
+          echo "| Docker  | \`$(docker version --format '{{.Server.Version}}')\` |" >> $GITHUB_STEP_SUMMARY
+
+      # ── Build a tiny .NET image for linux/amd64 ──────────────────────────
+      - name: 🏗️ Test Docker build (linux/amd64 target)
+        run: |
+          cat > /tmp/TestDockerfile << 'EOF'
+          FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/runtime:8.0-alpine
+          RUN echo "✅ Self-hosted runner built linux/amd64 image successfully" > /hello.txt
+          CMD ["cat", "/hello.txt"]
+          EOF
+          docker buildx build \
+            --platform linux/amd64 \
+            --file /tmp/TestDockerfile \
+            --tag okla-self-hosted-test:latest \
+            --load \
+            /tmp
+          docker run --rm okla-self-hosted-test:latest
+          docker rmi okla-self-hosted-test:latest
+          echo ""
+          echo "✅ Docker cross-compile linux/amd64 → funciona correctamente"
+          echo "| Docker linux/amd64 build | ✅ OK |" >> $GITHUB_STEP_SUMMARY
+
+      # ── System resources ─────────────────────────────────────────────────
+      - name: 📊 System resources
+        run: |
+          echo "## 💻 Recursos del sistema" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "CPU Cores : $(sysctl -n hw.ncpu)"          >> $GITHUB_STEP_SUMMARY
+          echo "RAM total : $(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB" >> $GITHUB_STEP_SUMMARY
+          echo "Disco libre: $(df -h / | tail -1 | awk '{print $4}')" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # ── Final summary ────────────────────────────────────────────────────
+      - name: ✅ Final summary
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════════════════╗"
+          echo "║   ✅ Self-hosted runner verificado correctamente  ║"
+          echo "╠══════════════════════════════════════════════════╣"
+          echo "║  Runner : $RUNNER_NAME"
+          echo "║  .NET   : $(dotnet --version)"
+          echo "║  Node   : $(node --version)"
+          echo "║  pnpm   : $(pnpm --version)"
+          echo "║  Docker : $(docker version --format '{{.Server.Version}}')"
+          echo "║  Arch   : $(uname -m) → builds linux/amd64 ✓"
+          echo "╚══════════════════════════════════════════════════╝"

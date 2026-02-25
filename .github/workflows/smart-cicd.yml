@@ -34,7 +34,7 @@ jobs:
   # ============================================
   detect-changes:
     name: 🔍 Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       # Core services
       authservice: ${{ steps.filter.outputs.authservice }}

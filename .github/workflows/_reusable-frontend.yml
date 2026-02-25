@@ -52,7 +52,7 @@ jobs:
   # ============================================
   lint-and-typecheck:
     name: 🔍 Lint & Type Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: 📥 Checkout code
@@ -98,7 +98,7 @@ jobs:
   # ============================================
   unit-tests:
     name: 🧪 Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: lint-and-typecheck
 
     steps:
@@ -138,7 +138,7 @@ jobs:
   docker:
     name: 🐳 Docker Build
     needs: unit-tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     if: always() && !cancelled() && inputs.run-docker-build
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -146,6 +146,11 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
+      - name: 🔧 Set up QEMU (cross-compile linux/amd64 desde ARM64)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -178,6 +183,7 @@ jobs:
           context: ${{ inputs.working-directory }}
           file: ${{ inputs.working-directory }}/Dockerfile
           push: ${{ inputs.run-docker-push }}
+          platforms: linux/amd64
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:${{ steps.version.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:latest

@@ -73,7 +73,7 @@ jobs:
   # ============================================
   build-and-test:
     name: 🔨 Build & Test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       version: ${{ steps.version.outputs.version }}
 
@@ -171,12 +171,17 @@ jobs:
   docker:
     name: 🐳 Docker Build
     needs: build-and-test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     if: inputs.run-docker-build
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
+      - name: 🔧 Set up QEMU (cross-compile linux/amd64 desde ARM64)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -204,6 +209,7 @@ jobs:
           context: ./backend
           file: ${{ inputs.service-path }}/Dockerfile
           push: ${{ inputs.run-docker-push }}
+          platforms: linux/amd64
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
