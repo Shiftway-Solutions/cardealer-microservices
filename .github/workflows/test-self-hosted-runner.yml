@@ -64,7 +64,25 @@ jobs:
           echo "| pnpm    | \`$(pnpm --version)\` |" >> $GITHUB_STEP_SUMMARY
 
       # ── Docker ───────────────────────────────────────────────────────────
+      - name: 🩺 Ensure Docker daemon is healthy
+        timeout-minutes: 3
+        run: |
+          if ! timeout 10 docker version > /dev/null 2>&1; then
+            echo "⚠️ Docker not responding — restarting Docker Desktop..."
+            osascript -e 'quit app "Docker"' 2>/dev/null || killall Docker 2>/dev/null || true
+            sleep 5
+            open -a Docker 2>/dev/null || true
+            for i in $(seq 1 24); do
+              sleep 5
+              timeout 5 docker version > /dev/null 2>&1 && echo "✅ Docker ready (attempt $i)" && break
+              echo "  Still waiting... $i/24"
+            done
+          else
+            echo "✅ Docker daemon is healthy"
+          fi
+
       - name: 🔧 Set up QEMU
+        timeout-minutes: 3
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/amd64

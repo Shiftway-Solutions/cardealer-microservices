@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ============================================
 # OKLA Frontend - Next.js 14 Docker Image
 # ============================================
@@ -14,8 +15,9 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies — cache pnpm store between builds
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder

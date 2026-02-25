@@ -173,7 +173,30 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: 🩺 Ensure Docker daemon is healthy
+        timeout-minutes: 3
+        run: |
+          echo "Testing Docker daemon responsiveness..."
+          if ! timeout 10 docker version > /dev/null 2>&1; then
+            echo "⚠️ Docker not responding — restarting Docker Desktop..."
+            osascript -e 'quit app "Docker"' 2>/dev/null || killall Docker 2>/dev/null || true
+            sleep 5
+            open -a Docker 2>/dev/null || true
+            echo "⏳ Waiting for Docker daemon (up to 2 min)..."
+            for i in $(seq 1 24); do
+              sleep 5
+              if timeout 5 docker version > /dev/null 2>&1; then
+                echo "✅ Docker is ready (attempt $i)"
+                break
+              fi
+              echo "  Still waiting... attempt $i/24"
+            done
+          else
+            echo "✅ Docker daemon is healthy"
+          fi
+
       - name: 🔧 Set up QEMU (cross-compile linux/amd64 desde ARM64)
+        timeout-minutes: 3
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/amd64
