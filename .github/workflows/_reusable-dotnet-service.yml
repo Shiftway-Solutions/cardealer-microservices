@@ -56,11 +56,6 @@ on:
         required: false
         type: string
         default: ""
-    secrets:
-      REGISTRY_USERNAME:
-        required: false
-      REGISTRY_PASSWORD:
-        required: false
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true

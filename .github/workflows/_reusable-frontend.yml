@@ -40,7 +40,6 @@ on:
         required: false
         type: string
         default: "ghcr.io"
-    secrets:
 
 jobs:
   # ============================================
