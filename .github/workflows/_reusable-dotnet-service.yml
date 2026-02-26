@@ -234,14 +234,14 @@ jobs:
           #    install its binary as a regular file (symlink to Docker.app = EPERM).
           rm -f ~/.docker/cli-plugins/docker-buildx
 
-          # 2. Create a clean CI-specific DOCKER_CONFIG directory (temp dir).
-          #    Has NO credsStore, so Docker never calls the macOS Keychain helper.
-          #    docker/login-action stores GHCR credentials in auths{} (plaintext
-          #    base64), which is correct for a CI ephemeral session.
+          # 2. Create a clean CI-specific DOCKER_CONFIG with credsStore:"" (empty).
+          #    Docker CLI on macOS falls back to osxkeychain when credsStore is absent.
+          #    Setting it to "" explicitly disables all credential helpers, so Docker
+          #    uses auths{} in config.json — no macOS Keychain interaction.
           CI_CFG=$(mktemp -d)
-          jq 'del(.credsStore, .credHelpers)' "$HOME/.docker/config.json" \
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
             > "$CI_CFG/config.json" 2>/dev/null \
-            || printf '{"auths":{}}' > "$CI_CFG/config.json"
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
           echo "CI DOCKER_CONFIG: $(cat "$CI_CFG/config.json")"
           echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
 
