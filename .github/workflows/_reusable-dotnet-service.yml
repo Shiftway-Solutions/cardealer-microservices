@@ -233,12 +233,12 @@ jobs:
           # Create a fresh Docker config for this CI session.
           # The default 'desktop' credsStore requires macOS keychain access,
           # which is unavailable in background/non-interactive runner sessions.
-          # Using a temp dir with an empty config lets Buildx and Login work
-          # without needing keychain access.
+          # Setting credsStore to "" disables ALL credential helpers so Docker
+          # uses no auth for public images and stores GHCR login in the file.
           CI_DOCKER_CONFIG=$(mktemp -d)
-          echo "{}" > "$CI_DOCKER_CONFIG/config.json"
+          printf '{"auths":{},"credsStore":"","credHelpers":{}}\n' > "$CI_DOCKER_CONFIG/config.json"
           echo "DOCKER_CONFIG=$CI_DOCKER_CONFIG" >> "$GITHUB_ENV"
-          echo "✅ CI Docker config created at: $CI_DOCKER_CONFIG (no credsStore)"
+          echo "✅ CI Docker config at $CI_DOCKER_CONFIG (credsStore disabled)"
 
       - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
