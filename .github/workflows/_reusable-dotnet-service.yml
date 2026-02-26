@@ -281,14 +281,21 @@ jobs:
             || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
           echo "Config after reset: $(cat "$DOCKER_CONFIG/config.json")"
 
-      - name: "Login to Container Registry"
+      - name: "🔐 Login to Container Registry"
         if: inputs.run-docker-push
         timeout-minutes: 2
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ inputs.docker-registry }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Write GHCR credentials directly to auths{} without calling docker login.
+          # docker/login-action calls `docker login` which on macOS always falls back
+          # to docker-credential-osxkeychain, even when credsStore is set to "".
+          # Writing to auths{} directly avoids credential helpers completely.
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build Docker image
         timeout-minutes: 45
