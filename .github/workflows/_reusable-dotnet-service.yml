@@ -195,7 +195,7 @@ jobs:
           echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
 
           # Fast path: Docker ya está respondiendo
-          if timeout 10 docker version > /dev/null 2>&1; then
+          if docker version > /dev/null 2>&1; then
             echo "✅ Docker daemon is healthy (Colima already running)"
             docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
             exit 0
@@ -214,7 +214,7 @@ jobs:
           # Esperar hasta 3 minutos para que Docker responda
           for i in $(seq 1 36); do
             sleep 5
-            if timeout 5 docker version > /dev/null 2>&1; then
+            if docker version > /dev/null 2>&1; then
               echo "✅ Docker ready after $((i*5))s"
               docker version --format '  Engine: {{.Server.Version}} | Host: {{.Client.Host}}'
               exit 0

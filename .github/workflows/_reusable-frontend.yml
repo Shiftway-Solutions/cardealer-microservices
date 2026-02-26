@@ -169,7 +169,7 @@ jobs:
           fi
 
           # Fast path: Docker already responding
-          if timeout 10 docker version > /dev/null 2>&1; then
+          if docker version > /dev/null 2>&1; then
             echo "✅ Docker daemon is healthy"
             docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
             exit 0
@@ -188,7 +188,7 @@ jobs:
           # Wait up to 5 minutes for Docker to be ready
           for i in $(seq 1 60); do
             sleep 5
-            if timeout 5 docker version > /dev/null 2>&1; then
+            if docker version > /dev/null 2>&1; then
               echo "✅ Docker ready after $((i*5))s"
               docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
               break
