@@ -228,14 +228,32 @@ jobs:
             echo "  Waiting... $((i*5))s / 180s"
           done
 
-      - name: �️ Remove Docker Desktop buildx symlink (if present)
+      - name: 🗑️ Remove Docker Desktop buildx symlink & fix credentials
         run: |
-          # setup-buildx-action copyfiles to ~/.docker/cli-plugins/docker-buildx
-          # If a Docker Desktop symlink exists there it points into Docker.app
-          # (read-only), causing EPERM. Remove it so the action installs cleanly.
+          # 1. Remove Docker Desktop buildx symlink so setup-buildx-action can
+          #    install its binary as a regular file (symlink → Docker.app = EPERM).
           rm -f ~/.docker/cli-plugins/docker-buildx
           echo "cli-plugins after cleanup:"
           ls -la ~/.docker/cli-plugins/ 2>/dev/null || echo "(empty)"
+
+          # 2. Strip credsStore from docker config to prevent locked-keychain errors
+          #    in background CI sessions. Public images (moby/buildkit) are pulled
+          #    anonymously; GHCR login is handled later by docker/login-action.
+          DOCKER_CFG="$HOME/.docker/config.json"
+          if [ -f "$DOCKER_CFG" ]; then
+            python3 -c "
+import json, sys
+with open('$DOCKER_CFG') as f:
+    cfg = json.load(f)
+cfg.pop('credsStore', None)
+cfg.pop('credHelpers', None)
+with open('$DOCKER_CFG', 'w') as f:
+    json.dump(cfg, f, indent=2)
+print('docker config.json after cleanup:', json.dumps(cfg))
+"
+          fi
+          echo "DOCKER_CONFIG=$HOME/.docker" >> "$GITHUB_ENV"
+          echo "Using DOCKER_CONFIG=$HOME/.docker"
 
       - name: �🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
