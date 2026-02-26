@@ -151,12 +151,22 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Use a temporary Docker config dir so credentials are stored in a plain
+    # JSON file instead of the macOS Keychain — avoids "User interaction is
+    # not allowed (-25308)" on headless self-hosted macOS runners.
+    env:
+      DOCKER_CONFIG: /tmp/.docker-ci
     outputs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
+      - name: 🔧 Init Docker config (avoid macOS keychain)
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
 
       - name: 🩺 Ensure Docker daemon is running (Colima)
         timeout-minutes: 6
@@ -209,14 +219,32 @@ jobs:
           driver-opts: |
             network=host
 
-      - name: � Login to Container Registry
+      - name: 🔐 Reset Docker config post-buildx (ensure credsStore stays empty)
+        if: inputs.run-docker-push
+        run: |
+          echo "DOCKER_CONFIG=$DOCKER_CONFIG"
+          echo "Config before reset: $(cat "$DOCKER_CONFIG/config.json" 2>/dev/null || echo '(not found)')"
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json \
+            && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+          echo "Config after reset: $(cat "$DOCKER_CONFIG/config.json")"
+
+      - name: 🔐 Login to Container Registry
         if: inputs.run-docker-push
         timeout-minutes: 2
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ inputs.docker-registry }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Write GHCR credentials directly to auths{} without calling docker login.
+          # docker/login-action and `docker login` on macOS always fall back to
+          # docker-credential-osxkeychain, even when credsStore is "".
+          # Writing to auths{} directly avoids credential helpers completely.
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏷️ Generate version
         id: version
