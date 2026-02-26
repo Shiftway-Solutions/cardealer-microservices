@@ -245,6 +245,24 @@ jobs:
           fi
           echo "DOCKER_CONFIG=$HOME/.docker" >> "$GITHUB_ENV"
 
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          # moby/buildkit:buildx-stable-1 is needed by docker buildx create.
+          # If not in local cache, the daemon calls the credential helper which
+          # is docker-credential-osxkeychain — locked in background CI sessions.
+          # Pre-pulling from the interactive terminal (when keychain is available)
+          # caches the image so CI finds it locally and skips credential lookup.
+          # If not cached (fresh runner restart), the pull falls back to anonymous.
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached — no pull needed"
+          else
+            echo "⚠️ moby/buildkit:buildx-stable-1 not in cache — pulling anonymously"
+            DOCKER_CONFIG=/tmp/docker-anon-cfg \
+              && mkdir -p "$DOCKER_CONFIG" \
+              && printf '{"auths":{}}' > "$DOCKER_CONFIG/config.json" \
+              && DOCKER_CONFIG="$DOCKER_CONFIG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
       - name: �🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
