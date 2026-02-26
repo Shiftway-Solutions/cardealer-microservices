@@ -63,3 +63,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 http://localhost:8080/health -qO- > /dev/null || exit 1
 
 ENTRYPOINT ["dotnet", "MessageBusService.Api.dll"]
+
+# rebuild: colima-fix
