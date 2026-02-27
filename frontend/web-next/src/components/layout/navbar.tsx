@@ -418,8 +418,13 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
             'relative flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium tracking-wide transition-colors',
             pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
               ? 'text-primary'
-              : 'text-foreground/80 hover:bg-muted hover:text-foreground'
+              : 'hover:bg-muted hover:text-foreground'
           )}
+          style={
+            pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+              ? {}
+              : { color: 'rgb(2, 8, 23)' }
+          }
         >
           {link.icon}
           {link.label}
