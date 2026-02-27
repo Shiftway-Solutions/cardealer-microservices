@@ -21,6 +21,7 @@ import {
   useFuelTypes,
   useTransmissions,
 } from '@/hooks/use-vehicles';
+import { useFavorites } from '@/hooks/use-favorites';
 import type { VehicleSearchParams, VehicleCardData } from '@/types';
 
 // =============================================================================
@@ -164,8 +165,8 @@ export default function VehiculosClient() {
     searchParams.get('fuelType') || ''
   );
 
-  // Favorites (client-side only)
-  const [favorites, setFavorites] = React.useState<Set<string>>(new Set());
+  // Favorites — uses useFavorites hook (authenticated: API, unauthenticated: localStorage)
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   // Build search params for API
   const apiSearchParams = React.useMemo(
@@ -217,14 +218,8 @@ export default function VehiculosClient() {
 
   // Handlers
   const handleFavoriteToggle = (vehicleId: string) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(vehicleId)) {
-        newFavorites.delete(vehicleId);
-      } else {
-        newFavorites.add(vehicleId);
-      }
-      return newFavorites;
+    toggleFavorite(vehicleId).catch(() => {
+      // Error handled by useFavorites hook
     });
   };
 
@@ -608,7 +603,7 @@ export default function VehiculosClient() {
                 key={vehicle.id}
                 vehicle={vehicle}
                 variant={viewMode === 'list' ? 'horizontal' : 'default'}
-                isFavorite={favorites.has(vehicle.id)}
+                isFavorite={isFavorite(vehicle.id)}
                 onFavoriteClick={handleFavoriteToggle}
                 priority={index < 3}
               />

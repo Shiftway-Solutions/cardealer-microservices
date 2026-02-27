@@ -213,13 +213,21 @@ jobs:
         run: |
           kubectl apply -f k8s/configmaps.yaml
 
-      - name: 🗄️ Deploy Infrastructure (PostgreSQL + Redis + RabbitMQ)
+      - name: �️ Remove in-cluster PostgreSQL (DO Managed DB is used instead)
         run: |
-          echo "🗄️ Deploying consolidated infrastructure..."
-          kubectl apply -f k8s/infrastructure.yaml
+          # Production uses DO Managed PostgreSQL — remove the in-cluster postgres-0
+          # --ignore-not-found=true ensures idempotency (safe to run multiple times)
+          kubectl delete statefulset postgres -n okla --ignore-not-found=true
+          kubectl delete service postgres -n okla --ignore-not-found=true
+          kubectl delete configmap postgres-init-script -n okla --ignore-not-found=true
+          # Delete PVC only if StatefulSet no longer exists (data already on DO Managed DB)
+          kubectl delete pvc data-postgres-0 -n okla --ignore-not-found=true
+          echo "✅ In-cluster PostgreSQL removed — using DO Managed DB"
 
-          echo "⏳ Waiting for PostgreSQL to be ready..."
-          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
+      - name: 🗄️ Deploy Infrastructure (Redis + RabbitMQ)
+        run: |
+          echo "🗄️ Deploying infrastructure (Redis + RabbitMQ)..."
+          kubectl apply -f k8s/infrastructure.yaml
 
           echo "⏳ Waiting for Redis to be ready..."
           kubectl rollout status deployment/redis -n okla --timeout=60s || true
@@ -227,9 +235,8 @@ jobs:
           echo "⏳ Waiting for RabbitMQ to be ready..."
           kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
 
-          # Wait for databases to be fully initialized
           echo "⏳ Waiting for infrastructure initialization..."
-          sleep 30
+          sleep 10
 
       - name: Deploy services
         run: |

@@ -138,7 +138,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
             className={cn(
               'flex-1 gap-2 transition-colors',
-              isFavorite && 'border-rose-500 bg-rose-500 text-white hover:bg-rose-600'
+              isFavorite && 'border-rose-500 bg-rose-500 hover:bg-rose-600'
             )}
           >
             <Heart className={cn('h-5 w-5', isFavorite && 'fill-current')} />

@@ -27,15 +27,18 @@ export interface FavoriteVehicle {
     mileage: number;
     transmission: string;
     fuelType: string;
+    /** bodyType (del campo BodyStyle del backend) */
     bodyType: string;
     location: string;
     imageUrl: string;
     dealRating?: 'great' | 'good' | 'fair' | 'high';
+    /** Siempre en minúsculas: 'active' | 'sold' | 'pending' | 'removed' */
     status: 'active' | 'sold' | 'pending' | 'removed';
     priceChanged?: boolean;
     previousPrice?: number;
   };
   notes?: string;
+  /** notifyOnPriceChange — campo notifyPriceChange del backend mapeado con "On" */
   notifyOnPriceChange: boolean;
 }
 

@@ -29,13 +29,32 @@ public class FavoritesController : ControllerBase
     /// Obtiene los vehículos favoritos del usuario actual
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<VehicleDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<VehicleDto>>> GetMyFavorites()
+    [ProducesResponseType(typeof(FavoritesListResponseDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<FavoritesListResponseDto>> GetMyFavorites()
     {
         var userId = GetCurrentUserId();
-        var vehicles = await _favoriteRepository.GetFavoriteVehiclesByUserIdAsync(userId);
+        // GetByUserIdAsync now includes Vehicle + Images (see FavoriteRepository)
+        var favorites = await _favoriteRepository.GetByUserIdAsync(userId);
 
-        return Ok(vehicles.Select(MapToDto));
+        var items = favorites
+            .Where(f => f.Vehicle != null)
+            .Select(f => new FavoriteItemDto
+            {
+                Id = f.Id,
+                VehicleId = f.VehicleId,
+                UserId = f.UserId,
+                CreatedAt = f.CreatedAt,
+                Notes = f.Notes,
+                NotifyOnPriceChange = f.NotifyPriceChange,
+                Vehicle = MapToFavoriteVehicleDto(f.Vehicle!)
+            })
+            .ToList();
+
+        return Ok(new FavoritesListResponseDto
+        {
+            Favorites = items,
+            Total = items.Count
+        });
     }
 
     /// <summary>
@@ -195,7 +214,46 @@ public class FavoritesController : ControllerBase
         return userId;
     }
 
-    // Helper: Mapear Vehicle a DTO
+    // Helper: Mapear Favorite+Vehicle a FavoriteItemDto (lo que espera el frontend)
+    private static FavoriteItemDto MapToFavoriteItemDto(Favorite favorite)
+    {
+        return new FavoriteItemDto
+        {
+            Id = favorite.Id,
+            VehicleId = favorite.VehicleId,
+            UserId = favorite.UserId,
+            CreatedAt = favorite.CreatedAt,
+            Notes = favorite.Notes,
+            NotifyOnPriceChange = favorite.NotifyPriceChange,
+            Vehicle = MapToFavoriteVehicleDto(favorite.Vehicle!)
+        };
+    }
+
+    // Helper: Mapear Vehicle a FavoriteVehicleDto
+    private static FavoriteVehicleDto MapToFavoriteVehicleDto(Vehicle vehicle)
+    {
+        return new FavoriteVehicleDto
+        {
+            Id = vehicle.Id,
+            Slug = GenerateSlug(vehicle),
+            Title = vehicle.Title,
+            Make = vehicle.Make,
+            Model = vehicle.Model,
+            Year = vehicle.Year,
+            Price = vehicle.Price,
+            Mileage = vehicle.Mileage ?? 0,
+            Transmission = vehicle.Transmission.ToString(),
+            FuelType = vehicle.FuelType.ToString(),
+            BodyType = vehicle.BodyStyle.ToString(),
+            Location = FormatLocation(vehicle.City, vehicle.State),
+            ImageUrl = vehicle.Images
+                .OrderBy(i => i.SortOrder)
+                .FirstOrDefault()?.Url ?? string.Empty,
+            Status = vehicle.Status.ToString().ToLowerInvariant()
+        };
+    }
+
+    // Helper: Mapear Vehicle a VehicleDto (usado por otros endpoints)
     private static VehicleDto MapToDto(Vehicle vehicle)
     {
         return new VehicleDto
@@ -219,6 +277,24 @@ public class FavoritesController : ControllerBase
             FavoriteCount = vehicle.FavoriteCount,
             CreatedAt = vehicle.CreatedAt
         };
+    }
+
+    // Helper: Generar slug URL para un vehículo (igual que VehiclesController)
+    private static string GenerateSlug(Vehicle vehicle)
+    {
+        var baseSlug = $"{vehicle.Year}-{vehicle.Make}-{vehicle.Model}"
+            .ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("--", "-");
+        var shortId = vehicle.Id.ToString("N")[..8];
+        return $"{baseSlug}-{shortId}";
+    }
+
+    // Helper: Formatear ubicación desde city/state
+    private static string FormatLocation(string? city, string? state)
+    {
+        var parts = new[] { city, state }.Where(p => !string.IsNullOrWhiteSpace(p));
+        return string.Join(", ", parts);
     }
 }
 
@@ -246,6 +322,46 @@ public record FavoriteResponse
     public bool NotifyPriceChange { get; init; }
 }
 
+/// <summary>Response de GET /api/favorites — compatible con FavoritesListResponse del frontend</summary>
+public record FavoritesListResponseDto
+{
+    public IReadOnlyList<FavoriteItemDto> Favorites { get; init; } = [];
+    public int Total { get; init; }
+}
+
+/// <summary>Ítem individual: metadata del favorito + datos del vehículo</summary>
+public record FavoriteItemDto
+{
+    public Guid Id { get; init; }
+    public Guid VehicleId { get; init; }
+    public Guid UserId { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public string? Notes { get; init; }
+    /// <summary>notifyOnPriceChange (camelCase) — coincide con la interfaz FavoriteVehicle del frontend</summary>
+    public bool NotifyOnPriceChange { get; init; }
+    public FavoriteVehicleDto Vehicle { get; init; } = new();
+}
+
+/// <summary>Datos del vehículo dentro de un favorito — campos que necesita FavoriteVehicle.vehicle en el frontend</summary>
+public record FavoriteVehicleDto
+{
+    public Guid Id { get; init; }
+    public string Slug { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Make { get; init; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
+    public int Year { get; init; }
+    public decimal Price { get; init; }
+    public int Mileage { get; init; }
+    public string Transmission { get; init; } = string.Empty;
+    public string FuelType { get; init; } = string.Empty;
+    public string BodyType { get; init; } = string.Empty;
+    public string Location { get; init; } = string.Empty;
+    public string ImageUrl { get; init; } = string.Empty;
+    /// <summary>Siempre en minúsculas: "active", "sold", "pending", "removed"</summary>
+    public string Status { get; init; } = "active";
+}
+
 public record FavoriteCountResponse
 {
     public int Count { get; init; }
@@ -256,6 +372,7 @@ public record IsFavoriteResponse
     public bool IsFavorite { get; init; }
 }
 
+// VehicleDto usado por otros endpoints (check, etc.)
 public record VehicleDto
 {
     public Guid Id { get; init; }

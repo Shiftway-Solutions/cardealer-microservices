@@ -38,6 +38,8 @@ public class FavoriteRepository : IFavoriteRepository
     {
         return await _context.Favorites
             .Where(f => f.UserId == userId)
+            .Include(f => f.Vehicle)
+                .ThenInclude(v => v!.Images)
             .OrderByDescending(f => f.CreatedAt)
             .ToListAsync(cancellationToken);
     }
