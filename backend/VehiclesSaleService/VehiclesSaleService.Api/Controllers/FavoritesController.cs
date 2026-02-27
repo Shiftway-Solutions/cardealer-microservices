@@ -241,7 +241,7 @@ public class FavoritesController : ControllerBase
             Model = vehicle.Model,
             Year = vehicle.Year,
             Price = vehicle.Price,
-            Mileage = vehicle.Mileage ?? 0,
+            Mileage = vehicle.Mileage,
             Transmission = vehicle.Transmission.ToString(),
             FuelType = vehicle.FuelType.ToString(),
             BodyType = vehicle.BodyStyle.ToString(),
