@@ -1,13 +1,13 @@
 /**
- * Vehicle Detail Client Component — Premium conversion-focused layout
+ * Vehicle Detail Client Component — Conversion-focused layout
  *
- * UX Architecture (research-backed):
- * - Gallery + Header/Contact in 2-col layout (desktop)
- * - Quick specs bar for fast scanning (Baymard: key specs = #1 info users check)
- * - Internal chat as primary CTA (keeps users on platform)
- * - Reviews collapsible Amazon-style (secondary to listing)
+ * UX Architecture:
+ * - 2-col layout: gallery+details (left) + header+contact (right sticky)
+ * - Quick specs bar for fast scanning
+ * - Internal chat primary CTA, WhatsApp secondary
+ * - Reviews Amazon-style collapsible (secondary to listing)
  * - Mobile: single-col + sticky contact footer
- * - Registration prompts strategically placed for non-auth users
+ * - Registration prompts for non-auth users
  */
 
 'use client';
@@ -44,14 +44,14 @@ interface VehicleDetailClientProps {
   vehicle: Vehicle;
 }
 
-/* ─── Quick Specs Bar (horizontal, scannable) ─── */
+/* ─── Quick Specs Bar ─── */
 
 function QuickSpecsBar({ vehicle }: { vehicle: Vehicle }) {
   const specs = [
     {
       icon: Gauge,
       label: 'Kilometraje',
-      value: vehicle.mileage !== undefined ? `${formatNumber(vehicle.mileage)} km` : null,
+      value: vehicle.mileage != null ? `${formatNumber(vehicle.mileage)} km` : null,
     },
     {
       icon: Settings,
@@ -105,9 +105,9 @@ function QuickSpecsBar({ vehicle }: { vehicle: Vehicle }) {
       {specs.map((spec, i) => (
         <div
           key={i}
-          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm"
+          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm"
         >
-          <spec.icon className="h-4 w-4 text-gray-400" />
+          <spec.icon className="h-3.5 w-3.5 text-gray-400" />
           <span className="text-gray-500">{spec.label}:</span>
           <span className="font-medium text-gray-900">{spec.value}</span>
         </div>
@@ -125,11 +125,11 @@ function CollapsibleReviews({ vehicle, title }: { vehicle: Vehicle; title: strin
     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-gray-50"
       >
-        <div className="flex items-center gap-2.5">
-          <Star className="h-5 w-5 text-amber-500" />
-          <h2 className="text-base font-semibold text-gray-900">Reseñas del vendedor</h2>
+        <div className="flex items-center gap-2">
+          <Star className="h-4 w-4 text-amber-500" />
+          <h2 className="text-sm font-semibold text-gray-900">Reseñas del vendedor</h2>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">{isExpanded ? 'Ocultar' : 'Ver reseñas'}</span>
@@ -147,7 +147,7 @@ function CollapsibleReviews({ vehicle, title }: { vehicle: Vehicle; title: strin
           isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 overflow-hidden opacity-0'
         )}
       >
-        <div className="border-t border-gray-100 px-6 pt-2 pb-6">
+        <div className="border-t border-gray-100 px-5 pt-2 pb-5">
           <ReviewsSection
             targetId={vehicle.sellerId}
             targetType={vehicle.sellerType === 'dealer' ? 'dealer' : 'seller'}
@@ -219,59 +219,57 @@ function MobileContactFooter({ vehicle }: { vehicle: Vehicle }) {
   );
 }
 
-/* ─── Registration Banner (strategic placement for non-auth users) ─── */
+/* ─── Registration Banner ─── */
 
 function RegistrationBanner({ vehicleSlug }: { vehicleSlug: string }) {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) return null;
 
   return (
-    <div className="overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white shadow-lg shadow-emerald-200/30">
+    <div className="overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white shadow-md">
       <div className="flex flex-col items-center gap-4 sm:flex-row">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
-          <Zap className="h-6 w-6" />
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
+          <Zap className="h-5 w-5" />
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <h3 className="text-base font-semibold">
-            Crea tu cuenta gratis y obtén ventajas exclusivas
-          </h3>
-          <p className="mt-1 text-sm text-emerald-100">
-            Guarda favoritos • Recibe alertas de precios • Chatea con vendedores • Historial de
-            búsquedas
+          <p className="text-sm font-semibold">Crea tu cuenta gratis y obtén ventajas exclusivas</p>
+          <p className="mt-0.5 text-xs text-emerald-100">
+            Guarda favoritos • Alertas de precios • Chatea con vendedores
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild className="bg-white font-semibold text-emerald-700 hover:bg-emerald-50">
-            <Link href={`/registro?redirect=/vehiculos/${vehicleSlug}`}>Crear cuenta gratis</Link>
-          </Button>
-        </div>
+        <Button
+          asChild
+          size="sm"
+          className="bg-white font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50"
+        >
+          <Link href={`/registro?redirect=/vehiculos/${vehicleSlug}`}>Crear cuenta gratis</Link>
+        </Button>
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    MAIN COMPONENT
-   ═══════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════ */
 
 export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const title = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
   return (
     <div className="min-h-screen bg-gray-50/80 pb-24 lg:pb-0">
-      {/* Breadcrumbs — compact */}
+      {/* Breadcrumbs */}
       <div className="border-b border-gray-200 bg-white">
-        <div className="container py-2.5">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8">
           <Breadcrumbs items={[{ label: 'Vehículos', href: '/vehiculos' }, { label: title }]} />
         </div>
       </div>
 
-      {/* ─── Main Grid ─── */}
-      <div className="container py-5 lg:py-6">
-        <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-          {/* ─── LEFT COLUMN ─── */}
-          <div className="space-y-5">
-            {/* Gallery */}
+      {/* Main Grid */}
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <div className="grid gap-5 lg:grid-cols-[1fr_360px] lg:gap-6">
+          {/* LEFT COLUMN */}
+          <div className="space-y-4">
             <VehicleGallery
               images={vehicle.images ?? []}
               title={title}
@@ -280,54 +278,48 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
               className="shadow-sm"
             />
 
-            {/* Mobile: Header + Contact (hidden on desktop) */}
-            <div className="space-y-4 lg:hidden">
+            {/* Mobile only: Header + Contact */}
+            <div className="space-y-3 lg:hidden">
               <VehicleHeader vehicle={vehicle} />
               <SellerContactCard vehicle={vehicle} />
             </div>
 
-            {/* Quick Specs Bar */}
             <QuickSpecsBar vehicle={vehicle} />
-
-            {/* Tabs — Description, Specs, Features */}
             <VehicleTabs vehicle={vehicle} />
-
-            {/* Registration Banner (non-auth users only) */}
             <RegistrationBanner vehicleSlug={vehicle.slug} />
-
-            {/* Reviews — Amazon-style collapsible */}
             <CollapsibleReviews vehicle={vehicle} title={title} />
           </div>
 
-          {/* ─── RIGHT COLUMN (Desktop Sticky Sidebar) ─── */}
+          {/* RIGHT COLUMN — Desktop Sticky Sidebar */}
           <div className="hidden lg:block">
-            <div className="sticky top-20 space-y-5">
+            <div className="sticky top-20 space-y-4">
               <VehicleHeader vehicle={vehicle} />
               <SellerContactCard vehicle={vehicle} />
             </div>
           </div>
         </div>
 
-        {/* ─── Similar Vehicles ─── */}
-        <div className="mt-10">
+        {/* Similar Vehicles — compact, secondary */}
+        <div className="mt-8 border-t border-gray-200 pt-6">
           <React.Suspense
             fallback={
               <div>
-                <h2 className="mb-6 text-lg font-bold text-gray-900">Vehículos similares</h2>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <h2 className="mb-4 text-sm font-semibold tracking-wide text-gray-700 uppercase">
+                  Vehículos similares
+                </h2>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <VehicleCardSkeleton key={i} />
+                    <VehicleCardSkeleton key={i} variant="compact" />
                   ))}
                 </div>
               </div>
             }
           >
-            <SimilarVehicles vehicleId={vehicle.id} limit={4} />
+            <SimilarVehicles vehicleId={vehicle.id} limit={4} variant="compact" />
           </React.Suspense>
         </div>
       </div>
 
-      {/* ─── Mobile Sticky Contact Footer ─── */}
       <MobileContactFooter vehicle={vehicle} />
     </div>
   );
