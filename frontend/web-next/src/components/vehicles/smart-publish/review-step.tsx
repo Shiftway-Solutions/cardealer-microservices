@@ -268,6 +268,13 @@ export function ReviewStep({
 
           {/* Actions */}
           <div className="space-y-3">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+              <p className="font-medium">📋 Revisión antes de publicar</p>
+              <p className="mt-1">
+                Tu anuncio será revisado por nuestro equipo antes de ser visible al público.
+                Recibirás una notificación cuando sea aprobado (generalmente en menos de 24 horas).
+              </p>
+            </div>
             <button
               onClick={onPublish}
               disabled={!canPublish || isPublishing}
@@ -276,12 +283,12 @@ export function ReviewStep({
               {isPublishing ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Publicando...
+                  Enviando a revisión...
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  Publicar Vehículo
+                  Enviar a Revisión
                 </>
               )}
             </button>

@@ -588,12 +588,18 @@ export function SmartPublishWizard({
       // Step 1: Create vehicle as Draft
       const created = await createVehicle.mutateAsync(request);
 
-      // Step 2: Publish it (Draft → Active) so it appears in listings
+      // Step 2: Submit for review (Draft → PendingReview)
       await publishVehicle.mutateAsync(created.id);
 
       localStorage.removeItem(draftKey);
-      toast.success('¡Vehículo publicado exitosamente!');
-      router.push(`/vehiculos/${created.slug}`);
+      toast.success(
+        '¡Tu vehículo ha sido enviado a revisión! Te notificaremos cuando sea aprobado.',
+        {
+          duration: 6000,
+        }
+      );
+      // Redirect to seller's vehicles dashboard where they can see the status
+      router.push('/cuenta/mis-vehiculos');
     } catch (error: unknown) {
       const err = error as { message?: string };
       toast.error(err.message || 'Error al publicar el vehículo');

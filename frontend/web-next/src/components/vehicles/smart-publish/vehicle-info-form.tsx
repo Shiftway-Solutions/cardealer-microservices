@@ -22,7 +22,11 @@ import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
 
 const CONDITIONS = [
   { value: 'New', label: 'Nuevo', description: '0 km, sin uso previo' },
-  { value: 'CertifiedPreOwned', label: 'Certificado', description: 'Certificado por dealer, garantía extendida' },
+  {
+    value: 'CertifiedPreOwned',
+    label: 'Certificado',
+    description: 'Certificado por dealer, garantía extendida',
+  },
   { value: 'Used', label: 'Usado', description: 'Usado en buen estado general' },
   { value: 'Salvage', label: 'Salvamento', description: 'Daño significativo, necesita reparación' },
   { value: 'Rebuilt', label: 'Reconstruido', description: 'Reparado después de salvamento' },

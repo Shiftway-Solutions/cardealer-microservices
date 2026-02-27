@@ -95,7 +95,7 @@ interface VehicleFormData {
 
 function EditVehicleSkeleton() {
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8">
         {/* Header skeleton */}
         <div className="mb-6 flex items-center justify-between">
@@ -143,13 +143,13 @@ function EditVehicleSkeleton() {
 
 function EditVehicleError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <AlertCircle className="mb-4 h-16 w-16 text-red-400" />
             <h2 className="mb-2 text-xl font-semibold">Error al cargar el vehículo</h2>
-            <p className="mb-6 text-muted-foreground">{message}</p>
+            <p className="text-muted-foreground mb-6">{message}</p>
             <div className="flex gap-3">
               <Link href="/mis-vehiculos">
                 <Button variant="outline">
@@ -330,7 +330,7 @@ export default function EditVehiclePage() {
   const isDeleting = deleteMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -341,7 +341,7 @@ export default function EditVehiclePage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Editar Vehículo</h1>
+              <h1 className="text-foreground text-2xl font-bold">Editar Vehículo</h1>
               <p className="text-muted-foreground">
                 {vehicle.make} {vehicle.model} {vehicle.year}
               </p>
@@ -374,7 +374,7 @@ export default function EditVehiclePage() {
 
         {/* Tabs */}
         <Tabs defaultValue="info" className="space-y-6">
-          <TabsList className="border bg-card">
+          <TabsList className="bg-card border">
             <TabsTrigger value="info" className="data-[state=active]:bg-primary/10">
               <Car className="mr-2 h-4 w-4" />
               Información
@@ -589,7 +589,7 @@ export default function EditVehiclePage() {
                   {vehicle.images?.map((image, i) => (
                     <div
                       key={image.id}
-                      className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
+                      className="group bg-muted relative aspect-square overflow-hidden rounded-lg"
                     >
                       <img
                         src={image.url}
@@ -606,18 +606,18 @@ export default function EditVehiclePage() {
                         </Button>
                       </div>
                       {image.isPrimary && (
-                        <Badge className="absolute top-2 left-2 bg-primary/100 text-xs">
+                        <Badge className="bg-primary/100 absolute top-2 left-2 text-xs">
                           Principal
                         </Badge>
                       )}
                     </div>
                   ))}
-                  <button className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 text-muted-foreground transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary">
+                  <button className="border-border bg-muted/50 text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors">
                     <Camera className="mb-2 h-8 w-8" />
                     <span className="text-sm">Agregar</span>
                   </button>
                 </div>
-                <p className="mt-4 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-4 text-sm">
                   Puedes agregar hasta 20 fotos. La primera foto será la principal.
                 </p>
               </CardContent>
@@ -635,7 +635,7 @@ export default function EditVehiclePage() {
                 <div>
                   <label className="mb-2 block text-sm font-medium">Precio (RD$)</label>
                   <div className="relative">
-                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
+                    <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                       RD$
                     </span>
                     <Input
@@ -645,7 +645,7 @@ export default function EditVehiclePage() {
                       onChange={e => handleChange('price', e.target.value)}
                     />
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Precio sugerido basado en el mercado: RD${' '}
                     {(parseInt(formData.price || '0') * 0.95).toLocaleString()} - RD${' '}
                     {(parseInt(formData.price || '0') * 1.05).toLocaleString()}
@@ -653,16 +653,18 @@ export default function EditVehiclePage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-muted/50 p-4 hover:bg-muted">
+                  <label className="bg-muted/50 hover:bg-muted flex cursor-pointer items-center gap-3 rounded-lg p-4">
                     <input
                       type="checkbox"
-                      className="h-5 w-5 rounded border-border"
+                      className="border-border h-5 w-5 rounded"
                       checked={formData.isNegotiable}
                       onChange={e => handleChange('isNegotiable', e.target.checked)}
                     />
                     <div>
                       <span className="font-medium">Precio Negociable</span>
-                      <p className="text-sm text-muted-foreground">El comprador puede hacer ofertas</p>
+                      <p className="text-muted-foreground text-sm">
+                        El comprador puede hacer ofertas
+                      </p>
                     </div>
                   </label>
                 </div>
@@ -678,10 +680,10 @@ export default function EditVehiclePage() {
                   <CardTitle>Estado de la Publicación</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+                  <div className="bg-muted/50 flex items-center justify-between rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       {formData.status === 'active' ? (
-                        <CheckCircle className="h-5 w-5 text-primary" />
+                        <CheckCircle className="text-primary h-5 w-5" />
                       ) : (
                         <Pause className="h-5 w-5 text-yellow-500" />
                       )}
@@ -691,7 +693,7 @@ export default function EditVehiclePage() {
                             ? 'Publicación Activa'
                             : 'Publicación Pausada'}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {formData.status === 'active'
                             ? 'Tu vehículo es visible para compradores'
                             : 'Tu vehículo no aparece en búsquedas'}

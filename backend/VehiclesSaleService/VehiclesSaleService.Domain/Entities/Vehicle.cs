@@ -156,6 +156,33 @@ public class Vehicle : ITenantEntity
     public bool IsDeleted { get; set; } = false;
     public bool IsFeatured { get; set; } = false;
 
+    // ========================================
+    // MODERACIÓN / APROBACIÓN
+    // ========================================
+    /// <summary>Fecha en que se envió a revisión (PendingReview).</summary>
+    public DateTime? SubmittedForReviewAt { get; set; }
+
+    /// <summary>Fecha de aprobación por el staff.</summary>
+    public DateTime? ApprovedAt { get; set; }
+
+    /// <summary>ID del administrador/moderador que aprobó.</summary>
+    public Guid? ApprovedBy { get; set; }
+
+    /// <summary>Fecha de rechazo por el staff.</summary>
+    public DateTime? RejectedAt { get; set; }
+
+    /// <summary>ID del administrador/moderador que rechazó.</summary>
+    public Guid? RejectedBy { get; set; }
+
+    /// <summary>Motivo del rechazo (visible al vendedor).</summary>
+    public string? RejectionReason { get; set; }
+
+    /// <summary>Notas internas del moderador (no visibles al vendedor).</summary>
+    public string? ModerationNotes { get; set; }
+
+    /// <summary>Cantidad de veces que ha sido rechazado.</summary>
+    public int RejectionCount { get; set; } = 0;
+
     // ── Propiedades de Campaña Publicitaria (AdvertisingService sync) ─────────
     /// <summary>Vehículo tiene una campaña PremiumSpot activa.</summary>
     public bool IsPremium { get; set; } = false;

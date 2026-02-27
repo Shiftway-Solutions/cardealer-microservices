@@ -90,10 +90,12 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
     notFound();
   }
 
-  // Track view (fire and forget)
-  vehicleService.trackView(vehicle.id).catch(() => {
-    // Silently fail - view tracking is non-critical
-  });
+  // Track view only for Active vehicles (fire and forget)
+  if (vehicle.status === 'active') {
+    vehicleService.trackView(vehicle.id).catch(() => {
+      // Silently fail - view tracking is non-critical
+    });
+  }
 
   // Prepare SEO data for JSON-LD
   // Cast to unknown first then to Record for flexible property access
@@ -135,11 +137,52 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
     { name: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, url: `/vehiculos/${slug}` },
   ];
 
+  // Status banner config for non-active vehicles
+  const statusBanners: Record<string, { bg: string; text: string; message: string } | undefined> = {
+    pending: {
+      bg: 'bg-yellow-50 border-yellow-300',
+      text: 'text-yellow-800',
+      message:
+        '⏳ Este anuncio está pendiente de revisión por nuestro equipo. No es visible al público aún.',
+    },
+    draft: {
+      bg: 'bg-gray-50 border-gray-300',
+      text: 'text-gray-700',
+      message: '📝 Este es un borrador. Envíalo a revisión para que sea publicado.',
+    },
+    rejected: {
+      bg: 'bg-red-50 border-red-300',
+      text: 'text-red-800',
+      message:
+        '❌ Este anuncio fue rechazado. Revisa los comentarios del equipo y corrige los problemas antes de re-enviarlo.',
+    },
+    paused: {
+      bg: 'bg-gray-50 border-gray-300',
+      text: 'text-gray-600',
+      message: '⏸️ Este anuncio está pausado y no es visible al público.',
+    },
+    sold: {
+      bg: 'bg-blue-50 border-blue-300',
+      text: 'text-blue-800',
+      message: '✅ Este vehículo ha sido marcado como vendido.',
+    },
+  };
+  const banner = statusBanners[vehicle.status];
+
   return (
     <>
       {/* Structured Data */}
       <JsonLd data={generateVehicleJsonLd(vehicleSEO)} />
       <JsonLd data={generateBreadcrumbJsonLd(breadcrumbs)} />
+
+      {/* Status banner for non-active vehicles (visible only to the owner) */}
+      {banner && (
+        <div className={`border-b ${banner.bg}`}>
+          <div className="container py-3">
+            <p className={`text-sm font-medium ${banner.text}`}>{banner.message}</p>
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={<VehicleDetailSkeleton />}>
         <VehicleDetailClient vehicle={vehicle} />

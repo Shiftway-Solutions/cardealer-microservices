@@ -508,6 +508,67 @@
       }
     },
     {
+      "_comment": "Public: GetBySlug (AllowAnonymous) – must be before catch-all",
+      "UpstreamPathTemplate": "/api/vehicles/slug/{slug}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/slug/{slug}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Public: GetByVIN (AllowAnonymous)",
+      "UpstreamPathTemplate": "/api/vehicles/vin/{vin}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/vin/{vin}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Public: GetById (AllowAnonymous)",
+      "UpstreamPathTemplate": "/api/vehicles/{id}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Public: Similar vehicles (AllowAnonymous)",
+      "UpstreamPathTemplate": "/api/vehicles/{id}/similar",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/{id}/similar",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Authenticated: catch-all for create, update, delete, publish, etc.",
       "UpstreamPathTemplate": "/api/vehicles/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",

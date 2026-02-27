@@ -993,21 +993,37 @@ export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
 // The catalog API and static fallbacks may use lowercase/snake_case values
 // but the backend expects PascalCase enum names for deserialization.
 const CONDITION_TO_ENUM: Record<string, string> = {
-  new: 'New', 'like-new': 'CertifiedPreOwned', excellent: 'Used',
-  good: 'Used', fair: 'Used', used: 'Used', salvage: 'Salvage',
-  rebuilt: 'Rebuilt', certifiedpreowned: 'CertifiedPreOwned',
+  new: 'New',
+  'like-new': 'CertifiedPreOwned',
+  excellent: 'Used',
+  good: 'Used',
+  fair: 'Used',
+  used: 'Used',
+  salvage: 'Salvage',
+  rebuilt: 'Rebuilt',
+  certifiedpreowned: 'CertifiedPreOwned',
 };
 const FUEL_TYPE_TO_ENUM: Record<string, string> = {
-  gasoline: 'Gasoline', diesel: 'Diesel', hybrid: 'Hybrid',
-  electric: 'Electric', plugin_hybrid: 'PlugInHybrid',
-  pluginhybrid: 'PlugInHybrid', lpg: 'NaturalGas',
-  naturalgas: 'NaturalGas', flex_fuel: 'FlexFuel', flexfuel: 'FlexFuel',
+  gasoline: 'Gasoline',
+  diesel: 'Diesel',
+  hybrid: 'Hybrid',
+  electric: 'Electric',
+  plugin_hybrid: 'PlugInHybrid',
+  pluginhybrid: 'PlugInHybrid',
+  lpg: 'NaturalGas',
+  naturalgas: 'NaturalGas',
+  flex_fuel: 'FlexFuel',
+  flexfuel: 'FlexFuel',
   hydrogen: 'Hydrogen',
 };
 const TRANSMISSION_TO_ENUM: Record<string, string> = {
-  automatic: 'Automatic', manual: 'Manual', cvt: 'CVT',
-  dct: 'DualClutch', dualclutch: 'DualClutch',
-  'semi-automatic': 'Automated', automated: 'Automated',
+  automatic: 'Automatic',
+  manual: 'Manual',
+  cvt: 'CVT',
+  dct: 'DualClutch',
+  dualclutch: 'DualClutch',
+  'semi-automatic': 'Automated',
+  automated: 'Automated',
 };
 /** Resolve a frontend/catalog value to its backend enum name */
 function toEnum(value: string, map: Record<string, string>): string {
@@ -1081,12 +1097,27 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
 }
 
 /**
- * Publish a vehicle (change status from Draft → Active).
+ * Publish a vehicle (change status from Draft → PendingReview).
  * Must be called after createVehicle once all required fields are filled.
+ * The vehicle will be reviewed by staff before becoming visible.
  */
 export async function publishVehicle(id: string): Promise<CreateVehicleResponse> {
   const response = await apiClient.post<CreateVehicleResponse>(`/api/vehicles/${id}/publish`);
   return response.data;
+}
+
+/**
+ * Unpublish/pause a vehicle (Active → Archived)
+ */
+export async function unpublishVehicle(id: string, reason?: string): Promise<void> {
+  await apiClient.post(`/api/vehicles/${id}/unpublish`, { reason });
+}
+
+/**
+ * Mark a vehicle as sold
+ */
+export async function markVehicleSold(id: string, soldPrice?: number): Promise<void> {
+  await apiClient.post(`/api/vehicles/${id}/sold`, { soldPrice });
 }
 
 /**
@@ -1552,6 +1583,8 @@ export const vehicleService = {
   // Write operations
   create: createVehicle,
   publish: publishVehicle,
+  unpublish: unpublishVehicle,
+  markSold: markVehicleSold,
   update: updateVehicle,
   delete: deleteVehicle,
 

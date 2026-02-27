@@ -574,7 +574,7 @@ public class VehiclesController : ControllerBase
         if (request.Description != null) vehicle.Description = request.Description;
         if (request.Price.HasValue) vehicle.Price = request.Price.Value;
         if (!string.IsNullOrEmpty(request.Currency)) vehicle.Currency = request.Currency;
-        if (request.Status.HasValue) vehicle.Status = request.Status.Value;
+        // Status cannot be changed via Update — use /publish, /approve, /reject, /unpublish, /sold
         if (request.VehicleType.HasValue) vehicle.VehicleType = request.VehicleType.Value;
         if (request.BodyStyle.HasValue) vehicle.BodyStyle = request.BodyStyle.Value;
         if (request.FuelType.HasValue) vehicle.FuelType = request.FuelType.Value;
@@ -645,11 +645,11 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
-        // Validate status - only Draft or Inactive can be published
-        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived)
+        // Validate status - only Draft, Archived, or Rejected can be submitted for review
+        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected)
         {
             return BadRequest(new { 
-                message = $"Vehicle cannot be published from status '{vehicle.Status}'. Only Draft or Archived vehicles can be published.",
+                message = $"Vehicle cannot be submitted from status '{vehicle.Status}'. Only Draft, Archived, or Rejected vehicles can be submitted for review.",
                 currentStatus = vehicle.Status.ToString()
             });
         }
@@ -697,17 +697,21 @@ public class VehiclesController : ControllerBase
             });
         }
 
-        // Update status and timestamps
-        vehicle.Status = VehicleStatus.Active;
-        vehicle.PublishedAt = DateTime.UtcNow;
+        // Update status → PendingReview (requires staff approval before visible)
+        vehicle.Status = VehicleStatus.PendingReview;
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
+        // Clear any previous rejection data if re-submitting
+        vehicle.RejectedAt = null;
+        vehicle.RejectedBy = null;
+        vehicle.RejectionReason = null;
 
-        // Set expiration based on dynamic config
+        // Set expiration based on dynamic config (will apply once approved)
         var expiresAt = request?.ExpiresAt ?? DateTime.UtcNow.AddDays(listingExpirationDays);
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Vehicle published: {VehicleId} - {Title}, expires: {ExpiresAt}", id, vehicle.Title, expiresAt);
+        _logger.LogInformation("Vehicle submitted for review: {VehicleId} - {Title}", id, vehicle.Title);
 
         // Publish event
         try
@@ -721,21 +725,21 @@ public class VehiclesController : ControllerBase
                 Price = vehicle.Price,
                 VIN = vehicle.VIN ?? string.Empty,
                 CreatedBy = vehicle.SellerId,
-                CreatedAt = vehicle.PublishedAt.Value
+                CreatedAt = DateTime.UtcNow
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish VehiclePublishedEvent for {VehicleId}", id);
+            _logger.LogError(ex, "Failed to publish event for {VehicleId}", id);
         }
 
         return Ok(new PublishVehicleResponse
         {
             Id = vehicle.Id,
             Status = vehicle.Status,
-            PublishedAt = vehicle.PublishedAt.Value,
+            PublishedAt = null,
             ExpiresAt = expiresAt,
-            Message = $"Vehicle published successfully. It is now visible to buyers. Expires: {expiresAt:yyyy-MM-dd}"
+            Message = "Tu vehículo ha sido enviado a revisión. Nuestro equipo lo revisará en las próximas 24 horas y recibirás una notificación cuando sea aprobado."
         });
     }
 
@@ -776,6 +780,162 @@ public class VehiclesController : ControllerBase
             Status = vehicle.Status,
             UpdatedAt = vehicle.UpdatedAt,
             Message = "Vehicle unpublished successfully. It is no longer visible to buyers."
+        });
+    }
+
+    // ========================================
+    // MODERATION: APPROVE / REJECT (Staff only)
+    // ========================================
+
+    /// <summary>
+    /// Approve a vehicle listing (PendingReview -> Active).
+    /// Only staff/admin should call this endpoint.
+    /// </summary>
+    [HttpPost("{id:guid}/approve")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveVehicleRequest? request = null)
+    {
+        var vehicle = await _context.Vehicles
+            .Include(v => v.Images)
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (vehicle.Status != VehicleStatus.PendingReview)
+        {
+            return BadRequest(new
+            {
+                message = $"Only vehicles in PendingReview can be approved. Current status: '{vehicle.Status}'.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        // Load dynamic config for expiration
+        var listingExpirationDays = await _configClient.GetIntAsync("vehicles.listing_expiration_days", 90);
+
+        vehicle.Status = VehicleStatus.Active;
+        vehicle.PublishedAt = DateTime.UtcNow;
+        vehicle.ApprovedAt = DateTime.UtcNow;
+        vehicle.ApprovedBy = request?.ModeratorId;
+        vehicle.ModerationNotes = request?.Notes;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        var expiresAt = DateTime.UtcNow.AddDays(listingExpirationDays);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle approved: {VehicleId} by moderator {ModeratorId}", id, request?.ModeratorId);
+
+        return Ok(new
+        {
+            id = vehicle.Id,
+            status = vehicle.Status.ToString(),
+            publishedAt = vehicle.PublishedAt,
+            expiresAt,
+            message = "Vehicle approved and now visible to buyers."
+        });
+    }
+
+    /// <summary>
+    /// Reject a vehicle listing (PendingReview -> Rejected).
+    /// Only staff/admin should call this endpoint.
+    /// </summary>
+    [HttpPost("{id:guid}/reject")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectVehicleRequest request)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (vehicle.Status != VehicleStatus.PendingReview)
+        {
+            return BadRequest(new
+            {
+                message = $"Only vehicles in PendingReview can be rejected. Current status: '{vehicle.Status}'.",
+                currentStatus = vehicle.Status.ToString()
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+            return BadRequest(new { message = "A rejection reason is required." });
+
+        vehicle.Status = VehicleStatus.Rejected;
+        vehicle.RejectedAt = DateTime.UtcNow;
+        vehicle.RejectedBy = request.ModeratorId;
+        vehicle.RejectionReason = request.Reason;
+        vehicle.ModerationNotes = request.Notes;
+        vehicle.RejectionCount++;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Vehicle rejected: {VehicleId} by moderator {ModeratorId}, reason: {Reason}",
+            id, request.ModeratorId, request.Reason);
+
+        return Ok(new
+        {
+            id = vehicle.Id,
+            status = vehicle.Status.ToString(),
+            rejectedAt = vehicle.RejectedAt,
+            reason = vehicle.RejectionReason,
+            rejectionCount = vehicle.RejectionCount,
+            message = "Vehicle rejected. Seller will be notified."
+        });
+    }
+
+    /// <summary>
+    /// Get vehicles pending review (moderation queue).
+    /// Returns only PendingReview vehicles, ordered by submission date (oldest first).
+    /// </summary>
+    [HttpGet("moderation/queue")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetModerationQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var query = _context.Vehicles
+            .Include(v => v.Images)
+            .Where(v => !v.IsDeleted && v.Status == VehicleStatus.PendingReview)
+            .OrderBy(v => v.SubmittedForReviewAt ?? v.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var vehicles = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            vehicles = vehicles.Select(v => new
+            {
+                id = v.Id,
+                title = v.Title,
+                slug = GenerateSlug(v),
+                make = v.Make,
+                model = v.Model,
+                year = v.Year,
+                price = v.Price,
+                currency = v.Currency,
+                condition = v.Condition.ToString(),
+                sellerName = v.SellerName,
+                sellerType = v.SellerType.ToString(),
+                imageUrl = v.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
+                imageCount = v.Images.Count,
+                submittedAt = v.SubmittedForReviewAt,
+                rejectionCount = v.RejectionCount,
+                city = v.City,
+                state = v.State
+            }),
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
         });
     }
 
@@ -1238,7 +1398,7 @@ public record PublishVehicleResponse
 {
     public Guid Id { get; init; }
     public VehicleStatus Status { get; init; }
-    public DateTime PublishedAt { get; init; }
+    public DateTime? PublishedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public string Message { get; init; } = string.Empty;
 }
@@ -1368,6 +1528,23 @@ public record SellerVehicleStats
     public int PendingListings { get; init; }
     public int TotalViews { get; init; }
     public int TotalFavorites { get; init; }
+}
+
+// ========================================
+// Moderation DTOs
+// ========================================
+
+public record ApproveVehicleRequest
+{
+    public Guid? ModeratorId { get; init; }
+    public string? Notes { get; init; }
+}
+
+public record RejectVehicleRequest
+{
+    public Guid? ModeratorId { get; init; }
+    public string Reason { get; init; } = string.Empty;
+    public string? Notes { get; init; }
 }
 
 #endregion

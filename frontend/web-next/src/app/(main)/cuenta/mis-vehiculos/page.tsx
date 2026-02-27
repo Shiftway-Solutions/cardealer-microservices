@@ -34,8 +34,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { userService, type UserVehicleDto } from '@/services/users';
+import { vehicleService } from '@/services/vehicles';
+import { toast } from 'sonner';
 
-type VehicleStatus = 'all' | 'active' | 'pending' | 'paused' | 'sold' | 'expired';
+type VehicleStatus = 'all' | 'active' | 'pending' | 'paused' | 'sold' | 'expired' | 'rejected';
 
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   active: { label: 'Activo', color: 'text-green-700', bgColor: 'bg-green-100' },
@@ -92,11 +94,25 @@ function VehicleCard({
               <Car className="text-muted-foreground h-12 w-12" />
             </div>
           )}
-          {/* Status overlay for paused/expired */}
+          {/* Status overlay for paused/expired/pending/rejected */}
           {(vehicle.status === 'paused' || vehicle.status === 'expired') && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <span className="rounded bg-black/60 px-3 py-1 font-medium text-white">
                 {vehicle.status === 'paused' ? 'Pausado' : 'Expirado'}
+              </span>
+            </div>
+          )}
+          {vehicle.status === 'pending' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-yellow-900/30">
+              <span className="rounded bg-yellow-600/80 px-3 py-1 text-sm font-medium text-white">
+                En Revisión
+              </span>
+            </div>
+          )}
+          {vehicle.status === 'rejected' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-red-900/30">
+              <span className="rounded bg-red-600/80 px-3 py-1 text-sm font-medium text-white">
+                Rechazado
               </span>
             </div>
           )}
@@ -168,10 +184,10 @@ function VehicleCard({
                     Pausar
                   </DropdownMenuItem>
                 )}
-                {vehicle.status === 'paused' && (
+                {(vehicle.status === 'paused' || vehicle.status === 'rejected') && (
                   <DropdownMenuItem onClick={() => onActivate(vehicle.id)}>
                     <Play className="mr-2 h-4 w-4" />
-                    Activar
+                    {vehicle.status === 'rejected' ? 'Re-enviar a Revisión' : 'Reactivar'}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -291,27 +307,43 @@ export default function MyVehiclesPage() {
 
   // Actions
   const handlePause = async (id: string) => {
-    // TODO: Implement pause
-    console.log('Pause vehicle:', id);
+    try {
+      await vehicleService.unpublish(id, 'Pausado por el vendedor');
+      setVehicles(prev => prev.map(v => (v.id === id ? { ...v, status: 'paused' } : v)));
+      toast.success('Vehículo pausado');
+    } catch {
+      toast.error('Error al pausar el vehículo');
+    }
   };
 
   const handleActivate = async (id: string) => {
-    // TODO: Implement activate
-    console.log('Activate vehicle:', id);
+    try {
+      await vehicleService.publish(id);
+      setVehicles(prev => prev.map(v => (v.id === id ? { ...v, status: 'pending' } : v)));
+      toast.success('Vehículo enviado a revisión nuevamente');
+    } catch {
+      toast.error('Error al reactivar el vehículo. Verifica que cumple los requisitos.');
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este vehículo? Esta acción no se puede deshacer.')) {
       return;
     }
-    // TODO: Implement delete
-    console.log('Delete vehicle:', id);
+    try {
+      await vehicleService.delete(id);
+      setVehicles(prev => prev.filter(v => v.id !== id));
+      toast.success('Vehículo eliminado');
+    } catch {
+      toast.error('Error al eliminar el vehículo');
+    }
   };
 
   const tabs: { value: VehicleStatus; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'active', label: 'Activos' },
-    { value: 'pending', label: 'Pendientes' },
+    { value: 'pending', label: 'En Revisión' },
+    { value: 'rejected', label: 'Rechazados' },
     { value: 'paused', label: 'Pausados' },
     { value: 'sold', label: 'Vendidos' },
   ];

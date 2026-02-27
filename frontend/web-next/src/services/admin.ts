@@ -273,11 +273,13 @@ export async function getVehicleById(id: string): Promise<AdminVehicle> {
 }
 
 export async function approveVehicle(id: string): Promise<void> {
-  await apiClient.post(`/api/admin/vehicles/${id}/approve`);
+  // Call VehiclesSaleService directly — PendingReview → Active
+  await apiClient.post(`/api/vehicles/${id}/approve`);
 }
 
 export async function rejectVehicle(id: string, reason: string): Promise<void> {
-  await apiClient.post(`/api/admin/vehicles/${id}/reject`, { reason });
+  // Call VehiclesSaleService directly — PendingReview → Rejected
+  await apiClient.post(`/api/vehicles/${id}/reject`, { reason });
 }
 
 export async function toggleFeatured(id: string, featured: boolean): Promise<void> {
