@@ -418,7 +418,7 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
             'relative flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium tracking-wide transition-colors',
             pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
               ? 'text-primary'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              : 'text-foreground/80 hover:bg-muted hover:text-foreground'
           )}
         >
           {link.icon}
@@ -641,7 +641,7 @@ function RightActions({
           <Button
             asChild
             size="sm"
-            className="group relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[#00A870] to-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:shadow-primary/25"
+            className="group to-primary hover:shadow-primary/25 relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[#00A870] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
           >
             <Link href="/registro">
               <UserPlus className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -670,7 +670,7 @@ function RightActions({
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-full',
                 isUserMenuOpen
-                  ? 'from-primary bg-gradient-to-br to-primary'
+                  ? 'from-primary to-primary bg-gradient-to-br'
                   : 'from-muted to-muted/80 bg-gradient-to-br'
               )}
             >
@@ -832,8 +832,8 @@ function MobileMenu({ isOpen, pathname, isAuthenticated, user, onLogout }: Mobil
       <div className="space-y-2 px-4 py-4">
         {/* User Info Header - Show when authenticated */}
         {isAuthenticated && user && (
-          <div className="from-primary/10 mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-r to-primary/80/10 px-4 py-3">
-            <div className="from-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br to-primary shadow-md">
+          <div className="from-primary/10 to-primary/80/10 mb-3 flex items-center gap-3 rounded-xl bg-gradient-to-r px-4 py-3">
+            <div className="from-primary to-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br shadow-md">
               <span className="text-lg font-bold text-white">
                 {user.firstName?.charAt(0).toUpperCase() || 'U'}
               </span>

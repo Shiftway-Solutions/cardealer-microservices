@@ -796,28 +796,6 @@ function BuyerDashboard() {
           </CardContent>
         </Card>
       )}
-
-      {/* ── Subtle "Want to Sell?" CTA ──────────────────────── */}
-      <Card className="border-muted bg-muted/30">
-        <CardContent className="flex items-center justify-between gap-4 pt-4 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
-              <DollarSign className="text-primary h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-foreground font-medium">¿Quieres vender tu vehículo?</p>
-              <p className="text-muted-foreground text-sm">
-                Publica tu primer anuncio y llega a miles de compradores en RD
-              </p>
-            </div>
-          </div>
-          <Link href="/vender">
-            <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
-              Publicar <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
     </div>
   );
 }
