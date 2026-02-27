@@ -2499,9 +2499,8 @@
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
 
-    // ── AdvertisingService ──────────────────────────────────────────
-
     {
+      "_comment": "AdvertisingService: Create Campaign",
       "UpstreamPathTemplate": "/api/advertising/campaigns",
       "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/advertising/campaigns",

@@ -34,6 +34,38 @@ import {
 // TRANSFORM HELPERS
 // =============================================
 
+/**
+ * Transform a raw vehicle DTO (from /api/vehicles/featured) to the Vehicle
+ * format expected by homepage components.
+ */
+const transformFeaturedDtoToVehicle = (dto: Record<string, unknown>): Vehicle => {
+  const images = dto.images as Array<Record<string, unknown>> | undefined;
+  const firstImage = images?.sort((a, b) => {
+    const aOrder = (a.sortOrder as number) ?? (a.order as number) ?? 99;
+    const bOrder = (b.sortOrder as number) ?? (b.order as number) ?? 99;
+    return aOrder - bOrder;
+  })[0];
+  const imageUrl = (firstImage?.url as string) || '/placeholder-car.jpg';
+
+  return {
+    id: dto.id as string,
+    make: dto.make as string,
+    model: dto.model as string,
+    year: dto.year as number,
+    price: dto.price as number,
+    mileage: dto.mileage as number,
+    fuelType: String(dto.fuelType ?? ''),
+    transmission: String(dto.transmission ?? ''),
+    exteriorColor: String(dto.exteriorColor ?? ''),
+    bodyStyle: String(dto.bodyType ?? dto.bodyStyle ?? ''),
+    images: images?.map(i => i.url as string).filter(Boolean) || [imageUrl],
+    condition: 'Used',
+    location: [dto.city, dto.province || dto.state].filter(Boolean).join(', ') || 'Santo Domingo',
+    tier: (dto.isFeatured ? 'featured' : 'basic') as Vehicle['tier'],
+    featuredBadge: dto.isFeatured ? 'destacado' : undefined,
+  };
+};
+
 const transformToFeaturedListing = (
   v: HomepageVehicle,
   categoryName: string
@@ -63,13 +95,14 @@ const transformSectionVehicles = (section: HomepageSection | undefined): Feature
 
 interface HomepageClientProps {
   sections: HomepageSection[];
+  fallbackVehicles?: Record<string, unknown>[];
 }
 
 // =============================================
 // COMPONENT
 // =============================================
 
-export default function HomepageClient({ sections }: HomepageClientProps) {
+export default function HomepageClient({ sections, fallbackVehicles = [] }: HomepageClientProps) {
   const getSection = (slug: string) => sections.find(s => s.slug === slug);
 
   const carousel = getSection('carousel');
@@ -117,15 +150,27 @@ export default function HomepageClient({ sections }: HomepageClientProps) {
 
   const heroVehicles: Vehicle[] = useMemo(() => {
     const source = carousel?.vehicles.length ? carousel : destacados;
-    if (!source || source.vehicles.length === 0) return [];
-    return source.vehicles.map(transformHomepageVehicleToVehicle);
-  }, [carousel, destacados]);
+    if (source && source.vehicles.length > 0) {
+      return source.vehicles.map(transformHomepageVehicleToVehicle);
+    }
+    // Fallback: use featured vehicles from the vehicles API
+    if (fallbackVehicles.length > 0) {
+      return fallbackVehicles.slice(0, 5).map(transformFeaturedDtoToVehicle);
+    }
+    return [];
+  }, [carousel, destacados, fallbackVehicles]);
 
   const gridVehicles: Vehicle[] = useMemo(() => {
     const source = destacados?.vehicles.length ? destacados : carousel;
-    if (!source || source.vehicles.length === 0) return [];
-    return source.vehicles.map(transformHomepageVehicleToVehicle);
-  }, [destacados, carousel]);
+    if (source && source.vehicles.length > 0) {
+      return source.vehicles.map(transformHomepageVehicleToVehicle);
+    }
+    // Fallback: use featured vehicles from the vehicles API
+    if (fallbackVehicles.length > 0) {
+      return fallbackVehicles.map(transformFeaturedDtoToVehicle);
+    }
+    return [];
+  }, [destacados, carousel, fallbackVehicles]);
 
   const categorySections = useMemo(() => {
     return [sedanes, suvs, camionetas, deportivos, destacados, lujo].filter(

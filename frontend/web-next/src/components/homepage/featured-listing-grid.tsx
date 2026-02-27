@@ -36,12 +36,13 @@ export default function FeaturedListingGrid({
 }: FeaturedListingGridProps) {
   const displayVehicles = maxItems ? vehicles.slice(0, maxItems) : vehicles;
 
-  // Generate vehicle URL
+  // Generate vehicle URL (mirrors backend GenerateSlug: {year}-{make}-{model}-{shortId8})
   const generateVehicleUrl = (vehicle: Vehicle) => {
     const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
       .toLowerCase()
       .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
+    const shortId = (vehicle.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   };
 
   return (

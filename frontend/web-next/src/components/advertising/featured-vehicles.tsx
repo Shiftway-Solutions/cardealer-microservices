@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,9 +48,18 @@ function FeaturedVehicleCard({
     }
   };
 
+  // Build a proper slug when the API doesn't provide one
+  const vehicleHref = useMemo(() => {
+    if (vehicle.slug) return `/vehiculos/${vehicle.slug}`;
+    // Generate slug matching backend format: {year}-{make}-{model}-{shortId8}
+    const title = (vehicle.title || '').toLowerCase().replace(/\s+/g, '-');
+    const shortId = (vehicle.vehicleId || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${title}-${shortId}`;
+  }, [vehicle]);
+
   return (
     <Link
-      href={`/vehiculos/${vehicle.slug || vehicle.vehicleId}`}
+      href={vehicleHref}
       onClick={handleClick}
       className="group block"
     >

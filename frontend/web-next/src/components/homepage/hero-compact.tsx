@@ -243,7 +243,8 @@ export function VehicleCardCompact({ vehicle, index }: VehicleCardCompactProps) 
     const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
       .toLowerCase()
       .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
+    const shortId = (vehicle.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   }, [vehicle]);
 
   return (
@@ -444,7 +445,8 @@ function VehicleCardThemed({ vehicle, index }: VehicleCardThemedProps) {
     const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
       .toLowerCase()
       .replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${vehicle.id}`;
+    const shortId = (vehicle.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   }, [vehicle]);
 
   return (

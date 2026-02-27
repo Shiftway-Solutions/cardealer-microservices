@@ -92,10 +92,11 @@ export default function FeaturedSection({
     });
   };
 
-  // Generate vehicle URL
+  // Generate vehicle URL (mirrors backend GenerateSlug: {year}-{make}-{model}-{shortId8})
   const generateVehicleUrl = (item: FeaturedListingItem) => {
     const slug = `${item.year}-${item.make}-${item.model}`.toLowerCase().replace(/\s+/g, '-');
-    return `/vehiculos/${slug}-${item.id}`;
+    const shortId = (item.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+    return `/vehiculos/${slug}-${shortId}`;
   };
 
   if (listings.length === 0) return null;
