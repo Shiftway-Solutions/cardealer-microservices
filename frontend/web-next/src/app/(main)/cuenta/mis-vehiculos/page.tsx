@@ -233,6 +233,10 @@ function EmptyState({ status }: { status: VehicleStatus }) {
       title: 'No tienes publicaciones expiradas',
       description: 'Las publicaciones que expiren aparecerán aquí',
     },
+    rejected: {
+      title: 'No tienes vehículos rechazados',
+      description: 'Si algún anuncio es rechazado por el equipo de revisión, aparecerá aquí con los motivos',
+    },
   };
 
   const { title, description } = messages[status];
