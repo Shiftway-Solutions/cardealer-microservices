@@ -418,13 +418,8 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
             'relative flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium tracking-wide transition-colors',
             pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
               ? 'text-primary'
-              : 'hover:bg-muted hover:text-foreground'
+              : 'text-foreground hover:bg-muted'
           )}
-          style={
-            pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
-              ? {}
-              : { color: 'rgb(2, 8, 23)' }
-          }
         >
           {link.icon}
           {link.label}
@@ -449,7 +444,7 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                       'relative flex items-center justify-center rounded-xl p-2.5 transition-all',
                       pathname === '/cuenta/favoritos'
                         ? 'bg-primary/10 text-primary shadow-sm'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        : 'text-foreground hover:bg-muted'
                     )}
                   >
                     <Heart className="h-4 w-4" />
@@ -471,7 +466,7 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                         'relative flex items-center justify-center rounded-xl p-2.5 transition-all',
                         pathname === '/cuenta/notificaciones'
                           ? 'bg-primary/10 text-primary shadow-sm'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          : 'text-foreground hover:bg-muted'
                       )}
                     >
                       <Bell className="h-4 w-4" />
