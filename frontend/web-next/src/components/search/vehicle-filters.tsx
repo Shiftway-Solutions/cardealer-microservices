@@ -234,16 +234,23 @@ export function VehicleFilters({
     <div className={cn('space-y-0', className)}>
       {/* ── HEADER ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between pb-3">
-        <span className="text-foreground text-base font-semibold">Filtros</span>
+        <div className="flex items-center gap-2">
+          <span className="text-foreground text-sm font-bold tracking-tight">Filtros</span>
+          {activeCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00A870] text-[10px] font-bold text-white">
+              {activeCount}
+            </span>
+          )}
+        </div>
         {activeCount > 0 && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="text-muted-foreground h-7 gap-1 px-2 text-xs hover:text-red-600"
+            className="text-muted-foreground h-7 gap-1 px-2 text-xs hover:text-red-500"
           >
             <RotateCcw className="h-3 w-3" />
-            Limpiar ({activeCount})
+            Limpiar todo
           </Button>
         )}
       </div>

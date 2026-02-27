@@ -126,12 +126,14 @@ function AdSlotLeaderboard() {
           </div>
           <div>
             <p className="text-lg font-bold text-white">¿Tienes un vehículo para vender?</p>
-            <p className="text-sm text-white/80">Publica en minutos y llega a miles de compradores en RD</p>
+            <p className="text-sm text-white/80">
+              Publica en minutos y llega a miles de compradores en RD
+            </p>
           </div>
         </div>
         <Link
           href="/vender"
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#00A870] shadow-sm transition-all hover:shadow-md hover:scale-105"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#00A870] shadow-sm transition-all hover:scale-105 hover:shadow-md"
         >
           <Tag className="h-4 w-4" />
           Publicar ahora
@@ -156,7 +158,9 @@ function AdSlotRectangle({ className }: { className?: string }) {
         </div>
         <div>
           <p className="font-bold text-white">Crea una alerta</p>
-          <p className="mt-1 text-xs text-slate-400">Recibe notificaciones cuando aparezca un vehículo que te interese</p>
+          <p className="mt-1 text-xs text-slate-400">
+            Recibe notificaciones cuando aparezca un vehículo que te interese
+          </p>
         </div>
         <Link
           href="/cuenta/alertas"
@@ -381,11 +385,11 @@ export default function VehiculosClient() {
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* ═══════════════════════════════════════════════════════
           STICKY HEADER: Search bar + Body type quick filters
       ═══════════════════════════════════════════════════════ */}
-      <div className="border-border bg-card sticky top-0 z-30 border-b shadow-sm">
+      <div className="border-border sticky top-0 z-30 border-b bg-white shadow-sm dark:bg-slate-900">
         <div className="mx-auto max-w-screen-xl px-4 py-3 sm:px-6">
           {/* Row 1: Search bar + controls */}
           <div className="flex items-center gap-3">
@@ -478,11 +482,11 @@ export default function VehiculosClient() {
           </div>
 
           {/* Row 2: Body type quick selector (horizontal scroll) */}
-          <div className="scrollbar-none -mx-4 mt-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+          <div className="scrollbar-none -mx-4 mt-2.5 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
             <BodyTypeSelector
               value={filters.bodyType}
               onChange={v => setFilters({ bodyType: v, page: 1 })}
-              variant="default"
+              variant="compact"
             />
           </div>
 
@@ -522,22 +526,22 @@ export default function VehiculosClient() {
       ═══════════════════════════════════════════════════════ */}
       <div className="border-border bg-card border-b">
         <div className="mx-auto flex max-w-screen-xl items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6">
-          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
             <ShieldCheck className="h-3.5 w-3.5 text-[#00A870]" />
             <span>Vendedores verificados</span>
           </div>
           <span className="text-border">·</span>
-          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
             <Star className="h-3.5 w-3.5 text-amber-500" />
             <span>+2,400 vehículos activos</span>
           </div>
           <span className="text-border">·</span>
-          <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
             <Phone className="h-3.5 w-3.5 text-[#00A870]" />
             <span>Contacto directo con el vendedor</span>
           </div>
-          <span className="hidden text-border sm:inline">·</span>
-          <div className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+          <span className="text-border hidden sm:inline">·</span>
+          <div className="text-muted-foreground hidden shrink-0 items-center gap-1.5 text-xs sm:flex">
             <Bell className="h-3.5 w-3.5 text-[#00A870]" />
             <span>Alertas de precio gratis</span>
           </div>
@@ -551,25 +555,27 @@ export default function VehiculosClient() {
         <div className="flex gap-6">
           {/* ─── LEFT SIDEBAR ─────────────────────────────────── */}
           <aside className="hidden w-[268px] flex-shrink-0 lg:block">
-            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border sticky top-[220px] max-h-[calc(100vh-230px)] space-y-4 overflow-y-auto pr-1">
-              <VehicleFilters
-                filters={filters}
-                onChange={changes => setFilters({ ...changes, page: 1 })}
-                onClear={clearFilters}
-                activeCount={activeFilterCount}
-                makeCatalog={makes.map(m => ({ id: m.id, name: m.name }))}
-                modelCatalog={models.map(m => ({ id: m.id, name: m.name, make: filters.make }))}
-              />
+            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border border-border sticky top-[220px] max-h-[calc(100vh-230px)] overflow-y-auto rounded-2xl border bg-white shadow-sm dark:bg-slate-900">
+              <div className="space-y-4 p-4">
+                <VehicleFilters
+                  filters={filters}
+                  onChange={changes => setFilters({ ...changes, page: 1 })}
+                  onClear={clearFilters}
+                  activeCount={activeFilterCount}
+                  makeCatalog={makes.map(m => ({ id: m.id, name: m.name }))}
+                  modelCatalog={models.map(m => ({ id: m.id, name: m.name, make: filters.make }))}
+                />
 
-              {/* Sidebar ad slot */}
-              <AdSlotRectangle className="mt-4" />
+                {/* Sidebar ad slot */}
+                <AdSlotRectangle className="mt-4" />
+              </div>
             </div>
           </aside>
 
           {/* ─── RESULTS AREA ────────────────────────────────── */}
           <main className="min-w-0 flex-1">
             {/* Toolbar: count + active filters + save search */}
-            <div className="mb-4 space-y-3">
+            <div className="border-border mb-4 space-y-3 rounded-2xl border bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* Results count */}
                 <div className="text-muted-foreground text-sm">
@@ -687,31 +693,30 @@ export default function VehiculosClient() {
 
             {/* Empty state */}
             {!error && !isLoading && vehicles.length === 0 && (
-              <div className="bg-card flex flex-col items-center justify-center rounded-xl border py-20 text-center">
-                <div className="bg-muted mb-4 rounded-full p-5">
-                  <Search className="text-muted-foreground h-9 w-9" />
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center shadow-sm dark:bg-slate-900">
+                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+                  <span className="text-5xl">🔍</span>
                 </div>
-                <h3 className="text-foreground text-xl font-semibold">No encontramos resultados</h3>
-                <p className="text-muted-foreground mt-2 max-w-md text-sm">
-                  Prueba ajustando los filtros o buscando con otros términos. Puedes{' '}
+                <h3 className="text-foreground text-xl font-bold">No encontramos resultados</h3>
+                <p className="text-muted-foreground mt-2 max-w-sm text-sm leading-relaxed">
+                  Prueba ajustando los filtros o buscando con otros términos.
+                </p>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="mt-5 rounded-xl bg-[#00A870] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#008a5c] hover:shadow-lg"
+                >
+                  Limpiar filtros y ver todos
+                </button>
+                {isAuthenticated && (
                   <button
                     type="button"
-                    onClick={clearFilters}
-                    className="text-[#00A870] underline-offset-2 hover:underline"
-                  >
-                    limpiar todos los filtros
-                  </button>{' '}
-                  para ver más resultados.
-                </p>
-                {isAuthenticated && (
-                  <Button
-                    variant="outline"
-                    className="mt-5 gap-2 border-[#00A870] text-[#00A870] hover:bg-[#00A870]/10"
                     onClick={() => setSaveModalOpen(true)}
+                    className="mt-3 flex items-center gap-2 text-sm text-[#00A870] underline-offset-2 hover:underline"
                   >
-                    <Bell className="h-4 w-4" />
-                    Guarda búsqueda y recibe alertas
-                  </Button>
+                    <Bell className="h-3.5 w-3.5" />
+                    Recibir alerta cuando haya resultados
+                  </button>
                 )}
               </div>
             )}
@@ -832,7 +837,11 @@ export default function VehiculosClient() {
       <div className="fixed right-4 bottom-6 z-50 flex flex-col items-end gap-2 lg:hidden">
         <button
           type="button"
-          onClick={() => isAuthenticated ? setSaveModalOpen(true) : (window.location.href = '/login?redirect=/vehiculos')}
+          onClick={() =>
+            isAuthenticated
+              ? setSaveModalOpen(true)
+              : (window.location.href = '/login?redirect=/vehiculos')
+          }
           className="flex items-center gap-2 rounded-full bg-[#00A870] px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:bg-[#008a5c] hover:shadow-2xl active:scale-95"
           aria-label="Guardar búsqueda y crear alerta"
         >
