@@ -282,6 +282,38 @@ const initialFormData: VehicleFormData = {
   sellerWhatsApp: '',
 };
 
+// ============================================================
+// Draft Serialization
+// ============================================================
+
+/**
+ * Prepare formData for JSON serialization into localStorage.
+ * – Strips non-serializable `File` objects and ephemeral blob/data URLs from images.
+ * – Keeps only images that have a real server URL (already uploaded).
+ * – Preserves all other scalar/primitive fields unchanged.
+ */
+function serializeForDraft(
+  data: VehicleFormData,
+  step: WizardStep,
+): Record<string, unknown> {
+  const serializableImages = data.images
+    .filter(img => img.url && !img.url.startsWith('blob:') && !img.isUploading)
+    .map(img => ({
+      id: img.id,
+      url: img.url,
+      order: img.order,
+      isPrimary: img.isPrimary,
+    }));
+
+  // Spread all fields, override images with the serializable version
+  return {
+    ...data,
+    images: serializableImages,
+    _step: step,
+    _timestamp: Date.now(),
+  };
+}
+
 export function SmartPublishWizard({
   mode = 'individual',
   dealerId,
@@ -355,7 +387,7 @@ export function SmartPublishWizard({
       try {
         localStorage.setItem(
           draftKey,
-          JSON.stringify({ ...formData, _step: currentStep, _timestamp: Date.now() })
+          JSON.stringify(serializeForDraft(formData, currentStep))
         );
       } catch {
         /* ignore */
@@ -370,6 +402,21 @@ export function SmartPublishWizard({
         const parsed = JSON.parse(saved);
         const { _step, _timestamp: _ts, ...data } = parsed;
         void _ts;
+
+        // Reconstruct UploadedImage objects from serialized draft data
+        if (Array.isArray(data.images)) {
+          data.images = data.images
+            .filter((img: Record<string, unknown>) => img.url && typeof img.url === 'string')
+            .map((img: Record<string, unknown>) => ({
+              id: (img.id as string) || crypto.randomUUID(),
+              url: img.url as string,
+              order: (img.order as number) ?? 0,
+              isPrimary: (img.isPrimary as boolean) ?? false,
+              isUploading: false,
+              progress: 100,
+            }));
+        }
+
         setFormData(prev => ({ ...prev, ...data }));
         setCurrentStep(_step || 'info');
       }
@@ -561,11 +608,14 @@ export function SmartPublishWizard({
 
   const handleSaveDraft = useCallback(() => {
     try {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ ...formData, _step: currentStep, _timestamp: Date.now() })
+      const draft = serializeForDraft(formData, currentStep);
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      const imgCount = (draft.images as unknown[]).length;
+      toast.success(
+        imgCount > 0
+          ? `Borrador guardado (${imgCount} foto${imgCount !== 1 ? 's' : ''})`
+          : 'Borrador guardado'
       );
-      toast.success('Borrador guardado');
     } catch {
       toast.error('Error al guardar borrador');
     }
