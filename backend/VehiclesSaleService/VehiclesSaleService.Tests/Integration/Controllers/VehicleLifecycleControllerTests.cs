@@ -89,7 +89,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Publish_DraftVehicle_WithValidData_PublishesSuccessfully()
+    public async Task Publish_DraftVehicle_WithValidData_SetsPendingReview()
     {
         // Arrange
         var vehicleId = Guid.NewGuid();
@@ -104,8 +104,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         result.Result.Should().BeOfType<OkObjectResult>();
         var response = ((OkObjectResult)result.Result!).Value as PublishVehicleResponse;
         response.Should().NotBeNull();
-        response!.Status.Should().Be(VehicleStatus.Active);
-        response.Message.Should().Contain("published successfully");
+        response!.Status.Should().Be(VehicleStatus.PendingReview);
+        response.Message.Should().Contain("revisión");
     }
 
     [Fact]
@@ -157,6 +157,121 @@ public class VehicleLifecycleControllerTests : IDisposable
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Publish_RejectedVehicle_ResubmitsToPendingReview()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.Rejected);
+        vehicle.RejectionReason = "Previous issue";
+        vehicle.RejectionCount = 1;
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Publish(vehicleId, null);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var response = ((OkObjectResult)result.Result!).Value as PublishVehicleResponse;
+        response.Should().NotBeNull();
+        response!.Status.Should().Be(VehicleStatus.PendingReview);
+    }
+
+    #endregion
+
+    #region Approve / Reject Tests
+
+    [Fact]
+    public async Task Approve_PendingVehicle_SetsActive()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow.AddHours(-1);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new ApproveVehicleRequest 
+        { 
+            ModeratorId = Guid.NewGuid(),
+            Notes = "Looks good"
+        };
+
+        // Act
+        var result = await _controller.Approve(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var updatedVehicle = await _context.Vehicles.FindAsync(vehicleId);
+        updatedVehicle!.Status.Should().Be(VehicleStatus.Active);
+        updatedVehicle.ApprovedAt.Should().NotBeNull();
+        updatedVehicle.PublishedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Approve_NonPendingVehicle_ReturnsBadRequest()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.Draft);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Approve(vehicleId, null);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Reject_PendingVehicle_SetsRejectedWithReason()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        vehicle.SubmittedForReviewAt = DateTime.UtcNow.AddHours(-1);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new RejectVehicleRequest 
+        { 
+            ModeratorId = Guid.NewGuid(),
+            Reason = "Photos are blurry",
+            Notes = "Please retake photos"
+        };
+
+        // Act
+        var result = await _controller.Reject(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var updatedVehicle = await _context.Vehicles.FindAsync(vehicleId);
+        updatedVehicle!.Status.Should().Be(VehicleStatus.Rejected);
+        updatedVehicle.RejectionReason.Should().Be("Photos are blurry");
+        updatedVehicle.RejectedAt.Should().NotBeNull();
+        updatedVehicle.RejectionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Reject_WithoutReason_ReturnsBadRequest()
+    {
+        // Arrange
+        var vehicleId = Guid.NewGuid();
+        var vehicle = CreateValidVehicle(vehicleId, VehicleStatus.PendingReview);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+
+        var request = new RejectVehicleRequest { Reason = "" };
+
+        // Act
+        var result = await _controller.Reject(vehicleId, request);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     #endregion
