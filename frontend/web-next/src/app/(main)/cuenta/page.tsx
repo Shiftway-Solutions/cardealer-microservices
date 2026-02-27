@@ -40,6 +40,12 @@ import {
   ChevronRight,
   Heart,
   DollarSign,
+  Search,
+  Bell,
+  History,
+  BookOpen,
+  Sparkles,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useCanSell } from '@/hooks/use-kyc';
@@ -54,6 +60,8 @@ import { useUpcomingAppointments } from '@/hooks/use-appointments';
 import { formatLeadName } from '@/services/crm';
 import { getAppointmentTypeLabel } from '@/services/appointments';
 import { useSellerByUserId, useSellerStats } from '@/hooks/use-seller';
+import { useFavorites } from '@/hooks/use-favorites';
+import { useAlertStats } from '@/hooks/use-alerts';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -558,211 +566,339 @@ function SellerDashboard() {
 }
 
 // ============================================================
-// BUYER DASHBOARD (original content, preserved)
+// BUYER DASHBOARD — Focused on searching, saving & buying
 // ============================================================
 
 function BuyerDashboard() {
-  const [stats, setStats] = React.useState<{
-    vehiclesPublished: number;
-    totalViews: number;
-    totalInquiries: number;
-    averageRating: number;
-    reviewCount: number;
-  } | null>(null);
-  const [recentVehicles, setRecentVehicles] = React.useState<UserVehicleDto[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const { user } = useAuth();
+  const { favorites, count: favCount, isLoading: favLoading } = useFavorites();
+  const { data: alertStats, isLoading: alertsLoading } = useAlertStats();
 
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        setError(null);
+  const firstName = user?.firstName?.split(' ')[0] || 'Bienvenido';
 
-        // Fetch user stats
-        const statsData = await userService.getUserStats().catch(() => null);
-        setStats(
-          statsData ?? {
-            vehiclesPublished: 0,
-            totalViews: 0,
-            totalInquiries: 0,
-            averageRating: 0,
-            reviewCount: 0,
-          }
-        );
-
-        // Fetch recent vehicles
-        const vehiclesResult = await userService
-          .getUserVehicles({ limit: 3, status: 'all' })
-          .catch(() => ({ vehicles: [], total: 0 }));
-        setRecentVehicles(vehiclesResult.vehicles);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('No se pudieron cargar los datos. Por favor, intenta de nuevo.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600" />
-          <p className="text-muted-foreground mt-4">Cargando tu dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-600" />
-          <p className="text-muted-foreground mt-4">{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Reintentar
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // 3 most recent favorites for preview section
+  const recentFavorites = favorites.slice(0, 3);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Bienvenido a tu panel de control</p>
+      {/* ── Welcome Header ─────────────────────────────────── */}
+      <div className="from-primary/5 to-primary/10 rounded-2xl bg-gradient-to-br p-6">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-foreground text-2xl font-bold">
+              ¡Hola, {firstName}! 👋
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Encuentra tu próximo vehículo en OKLA
+            </p>
+          </div>
+          <Link href="/vehiculos">
+            <Button className="gap-2" size="lg">
+              <Search className="h-5 w-5" />
+              Buscar Vehículos
+            </Button>
+          </Link>
         </div>
-        <Link href="/vender">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Publicar Vehículo
-          </Button>
+      </div>
+
+      {/* ── Activity Summary ───────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-4">
+        <Link
+          href="/cuenta/favoritos"
+          className="border-border bg-card hover:border-rose-300 hover:bg-rose-50 group rounded-xl border p-4 text-center transition-all"
+          data-testid="summary-favorites"
+        >
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 transition-colors group-hover:bg-rose-200">
+            <Heart className="h-5 w-5 text-rose-600" />
+          </div>
+          {favLoading ? (
+            <div className="mx-auto mb-1 h-7 w-8 animate-pulse rounded bg-rose-100" />
+          ) : (
+            <p className="text-foreground text-2xl font-bold">{favCount}</p>
+          )}
+          <p className="text-muted-foreground text-xs">Favoritos</p>
+        </Link>
+
+        <Link
+          href="/cuenta/busquedas"
+          className="border-border bg-card hover:border-blue-300 hover:bg-blue-50 group rounded-xl border p-4 text-center transition-all"
+          data-testid="summary-saved-searches"
+        >
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 transition-colors group-hover:bg-blue-200">
+            <BookOpen className="h-5 w-5 text-blue-600" />
+          </div>
+          {alertsLoading ? (
+            <div className="mx-auto mb-1 h-7 w-8 animate-pulse rounded bg-blue-100" />
+          ) : (
+            <p className="text-foreground text-2xl font-bold">
+              {alertStats?.activeSavedSearches ?? 0}
+            </p>
+          )}
+          <p className="text-muted-foreground text-xs">Búsquedas</p>
+        </Link>
+
+        <Link
+          href="/cuenta/alertas"
+          className="border-border bg-card hover:border-amber-300 hover:bg-amber-50 group rounded-xl border p-4 text-center transition-all"
+          data-testid="summary-alerts"
+        >
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 transition-colors group-hover:bg-amber-200">
+            <Bell className="h-5 w-5 text-amber-600" />
+          </div>
+          {alertsLoading ? (
+            <div className="mx-auto mb-1 h-7 w-8 animate-pulse rounded bg-amber-100" />
+          ) : (
+            <p className="text-foreground text-2xl font-bold">
+              {alertStats?.activePriceAlerts ?? 0}
+            </p>
+          )}
+          <p className="text-muted-foreground text-xs">Alertas de Precio</p>
         </Link>
       </div>
 
-      {/* Verification Banner */}
-      <VerificationBanner />
+      {/* ── Price Drop Alert ── shown only when there are drops ─ */}
+      {!alertsLoading && (alertStats?.priceDropsThisMonth ?? 0) > 0 && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="flex items-center justify-between gap-4 pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-green-900">
+                  {alertStats!.priceDropsThisMonth} bajada
+                  {alertStats!.priceDropsThisMonth > 1 ? 's' : ''} de precio este mes
+                </p>
+                <p className="text-sm text-green-700">Revisa tus alertas para ver los detalles</p>
+              </div>
+            </div>
+            <Link href="/cuenta/alertas">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-green-400 text-green-700 hover:bg-green-100"
+              >
+                Ver alertas <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard
-          title="Vehículos Activos"
-          value={stats?.vehiclesPublished ?? 0}
-          icon={Car}
-          color="blue"
-        />
-        <MetricCard
-          title="Vistas Totales"
-          value={stats?.totalViews ?? 0}
-          icon={Eye}
-          color="green"
-        />
-        <MetricCard
-          title="Consultas"
-          value={stats?.totalInquiries ?? 0}
-          icon={MessageSquare}
-          color="purple"
-        />
-        <MetricCard
-          title="Calificación"
-          value={stats?.averageRating ? `${stats.averageRating.toFixed(1)}` : '—'}
-          icon={Star}
-          color="yellow"
-          suffix={stats?.averageRating ? `(${stats.reviewCount})` : ''}
-        />
-      </div>
-
-      {/* Quick Actions */}
+      {/* ── Quick Actions ─────────────────────────────────── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
+          <CardTitle className="text-base">Acciones Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <QuickAction href="/vender" icon={Plus} label="Publicar Vehículo" color="green" />
-            <QuickAction
-              href="/cuenta/mis-vehiculos"
-              icon={Car}
-              label="Ver Mis Vehículos"
-              color="blue"
-            />
-            <QuickAction
-              href="/cuenta/mensajes"
-              icon={MessageSquare}
-              label="Ver Mensajes"
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+            <BuyerQuickAction href="/vehiculos" icon={Search} label="Buscar" color="blue" />
+            <BuyerQuickAction href="/cuenta/favoritos" icon={Heart} label="Favoritos" color="rose" />
+            <BuyerQuickAction
+              href="/cuenta/busquedas"
+              icon={BookOpen}
+              label="Búsquedas"
               color="purple"
             />
-            <QuickAction
-              href="/cuenta/favoritos"
-              icon={Star}
-              label="Mis Favoritos"
-              color="yellow"
+            <BuyerQuickAction
+              href="/cuenta/alertas"
+              icon={Bell}
+              label="Alertas"
+              color="amber"
+            />
+            <BuyerQuickAction
+              href="/mensajes"
+              icon={MessageSquare}
+              label="Mensajes"
+              color="green"
+            />
+            <BuyerQuickAction
+              href="/cuenta/historial"
+              icon={History}
+              label="Historial"
+              color="gray"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Vehicles */}
+      {/* ── Recent Favorites ─────────────────────────────── */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Mis Vehículos Recientes</CardTitle>
-          <Link href="/cuenta/mis-vehiculos">
-            <Button variant="ghost" size="sm" className="gap-1">
-              Ver todos
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Heart className="h-4 w-4 text-rose-500" />
+            Mis Favoritos Recientes
+          </CardTitle>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/cuenta/favoritos" className="flex items-center gap-1">
+              Ver todos <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent>
-          {recentVehicles.length > 0 ? (
-            <div className="space-y-4">
-              {recentVehicles.map(vehicle => (
-                <VehicleListItem key={vehicle.id} vehicle={vehicle} />
+          {favLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex animate-pulse gap-3">
+                  <div className="bg-muted h-16 w-24 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="bg-muted h-4 w-3/4 rounded" />
+                    <div className="bg-muted h-4 w-1/2 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentFavorites.length > 0 ? (
+            <div className="space-y-3">
+              {recentFavorites.map(fav => (
+                <FavoriteMiniCard key={fav.id} favorite={fav} />
               ))}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <Car className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-              <p className="text-muted-foreground mb-4">No tienes vehículos publicados</p>
-              <Link href="/vender">
-                <Button>Publicar mi primer vehículo</Button>
+              <Heart className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
+              <p className="text-foreground font-medium">Aún no tienes favoritos</p>
+              <p className="text-muted-foreground mt-1 mb-4 text-sm">
+                Guarda los vehículos que te interesen para compararlos luego
+              </p>
+              <Link href="/vehiculos">
+                <Button variant="outline" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Explorar vehículos
+                </Button>
               </Link>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Performance Tips */}
-      <Card className="border-blue-100 bg-blue-50">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+      {/* ── New Matches from Saved Searches ────────────────── */}
+      {!alertsLoading && (alertStats?.newMatchesThisWeek ?? 0) > 0 && (
+        <Card className="border-blue-100 bg-blue-50">
+          <CardContent className="flex items-center justify-between gap-4 pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-blue-900">
+                  {alertStats!.newMatchesThisWeek} vehículo
+                  {alertStats!.newMatchesThisWeek > 1 ? 's nuevos' : ' nuevo'} esta semana
+                </p>
+                <p className="text-sm text-blue-700">
+                  Coinciden con tus búsquedas guardadas
+                </p>
+              </div>
+            </div>
+            <Link href="/cuenta/busquedas">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-blue-400 text-blue-700 hover:bg-blue-100"
+              >
+                Ver resultados <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Subtle "Want to Sell?" CTA ──────────────────────── */}
+      <Card className="border-muted bg-muted/30">
+        <CardContent className="flex items-center justify-between gap-4 pt-4 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
+              <DollarSign className="text-primary h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-foreground mb-1 font-semibold">Mejora tus resultados</h3>
-              <p className="text-muted-foreground mb-3 text-sm">
-                Los vehículos con fotos profesionales y descripciones completas reciben hasta 3x más
-                consultas.
+              <p className="text-foreground font-medium">¿Quieres vender tu vehículo?</p>
+              <p className="text-muted-foreground text-sm">
+                Publica tu primer anuncio y llega a miles de compradores en RD
               </p>
-              <Link href="/ayuda/consejos-vendedor">
-                <Button variant="outline" size="sm">
-                  Ver consejos
-                </Button>
-              </Link>
             </div>
           </div>
+          <Link href="/vender">
+            <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
+              Publicar <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ── Buyer-specific helpers ────────────────────────────────────────────────────
+
+type BuyerActionColor = 'blue' | 'rose' | 'purple' | 'amber' | 'green' | 'gray';
+
+function BuyerQuickAction({
+  href,
+  icon: Icon,
+  label,
+  color,
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  color: BuyerActionColor;
+}) {
+  const colorMap: Record<BuyerActionColor, string> = {
+    blue: 'bg-blue-100 text-blue-600 group-hover:bg-blue-200',
+    rose: 'bg-rose-100 text-rose-600 group-hover:bg-rose-200',
+    purple: 'bg-purple-100 text-purple-600 group-hover:bg-purple-200',
+    amber: 'bg-amber-100 text-amber-600 group-hover:bg-amber-200',
+    green: 'bg-green-100 text-green-600 group-hover:bg-green-200',
+    gray: 'bg-gray-100 text-gray-600 group-hover:bg-gray-200',
+  };
+  return (
+    <Link
+      href={href}
+      className="border-border hover:border-primary/20 group flex flex-col items-center gap-2 rounded-xl border p-3 transition-all"
+    >
+      <div
+        className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${colorMap[color]}`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+      <span className="text-foreground text-center text-xs font-medium">{label}</span>
+    </Link>
+  );
+}
+
+function FavoriteMiniCard({ favorite }: { favorite: import('@/services/favorites').FavoriteVehicle }) {
+  const v = favorite.vehicle;
+  const title = v.title || `${v.year} ${v.make} ${v.model}`;
+  const href = v.slug ? `/vehiculos/${v.slug}` : '/vehiculos';
+
+  return (
+    <Link
+      href={href}
+      className="border-border hover:border-primary/30 hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-all"
+    >
+      {/* Image */}
+      <div className="bg-muted relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg">
+        {v.imageUrl ? (
+          <img src={v.imageUrl} alt={title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
+        )}
+      </div>
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <p className="text-foreground line-clamp-1 text-sm font-medium">{title}</p>
+        <p className="text-primary text-sm font-bold">
+          {v.price ? `RD$${v.price.toLocaleString()}` : '—'}
+        </p>
+        {v.location && (
+          <p className="text-muted-foreground flex items-center gap-1 text-xs">
+            <MapPin className="h-3 w-3" />
+            {v.location}
+          </p>
+        )}
+      </div>
+      <ArrowRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+    </Link>
   );
 }
 
