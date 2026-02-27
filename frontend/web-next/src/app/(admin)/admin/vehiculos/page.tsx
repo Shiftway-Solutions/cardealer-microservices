@@ -197,7 +197,7 @@ function ModerationItemCard({
 }: {
   item: ModerationItem;
   onApprove: () => void;
-  onReject: () => void;
+  onReject: (reason: string) => void;
   onSkip: () => void;
   isApproving: boolean;
   isRejecting: boolean;
@@ -211,7 +211,8 @@ function ModerationItemCard({
   };
 
   const confirmReject = () => {
-    onReject();
+    const reason = selectedReason === 'Otro (especificar)' ? customReason : selectedReason;
+    onReject(reason);
     setShowRejectModal(false);
     setSelectedReason('');
     setCustomReason('');
@@ -563,7 +564,7 @@ function ModerationTab() {
           <ModerationItemCard
             item={currentItem}
             onApprove={handleApprove}
-            onReject={() => handleReject()}
+            onReject={(reason: string) => handleReject(reason)}
             onSkip={handleNext}
             isApproving={approveMutation.isPending}
             isRejecting={rejectMutation.isPending}
@@ -769,7 +770,7 @@ function VehiclesGridTab() {
                 <span>{new Date(vehicle.createdAt).toLocaleDateString('es-DO')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href={`/vehiculos/${vehicle.id}`} target="_blank">
+                <Link href={`/vehiculos/${vehicle.slug || vehicle.id}`} target="_blank">
                   <Button variant="outline" size="sm">
                     <Eye className="mr-1 h-4 w-4" />
                     Ver

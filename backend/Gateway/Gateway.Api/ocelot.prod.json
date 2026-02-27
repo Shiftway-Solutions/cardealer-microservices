@@ -568,6 +568,36 @@
       }
     },
     {
+      "_comment": "Public: Featured vehicles (AllowAnonymous)",
+      "UpstreamPathTemplate": "/api/vehicles/featured",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/featured",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Public: Track vehicle views (anonymous allowed)",
+      "UpstreamPathTemplate": "/api/vehicles/{id}/views",
+      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "DownstreamPathTemplate": "/api/vehicles/{id}/views",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "vehiclessaleservice", "Port": 8080 }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "_comment": "Authenticated: catch-all for create, update, delete, publish, etc.",
       "UpstreamPathTemplate": "/api/vehicles/{everything}",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],

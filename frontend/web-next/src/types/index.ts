@@ -53,6 +53,8 @@ export interface Vehicle {
   isFeatured?: boolean;
   viewCount?: number;
   favoriteCount?: number;
+  rejectionReason?: string;
+  vin?: string;
 
   // Seller
   sellerId: string;

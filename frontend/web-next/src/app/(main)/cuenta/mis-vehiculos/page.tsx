@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Car,
   Loader2,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -178,6 +179,14 @@ function VehicleCard({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {vehicle.status === 'active' && !vehicle.isFeatured && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/vender/promover/${vehicle.id}`}>
+                      <Star className="mr-2 h-4 w-4" />
+                      Promocionar
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 {vehicle.status === 'active' && (
                   <DropdownMenuItem onClick={() => onPause(vehicle.id)}>
                     <Pause className="mr-2 h-4 w-4" />
@@ -235,7 +244,8 @@ function EmptyState({ status }: { status: VehicleStatus }) {
     },
     rejected: {
       title: 'No tienes vehículos rechazados',
-      description: 'Si algún anuncio es rechazado por el equipo de revisión, aparecerá aquí con los motivos',
+      description:
+        'Si algún anuncio es rechazado por el equipo de revisión, aparecerá aquí con los motivos',
     },
   };
 

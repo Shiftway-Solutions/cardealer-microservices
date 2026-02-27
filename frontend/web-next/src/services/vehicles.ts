@@ -397,6 +397,8 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
           ? { latitude: raw.latitude as number, longitude: raw.longitude as number }
           : undefined,
     },
+    rejectionReason: raw.rejectionReason as string | undefined,
+    vin: raw.vin as string | undefined,
     createdAt: raw.createdAt as string,
     updatedAt: raw.updatedAt as string,
     publishedAt: raw.publishedAt as string | undefined,
@@ -1124,7 +1126,12 @@ export async function markVehicleSold(id: string, soldPrice?: number): Promise<v
  * Update an existing vehicle
  */
 export async function updateVehicle(id: string, data: UpdateVehicleRequest): Promise<Vehicle> {
-  const response = await apiClient.put<VehicleDto>(`/api/vehicles/${id}`, data);
+  // Apply same enum mappings as createVehicle for backend compatibility
+  const mapped: Record<string, unknown> = { ...data };
+  if (data.fuelType) mapped.fuelType = toEnum(data.fuelType, FUEL_TYPE_TO_ENUM);
+  if (data.transmission) mapped.transmission = toEnum(data.transmission, TRANSMISSION_TO_ENUM);
+  if (data.condition) mapped.condition = toEnum(data.condition, CONDITION_TO_ENUM);
+  const response = await apiClient.put<VehicleDto>(`/api/vehicles/${id}`, mapped);
   return transformVehicle(response.data);
 }
 
@@ -1475,23 +1482,23 @@ function getStaticBodyTypes(): CatalogOption[] {
 
 function getStaticFuelTypes(): CatalogOption[] {
   return [
-    { value: 'Gasoline', label: 'Gasolina' },
-    { value: 'Diesel', label: 'Diésel' },
-    { value: 'Hybrid', label: 'Híbrido' },
-    { value: 'Electric', label: 'Eléctrico' },
-    { value: 'PlugInHybrid', label: 'Híbrido Enchufable' },
-    { value: 'NaturalGas', label: 'GLP / Gas' },
-    { value: 'FlexFuel', label: 'Flex Fuel' },
+    { value: 'gasoline', label: 'Gasolina' },
+    { value: 'diesel', label: 'Diésel' },
+    { value: 'hybrid', label: 'Híbrido' },
+    { value: 'electric', label: 'Eléctrico' },
+    { value: 'pluginhybrid', label: 'Híbrido Enchufable' },
+    { value: 'naturalgas', label: 'GLP / Gas' },
+    { value: 'flexfuel', label: 'Flex Fuel' },
   ];
 }
 
 function getStaticTransmissions(): CatalogOption[] {
   return [
-    { value: 'Automatic', label: 'Automática' },
-    { value: 'Manual', label: 'Manual' },
-    { value: 'CVT', label: 'CVT' },
-    { value: 'DualClutch', label: 'Doble Embrague (DCT)' },
-    { value: 'Automated', label: 'Semi-automática' },
+    { value: 'automatic', label: 'Automática' },
+    { value: 'manual', label: 'Manual' },
+    { value: 'cvt', label: 'CVT' },
+    { value: 'dualclutch', label: 'Doble Embrague (DCT)' },
+    { value: 'automated', label: 'Semi-automática' },
   ];
 }
 
