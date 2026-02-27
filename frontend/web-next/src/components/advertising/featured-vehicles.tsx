@@ -58,11 +58,7 @@ function FeaturedVehicleCard({
   }, [vehicle]);
 
   return (
-    <Link
-      href={vehicleHref}
-      onClick={handleClick}
-      className="group block"
-    >
+    <Link href={vehicleHref} onClick={handleClick} className="group block">
       <Card className="overflow-hidden border-0 shadow-md transition-shadow hover:shadow-lg">
         <div className="bg-muted relative aspect-[16/10]">
           {vehicle.imageUrl ? (

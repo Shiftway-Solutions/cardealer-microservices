@@ -301,7 +301,7 @@ export function VehicleCardCompact({ vehicle, index }: VehicleCardCompactProps) 
                   </span>
                 )}
                 {vehicle.tier === 'featured' && (
-                  <span className="rounded-full bg-gradient-to-r from-primary to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="from-primary rounded-full bg-gradient-to-r to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                     Destacado
                   </span>
                 )}
@@ -503,7 +503,7 @@ function VehicleCardThemed({ vehicle, index }: VehicleCardThemedProps) {
                   </span>
                 )}
                 {vehicle.tier === 'featured' && (
-                  <span className="rounded-full bg-gradient-to-r from-primary to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="from-primary rounded-full bg-gradient-to-r to-teal-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                     Destacado
                   </span>
                 )}

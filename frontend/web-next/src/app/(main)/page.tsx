@@ -58,7 +58,7 @@ async function getFeaturedVehiclesFallback() {
 
     const data = await res.json();
     // Handle both ApiResponse<T> wrapper and raw array
-    return Array.isArray(data) ? data : data.data ?? [];
+    return Array.isArray(data) ? data : (data.data ?? []);
   } catch (error) {
     console.error('[Homepage] Error fetching featured vehicles:', error);
     return [];
