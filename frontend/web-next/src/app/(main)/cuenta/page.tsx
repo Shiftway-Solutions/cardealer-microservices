@@ -585,12 +585,8 @@ function BuyerDashboard() {
       <div className="from-primary/5 to-primary/10 rounded-2xl bg-gradient-to-br p-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">
-              ¡Hola, {firstName}! 👋
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Encuentra tu próximo vehículo en OKLA
-            </p>
+            <h1 className="text-foreground text-2xl font-bold">¡Hola, {firstName}! 👋</h1>
+            <p className="text-muted-foreground mt-1">Encuentra tu próximo vehículo en OKLA</p>
           </div>
           <Link href="/vehiculos">
             <Button className="gap-2" size="lg">
@@ -605,7 +601,7 @@ function BuyerDashboard() {
       <div className="grid grid-cols-3 gap-4">
         <Link
           href="/cuenta/favoritos"
-          className="border-border bg-card hover:border-rose-300 hover:bg-rose-50 group rounded-xl border p-4 text-center transition-all"
+          className="border-border bg-card group rounded-xl border p-4 text-center transition-all hover:border-rose-300 hover:bg-rose-50"
           data-testid="summary-favorites"
         >
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 transition-colors group-hover:bg-rose-200">
@@ -621,7 +617,7 @@ function BuyerDashboard() {
 
         <Link
           href="/cuenta/busquedas"
-          className="border-border bg-card hover:border-blue-300 hover:bg-blue-50 group rounded-xl border p-4 text-center transition-all"
+          className="border-border bg-card group rounded-xl border p-4 text-center transition-all hover:border-blue-300 hover:bg-blue-50"
           data-testid="summary-saved-searches"
         >
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 transition-colors group-hover:bg-blue-200">
@@ -639,7 +635,7 @@ function BuyerDashboard() {
 
         <Link
           href="/cuenta/alertas"
-          className="border-border bg-card hover:border-amber-300 hover:bg-amber-50 group rounded-xl border p-4 text-center transition-all"
+          className="border-border bg-card group rounded-xl border p-4 text-center transition-all hover:border-amber-300 hover:bg-amber-50"
           data-testid="summary-alerts"
         >
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 transition-colors group-hover:bg-amber-200">
@@ -693,19 +689,19 @@ function BuyerDashboard() {
         <CardContent>
           <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
             <BuyerQuickAction href="/vehiculos" icon={Search} label="Buscar" color="blue" />
-            <BuyerQuickAction href="/cuenta/favoritos" icon={Heart} label="Favoritos" color="rose" />
+            <BuyerQuickAction
+              href="/cuenta/favoritos"
+              icon={Heart}
+              label="Favoritos"
+              color="rose"
+            />
             <BuyerQuickAction
               href="/cuenta/busquedas"
               icon={BookOpen}
               label="Búsquedas"
               color="purple"
             />
-            <BuyerQuickAction
-              href="/cuenta/alertas"
-              icon={Bell}
-              label="Alertas"
-              color="amber"
-            />
+            <BuyerQuickAction href="/cuenta/alertas" icon={Bell} label="Alertas" color="amber" />
             <BuyerQuickAction
               href="/mensajes"
               icon={MessageSquare}
@@ -785,9 +781,7 @@ function BuyerDashboard() {
                   {alertStats!.newMatchesThisWeek} vehículo
                   {alertStats!.newMatchesThisWeek > 1 ? 's nuevos' : ' nuevo'} esta semana
                 </p>
-                <p className="text-sm text-blue-700">
-                  Coinciden con tus búsquedas guardadas
-                </p>
+                <p className="text-sm text-blue-700">Coinciden con tus búsquedas guardadas</p>
               </div>
             </div>
             <Link href="/cuenta/busquedas">
@@ -866,7 +860,11 @@ function BuyerQuickAction({
   );
 }
 
-function FavoriteMiniCard({ favorite }: { favorite: import('@/services/favorites').FavoriteVehicle }) {
+function FavoriteMiniCard({
+  favorite,
+}: {
+  favorite: import('@/services/favorites').FavoriteVehicle;
+}) {
   const v = favorite.vehicle;
   const title = v.title || `${v.year} ${v.make} ${v.model}`;
   const href = v.slug ? `/vehiculos/${v.slug}` : '/vehiculos';

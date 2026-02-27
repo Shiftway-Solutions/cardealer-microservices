@@ -2285,6 +2285,18 @@
       "RouteClaimsRequirement": { "role": "Compliance" }
     },
     {
+      "UpstreamPathTemplate": "/api/configurations/category/general",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/configurations/category/general",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "configurationservice", "Port": 8080 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 10000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/configurations/category/{category}",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/configurations/category/{category}",
