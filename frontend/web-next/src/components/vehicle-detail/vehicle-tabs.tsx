@@ -28,24 +28,29 @@ interface VehicleTabsProps {
 
 export function VehicleTabs({ vehicle, className }: VehicleTabsProps) {
   return (
-    <div className={cn('overflow-hidden rounded-xl bg-white shadow-sm', className)}>
+    <div
+      className={cn(
+        'border-border overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-slate-900',
+        className
+      )}
+    >
       <Tabs defaultValue="description" className="w-full">
         <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
           <TabsTrigger
             value="description"
-            className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
           >
             Descripción
           </TabsTrigger>
           <TabsTrigger
             value="specs"
-            className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
           >
             Especificaciones
           </TabsTrigger>
           <TabsTrigger
             value="features"
-            className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            className="rounded-none border-b-2 border-transparent px-6 py-3 data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none"
           >
             Características
           </TabsTrigger>
@@ -163,9 +168,12 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
       <h3 className="mb-4 text-lg font-semibold">Especificaciones técnicas</h3>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {validSpecs.map((spec, index) => (
-          <div key={index} className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-              <spec.icon className="text-muted-foreground h-5 w-5" />
+          <div
+            key={index}
+            className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700">
+              <spec.icon className="h-5 w-5 text-[#00A870]" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">{spec.label}</p>
@@ -282,7 +290,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature: string, index: number) => (
             <div key={index} className="text-foreground flex items-center gap-2">
-              <Check className="text-primary h-4 w-4 flex-shrink-0" />
+              <Check className="h-4 w-4 flex-shrink-0 text-[#00A870]" />
               <span>{feature}</span>
             </div>
           ))}
@@ -295,7 +303,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {category.features.map((feature: string, index: number) => (
                   <div key={index} className="text-foreground flex items-center gap-2">
-                    <Check className="text-primary h-4 w-4 flex-shrink-0" />
+                    <Check className="h-4 w-4 flex-shrink-0 text-[#00A870]" />
                     <span>{feature}</span>
                   </div>
                 ))}

@@ -18,6 +18,25 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Test/seed data placeholder services
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: '*.okla.com.do',
@@ -116,11 +135,15 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
           },
-          // Prevent clickjacking
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          // Prevent clickjacking (disabled in dev so VS Code Simple Browser iframe works)
+          ...(isDev
+            ? []
+            : [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]),
           // Prevent MIME type sniffing
           {
             key: 'X-Content-Type-Options',

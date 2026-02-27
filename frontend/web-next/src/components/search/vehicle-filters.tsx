@@ -107,8 +107,8 @@ const dealRatingOptions = [
 export interface VehicleFiltersProps {
   filters: VehicleSearchFilters;
   onChange: (filters: Partial<VehicleSearchFilters>) => void;
-  onClear: () => void;
-  activeCount: number;
+  onClear?: () => void;
+  activeCount?: number;
   makeCatalog?: { id: string; name: string }[];
   modelCatalog?: { id: string; name: string; make?: string }[];
   facets?: {
@@ -232,31 +232,6 @@ export function VehicleFilters({
 
   return (
     <div className={cn('space-y-0', className)}>
-      {/* ── HEADER ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-foreground text-sm font-bold tracking-tight">Filtros</span>
-          {activeCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00A870] text-[10px] font-bold text-white">
-              {activeCount}
-            </span>
-          )}
-        </div>
-        {activeCount > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClear}
-            className="text-muted-foreground h-7 gap-1 px-2 text-xs hover:text-red-500"
-          >
-            <RotateCcw className="h-3 w-3" />
-            Limpiar todo
-          </Button>
-        )}
-      </div>
-
-      <Separator className="mb-4" />
-
       <Accordion
         type="multiple"
         defaultValue={['condicion', 'marca', 'precio', 'anio', 'carroceria', 'ubicacion']}
@@ -274,8 +249,7 @@ export function VehicleFilters({
                   { v: undefined, label: 'Todos' },
                   { v: 'nuevo', label: 'Nuevo' },
                   { v: 'usado', label: 'Usado' },
-                  { v: 'certificado', label: 'Certificado' },
-                ] as { v: 'certificado' | 'nuevo' | 'usado' | undefined; label: string }[]
+                ] as { v: 'nuevo' | 'usado' | undefined; label: string }[]
               ).map(opt => {
                 const isActive = filters.condition === opt.v;
                 return (
@@ -693,7 +667,7 @@ export function VehicleFilters({
                 />
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#00A870]" />
-                  Solo certificados
+                  Con garantía del vendedor
                 </span>
               </label>
               <label className="flex cursor-pointer items-center gap-2 text-sm">

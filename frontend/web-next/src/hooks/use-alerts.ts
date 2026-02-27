@@ -185,6 +185,12 @@ export function useSavedSearches(
     queryFn: () => alertService.getSavedSearches(params),
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
+    // Don't retry on 401/403 — these indicate auth issues, not transient failures
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) return false;
+      return failureCount < 2;
+    },
   });
 }
 
@@ -319,6 +325,12 @@ export function useAlertStats() {
     queryFn: () => alertService.getAlertStats(),
     enabled: isAuthenticated,
     staleTime: 1 * 60 * 1000, // 1 minute
+    // Don't retry on 401/403 — these indicate auth/service issues, not transient failures
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) return false;
+      return failureCount < 2;
+    },
   });
 }
 

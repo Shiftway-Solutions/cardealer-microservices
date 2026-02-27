@@ -129,18 +129,40 @@ export function VehicleGallery({
     return (
       <div
         className={cn(
-          'bg-muted flex aspect-[16/10] items-center justify-center rounded-xl',
+          'border-border flex aspect-[16/10] items-center justify-center rounded-2xl border bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-700',
           className
         )}
       >
-        <p className="text-muted-foreground">No hay imágenes disponibles</p>
+        <div className="flex flex-col items-center gap-2">
+          <svg
+            className="h-16 w-16 text-slate-300 dark:text-slate-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
+            />
+          </svg>
+          <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+            Sin imágenes disponibles
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className={cn('bg-card overflow-hidden rounded-xl', className)}>
+      <div
+        className={cn(
+          'border-border overflow-hidden rounded-2xl border bg-white dark:bg-slate-900',
+          className
+        )}
+      >
         {/* Main Image */}
         <div
           className="group relative aspect-[16/10]"
@@ -217,10 +239,10 @@ export function VehicleGallery({
                   key={image.id}
                   onClick={() => goToIndex(index)}
                   className={cn(
-                    'relative h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all',
+                    'relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all',
                     index === currentIndex
-                      ? 'border-primary ring-primary/20 ring-2'
-                      : 'hover:border-border border-transparent'
+                      ? 'border-[#00A870] ring-2 ring-[#00A870]/20'
+                      : 'border-transparent hover:border-slate-300'
                   )}
                   aria-label={`Ver imagen ${index + 1}`}
                 >

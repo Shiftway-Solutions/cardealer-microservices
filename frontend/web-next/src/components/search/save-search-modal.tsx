@@ -62,7 +62,6 @@ function buildDefaultName(filters: VehicleSearchFilters): string {
   const parts: string[] = [];
   if (filters.condition === 'nuevo') parts.push('Nuevo');
   if (filters.condition === 'usado') parts.push('Usado');
-  if (filters.condition === 'certificado') parts.push('Certificado');
   if (filters.make) parts.push(filters.make);
   if (filters.model) parts.push(filters.model);
   if (filters.yearMin && filters.yearMax) parts.push(`${filters.yearMin}–${filters.yearMax}`);

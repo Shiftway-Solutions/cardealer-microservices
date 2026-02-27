@@ -90,7 +90,13 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
   };
 
   return (
-    <div className={cn('bg-card rounded-xl p-6 shadow-sm', className)} data-testid="seller-info">
+    <div
+      className={cn(
+        'border-border rounded-2xl border bg-white p-5 shadow-sm dark:bg-slate-900',
+        className
+      )}
+      data-testid="seller-info"
+    >
       {/* Seller header */}
       <div className="flex items-start gap-4">
         {/* Avatar */}
@@ -216,7 +222,7 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
       {/* Trust signals */}
       <div className="border-border mt-6 border-t pt-4">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Shield className="text-primary h-4 w-4" />
+          <Shield className="h-4 w-4 text-[#00A870]" />
           <span>Contacto verificado por OKLA</span>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
@@ -229,7 +235,7 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
         <div className="mt-4 flex flex-col items-center gap-1">
           <Link
             href={`/dealers/${sellerData.id}`}
-            className="text-primary flex items-center gap-1 text-sm hover:underline"
+            className="flex items-center gap-1 text-sm text-[#00A870] hover:underline"
           >
             <Store className="h-3.5 w-3.5" />
             Ver perfil y todo el inventario

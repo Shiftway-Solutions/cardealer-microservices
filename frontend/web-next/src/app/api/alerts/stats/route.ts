@@ -55,8 +55,19 @@ interface SavedSearchDto {
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // Forward the user's auth token to the AlertService endpoints
-  const authHeader = request.headers.get('authorization');
+  // Forward the user's auth token to the AlertService endpoints.
+  // Support both Bearer header (legacy localStorage) and HttpOnly cookie auth.
+  let authHeader = request.headers.get('authorization');
+
+  // If no explicit Authorization header, extract token from the HttpOnly cookie
+  // that the AuthService sets on login (okla_access_token).
+  if (!authHeader) {
+    const accessTokenCookie = request.cookies.get('okla_access_token');
+    if (accessTokenCookie?.value) {
+      authHeader = `Bearer ${accessTokenCookie.value}`;
+    }
+  }
+
   if (!authHeader) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -66,7 +77,7 @@ export async function GET(request: NextRequest) {
     Authorization: authHeader,
   };
 
-  // Propagate cookie header too (in case of cookie-based auth)
+  // Propagate cookie header too for additional context
   const cookieHeader = request.headers.get('cookie');
   if (cookieHeader) headers['Cookie'] = cookieHeader;
 

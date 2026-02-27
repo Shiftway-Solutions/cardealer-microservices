@@ -40,7 +40,7 @@ export interface VehicleSearchFilters {
   transmission?: 'automatica' | 'manual' | 'cvt';
   fuelType?: 'gasolina' | 'diesel' | 'electrico' | 'hibrido' | 'glp';
   drivetrain?: 'fwd' | 'rwd' | 'awd' | '4wd';
-  condition?: 'nuevo' | 'usado' | 'certificado';
+  condition?: 'nuevo' | 'usado';
 
   // Location
   province?: string;
@@ -289,7 +289,7 @@ function countActiveFilters(filters: VehicleSearchFilters): number {
   if (filters.city) count++;
   if (filters.dealRating) count++;
   if (filters.sellerType) count++;
-  if (filters.isCertified) count++;
+  if (filters.isCertified) count++; // 'Con garantía del vendedor'
   if (filters.hasCleanTitle) count++;
   if (filters.color) count++;
   if (filters.features?.length) count++;

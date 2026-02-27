@@ -253,8 +253,10 @@ function createRedirect(url: URL, _request: NextRequest): NextResponse {
  * Add security headers to response
  */
 function addSecurityHeaders(response: NextResponse): void {
-  // Prevent clickjacking
-  response.headers.set('X-Frame-Options', 'DENY');
+  // Prevent clickjacking – skip in development so VS Code Simple Browser (iframe) works
+  if (process.env.NODE_ENV !== 'development') {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
 
   // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');

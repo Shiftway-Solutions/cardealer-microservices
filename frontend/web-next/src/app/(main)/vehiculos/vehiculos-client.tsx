@@ -45,8 +45,6 @@ import {
   AlertCircle,
   RefreshCcw,
   BookmarkPlus,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
   Sparkles,
   Clock,
@@ -75,7 +73,6 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
-import { BodyTypeSelector } from '@/components/search/body-type-selector';
 import { useVehicleSearch } from '@/hooks/use-vehicle-search';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
@@ -102,7 +99,7 @@ const QUICK_FILTERS = [
   { id: 'recent', label: 'Recientes', icon: Clock, filter: { sortBy: 'newest' as const } },
   { id: 'sd', label: 'Sto. Domingo', icon: MapPin, filter: { province: 'Santo Domingo' } },
   { id: 'santiago', label: 'Santiago', icon: MapPin, filter: { province: 'Santiago' } },
-  { id: 'certified', label: 'Certificados', icon: Bell, filter: { isCertified: true } },
+  { id: 'clean_title', label: 'Título limpio', icon: ShieldCheck, filter: { hasCleanTitle: true } },
 ];
 
 // =============================================================================
@@ -186,7 +183,9 @@ function VehiclesGridSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
   return (
     <div
       className={
-        viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'flex flex-col gap-4'
+        viewMode === 'grid'
+          ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
+          : 'flex flex-col gap-3'
       }
     >
       {Array.from({ length: 9 }).map((_, i) => (
@@ -257,6 +256,61 @@ export default function VehiculosClient() {
   const currentPage = filters.page ?? 1;
   const totalPages = results?.totalPages ?? 1;
 
+  // ── Infinite scroll ──────────────────────────────────────────────────────
+  const [allVehicles, setAllVehicles] = React.useState<VehicleCardData[]>([]);
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+  const prevFiltersKeyRef = React.useRef<string | null>(null);
+
+  // Key that ignores page number — changes only when real search params change
+  const filtersKey = React.useMemo(() => {
+    const { page: _, ...rest } = filters;
+    return JSON.stringify(rest);
+  }, [filters]);
+
+  // When real search params change: reset accumulated list and scroll to top
+  React.useEffect(() => {
+    if (prevFiltersKeyRef.current === null) {
+      prevFiltersKeyRef.current = filtersKey;
+      return;
+    }
+    if (prevFiltersKeyRef.current !== filtersKey) {
+      prevFiltersKeyRef.current = filtersKey;
+      setAllVehicles([]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [filtersKey]);
+
+  // Accumulate pages as they load
+  React.useEffect(() => {
+    if (!isLoading && vehicles.length > 0) {
+      if ((filters.page ?? 1) === 1) {
+        setAllVehicles(vehicles);
+      } else {
+        setAllVehicles(prev => {
+          const ids = new Set(prev.map((v: VehicleCardData) => v.id));
+          return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
+        });
+      }
+    }
+  }, [vehicles, isLoading, filters.page]);
+
+  // Intersection observer: trigger next page when sentinel enters viewport
+  React.useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isLoading && !isFetching && currentPage < totalPages) {
+          setFilter('page', currentPage + 1);
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [isLoading, isFetching, currentPage, totalPages, setFilter]);
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Build active filter chips for display
   const activeChips = React.useMemo(() => {
     const chips: { key: string; label: string }[] = [];
@@ -264,12 +318,7 @@ export default function VehiculosClient() {
     if (filters.condition)
       chips.push({
         key: 'condition',
-        label:
-          filters.condition === 'nuevo'
-            ? 'Nuevo'
-            : filters.condition === 'usado'
-              ? 'Usado'
-              : 'Certificado',
+        label: filters.condition === 'nuevo' ? 'Nuevo' : 'Usado',
       });
     if (filters.make) chips.push({ key: 'make', label: filters.make });
     if (filters.model) chips.push({ key: 'model', label: filters.model });
@@ -296,7 +345,7 @@ export default function VehiculosClient() {
         key: 'sellerType',
         label: filters.sellerType === 'dealer' ? 'Dealers' : 'Particulares',
       });
-    if (filters.isCertified) chips.push({ key: 'isCertified', label: 'Certificados' });
+    if (filters.isCertified) chips.push({ key: 'isCertified', label: 'Con garantía' });
     if (filters.hasCleanTitle) chips.push({ key: 'hasCleanTitle', label: 'Título limpio' });
     if (filters.dealRating)
       chips.push({
@@ -325,21 +374,14 @@ export default function VehiculosClient() {
     toggleFavorite(vehicleId).catch(() => {});
   };
 
-  const handlePageChange = (page: number) => {
-    setFilter('page', page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Inject ad slots between result rows (after position 3 and 9)
+  // Render accumulated vehicles with ad slots every 6 items
   const renderResults = () => {
-    if (!vehicles.length) return null;
-    const cols = viewMode === 'grid' ? 3 : 1;
-    const adAfterRow = 1; // insert ad after row index 1 (i.e., after 3 cards in grid)
+    if (!allVehicles.length) return null;
 
     if (viewMode === 'list') {
       return (
-        <div className="flex flex-col gap-4">
-          {vehicles.map((vehicle: VehicleCardData, i: number) => (
+        <>
+          {allVehicles.map((vehicle: VehicleCardData, i: number) => (
             <React.Fragment key={vehicle.id}>
               <VehicleCard
                 vehicle={vehicle}
@@ -348,40 +390,30 @@ export default function VehiculosClient() {
                 onFavoriteClick={handleFavoriteToggle}
                 priority={i < 3}
               />
-              {i === 5 && <AdSlotLeaderboard />}
+              {(i + 1) % 6 === 0 && <AdSlotLeaderboard />}
             </React.Fragment>
           ))}
-        </div>
+        </>
       );
     }
 
-    // Grid: insert leaderboard after row 1 (position 3) and ad after row 3 (position 9)
-    const rows: React.ReactNode[] = [];
-    let i = 0;
-    let rowIndex = 0;
-    while (i < vehicles.length) {
-      const rowItems = vehicles.slice(i, i + cols);
-      rows.push(
-        <React.Fragment key={`row-${rowIndex}`}>
-          {rowItems.map((vehicle: VehicleCardData, idx: number) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              isFavorite={isFavorite(vehicle.id)}
-              onFavoriteClick={handleFavoriteToggle}
-              priority={i + idx < 3}
-            />
-          ))}
-        </React.Fragment>
+    // Grid: insert leaderboard every 6 cards
+    const items: React.ReactNode[] = [];
+    allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
+      items.push(
+        <VehicleCard
+          key={vehicle.id}
+          vehicle={vehicle}
+          isFavorite={isFavorite(vehicle.id)}
+          onFavoriteClick={handleFavoriteToggle}
+          priority={i < 3}
+        />
       );
-      i += cols;
-      rowIndex++;
-      // Insert ad after row 1 (after 3 cards)
-      if (rowIndex === adAfterRow + 1 && i < vehicles.length) {
-        rows.push(<AdSlotLeaderboard key="ad-leaderboard" />);
+      if ((i + 1) % 6 === 0) {
+        items.push(<AdSlotLeaderboard key={`ad-${i}`} />);
       }
-    }
-    return rows;
+    });
+    return items;
   };
 
   return (
@@ -481,69 +513,27 @@ export default function VehiculosClient() {
             </Button>
           </div>
 
-          {/* Row 2: Body type quick selector (horizontal scroll) */}
-          <div className="scrollbar-none -mx-4 mt-2.5 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
-            <BodyTypeSelector
-              value={filters.bodyType}
-              onChange={v => setFilters({ bodyType: v, page: 1 })}
-              variant="compact"
-            />
-          </div>
-
-          {/* Row 3: Quick filter pills */}
-          <div className="scrollbar-none mt-2.5 flex items-center gap-2 overflow-x-auto pb-0.5">
-            {QUICK_FILTERS.map(qf => {
-              const isActive = Object.entries(qf.filter).every(
-                ([k, v]) => (filters as Record<string, unknown>)[k] === v
-              );
-              return (
-                <button
-                  key={qf.id}
-                  type="button"
-                  onClick={() =>
-                    isActive
-                      ? clearFilters()
-                      : setFilters({ ...qf.filter, page: 1 } as Parameters<typeof setFilters>[0])
-                  }
-                  className={cn(
-                    'flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all',
-                    isActive
-                      ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                      : 'border-border text-muted-foreground hover:text-foreground hover:border-[#00A870]/40'
-                  )}
-                >
-                  <qf.icon className="h-3 w-3" />
-                  {qf.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════
-          TRUST BAR: Social proof signals
-      ═══════════════════════════════════════════════════════ */}
-      <div className="border-border bg-card border-b">
-        <div className="mx-auto flex max-w-screen-xl items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6">
-          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#00A870]" />
-            <span>Vendedores verificados</span>
-          </div>
-          <span className="text-border">·</span>
-          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-            <Star className="h-3.5 w-3.5 text-amber-500" />
-            <span>+2,400 vehículos activos</span>
-          </div>
-          <span className="text-border">·</span>
-          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-            <Phone className="h-3.5 w-3.5 text-[#00A870]" />
-            <span>Contacto directo con el vendedor</span>
-          </div>
-          <span className="text-border hidden sm:inline">·</span>
-          <div className="text-muted-foreground hidden shrink-0 items-center gap-1.5 text-xs sm:flex">
-            <Bell className="h-3.5 w-3.5 text-[#00A870]" />
-            <span>Alertas de precio gratis</span>
+          {/* Row 2: Trust micro-bar (social proof — compact, always visible) */}
+          <div className="scrollbar-none mt-1.5 flex items-center gap-4 overflow-x-auto pb-0.5">
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
+              <ShieldCheck className="h-3 w-3 text-[#00A870]" />
+              <span>Vendedores verificados</span>
+            </div>
+            <span className="text-border shrink-0">·</span>
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
+              <Star className="h-3 w-3 text-amber-500" />
+              <span>+2,400 vehículos activos</span>
+            </div>
+            <span className="text-border shrink-0">·</span>
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
+              <Phone className="h-3 w-3 text-[#00A870]" />
+              <span>Contacto directo</span>
+            </div>
+            <span className="text-border hidden shrink-0 sm:inline">·</span>
+            <div className="text-muted-foreground hidden shrink-0 items-center gap-1 text-[11px] sm:flex">
+              <Bell className="h-3 w-3 text-[#00A870]" />
+              <span>Alertas gratis</span>
+            </div>
           </div>
         </div>
       </div>
@@ -551,11 +541,33 @@ export default function VehiculosClient() {
       {/* ═══════════════════════════════════════════════════════
           MAIN CONTENT: Sidebar + Results
       ═══════════════════════════════════════════════════════ */}
-      <div className="mx-auto max-w-screen-xl px-4 py-5 sm:px-6">
-        <div className="flex gap-6">
+      <div className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6">
+        <div className="flex gap-5">
           {/* ─── LEFT SIDEBAR ─────────────────────────────────── */}
-          <aside className="hidden w-[268px] flex-shrink-0 lg:block">
-            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border border-border sticky top-[220px] max-h-[calc(100vh-230px)] overflow-y-auto rounded-2xl border bg-white shadow-sm dark:bg-slate-900">
+          <aside className="hidden w-[272px] flex-shrink-0 lg:block">
+            <div className="border-border sticky top-[165px] rounded-2xl border bg-white shadow-sm dark:bg-slate-900">
+              {/* Sidebar header */}
+              <div className="border-border flex items-center justify-between border-b px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-[#00A870]" />
+                  <span className="text-sm font-bold">Filtros</span>
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#00A870] px-1 text-[10px] font-bold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </div>
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-muted-foreground flex items-center gap-1 text-xs transition-colors hover:text-red-500"
+                  >
+                    <X className="h-3 w-3" />
+                    Limpiar
+                  </button>
+                )}
+              </div>
               <div className="space-y-4 p-4">
                 <VehicleFilters
                   filters={filters}
@@ -574,8 +586,37 @@ export default function VehiculosClient() {
 
           {/* ─── RESULTS AREA ────────────────────────────────── */}
           <main className="min-w-0 flex-1">
+            {/* Quick filter pills — aligned with results column */}
+            <div className="scrollbar-none mb-3 flex items-center gap-2 overflow-x-auto">
+              {QUICK_FILTERS.map(qf => {
+                const isActive = Object.entries(qf.filter).every(
+                  ([k, v]) => (filters as Record<string, unknown>)[k] === v
+                );
+                return (
+                  <button
+                    key={qf.id}
+                    type="button"
+                    onClick={() =>
+                      isActive
+                        ? clearFilters()
+                        : setFilters({ ...qf.filter, page: 1 } as Parameters<typeof setFilters>[0])
+                    }
+                    className={cn(
+                      'flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
+                      isActive
+                        ? 'border-[#00A870] bg-[#00A870] text-white shadow-sm'
+                        : 'border-border text-muted-foreground hover:text-foreground bg-white hover:border-[#00A870]/60 dark:bg-slate-900'
+                    )}
+                  >
+                    <qf.icon className="h-3 w-3" />
+                    {qf.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Toolbar: count + active filters + save search */}
-            <div className="border-border mb-4 space-y-3 rounded-2xl border bg-white px-4 py-3 shadow-sm dark:bg-slate-900">
+            <div className="border-border mb-3 space-y-2 border-b pb-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* Results count */}
                 <div className="text-muted-foreground text-sm">
@@ -675,16 +716,18 @@ export default function VehiculosClient() {
               </div>
             )}
 
-            {/* Loading skeleton */}
-            {!error && isLoading && <VehiclesGridSkeleton viewMode={viewMode} />}
+            {/* Loading skeleton — only on initial load */}
+            {!error && isLoading && allVehicles.length === 0 && (
+              <VehiclesGridSkeleton viewMode={viewMode} />
+            )}
 
             {/* Results grid with ad slots */}
-            {!error && !isLoading && vehicles.length > 0 && (
+            {!error && allVehicles.length > 0 && (
               <div
                 className={cn(
                   viewMode === 'grid'
-                    ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3'
-                    : 'flex flex-col gap-4'
+                    ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
+                    : 'flex flex-col gap-3'
                 )}
               >
                 {renderResults()}
@@ -692,7 +735,7 @@ export default function VehiculosClient() {
             )}
 
             {/* Empty state */}
-            {!error && !isLoading && vehicles.length === 0 && (
+            {!error && !isLoading && !isFetching && allVehicles.length === 0 && (
               <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center shadow-sm dark:bg-slate-900">
                 <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
                   <span className="text-5xl">🔍</span>
@@ -721,78 +764,24 @@ export default function VehiculosClient() {
               </div>
             )}
 
-            {/* ─── PAGINATION ─────────────────────────────────── */}
-            {!error && vehicles.length > 0 && totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  disabled={currentPage <= 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  aria-label="Página anterior"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+            {/* Infinite scroll sentinel — triggers next page load */}
+            <div ref={sentinelRef} className="h-px" />
 
-                {/* Page numbers */}
-                {(() => {
-                  const pages: number[] = [];
-                  const delta = 2;
-                  const left = Math.max(1, currentPage - delta);
-                  const right = Math.min(totalPages, currentPage + delta);
-
-                  if (left > 1) {
-                    pages.push(1);
-                    if (left > 2) pages.push(-1); // ellipsis
-                  }
-                  for (let p = left; p <= right; p++) pages.push(p);
-                  if (right < totalPages) {
-                    if (right < totalPages - 1) pages.push(-2); // ellipsis
-                    pages.push(totalPages);
-                  }
-
-                  return pages.map((p, i) =>
-                    p < 0 ? (
-                      <span key={`e${i}`} className="text-muted-foreground px-1 text-sm">
-                        …
-                      </span>
-                    ) : (
-                      <Button
-                        key={p}
-                        size="sm"
-                        variant={currentPage === p ? 'default' : 'ghost'}
-                        className={cn(
-                          'h-9 w-9',
-                          currentPage === p && 'bg-[#00A870] text-white hover:bg-[#008a5c]'
-                        )}
-                        onClick={() => handlePageChange(p)}
-                        aria-label={`Página ${p}`}
-                        aria-current={currentPage === p ? 'page' : undefined}
-                      >
-                        {p}
-                      </Button>
-                    )
-                  );
-                })()}
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  aria-label="Página siguiente"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+            {/* Loading more indicator */}
+            {(isLoading || isFetching) && allVehicles.length > 0 && (
+              <div className="mt-2 flex justify-center py-8">
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <RefreshCcw className="h-4 w-4 animate-spin text-[#00A870]" />
+                  Cargando más vehículos…
+                </div>
               </div>
             )}
 
-            {/* Page info */}
-            {!error && vehicles.length > 0 && totalPages > 1 && (
-              <p className="text-muted-foreground mt-3 text-center text-xs">
-                Página {currentPage} de {totalPages} · {totalResults.toLocaleString()} vehículos
+            {/* End of results */}
+            {!isLoading && !isFetching && allVehicles.length > 0 && currentPage >= totalPages && (
+              <p className="text-muted-foreground mt-8 pb-6 text-center text-xs">
+                Has visto los <span className="font-semibold">{totalResults.toLocaleString()}</span>{' '}
+                vehículos
               </p>
             )}
           </main>

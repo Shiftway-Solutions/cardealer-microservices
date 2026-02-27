@@ -54,7 +54,12 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
   return (
     <>
-      <div className={cn('rounded-xl bg-white p-6 shadow-sm', className)}>
+      <div
+        className={cn(
+          'border-border rounded-2xl border bg-white p-5 shadow-sm dark:bg-slate-900',
+          className
+        )}
+      >
         {/* Badges */}
         <div className="mb-3 flex flex-wrap gap-2">
           {vehicle.condition === 'new' && (
@@ -109,7 +114,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
-            <span className="text-foreground text-3xl font-bold lg:text-4xl">
+            <span className="text-3xl font-extrabold text-[#00A870] lg:text-4xl">
               {formatCurrency(vehicle.price)}
             </span>
             {vehicle.originalPrice && vehicle.originalPrice > vehicle.price && (

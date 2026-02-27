@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Store,
   User,
+  Car,
 } from 'lucide-react';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Badge } from './badge';
@@ -70,7 +71,7 @@ export function VehicleCard({
         )}
       >
         {/* Image */}
-        <div className="bg-muted relative h-32 w-48 shrink-0 overflow-hidden rounded-lg">
+        <div className="relative h-32 w-48 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
@@ -83,7 +84,7 @@ export function VehicleCard({
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-4xl">🚗</span>
+              <Car className="h-12 w-12 text-slate-300 dark:text-slate-600" />
             </div>
           )}
           {showDealRating && vehicle.dealRating && (
@@ -145,7 +146,7 @@ export function VehicleCard({
         )}
       >
         {/* Image */}
-        <div className="bg-muted relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
           {!imageError && vehicle.imageUrl ? (
             <Image
               src={vehicle.imageUrl}
@@ -158,7 +159,7 @@ export function VehicleCard({
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-5xl">🚗</span>
+              <Car className="h-14 w-14 text-slate-300 dark:text-slate-600" />
             </div>
           )}
         </div>
@@ -186,7 +187,7 @@ export function VehicleCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Section */}
-      <div className="bg-muted relative aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-700">
         {!imageError && vehicle.imageUrl ? (
           <Image
             src={vehicle.imageUrl}
@@ -198,8 +199,11 @@ export function VehicleCard({
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-6xl">🚗</span>
+          <div className="flex h-full flex-col items-center justify-center gap-2">
+            <Car className="h-16 w-16 text-slate-300 dark:text-slate-600" />
+            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+              {vehicle.make} {vehicle.model}
+            </span>
           </div>
         )}
 
