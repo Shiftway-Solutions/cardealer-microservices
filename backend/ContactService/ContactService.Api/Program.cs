@@ -20,7 +20,7 @@ using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Configuration;
 
 const string ServiceName = "ContactService";
-const string ServiceVersion = "1.0.0";
+const string ServiceVersion = "1.0.1"; // fix: valid appsettings.Production.json
 
 try
 {
