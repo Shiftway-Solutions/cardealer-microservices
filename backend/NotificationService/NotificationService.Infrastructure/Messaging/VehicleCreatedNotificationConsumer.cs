@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Vehicle;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 using NotificationService.Application.DTOs;
 
@@ -250,6 +251,23 @@ public class VehicleCreatedNotificationConsumer : BackgroundService
             _logger.LogInformation(
                 "Vehicle creation notification sent to dealer for VehicleId: {VehicleId}",
                 eventData.VehicleId);
+
+            // Persist in-app user notification
+            if (eventData.CreatedBy != Guid.Empty)
+            {
+                var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    await userNotifService.CreateAsync(
+                        userId: eventData.CreatedBy,
+                        type: "vehicle_approved",
+                        title: "🚗 Vehículo publicado",
+                        message: $"Tu {eventData.Year} {eventData.Make} {eventData.Model} ya está visible en el marketplace.",
+                        icon: "🚗",
+                        link: $"/vehiculos/{eventData.VehicleId}",
+                        cancellationToken: cancellationToken);
+                }
+            }
 
             // ✅ Send admin alert for new listing pending
             try

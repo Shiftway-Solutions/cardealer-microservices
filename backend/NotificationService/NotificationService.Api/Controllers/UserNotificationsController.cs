@@ -1,64 +1,71 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotificationService.Application.DTOs;
-using NotificationService.Domain.Entities;
+using NotificationService.Domain.Interfaces.Repositories;
 using System.Security.Claims;
 
 namespace NotificationService.Api.Controllers;
 
 /// <summary>
-/// Controller for managing user notifications (in-app notifications shown in header)
+/// Controller for managing in-app user notifications (header bell + /cuenta/notificaciones).
+/// All data is stored in the database — no mock data.
+///
+/// Security:
+///  - [Authorize] required for all endpoints.
+///  - UserId is extracted from JWT claims — NEVER trusted from request body.
+///  - Notification content is sanitized at write time (UserNotificationService).
 /// </summary>
 [ApiController]
 [Authorize]
 [Route("api/notifications")]
 public class UserNotificationsController : ControllerBase
 {
+    private readonly IUserNotificationRepository _repository;
     private readonly ILogger<UserNotificationsController> _logger;
-    
-    // In-memory storage for demo - in production use database
-    private static readonly List<UserNotification> _notifications = InitializeMockNotifications();
 
-    public UserNotificationsController(ILogger<UserNotificationsController> logger)
+    public UserNotificationsController(
+        IUserNotificationRepository repository,
+        ILogger<UserNotificationsController> logger)
     {
+        _repository = repository;
         _logger = logger;
     }
 
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    private Guid? GetCurrentUserId()
+    {
+        var raw = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+               ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
+
+    // ─── GET /api/notifications ──────────────────────────────────────────────────
+
     /// <summary>
-    /// Get paginated notifications for the current user
+    /// Get paginated notifications for the authenticated user.
     /// </summary>
     [HttpGet]
-    public ActionResult<UserNotificationsListResponse> GetNotifications(
+    public async Task<ActionResult<UserNotificationsListResponse>> GetNotifications(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] bool unreadOnly = false)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        var userId = GetCurrentUserId();
+        if (userId == null)
             return Unauthorized(new { Message = "User ID not found in token" });
-        
-        _logger.LogInformation("Getting notifications for user {UserId}, page {Page}, pageSize {PageSize}", 
-            userId, page, pageSize);
 
-        var query = _notifications
-            .Where(n => n.UserId.ToString() == userId || n.UserId == Guid.Empty) // Include global notifications
-            .Where(n => n.ExpiresAt == null || n.ExpiresAt > DateTime.UtcNow)
-            .OrderByDescending(n => n.CreatedAt);
+        if (page < 1) page = 1;
+        if (pageSize is < 1 or > 100) pageSize = 20;
 
-        if (unreadOnly)
-        {
-            query = query.Where(n => !n.IsRead).OrderByDescending(n => n.CreatedAt);
-        }
+        _logger.LogDebug(
+            "Getting notifications for UserId={UserId} page={Page} pageSize={PageSize} unreadOnly={UnreadOnly}",
+            userId, page, pageSize, unreadOnly);
 
-        var total = query.Count();
-        var unreadCount = _notifications.Count(n => 
-            (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && !n.IsRead);
+        var (items, total, unreadCount) = await _repository.GetByUserIdAsync(
+            userId.Value, page, pageSize, unreadOnly);
 
-        var notifications = query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(MapToDto)
-            .ToList();
+        var notifications = items.Select(MapToDto).ToList();
 
         return Ok(new UserNotificationsListResponse(
             Notifications: notifications,
@@ -70,161 +77,109 @@ public class UserNotificationsController : ControllerBase
         ));
     }
 
+    // ─── GET /api/notifications/unread/count ─────────────────────────────────────
+
     /// <summary>
-    /// Get unread notification count
+    /// Get unread notification count (used by header bell badge).
     /// </summary>
     [HttpGet("unread/count")]
-    public ActionResult<UnreadCountResponse> GetUnreadCount()
+    public async Task<ActionResult<UnreadCountResponse>> GetUnreadCount()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        var userId = GetCurrentUserId();
+        if (userId == null)
             return Unauthorized(new { Message = "User ID not found in token" });
-        
-        var count = _notifications.Count(n => 
-            (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && !n.IsRead);
 
+        var count = await _repository.GetUnreadCountAsync(userId.Value);
         return Ok(new UnreadCountResponse(count));
     }
 
+    // ─── PATCH /api/notifications/{id}/read ──────────────────────────────────────
+
     /// <summary>
-    /// Mark a notification as read
+    /// Mark a specific notification as read.
+    /// Only the owning user can mark their notification.
     /// </summary>
     [HttpPatch("{notificationId}/read")]
-    public ActionResult MarkAsRead(string notificationId)
+    public async Task<ActionResult> MarkAsRead(string notificationId)
     {
-        var notification = _notifications.FirstOrDefault(n => n.Id.ToString() == notificationId);
-        
-        if (notification == null)
-        {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(new { Message = "User ID not found in token" });
+
+        if (!Guid.TryParse(notificationId, out var notifId))
+            return BadRequest(new { Message = "Invalid notification ID" });
+
+        var updated = await _repository.MarkAsReadAsync(notifId, userId.Value);
+        if (!updated)
             return NotFound(new { Message = "Notification not found" });
-        }
 
-        notification.MarkAsRead();
-        _logger.LogInformation("Marked notification {NotificationId} as read", notificationId);
-
+        _logger.LogDebug("Marked notification {NotifId} as read for UserId={UserId}", notifId, userId);
         return Ok(new { Message = "Notification marked as read" });
     }
 
+    // ─── PATCH /api/notifications/read-all ───────────────────────────────────────
+
     /// <summary>
-    /// Mark all notifications as read
+    /// Mark all unread notifications as read for the authenticated user.
     /// </summary>
     [HttpPatch("read-all")]
-    public ActionResult MarkAllAsRead()
+    public async Task<ActionResult> MarkAllAsRead()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        var userId = GetCurrentUserId();
+        if (userId == null)
             return Unauthorized(new { Message = "User ID not found in token" });
-        
-        var userNotifications = _notifications
-            .Where(n => (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && !n.IsRead);
 
-        foreach (var notification in userNotifications)
-        {
-            notification.MarkAsRead();
-        }
-
-        _logger.LogInformation("Marked all notifications as read for user {UserId}", userId);
-
-        return Ok(new { Message = "All notifications marked as read" });
+        var count = await _repository.MarkAllAsReadAsync(userId.Value);
+        _logger.LogInformation("Marked {Count} notifications as read for UserId={UserId}", count, userId);
+        return Ok(new { Message = "All notifications marked as read", Count = count });
     }
 
+    // ─── DELETE /api/notifications/{id} ──────────────────────────────────────────
+
     /// <summary>
-    /// Delete a notification
+    /// Delete a specific notification.
+    /// Only the owning user can delete their own notification.
     /// </summary>
     [HttpDelete("{notificationId}")]
-    public ActionResult DeleteNotification(string notificationId)
+    public async Task<ActionResult> DeleteNotification(string notificationId)
     {
-        var notification = _notifications.FirstOrDefault(n => n.Id.ToString() == notificationId);
-        
-        if (notification == null)
-        {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(new { Message = "User ID not found in token" });
+
+        if (!Guid.TryParse(notificationId, out var notifId))
+            return BadRequest(new { Message = "Invalid notification ID" });
+
+        // Ownership check: load and validate before delete
+        var notification = await _repository.GetByIdAsync(notifId);
+        if (notification == null || notification.UserId != userId.Value)
             return NotFound(new { Message = "Notification not found" });
-        }
 
-        _notifications.Remove(notification);
-        _logger.LogInformation("Deleted notification {NotificationId}", notificationId);
-
+        await _repository.DeleteAsync(notifId);
+        _logger.LogDebug("Deleted notification {NotifId} for UserId={UserId}", notifId, userId);
         return Ok(new { Message = "Notification deleted" });
     }
 
+    // ─── DELETE /api/notifications/read ──────────────────────────────────────────
+
     /// <summary>
-    /// Delete all read notifications
+    /// Delete all read notifications for the authenticated user.
     /// </summary>
     [HttpDelete("read")]
-    public ActionResult DeleteAllRead()
+    public async Task<ActionResult> DeleteAllRead()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
+        var userId = GetCurrentUserId();
+        if (userId == null)
             return Unauthorized(new { Message = "User ID not found in token" });
-        
-        var readNotifications = _notifications
-            .Where(n => (n.UserId.ToString() == userId || n.UserId == Guid.Empty) && n.IsRead)
-            .ToList();
 
-        foreach (var notification in readNotifications)
-        {
-            _notifications.Remove(notification);
-        }
-
-        _logger.LogInformation("Deleted {Count} read notifications for user {UserId}", 
-            readNotifications.Count, userId);
-
-        return Ok(new { Message = $"Deleted {readNotifications.Count} read notifications" });
+        var count = await _repository.DeleteReadAsync(userId.Value);
+        _logger.LogInformation("Deleted {Count} read notifications for UserId={UserId}", count, userId);
+        return Ok(new { Message = $"Deleted {count} read notifications", Count = count });
     }
 
-    /// <summary>
-    /// Create a new notification (system/admin use)
-    /// </summary>
-    [HttpPost]
-    public ActionResult<UserNotificationDto> CreateNotification(
-        [FromBody] CreateUserNotificationRequest request)
-    {
-        var notification = UserNotification.Create(
-            userId: Guid.TryParse(request.UserId, out var uid) ? uid : Guid.Empty,
-            type: request.Type,
-            title: request.Title,
-            message: request.Message,
-            icon: request.Icon,
-            link: request.Link,
-            dealerId: Guid.TryParse(request.DealerId, out var did) ? did : null,
-            expiresAt: DateTime.TryParse(request.ExpiresAt, out var exp) ? exp : null
-        );
+    // ─── Mapping ─────────────────────────────────────────────────────────────────
 
-        _notifications.Insert(0, notification);
-        _logger.LogInformation("Created notification {NotificationId} for user {UserId}", 
-            notification.Id, request.UserId);
-
-        return CreatedAtAction(nameof(GetNotifications), MapToDto(notification));
-    }
-
-    /// <summary>
-    /// Send bulk notifications to multiple users
-    /// </summary>
-    [HttpPost("bulk")]
-    public ActionResult BulkCreateNotifications([FromBody] BulkNotificationRequest request)
-    {
-        var created = 0;
-        foreach (var userId in request.UserIds)
-        {
-            var notification = UserNotification.Create(
-                userId: Guid.TryParse(userId, out var uid) ? uid : Guid.Empty,
-                type: request.Type,
-                title: request.Title,
-                message: request.Message,
-                icon: request.Icon,
-                link: request.Link
-            );
-            _notifications.Insert(0, notification);
-            created++;
-        }
-
-        _logger.LogInformation("Created {Count} bulk notifications", created);
-        return Ok(new { Message = $"Created {created} notifications" });
-    }
-
-    #region Helper Methods
-
-    private static UserNotificationDto MapToDto(UserNotification n)
+    private static UserNotificationDto MapToDto(Domain.Entities.UserNotification n)
     {
         return new UserNotificationDto(
             Id: n.Id.ToString(),
@@ -240,66 +195,4 @@ public class UserNotificationsController : ControllerBase
             ExpiresAt: n.ExpiresAt?.ToString("o")
         );
     }
-
-    private static List<UserNotification> InitializeMockNotifications()
-    {
-        return new List<UserNotification>
-        {
-            UserNotification.Create(
-                userId: Guid.Empty, // Global notification
-                type: "message",
-                title: "Nuevo mensaje recibido",
-                message: "Juan Pérez respondió sobre el Toyota Corolla 2024",
-                icon: "💬",
-                link: "/messages"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "favorite",
-                title: "¡Tu vehículo fue guardado!",
-                message: "Tu BMW Serie 3 fue añadido a favoritos por 3 usuarios",
-                icon: "❤️"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "approval",
-                title: "Publicación aprobada",
-                message: "Tu Honda Accord 2023 ya está visible en el marketplace",
-                icon: "✅",
-                link: "/dealer/listings"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "system",
-                title: "¡Alerta de precio!",
-                message: "Un vehículo en tus búsquedas guardadas bajó $50,000 de precio",
-                icon: "💰",
-                link: "/browse"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "sale",
-                title: "¡Vehículo vendido!",
-                message: "¡Felicidades! Tu Hyundai Tucson ha sido marcado como vendido.",
-                icon: "🎉"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "vehicle",
-                title: "Nuevo lead recibido",
-                message: "María García está interesada en tu Mercedes-Benz C300",
-                icon: "🚗",
-                link: "/dealer/leads"
-            ),
-            UserNotification.Create(
-                userId: Guid.Empty,
-                type: "system",
-                title: "Actualización del sistema",
-                message: "Hemos añadido nuevas funciones de análisis a tu dashboard",
-                icon: "📢"
-            )
-        };
-    }
-
-    #endregion
 }

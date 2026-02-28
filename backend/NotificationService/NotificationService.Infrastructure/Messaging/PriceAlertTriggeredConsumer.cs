@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Alert;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 
 namespace NotificationService.Infrastructure.Messaging;
@@ -310,6 +311,23 @@ public class PriceAlertTriggeredConsumer : BackgroundService
             _logger.LogInformation(
                 "✅ Price alert notification sent to {Email} for AlertId: {AlertId}, VehicleId: {VehicleId}",
                 userEmail, alertEvent.AlertId, alertEvent.VehicleId);
+
+            // Persist in-app user notification
+            if (alertEvent.UserId != Guid.Empty)
+            {
+                var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    await userNotifService.CreateAsync(
+                        userId: alertEvent.UserId,
+                        type: "price",
+                        title: "💰 Alerta de precio activada",
+                        message: $"{vehicleTitle} bajó a RD${alertEvent.NewPrice:N0} (ahorro: RD${savings:N0})",
+                        icon: "💰",
+                        link: $"/vehiculos/{alertEvent.VehicleId}",
+                        cancellationToken: cancellationToken);
+                }
+            }
         }
         catch (Exception ex)
         {

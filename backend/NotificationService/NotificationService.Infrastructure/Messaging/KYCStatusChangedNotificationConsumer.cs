@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -207,6 +208,31 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
 
         // Send email notification
         await SendEmailWithFallbackAsync(kycEvent.Email, subject, body, cancellationToken);
+
+        // Persist in-app user notification so user sees it in the header bell and notifications page
+        if (Guid.TryParse(kycEvent.UserId.ToString(), out var userId) && userId != Guid.Empty)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+            if (userNotifService != null)
+            {
+                var (notifTitle, notifMessage, notifIcon) = kycEvent.NewStatus switch
+                {
+                    "Approved" => ("✅ Verificación aprobada", "Tu identidad ha sido verificada exitosamente.", "✅"),
+                    "Rejected" => ("⚠️ Verificación no aprobada", $"Tu verificación requiere atención.{(string.IsNullOrWhiteSpace(kycEvent.Reason) ? "" : $" Motivo: {kycEvent.Reason}")}", "⚠️"),
+                    _          => ("Verificación actualizada", $"El estado de tu verificación cambió a: {kycEvent.NewStatus}.", "🔔")
+                };
+
+                await userNotifService.CreateAsync(
+                    userId: userId,
+                    type: kycEvent.NewStatus == "Approved" ? "vehicle_approved" : "vehicle_rejected",
+                    title: notifTitle,
+                    message: notifMessage,
+                    icon: notifIcon,
+                    link: "/cuenta/verificacion",
+                    cancellationToken: cancellationToken);
+            }
+        }
 
         _logger.LogInformation(
             "KYC {Status} notification queued for {Email} for ProfileId={ProfileId}",

@@ -6,6 +6,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import {
+  notificationsService,
+  type Notification as ApiNotification,
+  formatNotificationTime,
+} from '@/services/notifications';
 import {
   Menu,
   X,
@@ -251,126 +257,36 @@ function getDropdownItems(
 }
 
 // =============================================================================
-// NOTIFICATIONS DATA
+// NOTIFICATIONS CONFIG
 // =============================================================================
 
-// Mock notifications para CONSUMIDORES (compradores, vendedores, dealers)
-const consumerNotifications = [
-  {
-    id: '1',
-    type: 'message',
-    title: 'Nuevo mensaje',
-    description: 'Carlos te envió un mensaje sobre tu Toyota Corolla',
-    time: 'Hace 5 min',
-    read: false,
-    href: '/mensajes',
-  },
-  {
-    id: '2',
-    type: 'view',
-    title: 'Tu vehículo fue visto',
-    description: 'Honda Civic 2022 tiene 15 nuevas vistas',
-    time: 'Hace 1 hora',
-    read: false,
-    href: '/cuenta/mis-vehiculos',
-  },
-  {
-    id: '3',
-    type: 'price',
-    title: 'Bajó de precio',
-    description: 'Hyundai Tucson que guardaste bajó RD$50,000',
-    time: 'Hace 2 horas',
-    read: true,
-    href: '/cuenta/favoritos',
-  },
-  {
-    id: '4',
-    type: 'sold',
-    title: '¡Felicidades!',
-    description: 'Tu Toyota Camry fue marcado como vendido',
-    time: 'Ayer',
-    read: true,
-    href: '/cuenta/mis-vehiculos',
-  },
-];
-
-// Mock notifications para ADMINISTRADORES
-const adminNotifications = [
-  {
-    id: '1',
-    type: 'kyc',
-    title: 'Verificaciones pendientes',
-    description: '5 usuarios esperan aprobación de KYC',
-    time: 'Hace 10 min',
-    read: false,
-    href: '/admin/kyc',
-  },
-  {
-    id: '2',
-    type: 'report',
-    title: 'Nuevos reportes',
-    description: '3 publicaciones reportadas por contenido',
-    time: 'Hace 30 min',
-    read: false,
-    href: '/admin/vehiculos',
-  },
-  {
-    id: '3',
-    type: 'dealer',
-    title: 'Solicitud de dealer',
-    description: 'AutoMax RD solicita cuenta dealer',
-    time: 'Hace 2 horas',
-    read: true,
-    href: '/admin/dealers',
-  },
-  {
-    id: '4',
-    type: 'alert',
-    title: 'Alerta de sistema',
-    description: 'Alto volumen de registros en últimas 24h',
-    time: 'Ayer',
-    read: true,
-    href: '/admin/metricas',
-  },
-];
-
-/**
- * Retorna las notificaciones según el tipo de usuario
- */
-function getNotifications(user: UserType | null) {
-  if (user?.accountType === 'admin' || user?.accountType === 'platform_employee') {
-    return adminNotifications;
-  }
-  return consumerNotifications;
-}
-
 const notificationIcons: Record<string, React.ElementType> = {
-  // Consumer types
   message: MessageSquare,
+  favorite: Heart,
   view: Eye,
   price: DollarSign,
-  sold: CheckCircle,
-  // Admin types
-  kyc: ShieldCheck,
-  report: Flag,
-  dealer: Building2,
-  alert: AlertTriangle,
-  // Fallback
+  system: AlertTriangle,
+  inquiry: MessageSquare,
+  vehicle_sold: CheckCircle,
+  vehicle_approved: CheckCircle,
+  vehicle_rejected: AlertTriangle,
+  payment_received: CreditCard,
+  subscription_expiring: Clock,
   default: Bell,
 };
 
 const notificationColors: Record<string, string> = {
-  // Consumer types
   message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  favorite: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
   view: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
   price: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  sold: 'bg-primary/10 text-primary dark:bg-primary/95/30 dark:text-primary/80',
-  // Admin types
-  kyc: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  report: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  dealer: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  alert: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  // Fallback
+  system: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
+  inquiry: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  vehicle_sold: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+  vehicle_approved: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  vehicle_rejected: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  payment_received: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  subscription_expiring: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   default: 'bg-muted text-muted-foreground',
 };
 
@@ -401,11 +317,26 @@ interface DesktopNavProps {
   pathname: string;
   isAuthenticated: boolean;
   user: UserType | null;
+  unreadCount: number;
+  recentNotifications: ApiNotification[];
 }
 
-function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
+function DesktopNav({
+  pathname,
+  isAuthenticated,
+  user,
+  unreadCount,
+  recentNotifications,
+}: DesktopNavProps) {
   const navLinks = getNavLinks(user);
-  const notifications = getNotifications(user);
+  const queryClient = useQueryClient();
+
+  const markAllReadMutation = useMutation({
+    mutationFn: notificationsService.markAllAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
 
   return (
     <div className="hidden min-w-0 items-center gap-1 lg:flex">
@@ -471,9 +402,9 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                     >
                       <Bell className="h-4 w-4" />
                       {/* Unread count badge */}
-                      {notifications.filter(n => !n.read).length > 0 && (
+                      {unreadCount > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#00A870] px-1 text-[10px] font-bold text-white shadow-sm">
-                          {notifications.filter(n => !n.read).length}
+                          {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
                     </button>
@@ -487,15 +418,19 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                 {/* Header */}
                 <div className="border-border flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-foreground font-semibold">Notificaciones</h3>
-                  <button className="text-primary text-xs font-medium hover:underline">
+                  <button
+                    className="text-primary text-xs font-medium hover:underline disabled:opacity-50"
+                    onClick={() => markAllReadMutation.mutate()}
+                    disabled={markAllReadMutation.isPending || unreadCount === 0}
+                  >
                     Marcar todo leído
                   </button>
                 </div>
 
                 {/* Notifications List */}
                 <div className="max-h-80 overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map(notification => {
+                  {recentNotifications.length > 0 ? (
+                    recentNotifications.map(notification => {
                       const Icon =
                         notificationIcons[notification.type] || notificationIcons.default;
                       const colorClass =
@@ -504,10 +439,10 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                       return (
                         <Link
                           key={notification.id}
-                          href={notification.href}
+                          href={notification.link ?? '/cuenta/notificaciones'}
                           className={cn(
                             'hover:bg-muted flex gap-3 px-4 py-3 transition-colors',
-                            !notification.read && 'bg-primary/5'
+                            !notification.isRead && 'bg-primary/5'
                           )}
                         >
                           <div
@@ -522,7 +457,7 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                             <p
                               className={cn(
                                 'text-sm',
-                                !notification.read
+                                !notification.isRead
                                   ? 'text-foreground font-semibold'
                                   : 'text-muted-foreground'
                               )}
@@ -530,14 +465,14 @@ function DesktopNav({ pathname, isAuthenticated, user }: DesktopNavProps) {
                               {notification.title}
                             </p>
                             <p className="text-muted-foreground truncate text-xs">
-                              {notification.description}
+                              {notification.message}
                             </p>
                             <p className="text-muted-foreground/70 mt-1 flex items-center gap-1 text-xs">
                               <Clock className="h-3 w-3" />
-                              {notification.time}
+                              {formatNotificationTime(notification.createdAt)}
                             </p>
                           </div>
-                          {!notification.read && (
+                          {!notification.isRead && (
                             <div className="flex-shrink-0 self-center">
                               <span className="h-2 w-2 rounded-full bg-[#00A870]" />
                             </div>
@@ -819,13 +754,20 @@ interface MobileMenuProps {
     listingsCount?: number;
   } | null;
   onLogout: () => void;
+  unreadCount: number;
 }
 
-function MobileMenu({ isOpen, pathname, isAuthenticated, user, onLogout }: MobileMenuProps) {
+function MobileMenu({
+  isOpen,
+  pathname,
+  isAuthenticated,
+  user,
+  onLogout,
+  unreadCount,
+}: MobileMenuProps) {
   const navLinks = getNavLinks(user);
   const dropdownItems = user ? getDropdownItems(user) : [];
   const userBadge = getDropdownBadgeInfo(user); // Badge solo en el header del perfil
-  const notifications = getNotifications(user);
 
   return isOpen ? (
     <div className="border-border bg-card animate-slide-down overflow-hidden border-t lg:hidden">
@@ -930,9 +872,9 @@ function MobileMenu({ isOpen, pathname, isAuthenticated, user, onLogout }: Mobil
             >
               <Bell className="h-4 w-4" />
               Notificaciones
-              {notifications.filter(n => !n.read).length > 0 && (
+              {unreadCount > 0 && (
                 <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00A870] px-1.5 text-xs font-bold text-white">
-                  {notifications.filter(n => !n.read).length}
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </Link>
@@ -987,6 +929,25 @@ export function Navbar() {
   // Get auth state from context
   const { isAuthenticated, user, logout } = useAuth();
 
+  // ── Real notifications data ─────────────────────────────────────────────────
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['notifications', 'unreadCount'],
+    queryFn: notificationsService.getUnreadCount,
+    enabled: isAuthenticated,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
+  });
+
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications', 'recent'],
+    queryFn: () => notificationsService.getNotifications({ pageSize: 5 }),
+    enabled: isAuthenticated,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
+  });
+
+  const recentNotifications = notificationsData?.notifications ?? [];
+
   // Handle logout
   const handleLogout = async () => {
     await logout();
@@ -1033,7 +994,13 @@ export function Navbar() {
         {/* Left - Logo + Navigation together */}
         <div className="flex min-w-0 items-center gap-8">
           <Logo />
-          <DesktopNav pathname={pathname} isAuthenticated={isAuthenticated} user={user} />
+          <DesktopNav
+            pathname={pathname}
+            isAuthenticated={isAuthenticated}
+            user={user}
+            unreadCount={unreadCount}
+            recentNotifications={recentNotifications}
+          />
         </div>
 
         {/* Right - Actions */}
@@ -1052,6 +1019,7 @@ export function Navbar() {
         isAuthenticated={isAuthenticated}
         user={user}
         onLogout={handleLogout}
+        unreadCount={unreadCount}
       />
     </header>
   );

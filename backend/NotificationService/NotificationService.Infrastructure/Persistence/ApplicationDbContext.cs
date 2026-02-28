@@ -14,6 +14,7 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<NotificationQueue> NotificationQueues { get; set; } = null!;
     public DbSet<NotificationLog> NotificationLogs { get; set; } = null!;
     public DbSet<ScheduledNotification> ScheduledNotifications { get; set; } = null!;
+    public DbSet<UserNotification> UserNotifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

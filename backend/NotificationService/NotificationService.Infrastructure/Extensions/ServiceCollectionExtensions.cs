@@ -37,6 +37,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationQueueRepository, EfNotificationQueueRepository>();
         services.AddScoped<IScheduledNotificationRepository, EfScheduledNotificationRepository>();
         services.AddScoped<INotificationLogRepository, EfNotificationLogRepository>();
+        services.AddScoped<IUserNotificationRepository, EfUserNotificationRepository>();
+
+        // ── User Notification Service (in-app notifications) ──
+        services.AddScoped<IUserNotificationService, UserNotificationService>();
 
         // ── Email Providers ───────────────────────────────────
         services.AddHttpClient("Resend");

@@ -89,7 +89,7 @@ export async function getNotification(id: string): Promise<Notification> {
  * Get unread notification count
  */
 export async function getUnreadCount(): Promise<number> {
-  const response = await apiClient.get<UnreadCountResponse>('/api/notifications/unread-count');
+  const response = await apiClient.get<UnreadCountResponse>('/api/notifications/unread/count');
   return response.data.count;
 }
 

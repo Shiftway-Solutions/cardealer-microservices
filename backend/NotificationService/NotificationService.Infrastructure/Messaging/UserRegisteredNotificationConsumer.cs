@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Auth;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 
 namespace NotificationService.Infrastructure.Messaging;
@@ -241,6 +242,31 @@ public class UserRegisteredNotificationConsumer : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to send admin alert for new user registration. Non-critical.");
+        }
+
+        // Persist welcome in-app notification for the new user
+        if (eventData.UserId != Guid.Empty)
+        {
+            try
+            {
+                using var welcomeScope = _serviceProvider.CreateScope();
+                var userNotifService = welcomeScope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    await userNotifService.CreateAsync(
+                        userId: eventData.UserId,
+                        type: "system",
+                        title: "🎉 ¡Bienvenido/a a OKLA!",
+                        message: $"¡Hola {eventData.FullName ?? eventData.Email}! Tu cuenta ha sido creada exitosamente. Explora miles de vehículos en la República Dominicana.",
+                        icon: "🎉",
+                        link: "/",
+                        cancellationToken: cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to persist welcome notification for UserId: {UserId}. Non-critical.", eventData.UserId);
+            }
         }
     }
 

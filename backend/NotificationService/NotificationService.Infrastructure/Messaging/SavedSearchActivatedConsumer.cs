@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Alert;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 
 namespace NotificationService.Infrastructure.Messaging;
@@ -313,6 +314,29 @@ public class SavedSearchActivatedConsumer : BackgroundService
             _logger.LogInformation(
                 "✅ Saved search notification sent to {Email} for SearchId: {SearchId}, Action: {Action}",
                 userEmail, searchEvent.SavedSearchId, searchEvent.ActionType);
+
+            // Persist in-app user notification
+            if (searchEvent.UserId != Guid.Empty)
+            {
+                var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    var icon = isCreated ? "🔍" : "✅";
+                    var title = isCreated
+                        ? $"🔍 Búsqueda guardada: {searchEvent.SearchName}"
+                        : $"✅ Búsqueda reactivada: {searchEvent.SearchName}";
+                    var msg = $"Te avisaremos {frequencyLabel.ToLower()} cuando haya coincidencias para: {searchDescription}";
+
+                    await userNotifService.CreateAsync(
+                        userId: searchEvent.UserId,
+                        type: "system",
+                        title: title,
+                        message: msg,
+                        icon: icon,
+                        link: "/cuenta/alertas",
+                        cancellationToken: cancellationToken);
+                }
+            }
         }
         catch (Exception ex)
         {

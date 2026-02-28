@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Billing;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Interfaces;
 using NotificationService.Application.DTOs;
 
@@ -279,6 +280,23 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                 "Payment receipt email sent to {Email} for PaymentId: {PaymentId}",
                 eventData.UserEmail,
                 eventData.PaymentId);
+
+            // Persist in-app user notification
+            if (eventData.UserId != Guid.Empty)
+            {
+                var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    await userNotifService.CreateAsync(
+                        userId: eventData.UserId,
+                        type: "payment_received",
+                        title: "💳 Pago procesado",
+                        message: $"Tu pago de RD${eventData.Amount:N0} {eventData.Currency} fue procesado exitosamente.",
+                        icon: "💳",
+                        link: "/cuenta/facturacion",
+                        cancellationToken: cancellationToken);
+                }
+            }
 
             // Send admin alert for payment received
             if (adminAlertService != null)
