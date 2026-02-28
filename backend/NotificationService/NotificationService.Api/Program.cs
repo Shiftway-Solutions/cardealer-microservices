@@ -102,6 +102,7 @@ builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
 builder.Services.AddHostedService<KYCStatusChangedNotificationConsumer>();
 builder.Services.AddHostedService<PriceAlertTriggeredConsumer>();
 builder.Services.AddHostedService<SavedSearchActivatedConsumer>();
+builder.Services.AddHostedService<UserLoggedInEventConsumer>(); // Security in-app notifications on login
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");
