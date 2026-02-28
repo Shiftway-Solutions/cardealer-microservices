@@ -21,8 +21,6 @@ import {
   Car,
   Loader2,
   Bell,
-  BellOff,
-  Filter,
   ArrowDownAZ,
   RefreshCw,
   AlertCircle,
@@ -146,6 +144,29 @@ function EmptyState() {
 // FAVORITE CARD
 // =============================================================================
 
+function formatFavoritePrice(price: number) {
+  return new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP',
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+function formatMileage(km: number) {
+  return new Intl.NumberFormat('es-DO').format(km) + ' km';
+}
+
+function timeAgo(date: string) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return 'hace un momento';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days} días`;
+}
+
 interface FavoriteCardProps {
   favorite: FavoriteVehicle;
   onRemove: () => void;
@@ -155,29 +176,6 @@ interface FavoriteCardProps {
 
 function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: FavoriteCardProps) {
   const { vehicle } = favorite;
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const formatMileage = (km: number) => {
-    return new Intl.NumberFormat('es-DO').format(km) + ' km';
-  };
-
-  const timeAgo = (date: string) => {
-    const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (seconds < 60) return 'hace un momento';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `hace ${days} días`;
-  };
 
   const isAvailable = vehicle.status === 'active';
 
@@ -220,10 +218,10 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
               </Link>
 
               <div className="mt-1 flex items-center gap-2">
-                <p className="text-primary text-xl font-bold">{formatPrice(vehicle.price)}</p>
+                <p className="text-primary text-xl font-bold">{formatFavoritePrice(vehicle.price)}</p>
                 {vehicle.previousPrice && vehicle.previousPrice > vehicle.price && (
                   <span className="text-sm text-muted-foreground line-through">
-                    {formatPrice(vehicle.previousPrice)}
+                    {formatFavoritePrice(vehicle.previousPrice)}
                   </span>
                 )}
               </div>

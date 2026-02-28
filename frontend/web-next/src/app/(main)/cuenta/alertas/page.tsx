@@ -7,7 +7,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,6 @@ import {
   TrendingDown,
   DollarSign,
   Car,
-  Settings,
   Check,
   AlertCircle,
   Loader2,
@@ -32,7 +30,6 @@ import {
   useTogglePriceAlert,
   useDeletePriceAlert,
   useAlertStats,
-  formatPriceChange,
   type PriceAlert,
 } from '@/hooks/use-alerts';
 
