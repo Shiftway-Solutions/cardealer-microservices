@@ -30,7 +30,6 @@ import {
   useSavedSearches,
   useToggleSavedSearch,
   useDeleteSavedSearch,
-  useRunSavedSearch,
   useAlertStats,
   formatNotifyFrequency,
   buildSearchDescription,
@@ -71,14 +70,17 @@ export default function SavedSearchesPage() {
   // Mutations
   const toggleMutation = useToggleSavedSearch();
   const deleteMutation = useDeleteSavedSearch();
-  const runMutation = useRunSavedSearch();
 
   // Get searches array from paginated response
   const searches = searchesData?.items ?? [];
 
-  const handleToggleNotifications = async (id: string) => {
+  const handleToggleNotifications = async (search: SavedSearch) => {
     try {
-      await toggleMutation.mutateAsync(id);
+      await toggleMutation.mutateAsync({
+        id: search.id,
+        notifyNewListings: search.notifyNewListings,
+        notifyFrequency: search.notifyFrequency,
+      });
       toast.success('Notificaciones actualizadas');
     } catch {
       toast.error('Error al actualizar notificaciones');
@@ -94,36 +96,32 @@ export default function SavedSearchesPage() {
     }
   };
 
-  const handleRunSearch = async (search: SavedSearch) => {
-    try {
-      await runMutation.mutateAsync(search.id);
-      // Build URL with snake_case keys matching parseSearchParams in use-vehicle-search
-      const sp = search.searchParams as Record<string, unknown>;
-      const urlParams = new URLSearchParams();
-      if (sp.q) urlParams.set('q', String(sp.q));
-      if (sp.make) urlParams.set('make', String(sp.make));
-      if (sp.model) urlParams.set('model', String(sp.model));
-      if (sp.yearMin) urlParams.set('year_min', String(sp.yearMin));
-      if (sp.yearMax) urlParams.set('year_max', String(sp.yearMax));
-      if (sp.priceMin) urlParams.set('price_min', String(sp.priceMin));
-      if (sp.priceMax) urlParams.set('price_max', String(sp.priceMax));
-      if (sp.mileageMax) urlParams.set('mileage_max', String(sp.mileageMax));
-      if (sp.bodyType) urlParams.set('body_type', String(sp.bodyType));
-      if (sp.transmission) urlParams.set('transmission', String(sp.transmission));
-      if (sp.fuelType) urlParams.set('fuel_type', String(sp.fuelType));
-      if (sp.drivetrain) urlParams.set('drivetrain', String(sp.drivetrain));
-      if (sp.condition) urlParams.set('condition', String(sp.condition));
-      if (sp.province) urlParams.set('province', String(sp.province));
-      if (sp.city) urlParams.set('city', String(sp.city));
-      if (sp.dealRating) urlParams.set('deal_rating', String(sp.dealRating));
-      if (sp.sellerType) urlParams.set('seller_type', String(sp.sellerType));
-      if (sp.isCertified) urlParams.set('is_certified', 'true');
-      if (sp.hasCleanTitle) urlParams.set('has_clean_title', 'true');
-      if (sp.color) urlParams.set('color', String(sp.color));
-      window.location.href = `/vehiculos?${urlParams.toString()}`;
-    } catch {
-      toast.error('Error al ejecutar búsqueda');
-    }
+  const handleRunSearch = (search: SavedSearch) => {
+    // Navigate directly to /vehiculos with saved search params.
+    // (Backend has no /run endpoint — the search is executed client-side.)
+    const sp = search.searchParams as Record<string, unknown>;
+    const urlParams = new URLSearchParams();
+    if (sp.q) urlParams.set('q', String(sp.q));
+    if (sp.make) urlParams.set('make', String(sp.make));
+    if (sp.model) urlParams.set('model', String(sp.model));
+    if (sp.yearMin) urlParams.set('year_min', String(sp.yearMin));
+    if (sp.yearMax) urlParams.set('year_max', String(sp.yearMax));
+    if (sp.priceMin) urlParams.set('price_min', String(sp.priceMin));
+    if (sp.priceMax) urlParams.set('price_max', String(sp.priceMax));
+    if (sp.mileageMax) urlParams.set('mileage_max', String(sp.mileageMax));
+    if (sp.bodyType) urlParams.set('body_type', String(sp.bodyType));
+    if (sp.transmission) urlParams.set('transmission', String(sp.transmission));
+    if (sp.fuelType) urlParams.set('fuel_type', String(sp.fuelType));
+    if (sp.drivetrain) urlParams.set('drivetrain', String(sp.drivetrain));
+    if (sp.condition) urlParams.set('condition', String(sp.condition));
+    if (sp.province) urlParams.set('province', String(sp.province));
+    if (sp.city) urlParams.set('city', String(sp.city));
+    if (sp.dealRating) urlParams.set('deal_rating', String(sp.dealRating));
+    if (sp.sellerType) urlParams.set('seller_type', String(sp.sellerType));
+    if (sp.isCertified) urlParams.set('is_certified', 'true');
+    if (sp.hasCleanTitle) urlParams.set('has_clean_title', 'true');
+    if (sp.color) urlParams.set('color', String(sp.color));
+    window.location.href = `/vehiculos?${urlParams.toString()}`;
   };
 
   // Show loading skeleton
@@ -289,7 +287,7 @@ export default function SavedSearchesPage() {
                         <span className="text-muted-foreground text-sm">Notificaciones</span>
                         <Switch
                           checked={search.notifyNewListings}
-                          onCheckedChange={() => handleToggleNotifications(search.id)}
+                          onCheckedChange={() => handleToggleNotifications(search)}
                           disabled={toggleMutation.isPending}
                         />
                       </div>
@@ -310,13 +308,8 @@ export default function SavedSearchesPage() {
                       <Button
                         className="bg-[#00A870] hover:bg-[#008a5c]"
                         onClick={() => handleRunSearch(search)}
-                        disabled={runMutation.isPending}
                       >
-                        {runMutation.isPending ? (
-                          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Play className="mr-1 h-4 w-4" />
-                        )}
+                        <Play className="mr-1 h-4 w-4" />
                         Ejecutar
                       </Button>
                     </div>
