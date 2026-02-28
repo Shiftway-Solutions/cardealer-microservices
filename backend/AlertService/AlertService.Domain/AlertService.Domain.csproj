@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

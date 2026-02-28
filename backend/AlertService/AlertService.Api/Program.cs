@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using AlertService.Domain.Interfaces;
 using AlertService.Infrastructure.Persistence;
 using AlertService.Infrastructure.Repositories;
+using AlertService.Infrastructure.Messaging;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Repositories
 builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
 builder.Services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+
+// RabbitMQ Event Publisher
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // Authentication
 var jwtSecret = builder.Configuration["Jwt:Key"]

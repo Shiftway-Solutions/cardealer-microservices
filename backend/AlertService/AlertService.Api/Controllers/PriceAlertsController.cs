@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using AlertService.Domain.Entities;
 using AlertService.Domain.Interfaces;
+using CarDealer.Contracts.Events.Alert;
 using System.Security.Claims;
 
 namespace AlertService.Api.Controllers;
@@ -12,13 +13,16 @@ namespace AlertService.Api.Controllers;
 public class PriceAlertsController : ControllerBase
 {
     private readonly IPriceAlertRepository _repository;
+    private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<PriceAlertsController> _logger;
 
     public PriceAlertsController(
         IPriceAlertRepository repository,
+        IEventPublisher eventPublisher,
         ILogger<PriceAlertsController> logger)
     {
         _repository = repository;
+        _eventPublisher = eventPublisher;
         _logger = logger;
     }
 
@@ -93,6 +97,8 @@ public class PriceAlertsController : ControllerBase
 
     /// <summary>
     /// Endpoint interno para procesar cambio de precio (llamado por VehiclesSaleService)
+    /// Cuando un precio baja y cumple la condición del usuario, dispara la alerta
+    /// y publica un evento a RabbitMQ → NotificationService envía el email/SMS.
     /// </summary>
     [HttpPost("check-price")]
     [AllowAnonymous]
@@ -119,9 +125,27 @@ public class PriceAlertsController : ControllerBase
                 await _repository.UpdateAsync(alert);
                 triggered++;
 
+                // Publish event → RabbitMQ → NotificationService sends email/SMS
+                var priceAlertEvent = new PriceAlertTriggeredEvent
+                {
+                    AlertId = alert.Id,
+                    UserId = alert.UserId,
+                    VehicleId = alert.VehicleId,
+                    VehicleTitle = notification.VehicleTitle,
+                    VehicleSlug = notification.VehicleSlug,
+                    OldPrice = notification.OldPrice,
+                    NewPrice = notification.NewPrice,
+                    TargetPrice = alert.TargetPrice,
+                    Currency = notification.Currency,
+                    Condition = alert.Condition.ToString(),
+                    CorrelationId = Guid.NewGuid().ToString()
+                };
+
+                await _eventPublisher.PublishAsync(priceAlertEvent);
+
                 _logger.LogInformation(
                     "Price alert {AlertId} triggered for user {UserId}, vehicle {VehicleId}. " +
-                    "Target: {TargetPrice}, New price: {NewPrice}",
+                    "Target: {TargetPrice}, New price: {NewPrice}. Event published to RabbitMQ.",
                     alert.Id, alert.UserId, alert.VehicleId, alert.TargetPrice, notification.NewPrice);
             }
         }
@@ -306,25 +330,16 @@ public class PriceAlertsController : ControllerBase
     // Helper methods
     private Guid GetCurrentUserId()
     {
-        // Log all claims for debugging
-        foreach (var claim in User.Claims)
-        {
-            _logger.LogInformation("JWT Claim: Type={ClaimType}, Value={ClaimValue}", claim.Type, claim.Value);
-        }
-        
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value
             ?? User.FindFirst("userId")?.Value;
 
-        _logger.LogInformation("Extracted userIdClaim: {UserIdClaim}", userIdClaim);
-
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            _logger.LogWarning("Failed to parse userId from claim: {UserIdClaim}", userIdClaim);
+            _logger.LogWarning("Failed to parse userId from JWT claims");
             throw new UnauthorizedAccessException("User not authenticated");
         }
 
-        _logger.LogInformation("Parsed UserId: {UserId}", userId);
         return userId;
     }
 
@@ -334,10 +349,10 @@ public class PriceAlertsController : ControllerBase
         {
             Id = alert.Id,
             VehicleId = alert.VehicleId,
-            VehicleTitle = $"Vehículo {alert.VehicleId.ToString()[..8]}",
-            VehicleSlug = null,
+            VehicleTitle = null, // Resolved by frontend via VehicleId lookup
+            VehicleSlug = null,  // Resolved by frontend via VehicleId lookup
             TargetPrice = alert.TargetPrice,
-            CurrentPrice = alert.TargetPrice,
+            CurrentPrice = null, // AlertService doesn't store current prices
             Currency = "DOP",
             Condition = alert.Condition.ToString(),
             IsActive = alert.IsActive,
@@ -370,10 +385,10 @@ public record PriceAlertDto
 {
     public Guid Id { get; init; }
     public Guid VehicleId { get; init; }
-    public string VehicleTitle { get; init; } = string.Empty;
+    public string? VehicleTitle { get; init; }
     public string? VehicleSlug { get; init; }
     public decimal TargetPrice { get; init; }
-    public decimal CurrentPrice { get; init; }
+    public decimal? CurrentPrice { get; init; }
     public string Currency { get; init; } = "DOP";
     public string Condition { get; init; } = string.Empty;
     public bool IsActive { get; init; }

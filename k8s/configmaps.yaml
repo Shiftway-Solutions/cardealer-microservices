@@ -170,42 +170,6 @@ data:
           "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }]
         },
         {
-          "_comment": "Favorites: check if vehicle is favorited (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/check/{vehicleId}",
-          "UpstreamHttpMethod": ["OPTIONS", "GET"],
-          "DownstreamPathTemplate": "/api/favorites/check/{vehicleId}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-        },
-        {
-          "_comment": "Favorites: get count (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/count",
-          "UpstreamHttpMethod": ["OPTIONS", "GET"],
-          "DownstreamPathTemplate": "/api/favorites/count",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-        },
-        {
-          "_comment": "Favorites: add/remove/update specific vehicle (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
-          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-          "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-        },
-        {
-          "_comment": "Favorites: list all favorites (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites",
-          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
-          "DownstreamPathTemplate": "/api/favorites",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [{ "Host": "vehiclessaleservice", "Port": 8080 }],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-        },
-        {
           "UpstreamPathTemplate": "/api/media/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/media/{everything}",
@@ -1582,55 +1546,6 @@ data:
         },
 
         {
-          "_comment": "Favorites: check if vehicle is favorited (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/check/{vehicleId}",
-          "UpstreamHttpMethod": ["OPTIONS", "GET"],
-          "DownstreamPathTemplate": "/api/favorites/check/{vehicleId}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [
-            { "Host": "vehiclessaleservice", "Port": 8080 }
-          ],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 10000 }
-        },
-        {
-          "_comment": "Favorites: get count (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/count",
-          "UpstreamHttpMethod": ["OPTIONS", "GET"],
-          "DownstreamPathTemplate": "/api/favorites/count",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [
-            { "Host": "vehiclessaleservice", "Port": 8080 }
-          ],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 10000 }
-        },
-        {
-          "_comment": "Favorites: add/remove/update specific vehicle (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
-          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-          "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [
-            { "Host": "vehiclessaleservice", "Port": 8080 }
-          ],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 10000 }
-        },
-        {
-          "_comment": "Favorites: list all favorites (authenticated)",
-          "UpstreamPathTemplate": "/api/favorites",
-          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
-          "DownstreamPathTemplate": "/api/favorites",
-          "DownstreamScheme": "http",
-          "DownstreamHostAndPorts": [
-            { "Host": "vehiclessaleservice", "Port": 8080 }
-          ],
-          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
-          "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 10000 }
-        },
-
-        {
           "UpstreamPathTemplate": "/api/catalog",
           "UpstreamHttpMethod": ["OPTIONS", "GET"],
           "DownstreamPathTemplate": "/api/catalog",
@@ -2874,6 +2789,43 @@ data:
           "UpstreamPathTemplate": "/api/pricealerts/health",
           "UpstreamHttpMethod": ["GET"],
           "DownstreamPathTemplate": "/health",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }]
+        },
+        {
+          "UpstreamPathTemplate": "/api/pricealerts/stats",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/pricealerts/stats",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
+          "UpstreamHttpMethod": ["OPTIONS", "GET"],
+          "DownstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/pricealerts/check-price",
+          "UpstreamHttpMethod": ["POST"],
+          "DownstreamPathTemplate": "/api/pricealerts/check-price",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }]
         },
