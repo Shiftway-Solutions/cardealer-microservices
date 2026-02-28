@@ -10,9 +10,8 @@
 # CLUSTER INFO (Feb 2026):
 # Current cluster: 2× s-4vcpu-8gb nodes (~12GB allocatable, autoscale to 3).
 # Pool name: okla-pool-upgraded
-# 14 core services run with replicas: 1.
+# 16 core services run with replicas: 1.
 # 28 services without Docker images are set to replicas: 0.
-# 2 services (adminservice, contactservice) disabled due to startup bugs.
 # To enable services after building images:
 #   kubectl scale deployment/<name> --replicas=1 -n okla
 # =============================================================================
@@ -1310,7 +1309,7 @@ metadata:
     app: adminservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: crashes on startup
+  replicas: 1
   selector:
     matchLabels:
       app: adminservice
@@ -2414,7 +2413,7 @@ metadata:
     app: contactservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: contactservice
