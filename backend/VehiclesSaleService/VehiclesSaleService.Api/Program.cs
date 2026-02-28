@@ -257,6 +257,15 @@ builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IError
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// AlertService client for price change notifications
+builder.Services.AddHttpClient("AlertService", client =>
+{
+    var alertServiceUrl = builder.Configuration["ServiceUrls:AlertService"] ?? "http://alertservice:8080";
+    client.BaseAddress = new Uri(alertServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 var app = builder.Build();
 
 // ============================================================================

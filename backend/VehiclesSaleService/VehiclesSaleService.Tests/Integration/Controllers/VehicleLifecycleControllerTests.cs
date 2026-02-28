@@ -11,6 +11,7 @@ using CarDealer.Shared.MultiTenancy;
 using CarDealer.Shared.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using VehicleDriveType = VehiclesSaleService.Domain.Entities.DriveType;
+using System.Net.Http;
 
 namespace VehiclesSaleService.Tests.Integration.Controllers;
 
@@ -26,6 +27,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     private readonly Mock<IEventPublisher> _eventPublisherMock;
     private readonly Mock<ILogger<VehiclesController>> _loggerMock;
     private readonly Mock<IConfigurationServiceClient> _configClientMock;
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
 
     public VehicleLifecycleControllerTests()
     {
@@ -45,6 +47,7 @@ public class VehicleLifecycleControllerTests : IDisposable
         _eventPublisherMock = new Mock<IEventPublisher>();
         _loggerMock = new Mock<ILogger<VehiclesController>>();
         _configClientMock = new Mock<IConfigurationServiceClient>();
+        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
         // Return the default value for any config key so validation uses production-safe defaults
         _configClientMock
@@ -63,7 +66,8 @@ public class VehicleLifecycleControllerTests : IDisposable
             _eventPublisherMock.Object,
             _loggerMock.Object,
             _context,
-            _configClientMock.Object
+            _configClientMock.Object,
+            _httpClientFactoryMock.Object
         );
     }
 

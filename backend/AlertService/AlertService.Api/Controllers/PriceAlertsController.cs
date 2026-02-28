@@ -23,17 +23,114 @@ public class PriceAlertsController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene todas las alertas de precio del usuario
+    /// Obtiene todas las alertas de precio del usuario (paginated format)
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<PriceAlertDto>>> GetMyAlerts()
+    public async Task<ActionResult> GetMyAlerts([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var userId = GetCurrentUserId();
         _logger.LogInformation("GetMyAlerts called for UserId: {UserId}", userId);
         var alerts = await _repository.GetByUserIdAsync(userId);
         _logger.LogInformation("Found {Count} alerts for UserId: {UserId}", alerts.Count, userId);
 
-        return Ok(alerts.Select(MapToDto).ToList());
+        var items = alerts.Select(MapToDto).ToList();
+        var totalItems = items.Count;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+        var paged = items.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        return Ok(new
+        {
+            items = paged,
+            pagination = new
+            {
+                page,
+                pageSize,
+                totalItems,
+                totalPages
+            }
+        });
+    }
+
+    /// <summary>
+    /// Obtiene estadísticas de alertas del usuario
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<ActionResult> GetStats()
+    {
+        var userId = GetCurrentUserId();
+        var alerts = await _repository.GetByUserIdAsync(userId);
+
+        var activePriceAlerts = alerts.Count(a => a.IsActive && !a.IsTriggered);
+        var priceDropsThisMonth = alerts.Count(a => a.IsTriggered && a.TriggeredAt.HasValue &&
+            a.TriggeredAt.Value >= DateTime.UtcNow.AddDays(-30));
+
+        return Ok(new
+        {
+            totalPriceAlerts = alerts.Count,
+            activePriceAlerts,
+            priceDropsThisMonth,
+            totalSavedSearches = 0,
+            activeSavedSearches = 0,
+            newMatchesThisWeek = 0
+        });
+    }
+
+    /// <summary>
+    /// Obtiene la alerta de precio para un vehículo específico
+    /// </summary>
+    [HttpGet("vehicle/{vehicleId:guid}")]
+    public async Task<ActionResult<PriceAlertDto>> GetByVehicleId(Guid vehicleId)
+    {
+        var userId = GetCurrentUserId();
+        var alerts = await _repository.GetActiveAlertsByVehicleIdAsync(vehicleId);
+        var alert = alerts.FirstOrDefault(a => a.UserId == userId);
+
+        if (alert == null)
+            return NotFound();
+
+        return Ok(MapToDto(alert));
+    }
+
+    /// <summary>
+    /// Endpoint interno para procesar cambio de precio (llamado por VehiclesSaleService)
+    /// </summary>
+    [HttpPost("check-price")]
+    [AllowAnonymous]
+    public async Task<ActionResult> CheckPriceChange([FromBody] PriceChangeNotification notification)
+    {
+        _logger.LogInformation(
+            "Price change notification received for vehicle {VehicleId}: {OldPrice} → {NewPrice}",
+            notification.VehicleId, notification.OldPrice, notification.NewPrice);
+
+        var alerts = await _repository.GetActiveAlertsByVehicleIdAsync(notification.VehicleId);
+
+        if (alerts.Count == 0)
+        {
+            _logger.LogInformation("No active alerts for vehicle {VehicleId}", notification.VehicleId);
+            return Ok(new { triggered = 0 });
+        }
+
+        var triggered = 0;
+        foreach (var alert in alerts)
+        {
+            if (alert.ShouldTrigger(notification.NewPrice))
+            {
+                alert.Trigger();
+                await _repository.UpdateAsync(alert);
+                triggered++;
+
+                _logger.LogInformation(
+                    "Price alert {AlertId} triggered for user {UserId}, vehicle {VehicleId}. " +
+                    "Target: {TargetPrice}, New price: {NewPrice}",
+                    alert.Id, alert.UserId, alert.VehicleId, alert.TargetPrice, notification.NewPrice);
+            }
+        }
+
+        _logger.LogInformation(
+            "Processed {Total} alerts for vehicle {VehicleId}, triggered {Triggered}",
+            alerts.Count, notification.VehicleId, triggered);
+
+        return Ok(new { triggered, total = alerts.Count });
     }
 
     /// <summary>
@@ -237,11 +334,18 @@ public class PriceAlertsController : ControllerBase
         {
             Id = alert.Id,
             VehicleId = alert.VehicleId,
+            VehicleTitle = $"Vehículo {alert.VehicleId.ToString()[..8]}",
+            VehicleSlug = null,
             TargetPrice = alert.TargetPrice,
+            CurrentPrice = alert.TargetPrice,
+            Currency = "DOP",
             Condition = alert.Condition.ToString(),
             IsActive = alert.IsActive,
             IsTriggered = alert.IsTriggered,
+            NotifyOnAnyChange = false,
             TriggeredAt = alert.TriggeredAt,
+            LastCheckedAt = alert.UpdatedAt,
+            LastNotifiedAt = alert.TriggeredAt,
             CreatedAt = alert.CreatedAt,
             UpdatedAt = alert.UpdatedAt
         };
@@ -266,13 +370,31 @@ public record PriceAlertDto
 {
     public Guid Id { get; init; }
     public Guid VehicleId { get; init; }
+    public string VehicleTitle { get; init; } = string.Empty;
+    public string? VehicleSlug { get; init; }
     public decimal TargetPrice { get; init; }
+    public decimal CurrentPrice { get; init; }
+    public string Currency { get; init; } = "DOP";
     public string Condition { get; init; } = string.Empty;
     public bool IsActive { get; init; }
     public bool IsTriggered { get; init; }
+    public bool NotifyOnAnyChange { get; init; }
     public DateTime? TriggeredAt { get; init; }
+    public DateTime? LastCheckedAt { get; init; }
+    public DateTime? LastNotifiedAt { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+}
+
+public record PriceChangeNotification
+{
+    public Guid VehicleId { get; init; }
+    public string VehicleTitle { get; init; } = string.Empty;
+    public string? VehicleSlug { get; init; }
+    public decimal OldPrice { get; init; }
+    public decimal NewPrice { get; init; }
+    public string Currency { get; init; } = "DOP";
+    public Guid UpdatedBy { get; init; }
 }
 
 #endregion

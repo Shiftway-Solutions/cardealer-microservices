@@ -127,22 +127,39 @@ export interface AlertStats {
 export async function getPriceAlerts(
   params: { isActive?: boolean; page?: number; pageSize?: number } = {}
 ): Promise<PaginatedResponse<PriceAlert>> {
-  const response = await apiClient.get<{
-    items: PriceAlert[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalItems: number;
-      totalPages: number;
+  const response = await apiClient.get('/api/pricealerts', { params });
+  const data = response.data as Record<string, unknown>;
+
+  // Handle both flat array and paginated response
+  if (Array.isArray(data)) {
+    const items = data as PriceAlert[];
+    return {
+      items,
+      pagination: {
+        page: 1,
+        pageSize: items.length || 10,
+        totalItems: items.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
-  }>('/api/pricealerts', { params });
+  }
+
+  const items = (data.items as PriceAlert[]) || [];
+  const pagination = (data.pagination as {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  }) || { page: 1, pageSize: items.length, totalItems: items.length, totalPages: 1 };
 
   return {
-    items: response.data.items,
+    items,
     pagination: {
-      ...response.data.pagination,
-      hasNextPage: response.data.pagination.page < response.data.pagination.totalPages,
-      hasPreviousPage: response.data.pagination.page > 1,
+      ...pagination,
+      hasNextPage: pagination.page < pagination.totalPages,
+      hasPreviousPage: pagination.page > 1,
     },
   };
 }
@@ -198,8 +215,9 @@ export async function deletePriceAlert(id: string): Promise<void> {
  * Calls /activate or /deactivate based on the current isActive state.
  * (Backend has no /toggle endpoint.)
  */
-export async function togglePriceAlert(id: string, currentIsActive: boolean): Promise<PriceAlert> {
-  const endpoint = currentIsActive ? 'deactivate' : 'activate';
+export async function togglePriceAlert(id: string, isActive: boolean): Promise<PriceAlert> {
+  // isActive = current state → call opposite endpoint
+  const endpoint = isActive ? 'deactivate' : 'activate';
   const response = await apiClient.post<PriceAlert>(`/api/pricealerts/${id}/${endpoint}`);
   return response.data;
 }
@@ -433,8 +451,20 @@ export async function runSavedSearch(_id: string): Promise<void> {
  * Get alert statistics for the user
  */
 export async function getAlertStats(): Promise<AlertStats> {
-  const response = await apiClient.get<AlertStats>('/api/alerts/stats');
-  return response.data;
+  try {
+    const response = await apiClient.get<AlertStats>('/api/pricealerts/stats');
+    return response.data;
+  } catch {
+    // Fallback: return zeros if stats endpoint not available
+    return {
+      totalPriceAlerts: 0,
+      activePriceAlerts: 0,
+      priceDropsThisMonth: 0,
+      totalSavedSearches: 0,
+      activeSavedSearches: 0,
+      newMatchesThisWeek: 0,
+    };
+  }
 }
 
 // ============================================================

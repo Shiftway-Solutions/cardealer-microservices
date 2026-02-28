@@ -56,10 +56,10 @@ export default function AlertsPage() {
   // Get alerts array from paginated response
   const alerts = alertsData?.items ?? [];
 
-  const handleToggleAlert = async (id: string) => {
+  const handleToggleAlert = async (alert: PriceAlert) => {
     try {
-      await toggleMutation.mutateAsync(id);
-      toast.success('Alerta actualizada');
+      await toggleMutation.mutateAsync({ id: alert.id, isActive: alert.isActive });
+      toast.success(alert.isActive ? 'Alerta desactivada' : 'Alerta activada');
     } catch {
       toast.error('Error al actualizar la alerta');
     }
@@ -83,7 +83,7 @@ export default function AlertsPage() {
       <div className="space-y-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Alertas de Precio</h1>
+            <h1 className="text-foreground text-2xl font-bold">Alertas de Precio</h1>
             <p className="text-muted-foreground">Recibe notificaciones cuando baje el precio</p>
           </div>
         </div>
@@ -118,14 +118,14 @@ export default function AlertsPage() {
       <div className="space-y-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Alertas de Precio</h1>
+            <h1 className="text-foreground text-2xl font-bold">Alertas de Precio</h1>
             <p className="text-muted-foreground">Recibe notificaciones cuando baje el precio</p>
           </div>
         </div>
         <Card className="border-red-200">
           <CardContent className="flex flex-col items-center py-12">
             <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
-            <p className="mb-4 text-muted-foreground">Error al cargar las alertas</p>
+            <p className="text-muted-foreground mb-4">Error al cargar las alertas</p>
             <Button onClick={() => refetch()} variant="outline">
               Reintentar
             </Button>
@@ -140,7 +140,7 @@ export default function AlertsPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Alertas de Precio</h1>
+          <h1 className="text-foreground text-2xl font-bold">Alertas de Precio</h1>
           <p className="text-muted-foreground">Recibe notificaciones cuando baje el precio</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90">
@@ -156,14 +156,14 @@ export default function AlertsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Bell className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Bell className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
                   {stats?.activePriceAlerts ?? activeAlerts.length}
                 </p>
-                <p className="text-sm text-muted-foreground">Activas</p>
+                <p className="text-muted-foreground text-sm">Activas</p>
               </div>
             </div>
           </CardContent>
@@ -178,7 +178,7 @@ export default function AlertsPage() {
                 <p className="text-2xl font-bold">
                   {stats?.priceDropsThisMonth ?? triggeredAlerts.length}
                 </p>
-                <p className="text-sm text-muted-foreground">Activadas</p>
+                <p className="text-muted-foreground text-sm">Activadas</p>
               </div>
             </div>
           </CardContent>
@@ -186,12 +186,12 @@ export default function AlertsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-muted p-2">
-                <TrendingDown className="h-5 w-5 text-muted-foreground" />
+              <div className="bg-muted rounded-lg p-2">
+                <TrendingDown className="text-muted-foreground h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats?.totalPriceAlerts ?? alerts.length}</p>
-                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-muted-foreground text-sm">Total</p>
               </div>
             </div>
           </CardContent>
@@ -213,13 +213,13 @@ export default function AlertsPage() {
                   className="flex flex-col justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-16 items-center justify-center rounded bg-muted">
-                      <Car className="h-6 w-6 text-muted-foreground" />
+                    <div className="bg-muted flex h-12 w-16 items-center justify-center rounded">
+                      <Car className="text-muted-foreground h-6 w-6" />
                     </div>
                     <div>
                       <Link
                         href={`/vehiculos/${alert.vehicleSlug ?? alert.vehicleId}`}
-                        className="font-medium hover:text-primary"
+                        className="hover:text-primary font-medium"
                       >
                         {alert.vehicleTitle}
                       </Link>
@@ -227,7 +227,7 @@ export default function AlertsPage() {
                         <span className="text-muted-foreground">
                           Actual: {formatPrice(alert.currentPrice)}
                         </span>
-                        <span className="font-medium text-primary">
+                        <span className="text-primary font-medium">
                           Objetivo: {formatPrice(alert.targetPrice)}
                         </span>
                       </div>
@@ -235,10 +235,10 @@ export default function AlertsPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Activa</span>
+                      <span className="text-muted-foreground text-sm">Activa</span>
                       <Switch
                         checked={alert.isActive}
-                        onCheckedChange={() => handleToggleAlert(alert.id)}
+                        onCheckedChange={() => handleToggleAlert(alert)}
                         disabled={toggleMutation.isPending}
                       />
                     </div>
@@ -259,7 +259,7 @@ export default function AlertsPage() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               <Bell className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p>No tienes alertas activas</p>
               <p className="mt-2 text-sm">
@@ -275,7 +275,7 @@ export default function AlertsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-primary" />
+              <Check className="text-primary h-5 w-5" />
               Alertas Activadas
             </CardTitle>
             <CardDescription>Estos vehículos alcanzaron tu precio objetivo</CardDescription>
@@ -285,11 +285,11 @@ export default function AlertsPage() {
               {triggeredAlerts.map(alert => (
                 <div
                   key={alert.id}
-                  className="flex flex-col justify-between gap-4 rounded-lg border border-primary bg-primary/10 p-4 sm:flex-row sm:items-center"
+                  className="border-primary bg-primary/10 flex flex-col justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-16 items-center justify-center rounded bg-card">
-                      <Car className="h-6 w-6 text-primary" />
+                    <div className="bg-card flex h-12 w-16 items-center justify-center rounded">
+                      <Car className="text-primary h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="font-medium">{alert.vehicleTitle}</h4>

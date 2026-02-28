@@ -1903,6 +1903,46 @@
       "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }]
     },
     {
+      "_comment": "PriceAlerts: stats endpoint (authenticated)",
+      "UpstreamPathTemplate": "/api/pricealerts/stats",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/pricealerts/stats",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "PriceAlerts: get alert for specific vehicle (authenticated)",
+      "UpstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "PriceAlerts: check-price internal endpoint (no auth - called by VehiclesSaleService)",
+      "UpstreamPathTemplate": "/api/pricealerts/check-price",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/pricealerts/check-price",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "alertservice", "Port": 8080 }]
+    },
+    {
       "UpstreamPathTemplate": "/api/pricealerts",
       "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
       "DownstreamPathTemplate": "/api/pricealerts",

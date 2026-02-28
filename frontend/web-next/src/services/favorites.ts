@@ -162,7 +162,12 @@ export const favoritesService = {
     vehicleId: string,
     request: UpdateFavoriteRequest
   ): Promise<FavoriteVehicle> {
-    const response = await apiClient.put<FavoriteVehicle>(`/api/favorites/${vehicleId}`, request);
+    // Map frontend field name to backend field name
+    const payload: Record<string, unknown> = {};
+    if (request.notes !== undefined) payload.notes = request.notes;
+    if (request.notifyOnPriceChange !== undefined)
+      payload.notifyPriceChange = request.notifyOnPriceChange;
+    const response = await apiClient.put<FavoriteVehicle>(`/api/favorites/${vehicleId}`, payload);
     return response.data;
   },
 

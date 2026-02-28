@@ -22,6 +22,7 @@ public class VehiclesController : ControllerBase
     private readonly ILogger<VehiclesController> _logger;
     private readonly ApplicationDbContext _context;
     private readonly IConfigurationServiceClient _configClient;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
@@ -29,7 +30,8 @@ public class VehiclesController : ControllerBase
         IEventPublisher eventPublisher,
         ILogger<VehiclesController> logger,
         ApplicationDbContext context,
-        IConfigurationServiceClient configClient)
+        IConfigurationServiceClient configClient,
+        IHttpClientFactory httpClientFactory)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
@@ -37,6 +39,7 @@ public class VehiclesController : ControllerBase
         _logger = logger;
         _context = context;
         _configClient = configClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -569,6 +572,9 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Track price change for alert notifications
+        var oldPrice = vehicle.Price;
+
         // Update only provided fields
         if (!string.IsNullOrEmpty(request.Title)) vehicle.Title = request.Title;
         if (request.Description != null) vehicle.Description = request.Description;
@@ -597,6 +603,39 @@ public class VehiclesController : ControllerBase
         await _vehicleRepository.UpdateAsync(vehicle);
 
         _logger.LogInformation("Vehicle updated: {VehicleId}", id);
+
+        // Notify AlertService if price changed
+        if (request.Price.HasValue && oldPrice != vehicle.Price)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var client = _httpClientFactory.CreateClient("AlertService");
+                    var slug = GenerateSlug(vehicle);
+                    var notification = new
+                    {
+                        vehicleId = vehicle.Id,
+                        vehicleTitle = vehicle.Title,
+                        vehicleSlug = slug,
+                        oldPrice,
+                        newPrice = vehicle.Price,
+                        currency = vehicle.Currency ?? "DOP",
+                        updatedBy = Guid.Empty
+                    };
+                    var response = await client.PostAsJsonAsync("/api/pricealerts/check-price", notification);
+                    _logger.LogInformation(
+                        "Price change notification sent for vehicle {VehicleId}: {OldPrice} → {NewPrice}, AlertService responded {StatusCode}",
+                        id, oldPrice, vehicle.Price, response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to notify AlertService about price change for vehicle {VehicleId}",
+                        id);
+                }
+            });
+        }
 
         return Ok(vehicle);
     }
