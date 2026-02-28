@@ -76,15 +76,15 @@ public static class ServiceCollectionExtensions
             .AddCheck<DatabaseHealthCheck>(
                 "database",
                 failureStatus: HealthStatus.Unhealthy,
-                tags: new[] { "ready" })
+                tags: new[] { "ready", "external" })
             .AddCheck<StorageHealthCheck>(
                 "storage",
                 failureStatus: HealthStatus.Degraded,
-                tags: new[] { "ready" })
+                tags: new[] { "ready", "external" })
             .AddDbContextCheck<ApplicationDbContext>(
                 "db-context",
                 failureStatus: HealthStatus.Unhealthy,
-                tags: new[] { "ready" });
+                tags: new[] { "ready", "external" });
 
         // Servicios de infraestructura adicionales
         services.AddSingleton<IFileValidator, FileValidator>();

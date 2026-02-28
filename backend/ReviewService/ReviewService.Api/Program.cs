@@ -108,7 +108,7 @@ builder.Services.AddCors(options =>
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ReviewDbContext>();
+    .AddDbContextCheck<ReviewDbContext>(tags: new[] { "ready", "external" });
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

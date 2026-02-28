@@ -204,8 +204,8 @@ builder.Services.AddAuthorization(options =>
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? "")
-    .AddDbContextCheck<KYCDbContext>();
+    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? "", tags: new[] { "ready", "external" })
+    .AddDbContextCheck<KYCDbContext>(tags: new[] { "ready", "external" });
 
 // CORS - Restricted to known origins (defense-in-depth)
 builder.Services.AddCors(options =>
