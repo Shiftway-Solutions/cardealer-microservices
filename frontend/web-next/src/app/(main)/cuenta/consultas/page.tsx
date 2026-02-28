@@ -58,7 +58,7 @@ export default function ConsultasPage() {
         </p>
       </div>
 
-      {/* Filter Tabs */}}
+      {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2">
         {[
           { key: 'all', label: 'Todas' },
