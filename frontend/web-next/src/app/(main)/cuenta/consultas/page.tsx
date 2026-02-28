@@ -7,6 +7,7 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,57 +37,17 @@ const statusConfig: Record<
 };
 
 export default function ConsultasPage() {
-  const [inquiries, setInquiries] = React.useState<ReceivedInquiry[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [filter, setFilter] = React.useState<string>('all');
 
-  React.useEffect(() => {
-    async function fetchInquiries() {
-      try {
-        setLoading(true);
-        const data = await getReceivedInquiries();
-        setInquiries(data ?? []);
-      } catch (err) {
-        console.error('Error fetching inquiries:', err);
-        setError('No se pudieron cargar las consultas.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchInquiries();
-  }, []);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['received-inquiries'],
+    queryFn: () => getReceivedInquiries(),
+    staleTime: 30_000, // 30 seconds
+  });
+  const inquiries: ReceivedInquiry[] = data ?? [];
 
   const filteredInquiries =
     filter === 'all' ? inquiries : inquiries.filter(i => i.status === filter);
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Consultas Recibidas</h1>
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-24 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[300px] items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-          <p className="text-muted-foreground mt-4">{error}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -97,7 +58,7 @@ export default function ConsultasPage() {
         </p>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs */}}
       <div className="flex flex-wrap gap-2">
         {[
           { key: 'all', label: 'Todas' },
@@ -117,7 +78,24 @@ export default function ConsultasPage() {
       </div>
 
       {/* Inquiries List */}
-      {filteredInquiries.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-24 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="flex min-h-[200px] items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="text-muted-foreground mx-auto h-12 w-12" />
+            <p className="text-muted-foreground mt-4">No se pudieron cargar las consultas.</p>
+          </div>
+        </div>
+      ) : filteredInquiries.length === 0 ? (
         <div className="flex min-h-[200px] items-center justify-center">
           <div className="text-center">
             <MessageSquare className="text-muted-foreground mx-auto h-12 w-12" />
