@@ -1256,6 +1256,17 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("VehiclesSaleService.Domain.Entities.VehicleViewHistory", b =>
+                {
+                    b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("VehiclesSaleService.Domain.Entities.Lead", b =>
                 {
                     b.HasOne("VehiclesSaleService.Domain.Entities.Vehicle", "Vehicle")

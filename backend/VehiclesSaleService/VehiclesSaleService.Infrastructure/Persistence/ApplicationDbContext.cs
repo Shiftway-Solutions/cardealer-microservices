@@ -22,6 +22,7 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<VehicleTrim> VehicleTrims => Set<VehicleTrim>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<VehicleViewHistory> VehicleViewHistories => Set<VehicleViewHistory>();
 
     // ========================================
     // HOMEPAGE SECTION ENTITIES
