@@ -23,7 +23,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 
 const string ServiceName = "AdminService";
-const string ServiceVersion = "1.0.0";
+const string ServiceVersion = "1.0.1"; // fix: valid appsettings.Production.json
 
 try
 {
