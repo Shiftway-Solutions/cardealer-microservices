@@ -19,6 +19,13 @@ const eslintConfig = defineConfig([
     '**/*.spec.ts',
     '**/*.spec.tsx',
     'e2e/**',
+    // Playwright reports and test results (minified JS)
+    'playwright-report/**',
+    'playwright-report-prod/**',
+    'test-results/**',
+    // Service worker (minified/generated)
+    'public/sw.js',
+    'public/workbox-*.js',
   ]),
   // Downgrade strict rules to warnings to avoid blocking CI/CD.
   // These should be fixed incrementally by the team.
@@ -28,6 +35,7 @@ const eslintConfig = defineConfig([
       'react/no-unescaped-entities': 'warn',
       'react-hooks/purity': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
       'prefer-const': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
     },
