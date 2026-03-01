@@ -2814,6 +2814,94 @@
       "DownstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 8080 }]
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/staff/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "staffservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/staff/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/staff/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "staffservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/permissions/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/permissions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/permissions",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/permissions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/role-permissions/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/role-permissions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "roleservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+
+    {
+      "UpstreamPathTemplate": "/api/audit/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "auditservice", "Port": 8080 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/audit/{everything}",
+      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/audit/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "auditservice", "Port": 8080 }],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
     }
   ],
   "GlobalConfiguration": {
