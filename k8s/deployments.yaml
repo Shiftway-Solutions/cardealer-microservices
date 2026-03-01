@@ -4028,7 +4028,7 @@ metadata:
     app: staffservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1
   selector:
     matchLabels:
       app: staffservice
@@ -4098,7 +4098,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /health
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
