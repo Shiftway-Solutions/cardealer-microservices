@@ -253,3 +253,4 @@ public class SystemAlert
 
 **Estado:** 🚧 EN DESARROLLO - No desplegado en producción  
 **Versión:** 0.1.0
+
