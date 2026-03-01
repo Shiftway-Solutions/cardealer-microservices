@@ -2229,7 +2229,7 @@ data:
         },
         {
           "UpstreamPathTemplate": "/api/admin/{everything}",
-          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+          "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
           "DownstreamPathTemplate": "/api/admin/{everything}",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8080 }],
