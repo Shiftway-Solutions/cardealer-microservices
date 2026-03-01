@@ -1,3 +1,4 @@
+// AuthService v2.1 - Device fingerprinting + SessionId JWT claim
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using AuthService.Infrastructure.Extensions;
