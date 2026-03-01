@@ -173,9 +173,7 @@ export default function EstadisticasPage() {
                 <p className="text-foreground text-3xl font-bold">
                   {averageRating > 0 ? averageRating.toFixed(1) : 'N/A'}
                 </p>
-                {averageRating > 0 && (
-                  <span className="text-muted-foreground text-sm">/ 5.0</span>
-                )}
+                {averageRating > 0 && <span className="text-muted-foreground text-sm">/ 5.0</span>}
               </div>
             )}
             <p className="text-muted-foreground mt-1 text-sm">
@@ -203,9 +201,7 @@ export default function EstadisticasPage() {
               </p>
             )}
             <p className="text-muted-foreground mt-1 text-sm">
-              {conversionRate
-                ? 'Consultas por cada 100 vistas'
-                : 'Necesitas vistas para calcular'}
+              {conversionRate ? 'Consultas por cada 100 vistas' : 'Necesitas vistas para calcular'}
             </p>
           </CardContent>
         </Card>

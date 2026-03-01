@@ -315,10 +315,13 @@ export default function MyVehiclesPage() {
   // Actions
   const handlePause = async (id: string) => {
     // Optimistic update
-    queryClient.setQueryData(['user-vehicles'], (old: { vehicles: UserVehicleDto[] } | undefined) => ({
-      ...old,
-      vehicles: old?.vehicles?.map(v => v.id === id ? { ...v, status: 'paused' } : v) ?? [],
-    }));
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.map(v => (v.id === id ? { ...v, status: 'paused' } : v)) ?? [],
+      })
+    );
     try {
       await vehicleService.unpublish(id, 'Pausado por el vendedor');
       toast.success('Vehículo pausado');
@@ -329,10 +332,13 @@ export default function MyVehiclesPage() {
   };
 
   const handleActivate = async (id: string) => {
-    queryClient.setQueryData(['user-vehicles'], (old: { vehicles: UserVehicleDto[] } | undefined) => ({
-      ...old,
-      vehicles: old?.vehicles?.map(v => v.id === id ? { ...v, status: 'pending' } : v) ?? [],
-    }));
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.map(v => (v.id === id ? { ...v, status: 'pending' } : v)) ?? [],
+      })
+    );
     try {
       await vehicleService.publish(id);
       toast.success('Vehículo enviado a revisión nuevamente');
@@ -346,10 +352,13 @@ export default function MyVehiclesPage() {
     if (!confirm('¿Estás seguro de eliminar este vehículo? Esta acción no se puede deshacer.')) {
       return;
     }
-    queryClient.setQueryData(['user-vehicles'], (old: { vehicles: UserVehicleDto[] } | undefined) => ({
-      ...old,
-      vehicles: old?.vehicles?.filter(v => v.id !== id) ?? [],
-    }));
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.filter(v => v.id !== id) ?? [],
+      })
+    );
     try {
       await vehicleService.delete(id);
       toast.success('Vehículo eliminado');
@@ -428,16 +437,16 @@ export default function MyVehiclesPage() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse overflow-hidden rounded-xl border bg-card">
+            <div key={i} className="bg-card animate-pulse overflow-hidden rounded-xl border">
               <div className="flex flex-col sm:flex-row">
-                <div className="bg-muted h-40 w-full sm:w-48 flex-shrink-0" />
-                <div className="flex-1 p-4 space-y-3">
-                  <div className="h-4 w-20 rounded bg-muted" />
-                  <div className="h-5 w-3/4 rounded bg-muted" />
-                  <div className="h-6 w-32 rounded bg-muted" />
+                <div className="bg-muted h-40 w-full flex-shrink-0 sm:w-48" />
+                <div className="flex-1 space-y-3 p-4">
+                  <div className="bg-muted h-4 w-20 rounded" />
+                  <div className="bg-muted h-5 w-3/4 rounded" />
+                  <div className="bg-muted h-6 w-32 rounded" />
                   <div className="flex gap-4">
-                    <div className="h-4 w-20 rounded bg-muted" />
-                    <div className="h-4 w-24 rounded bg-muted" />
+                    <div className="bg-muted h-4 w-20 rounded" />
+                    <div className="bg-muted h-4 w-24 rounded" />
                   </div>
                 </div>
               </div>

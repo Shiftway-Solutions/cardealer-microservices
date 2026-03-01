@@ -515,7 +515,11 @@ function transformBackendSession(session: BackendActiveSession): Session {
   // Parse device type from device field ("Desktop", "Mobile", "Tablet")
   const deviceLower = device.toLowerCase();
   let deviceType: Session['deviceType'] = 'unknown';
-  if (deviceLower.includes('mobile') || deviceLower.includes('iphone') || deviceLower.includes('android')) {
+  if (
+    deviceLower.includes('mobile') ||
+    deviceLower.includes('iphone') ||
+    deviceLower.includes('android')
+  ) {
     deviceType = 'mobile';
   } else if (deviceLower.includes('tablet') || deviceLower.includes('ipad')) {
     deviceType = 'tablet';
@@ -540,7 +544,8 @@ function transformBackendSession(session: BackendActiveSession): Session {
   } else if (browserDisplay !== 'Navegador desconocido') {
     deviceName = browserDisplay;
   } else {
-    const deviceLabel = deviceType === 'mobile' ? 'Móvil' : deviceType === 'tablet' ? 'Tablet' : 'Escritorio';
+    const deviceLabel =
+      deviceType === 'mobile' ? 'Móvil' : deviceType === 'tablet' ? 'Tablet' : 'Escritorio';
     deviceName = `Dispositivo desconocido (${deviceLabel})`;
   }
 

@@ -72,26 +72,26 @@ function DashboardLoadingSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
       {/* Welcome header skeleton */}
-      <div className="rounded-2xl bg-muted h-32" />
+      <div className="bg-muted h-32 rounded-2xl" />
       {/* Metric cards skeleton */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-24 rounded-xl bg-muted" />
+          <div key={i} className="bg-muted h-24 rounded-xl" />
         ))}
       </div>
       {/* List section skeleton */}
-      <div className="rounded-xl border bg-card p-4 space-y-3">
-        <div className="h-5 w-40 rounded bg-muted" />
+      <div className="bg-card space-y-3 rounded-xl border p-4">
+        <div className="bg-muted h-5 w-40 rounded" />
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-12 rounded-lg bg-muted" />
+          <div key={i} className="bg-muted h-12 rounded-lg" />
         ))}
       </div>
       {/* Quick actions skeleton */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="h-5 w-32 rounded bg-muted mb-3" />
+      <div className="bg-card rounded-xl border p-4">
+        <div className="bg-muted mb-3 h-5 w-32 rounded" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-14 rounded-xl bg-muted" />
+            <div key={i} className="bg-muted h-14 rounded-xl" />
           ))}
         </div>
       </div>
