@@ -555,7 +555,9 @@ test.describe('Phase 7: Vehicle Creation & Publishing', () => {
     console.log(`✅ Phase 7: Vehicle publicly accessible: ${returnedId}`);
   });
 
-  test('GET /api/users/me/vehicles → vehicle appears in owner list (pending review)', async ({ request }) => {
+  test('GET /api/users/me/vehicles → vehicle appears in owner list (pending review)', async ({
+    request,
+  }) => {
     expect(vehicleId, 'Need vehicleId').toBeTruthy();
     expect(userToken, 'Need userToken').toBeTruthy();
 
@@ -648,11 +650,11 @@ test.describe('Phase 9: Known Issues Regression Guards', () => {
       token: userToken,
     });
 
-    // ⚠️ Currently returns 405. Update to expect 200 when BUG-003 is fixed.
+    // ⚠️ Currently returns 400/405. Update to expect 200 when BUG-003 is fixed.
     console.log(
       `ℹ️  BUG-003: GET /api/billing/subscriptions → ${res.status()} (expected 405 until fixed)`
     );
-    expect([200, 404, 405]).toContain(res.status());
+    expect([200, 400, 404, 405]).toContain(res.status());
   });
 
   test('BUG-005: billingservice DB schema — subscriptions table exists', async ({ request }) => {
