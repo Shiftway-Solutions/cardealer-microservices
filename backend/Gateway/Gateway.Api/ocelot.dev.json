@@ -4214,6 +4214,55 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }],
       "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    // ========================
+    // SupportAgent Routes
+    // ========================
+
+    // SupportAgent - Send Message (Public, rate limited)
+    {
+      "UpstreamPathTemplate": "/api/support/message",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/support/message",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 80 }],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 30
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 60000
+      }
+    },
+    // SupportAgent - Session History (Public)
+    {
+      "UpstreamPathTemplate": "/api/support/session/{sessionId}",
+      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/support/session/{sessionId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 80 }]
+    },
+    // SupportAgent - Status (Public)
+    {
+      "UpstreamPathTemplate": "/api/support/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/support/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 80 }]
+    },
+    // SupportAgent - Health (Public)
+    {
+      "UpstreamPathTemplate": "/api/support/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 80 }]
     }
   ],
   "SwaggerEndPoints": [

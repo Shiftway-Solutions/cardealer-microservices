@@ -637,3 +637,33 @@ spec:
       targetPort: 8080
   selector:
     app: advertisingservice
+
+---
+# SearchAgent
+apiVersion: v1
+kind: Service
+metadata:
+  name: searchagent
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: searchagent
+
+---
+# SupportAgent
+apiVersion: v1
+kind: Service
+metadata:
+  name: supportagent
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: supportagent

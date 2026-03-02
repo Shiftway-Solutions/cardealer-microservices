@@ -4396,3 +4396,203 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+
+---
+# =============================================================================
+# SEARCH AGENT (AI-powered vehicle search with Claude Haiku 4.5)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searchagent
+  namespace: okla
+  labels:
+    app: searchagent
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: searchagent
+  template:
+    metadata:
+      labels:
+        app: searchagent
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: searchagent
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: searchagent
+          image: ghcr.io/gregorymorenoiem/searchagent:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: Claude__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: CLAUDE_API_KEY
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: searchagent-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+# =============================================================================
+# SUPPORT AGENT (AI Support & Buyer Protection with Claude Haiku 4.5)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supportagent
+  namespace: okla
+  labels:
+    app: supportagent
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supportagent
+  template:
+    metadata:
+      labels:
+        app: supportagent
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: supportagent
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: supportagent
+          image: ghcr.io/gregorymorenoiem/supportagent:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: Claude__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: CLAUDE_API_KEY
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: supportagent-db-secret
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: rabbitmq-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
