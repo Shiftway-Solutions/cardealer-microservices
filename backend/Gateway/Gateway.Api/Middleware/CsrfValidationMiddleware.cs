@@ -9,7 +9,8 @@ namespace Gateway.Api.Middleware;
 /// Server-side CSRF validation middleware (Double Submit Cookie pattern).
 /// Validates that the X-CSRF-Token header matches the csrf_token cookie
 /// for all state-changing HTTP methods (POST, PUT, PATCH, DELETE).
-/// 
+/// AI Agent paths (/api/search-agent/, /api/support/, /api/reco-agent/) are exempt
+/// because they use JWT Bearer auth (no browser cookies).
 /// OWASP Reference: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
 /// </summary>
 public class CsrfValidationMiddleware
