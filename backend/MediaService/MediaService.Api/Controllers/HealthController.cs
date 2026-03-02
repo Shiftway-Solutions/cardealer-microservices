@@ -18,7 +18,10 @@ public class HealthController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var report = await _healthCheckService.CheckHealthAsync();
+        // Exclude 'external' tagged checks (DB, storage) per project standards:
+        // only lightweight checks run on /health (liveness)
+        var report = await _healthCheckService.CheckHealthAsync(
+            check => !check.Tags.Contains("external"));
         return report.Status == HealthStatus.Healthy ? Ok(report) : StatusCode(503, report);
     }
 }
