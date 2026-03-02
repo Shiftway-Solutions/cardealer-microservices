@@ -273,10 +273,10 @@ test.describe('Phase 4: Dealer Profile', () => {
 // PHASE 5 — KYC Submission
 // ===========================================================================
 test.describe('Phase 5: KYC Submission', () => {
-  test('POST /api/KYCProfiles/draft → 200 or 409 (already exists)', async ({ request }) => {
+  test('POST /api/kyc/kycprofiles/draft → 200 or 409 (already exists)', async ({ request }) => {
     expect(userToken, 'Need valid userToken').toBeTruthy();
 
-    const res = await gw(request, 'POST', '/api/KYCProfiles/draft', {
+    const res = await gw(request, 'POST', '/api/kyc/kycprofiles/draft', {
       token: userToken,
       body: { userId },
     });
@@ -296,7 +296,7 @@ test.describe('Phase 5: KYC Submission', () => {
 
     const idempotencyKey = crypto.randomUUID();
 
-    const res = await gw(request, 'POST', '/api/KYCProfiles', {
+    const res = await gw(request, 'POST', '/api/kyc/kycprofiles', {
       token: userToken,
       extra: { 'X-Idempotency-Key': idempotencyKey },
       body: {
@@ -324,10 +324,10 @@ test.describe('Phase 5: KYC Submission', () => {
 
     if (res.status() === 409) {
       // KYC already exists — look up by userId to get kycId
-      const getRes = await gw(request, 'GET', `/api/KYCProfiles/user/${userId}`, {
+      const getRes = await gw(request, 'GET', `/api/kyc/kycprofiles/user/${userId}`, {
         token: userToken,
       });
-      expect(getRes.status(), 'GET /api/KYCProfiles/user/:id must return 200 when KYC exists').toBe(
+      expect(getRes.status(), 'GET /api/kyc/kycprofiles/user/:id must return 200 when KYC exists').toBe(
         200
       );
       const getData = unwrap((await getRes.json()) as Record<string, unknown>);
@@ -346,7 +346,7 @@ test.describe('Phase 5: KYC Submission', () => {
   test('POST /api/KYCProfiles/:id/submit → 200, status UnderReview (4)', async ({ request }) => {
     expect(kycId, 'Need kycId from previous test').toBeTruthy();
 
-    const res = await gw(request, 'POST', `/api/KYCProfiles/${kycId}/submit`, {
+    const res = await gw(request, 'POST', `/api/kyc/kycprofiles/${kycId}/submit`, {
       token: userToken,
     });
 
@@ -400,7 +400,7 @@ test.describe('Phase 6: Admin KYC Approval', () => {
     expect(kycId, 'Need kycId from Phase 5').toBeTruthy();
     expect(adminToken, 'Need adminToken from previous test').toBeTruthy();
 
-    const res = await gw(request, 'POST', `/api/KYCProfiles/${kycId}/approve`, {
+    const res = await gw(request, 'POST', `/api/kyc/kycprofiles/${kycId}/approve`, {
       token: adminToken,
       body: {
         notes: 'Approved via automated E2E audit',
@@ -414,7 +414,7 @@ test.describe('Phase 6: Admin KYC Approval', () => {
 
     if (res.status() === 400) {
       // Verify KYC is already in a terminal approved state
-      const checkRes = await gw(request, 'GET', `/api/KYCProfiles/user/${userId}`, {
+      const checkRes = await gw(request, 'GET', `/api/kyc/kycprofiles/user/${userId}`, {
         token: adminToken,
       });
       if (checkRes.status() === 200) {
