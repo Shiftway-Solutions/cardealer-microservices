@@ -858,7 +858,7 @@
       }
     },
     {
-      "_comment": "Public: GetBySlug (AllowAnonymous) \u2013 must be before catch-all",
+      "_comment": "Public: GetBySlug (AllowAnonymous) – must be before catch-all",
       "UpstreamPathTemplate": "/api/vehicles/slug/{slug}",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -5167,12 +5167,6 @@
         "AuthenticationProviderKey": "Bearer"
       }
     },
-
-    // ========================
-    // SearchAgent Routes
-    // ========================
-
-    // SearchAgent - AI-powered vehicle search (Public, no auth)
     {
       "UpstreamPathTemplate": "/api/search-agent/search",
       "UpstreamHttpMethod": [
@@ -5193,8 +5187,6 @@
         "TimeoutValue": 30000
       }
     },
-
-    // SearchAgent - Status (Public)
     {
       "UpstreamPathTemplate": "/api/search-agent/status",
       "UpstreamHttpMethod": [
@@ -5209,8 +5201,6 @@
         }
       ]
     },
-
-    // SearchAgent - Health check
     {
       "UpstreamPathTemplate": "/api/search-agent/health",
       "UpstreamHttpMethod": [
@@ -5225,8 +5215,6 @@
         }
       ]
     },
-
-    // SearchAgent - Config (Admin only)
     {
       "UpstreamPathTemplate": "/api/search-agent/config",
       "UpstreamHttpMethod": [
@@ -5246,12 +5234,6 @@
         "AuthenticationProviderKey": "Bearer"
       }
     },
-
-    // ========================
-    // RecoAgent Routes
-    // ========================
-
-    // RecoAgent - AI-powered vehicle recommendations (requires auth)
     {
       "UpstreamPathTemplate": "/api/reco-agent/recommend",
       "UpstreamHttpMethod": [
@@ -5275,8 +5257,6 @@
         "TimeoutValue": 45000
       }
     },
-
-    // RecoAgent - Record feedback (requires auth)
     {
       "UpstreamPathTemplate": "/api/reco-agent/feedback",
       "UpstreamHttpMethod": [
@@ -5295,8 +5275,6 @@
         "AuthenticationProviderKey": "Bearer"
       }
     },
-
-    // RecoAgent - Status (Public)
     {
       "UpstreamPathTemplate": "/api/reco-agent/status",
       "UpstreamHttpMethod": [
@@ -5311,8 +5289,6 @@
         }
       ]
     },
-
-    // RecoAgent - Health check
     {
       "UpstreamPathTemplate": "/api/reco-agent/health",
       "UpstreamHttpMethod": [
@@ -5327,8 +5303,6 @@
         }
       ]
     },
-
-    // RecoAgent - Config (Admin only)
     {
       "UpstreamPathTemplate": "/api/reco-agent/config",
       "UpstreamHttpMethod": [
@@ -5348,12 +5322,6 @@
         "AuthenticationProviderKey": "Bearer"
       }
     },
-
-    // ========================
-    // SupportAgent Routes
-    // ========================
-
-    // SupportAgent - Send Message (Public, rate limited)
     {
       "UpstreamPathTemplate": "/api/support/message",
       "UpstreamHttpMethod": [
@@ -5381,8 +5349,6 @@
         "TimeoutValue": 60000
       }
     },
-
-    // SupportAgent - Session History (Public)
     {
       "UpstreamPathTemplate": "/api/support/session/{sessionId}",
       "UpstreamHttpMethod": [
@@ -5398,8 +5364,6 @@
         }
       ]
     },
-
-    // SupportAgent - Status (Public)
     {
       "UpstreamPathTemplate": "/api/support/status",
       "UpstreamHttpMethod": [
@@ -5414,8 +5378,6 @@
         }
       ]
     },
-
-    // SupportAgent - Health (Public)
     {
       "UpstreamPathTemplate": "/api/support/health",
       "UpstreamHttpMethod": [
@@ -5432,22 +5394,34 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/health",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ]
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/upload",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/upload",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 30,
@@ -5456,11 +5430,16 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/status",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -5470,11 +5449,16 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/result",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -5484,13 +5468,20 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/retry",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/retry",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -5499,21 +5490,33 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/cancel",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/viewer/{vehicleId}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/vehicle/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "video360service", "Port": 8080 }
+        {
+          "Host": "video360service",
+          "Port": 8080
+        }
       ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,

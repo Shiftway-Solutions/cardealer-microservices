@@ -1821,7 +1821,7 @@ data:
           }
         },
         {
-          "_comment": "Public: GetBySlug (AllowAnonymous) \u2013 must be before catch-all",
+          "_comment": "Public: GetBySlug (AllowAnonymous) – must be before catch-all",
           "UpstreamPathTemplate": "/api/vehicles/slug/{slug}",
           "UpstreamHttpMethod": [
             "OPTIONS",
@@ -6128,6 +6128,363 @@ data:
           ],
           "AuthenticationOptions": {
             "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/search-agent/search",
+          "UpstreamHttpMethod": [
+            "POST",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/search-agent/search",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "searchagent",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/search-agent/status",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/search-agent/status",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "searchagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/search-agent/health",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/health",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "searchagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/search-agent/config",
+          "UpstreamHttpMethod": [
+            "GET",
+            "PUT",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/search-agent/config",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "searchagent",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/reco-agent/recommend",
+          "UpstreamHttpMethod": [
+            "POST",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/reco-agent/recommend",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "recoagent",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 45000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/reco-agent/feedback",
+          "UpstreamHttpMethod": [
+            "POST",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/reco-agent/feedback",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "recoagent",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/reco-agent/status",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/reco-agent/status",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "recoagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/reco-agent/health",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/health",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "recoagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/reco-agent/config",
+          "UpstreamHttpMethod": [
+            "GET",
+            "PUT",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/reco-agent/config",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "recoagent",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/support/message",
+          "UpstreamHttpMethod": [
+            "POST",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/support/message",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "supportagent",
+              "Port": 8080
+            }
+          ],
+          "RateLimitOptions": {
+            "ClientWhitelist": [],
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "PeriodTimespan": 1,
+            "Limit": 30
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 60000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/support/session/{sessionId}",
+          "UpstreamHttpMethod": [
+            "GET",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/support/session/{sessionId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "supportagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/support/status",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/support/status",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "supportagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/support/health",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/health",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "supportagent",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/health",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/health",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ]
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/jobs/upload",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/video360/jobs/upload",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30,
+            "TimeoutValue": 300000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/status",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/result",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/retry",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/retry",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 60000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/cancel",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/cancel",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/vehicle360/viewer/{vehicleId}",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/video360/vehicle/{vehicleId}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "video360service",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
           }
         }
       ],
