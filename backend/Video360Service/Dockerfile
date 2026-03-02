@@ -18,20 +18,22 @@ ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
     NUGET_XMLDOC_MODE=skip \
     DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 
-# Copy project files
-COPY ["Video360Service.Api/Video360Service.Api.csproj", "Video360Service.Api/"]
-COPY ["Video360Service.Application/Video360Service.Application.csproj", "Video360Service.Application/"]
-COPY ["Video360Service.Domain/Video360Service.Domain.csproj", "Video360Service.Domain/"]
-COPY ["Video360Service.Infrastructure/Video360Service.Infrastructure.csproj", "Video360Service.Infrastructure/"]
+# Copy project files (paths relative to ./backend build context)
+COPY ["Video360Service/Video360Service.Api/Video360Service.Api.csproj", "Video360Service/Video360Service.Api/"]
+COPY ["Video360Service/Video360Service.Application/Video360Service.Application.csproj", "Video360Service/Video360Service.Application/"]
+COPY ["Video360Service/Video360Service.Domain/Video360Service.Domain.csproj", "Video360Service/Video360Service.Domain/"]
+COPY ["Video360Service/Video360Service.Infrastructure/Video360Service.Infrastructure.csproj", "Video360Service/Video360Service.Infrastructure/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 
 # Restore dependencies
-RUN dotnet restore "Video360Service.Api/Video360Service.Api.csproj"
+RUN dotnet restore "Video360Service/Video360Service.Api/Video360Service.Api.csproj"
 
 # Copy source code
 COPY . .
 
 # Build
-WORKDIR "/src/Video360Service.Api"
+WORKDIR "/src/Video360Service/Video360Service.Api"
 RUN dotnet build "Video360Service.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
