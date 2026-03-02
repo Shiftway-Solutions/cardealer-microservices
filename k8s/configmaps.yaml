@@ -648,6 +648,38 @@ data:
           "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
         },
         {
+          "UpstreamPathTemplate": "/api/search-agent/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/search-agent/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/search-agent",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/search-agent",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/support/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/support/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
+          "UpstreamPathTemplate": "/api/support",
+          "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
+          "DownstreamPathTemplate": "/api/support",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 8080 }],
+          "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+        },
+        {
           "UpstreamPathTemplate": "/api/payments/{everything}",
           "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
           "DownstreamPathTemplate": "/api/payments/{everything}",

@@ -71,6 +71,7 @@ jobs:
       leadscoringservice: ${{ steps.filter.outputs.leadscoringservice }}
       backgroundremovalservice: ${{ steps.filter.outputs.backgroundremovalservice }}
       vehicle360processingservice: ${{ steps.filter.outputs.vehicle360processingservice }}
+      video360service: ${{ steps.filter.outputs.video360service }}
       # Infrastructure services
       cacheservice: ${{ steps.filter.outputs.cacheservice }}
       messagebusservice: ${{ steps.filter.outputs.messagebusservice }}
@@ -216,6 +217,9 @@ jobs:
             vehicle360processingservice:
               - 'backend/Vehicle360ProcessingService/**'
               - 'backend/_Shared/**'
+            video360service:
+              - 'backend/Video360Service/**'
+              - 'backend/_Shared/**'
             # Infrastructure services
             cacheservice:
               - 'backend/CacheService/**'
@@ -325,6 +329,7 @@ jobs:
           echo "| LeadScoringService | ${{ steps.filter.outputs.leadscoringservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| BackgroundRemovalService | ${{ steps.filter.outputs.backgroundremovalservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vehicle360ProcessingService | ${{ steps.filter.outputs.vehicle360processingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ steps.filter.outputs.video360service }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CacheService | ${{ steps.filter.outputs.cacheservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MessageBusService | ${{ steps.filter.outputs.messagebusservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ConfigurationService | ${{ steps.filter.outputs.configurationservice }} |" >> $GITHUB_STEP_SUMMARY
@@ -712,6 +717,17 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  video360service:
+    name: 🎬 Video360Service
+    needs: detect-changes
+    if: needs.detect-changes.outputs.video360service == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: video360service
+      service-path: backend/Video360Service
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   # ============================================
   # INFRASTRUCTURE SERVICES
   # ============================================
@@ -958,6 +974,7 @@ jobs:
       - leadscoringservice
       - backgroundremovalservice
       - vehicle360processingservice
+      - video360service
       # Infrastructure
       - cacheservice
       - messagebusservice
@@ -1084,6 +1101,7 @@ jobs:
       - leadscoringservice
       - backgroundremovalservice
       - vehicle360processingservice
+      - video360service
       # Infrastructure
       - cacheservice
       - messagebusservice
@@ -1150,6 +1168,7 @@ jobs:
           echo "| LeadScoringService | ${{ needs.leadscoringservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| BackgroundRemovalService | ${{ needs.backgroundremovalservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vehicle360ProcessingService | ${{ needs.vehicle360processingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ needs.video360service.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CacheService | ${{ needs.cacheservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MessageBusService | ${{ needs.messagebusservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ConfigurationService | ${{ needs.configurationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
