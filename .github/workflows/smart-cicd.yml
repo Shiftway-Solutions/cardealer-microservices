@@ -84,6 +84,10 @@ jobs:
       dataprotectionservice: ${{ steps.filter.outputs.dataprotectionservice }}
       # Advertising
       advertisingservice: ${{ steps.filter.outputs.advertisingservice }}
+      # Search Agent (AI search)
+      searchagent: ${{ steps.filter.outputs.searchagent }}
+      # Recommendation Agent (AI recommendations)
+      recoagent: ${{ steps.filter.outputs.recoagent }}
       # Chatbot (MLOps pipeline)
       chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
       llm-server: ${{ steps.filter.outputs.llm-server }}
@@ -243,6 +247,14 @@ jobs:
             advertisingservice:
               - 'backend/AdvertisingService/**'
               - 'backend/_Shared/**'
+            # Search Agent (AI search)
+            searchagent:
+              - 'backend/SearchAgent/**'
+              - 'backend/_Shared/**'
+            # Recommendation Agent (AI recommendations)
+            recoagent:
+              - 'backend/RecoAgent/**'
+              - 'backend/_Shared/**'
             # Chatbot
             chatbotservice:
               - 'backend/ChatbotService/ChatbotService.Api/**'
@@ -317,6 +329,8 @@ jobs:
           echo "| IntegrationService | ${{ steps.filter.outputs.integrationservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ steps.filter.outputs.dataprotectionservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ steps.filter.outputs.advertisingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ steps.filter.outputs.searchagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ steps.filter.outputs.recoagent }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
@@ -814,6 +828,32 @@ jobs:
     secrets: inherit
 
   # ============================================
+  # SEARCH AGENT (AI-powered search)
+  # ============================================
+
+  searchagent:
+    name: 🔍 SearchAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.searchagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: searchagent
+      service-path: backend/SearchAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  recoagent:
+    name: 🎯 RecoAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.recoagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: recoagent
+      service-path: backend/RecoAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
   # CHATBOT (MLOps — dedicated pipeline)
   # ============================================
 
@@ -913,6 +953,10 @@ jobs:
       - dataprotectionservice
       # Advertising
       - advertisingservice
+      # Search Agent
+      - searchagent
+      # Recommendation Agent
+      - recoagent
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -1033,6 +1077,10 @@ jobs:
       - dataprotectionservice
       # Advertising
       - advertisingservice
+      # Search Agent
+      - searchagent
+      # Recommendation Agent
+      - recoagent
       # Chatbot + Gateway + Frontend
       - chatbotservice
       - gateway
@@ -1090,6 +1138,8 @@ jobs:
           echo "| IntegrationService | ${{ needs.integrationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| DataProtectionService | ${{ needs.dataprotectionservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AdvertisingService | ${{ needs.advertisingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ needs.searchagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ needs.recoagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

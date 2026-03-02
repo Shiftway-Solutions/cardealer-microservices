@@ -4122,6 +4122,98 @@
       "DownstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "advertisingservice", "Port": 80 }]
+    },
+
+    // ========================
+    // SearchAgent Routes
+    // ========================
+
+    // SearchAgent - AI-powered vehicle search (Public, no auth)
+    {
+      "UpstreamPathTemplate": "/api/search-agent/search",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/search-agent/search",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    // SearchAgent - Status/health (Public)
+    {
+      "UpstreamPathTemplate": "/api/search-agent/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/search-agent/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }]
+    },
+    // SearchAgent - Health check
+    {
+      "UpstreamPathTemplate": "/api/search-agent/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }]
+    },
+    // SearchAgent - Config (Admin only)
+    {
+      "UpstreamPathTemplate": "/api/search-agent/config",
+      "UpstreamHttpMethod": ["GET", "PUT", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/search-agent/config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "searchagent", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+
+    // ========================
+    // RecoAgent Routes
+    // ========================
+
+    // RecoAgent - AI-powered vehicle recommendations (requires auth)
+    {
+      "UpstreamPathTemplate": "/api/reco-agent/recommend",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/reco-agent/recommend",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 10, "TimeoutValue": 45000 }
+    },
+    // RecoAgent - Record feedback (requires auth)
+    {
+      "UpstreamPathTemplate": "/api/reco-agent/feedback",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/reco-agent/feedback",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    // RecoAgent - Status (Public)
+    {
+      "UpstreamPathTemplate": "/api/reco-agent/status",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/reco-agent/status",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }]
+    },
+    // RecoAgent - Health check
+    {
+      "UpstreamPathTemplate": "/api/reco-agent/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }]
+    },
+    // RecoAgent - Config (Admin only)
+    {
+      "UpstreamPathTemplate": "/api/reco-agent/config",
+      "UpstreamHttpMethod": ["GET", "PUT", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/reco-agent/config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "recoagent", "Port": 8080 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     }
   ],
   "SwaggerEndPoints": [
