@@ -27,7 +27,33 @@ public class LlmDetectionResult
 
     /// <summary>Quick reply options suggested by the model for the UI.</summary>
     public List<string>? QuickReplies { get; set; }
-}
+    // ═══════════════════════════════════════════════════════════════
+    // DealerChatAgent — Intent Scoring & Classification
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>Intent Score 1-10 calculated by the DealerChatAgent per turn.</summary>
+    public int IntentScore { get; set; } = 1;
+
+    /// <summary>Classification: curioso, prospecto_frio, prospecto_tibio, comprador_inminente</summary>
+    public string Clasificacion { get; set; } = "curioso";
+
+    /// <summary>Active module: qa, cierre, handoff</summary>
+    public string ModuloActivo { get; set; } = "qa";
+
+    /// <summary>Vehicle ID the user is interested in</summary>
+    public string? VehiculoInteresId { get; set; }
+
+    /// <summary>Whether handoff to human was triggered</summary>
+    public bool HandoffActivado { get; set; }
+
+    /// <summary>Reason for handoff</summary>
+    public string? RazonHandoff { get; set; }
+
+    /// <summary>Topics discussed: precio, financiamiento, disponibilidad, etc.</summary>
+    public List<string> TemasConsulta { get; set; } = new();
+
+    /// <summary>Appointment proposal from the agent</summary>
+    public object? CitaPropuesta { get; set; }}
 
 /// <summary>
 /// Señales de lead detectadas por el modelo LLM.

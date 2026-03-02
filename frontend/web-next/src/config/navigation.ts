@@ -39,6 +39,7 @@ import {
   ScrollText,
   Wrench,
   CalendarDays,
+  Brain,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -230,6 +231,7 @@ export const ADMIN_SYSTEM_NAVIGATION: NavItem[] = [
   { href: '/admin/equipo', label: 'Equipo', icon: UsersRound },
   { href: '/admin/roles', label: 'Roles y Permisos', icon: Shield },
   { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
+  { href: '/admin/search-agent', label: 'SearchAgent IA', icon: Brain },
   { href: '/admin/logs', label: 'Logs del Sistema', icon: ScrollText },
   { href: '/admin/mantenimiento', label: 'Mantenimiento', icon: Wrench },
 ];
@@ -284,6 +286,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
       { href: '/admin/mantenimiento', label: 'Mantenimiento', icon: Settings },
       { href: '/admin/logs', label: 'Logs', icon: FileText },
       { href: '/admin/configuracion', label: 'Configuración', icon: Settings },
+      { href: '/admin/search-agent', label: 'SearchAgent IA', icon: Brain },
     ],
   },
   {

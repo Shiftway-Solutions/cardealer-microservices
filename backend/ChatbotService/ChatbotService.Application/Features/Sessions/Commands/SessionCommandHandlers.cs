@@ -268,6 +268,12 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         decimal confidenceScore = 0;
         bool isFallback = false;
         bool consumedInteraction = false;
+        
+        // DealerChatAgent intent scoring fields
+        int intentScore = 1;
+        string clasificacion = "curioso";
+        string moduloActivo = "qa";
+        bool handoffActivado = false;
 
         if (quickResponse != null)
         {
@@ -315,6 +321,28 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 botResponse = groundingResult.SanitizedResponse;
             }
 
+            // ── 10b. DealerChatAgent: capture intent scoring fields ───
+            intentScore = llmResult.IntentScore;
+            clasificacion = llmResult.Clasificacion;
+            moduloActivo = llmResult.ModuloActivo;
+            handoffActivado = llmResult.HandoffActivado;
+
+            // ── 10c. Auto-trigger handoff if Claude activated it ──────
+            if (llmResult.HandoffActivado && session.IsBotActive)
+            {
+                session.HandoffStatus = HandoffStatus.PendingHuman;
+                session.HandoffReason = llmResult.RazonHandoff ?? "Solicitado por el usuario";
+                _logger.LogInformation(
+                    "DealerChatAgent triggered handoff in session {SessionId}: {Reason}",
+                    session.Id, session.HandoffReason);
+            }
+
+            _logger.LogInformation(
+                "DealerChatAgent response — Session: {SessionId}, IntentScore: {Score}, " +
+                "Clasificacion: {Clasificacion}, Modulo: {Modulo}, Handoff: {Handoff}",
+                session.Id, llmResult.IntentScore, llmResult.Clasificacion,
+                llmResult.ModuloActivo, llmResult.HandoffActivado);
+
             // ── 11. Incrementar contadores ────────────────────────────
             session.InteractionCount++;
             if (session.InteractionCount >= session.MaxInteractionsPerSession)
@@ -348,7 +376,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             ConfidenceScore = confidenceScore,
             IsFromBot = true,
             ConsumedInteraction = consumedInteraction,
-            InteractionCost = consumedInteraction ? 0.002m : 0m,
+            InteractionCost = consumedInteraction ? 0.003m : 0m, // Claude Sonnet cost per interaction
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds,
             CreatedAt = DateTime.UtcNow
         };
@@ -369,6 +397,10 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             ConfidenceScore = confidenceScore,
             IsFallback = isFallback,
             ChatMode = session.ChatMode.ToString(),
+            IntentScore = intentScore,
+            Clasificacion = clasificacion,
+            ModuloActivo = moduloActivo,
+            HandoffActivado = handoffActivado,
             RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
         };

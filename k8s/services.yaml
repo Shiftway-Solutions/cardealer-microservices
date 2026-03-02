@@ -613,6 +613,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: video360service
+  namespace: okla
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: video360service
+
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: vehicleintelligenceservice
   namespace: okla
 spec:

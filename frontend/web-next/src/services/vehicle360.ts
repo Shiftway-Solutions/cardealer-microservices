@@ -1,7 +1,7 @@
 /**
- * Vehicle 360° Service — API client for Vehicle360ProcessingService.
+ * Vehicle 360° Service — API client for Video360Service.
  * Handles video upload, processing, and viewer data for 360° vehicle views.
- * Pipeline: Video → FFmpeg-API (frame extraction) → ClipDrop (bg removal) → S3.
+ * Pipeline: Video → Local FFmpeg (frame extraction) → remove.bg (bg removal) → S3.
  */
 
 import { apiClient } from '@/lib/api-client';
@@ -10,31 +10,56 @@ import { apiClient } from '@/lib/api-client';
 // TYPES
 // ============================================================
 
+/**
+ * Backend ProcessingStatus enum values (serialized as strings via JsonStringEnumConverter).
+ */
+export type Vehicle360Status =
+  | 'Pending'
+  | 'Uploading'
+  | 'Processing'
+  | 'Downloading'
+  | 'Completed'
+  | 'Failed'
+  | 'Cancelled'
+  | 'Retrying';
+
 export interface ProcessingJob {
   jobId: string;
-  vehicleId: string;
+  vehicleId?: string;
+  /** Status as string (JsonStringEnumConverter). */
   status: Vehicle360Status;
-  progress?: number;
-  currentStage?: string;
   frameCount?: number;
+  /** Extracted frame image URLs (mapped from backend frames[].imageUrl). */
+  frameUrls?: string[];
   createdAt: string;
   completedAt?: string;
   errorMessage?: string;
 }
 
-export type Vehicle360Status =
-  | 'Pending'
-  | 'Queued'
-  | 'Processing'
-  | 'UploadingVideo'
-  | 'VideoUploaded'
-  | 'ExtractingFrames'
-  | 'FramesExtracted'
-  | 'RemovingBackgrounds'
-  | 'UploadingResults'
-  | 'Completed'
-  | 'Failed'
-  | 'Cancelled';
+/** Raw backend Video360JobResponse before mapping */
+interface BackendJobResponse {
+  jobId: string;
+  vehicleId?: string;
+  status: Vehicle360Status;
+  totalFrames: number;
+  frames: { imageUrl: string; thumbnailUrl?: string; index: number }[];
+  errorMessage?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+function mapJobResponse(raw: BackendJobResponse): ProcessingJob {
+  return {
+    jobId: raw.jobId,
+    vehicleId: raw.vehicleId,
+    status: raw.status,
+    frameCount: raw.totalFrames,
+    frameUrls: raw.frames?.map(f => f.imageUrl).filter(Boolean),
+    createdAt: raw.createdAt,
+    completedAt: raw.completedAt,
+    errorMessage: raw.errorMessage,
+  };
+}
 
 export interface ProcessingOptions {
   frameCount?: number;
@@ -79,27 +104,41 @@ export interface PaginatedResult<T> {
 // ============================================================
 
 /**
- * Upload a video for 360° processing (internal pipeline).
+ * Upload a video for 360° processing via multipart/form-data.
+ * vehicleId, frameCount, imageFormat and quality are passed as query params.
  */
 export async function uploadVideo(
   file: File,
   vehicleId: string,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  frameCount = 36,
+  imageFormat: 'Jpeg' | 'Png' | 'WebP' = 'Jpeg',
+  quality: 'Low' | 'Medium' | 'High' | 'Ultra' = 'High'
 ): Promise<ProcessingJob> {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('vehicleId', vehicleId);
 
-  const response = await apiClient.post<ProcessingJob>('/api/vehicle360/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 300000, // 5 min timeout for video upload
-    onUploadProgress: e => {
-      if (onProgress && e.total) {
-        onProgress(Math.round((e.loaded * 100) / e.total));
-      }
-    },
+  const params = new URLSearchParams({
+    vehicleId,
+    frameCount: String(frameCount),
+    imageFormat,
+    quality,
   });
-  return response.data;
+
+  const response = await apiClient.post<BackendJobResponse>(
+    `/api/vehicle360/jobs/upload?${params.toString()}`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 300000, // 5 min timeout for video upload + processing
+      onUploadProgress: e => {
+        if (onProgress && e.total) {
+          onProgress(Math.round((e.loaded * 100) / e.total));
+        }
+      },
+    }
+  );
+  return mapJobResponse(response.data);
 }
 
 /**
@@ -119,19 +158,19 @@ export async function processVideo(
 }
 
 /**
- * Get the status of a processing job with progress details.
+ * Get the status / result of a processing job (same endpoint for status polling and final result).
  */
 export async function getJobStatus(jobId: string): Promise<ProcessingJob> {
-  const response = await apiClient.get<ProcessingJob>(`/api/vehicle360/jobs/${jobId}/status`);
-  return response.data;
+  const response = await apiClient.get<BackendJobResponse>(`/api/vehicle360/jobs/${jobId}/status`);
+  return mapJobResponse(response.data);
 }
 
 /**
  * Get the full result of a completed processing job.
  */
 export async function getJobResult(jobId: string): Promise<ProcessingJob> {
-  const response = await apiClient.get<ProcessingJob>(`/api/vehicle360/jobs/${jobId}/result`);
-  return response.data;
+  const response = await apiClient.get<BackendJobResponse>(`/api/vehicle360/jobs/${jobId}/result`);
+  return mapJobResponse(response.data);
 }
 
 /**

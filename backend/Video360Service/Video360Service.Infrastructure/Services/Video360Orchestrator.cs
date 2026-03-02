@@ -8,7 +8,7 @@ namespace Video360Service.Infrastructure.Services;
 
 /// <summary>
 /// Orquestador principal para el procesamiento de video 360°
-/// Coordina la extracción de frames, storage y manejo de proveedores
+/// Pipeline: Video → Extracción de frames (FFmpeg local) → Eliminación de fondo (remove.bg) → Storage (S3)
 /// </summary>
 public class Video360Orchestrator : IVideo360Orchestrator
 {
@@ -17,6 +17,7 @@ public class Video360Orchestrator : IVideo360Orchestrator
     private readonly IVideo360JobRepository _jobRepository;
     private readonly IUsageRecordRepository _usageRepository;
     private readonly IProviderConfigurationRepository _configRepository;
+    private readonly IBackgroundRemovalService _backgroundRemoval;
     private readonly ILogger<Video360Orchestrator> _logger;
 
     public Video360Orchestrator(
@@ -25,6 +26,7 @@ public class Video360Orchestrator : IVideo360Orchestrator
         IVideo360JobRepository jobRepository,
         IUsageRecordRepository usageRepository,
         IProviderConfigurationRepository configRepository,
+        IBackgroundRemovalService backgroundRemoval,
         ILogger<Video360Orchestrator> logger)
     {
         _providerFactory = providerFactory;
@@ -32,6 +34,7 @@ public class Video360Orchestrator : IVideo360Orchestrator
         _jobRepository = jobRepository;
         _usageRepository = usageRepository;
         _configRepository = configRepository;
+        _backgroundRemoval = backgroundRemoval;
         _logger = logger;
     }
 
@@ -305,34 +308,59 @@ public class Video360Orchestrator : IVideo360Orchestrator
         CancellationToken cancellationToken)
     {
         var frames = new List<ExtractedFrame>();
-        
+        var bgRemovalAvailable = _backgroundRemoval.IsAvailable;
+
+        if (bgRemovalAvailable)
+            _logger.LogInformation("Background removal enabled for job {JobId}", job.Id);
+        else
+            _logger.LogInformation("Background removal skipped (no API key) for job {JobId}", job.Id);
+
         foreach (var data in frameData)
         {
-            var extension = data.ContentType?.Split('/').LastOrDefault() ?? "jpg";
+            // Apply background removal if available
+            var imageBytes = data.ImageBytes;
+            var contentType = data.ContentType ?? "image/jpeg";
+
+            if (bgRemovalAvailable)
+            {
+                var bgResult = await _backgroundRemoval.RemoveBackgroundAsync(imageBytes, contentType, cancellationToken);
+                if (!bgResult.WasSkipped)
+                {
+                    imageBytes = bgResult.ImageBytes;
+                    contentType = bgResult.ContentType;
+                    _logger.LogDebug("Background removed for frame {Index}", data.Index);
+                }
+                else if (bgResult.ErrorMessage != null)
+                {
+                    _logger.LogWarning("BG removal skipped for frame {Index}: {Msg}", data.Index, bgResult.ErrorMessage);
+                }
+            }
+
+            var extension = contentType.Split('/').LastOrDefault() ?? "jpg";
             var fileName = $"frame_{data.Index:D2}.{extension}";
-            
+
             var url = await _storageService.UploadImageAsync(
-                data.ImageBytes,
+                imageBytes,
                 fileName,
-                data.ContentType ?? $"image/{extension}",
+                contentType,
                 cancellationToken);
-            
+
             var frame = new ExtractedFrame(
                 job.Id,
                 data.Index,
                 data.AngleDegrees,
                 data.AngleLabel,
                 url,
-                data.ImageBytes.Length,
-                data.ContentType ?? $"image/{extension}");
-            
+                imageBytes.Length,
+                contentType);
+
             frame.Width = data.Width;
             frame.Height = data.Height;
             frame.TimestampSeconds = data.TimestampSeconds;
-            
+
             frames.Add(frame);
         }
-        
+
         return frames;
     }
     

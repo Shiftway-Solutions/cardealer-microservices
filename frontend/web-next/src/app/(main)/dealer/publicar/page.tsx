@@ -17,8 +17,14 @@ import { Button } from '@/components/ui/button';
 
 export default function DealerPublicarPage() {
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
-  const { canSell, isPending, isRejected, needsVerification, isLoading: isKycLoading, rejectionReason } =
-    useCanSell();
+  const {
+    canSell,
+    isPending,
+    isRejected,
+    needsVerification,
+    isLoading: isKycLoading,
+    rejectionReason,
+  } = useCanSell();
 
   const isLoading = isDealerLoading || isKycLoading;
 
@@ -62,8 +68,8 @@ export default function DealerPublicarPage() {
           </div>
           <h2 className="mb-2 text-xl font-bold text-gray-900">Verificación rechazada</h2>
           <p className="mb-3 text-gray-600">
-            Tu solicitud de verificación fue rechazada. Debes volver a verificar para poder
-            publicar vehículos.
+            Tu solicitud de verificación fue rechazada. Debes volver a verificar para poder publicar
+            vehículos.
           </p>
           {rejectionReason && (
             <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
@@ -117,11 +123,11 @@ export default function DealerPublicarPage() {
 
   // Verified — show publish wizard
   return (
-    <div className="min-h-screen bg-muted/50">
+    <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-foreground">Publicar Vehículo</h1>
+          <h1 className="text-foreground mb-2 text-3xl font-bold">Publicar Vehículo</h1>
           <p className="text-muted-foreground">
             {dealer?.businessName
               ? `Publicando como ${dealer.businessName}`

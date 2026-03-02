@@ -73,6 +73,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
+import { SearchAgentWidget } from '@/components/search/SearchAgentWidget';
 import { useVehicleSearch } from '@/hooks/use-vehicle-search';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
@@ -847,6 +848,15 @@ export default function VehiculosClient() {
         onOpenChange={setSaveModalOpen}
         filters={filters}
         totalResults={totalResults}
+      />
+
+      {/* ═══════════════════════════════════════════════════════
+          SEARCH AGENT — AI Search Chat Widget
+      ═══════════════════════════════════════════════════════ */}
+      <SearchAgentWidget
+        onFiltersApplied={(aiFilters) => {
+          setFilters({ ...aiFilters, page: 1 } as Parameters<typeof setFilters>[0]);
+        }}
       />
     </div>
   );

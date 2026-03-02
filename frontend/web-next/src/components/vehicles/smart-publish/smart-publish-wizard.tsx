@@ -603,7 +603,12 @@ export function SmartPublishWizard({
       // Redirect to seller's vehicles dashboard where they can see the status
       router.push('/cuenta/mis-vehiculos');
     } catch (error: unknown) {
-      const err = error as { message?: string; code?: string; requiresKyc?: boolean; redirectUrl?: string };
+      const err = error as {
+        message?: string;
+        code?: string;
+        requiresKyc?: boolean;
+        redirectUrl?: string;
+      };
       // If dealer KYC is required, redirect to verification page
       if (err.requiresKyc || err.code === 'HTTP_403') {
         toast.error(err.message || 'Debes verificar tu identidad antes de publicar.');

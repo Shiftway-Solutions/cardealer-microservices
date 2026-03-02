@@ -4263,6 +4263,59 @@
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [{ "Host": "supportagent", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/health",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/upload",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/video360/jobs/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" },
+      "QoSOptions": { "ExceptionsAllowedBeforeBreaking": 3, "DurationOfBreak": 30, "TimeoutValue": 300000 }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/status",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/result",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/retry",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/retry",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/cancel",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/cancel",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }],
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+    },
+    {
+      "UpstreamPathTemplate": "/api/vehicle360/viewer/{vehicleId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/video360/vehicle/{vehicleId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [{ "Host": "video360service", "Port": 80 }]
     }
   ],
   "SwaggerEndPoints": [

@@ -1,0 +1,67 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img "SUV moderno premium" [ref=e4]
+      - generic [ref=e6]:
+        - link "O OKLA" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9]: O
+          - generic [ref=e10]: OKLA
+        - generic [ref=e11]:
+          - 'heading "El marketplace de vehículos #1 de República Dominicana. Compra y vende con confianza." [level=1] [ref=e12]'
+          - paragraph [ref=e13]: Miles de vehículos te esperan. Encuentra tu próximo carro, jeepeta o camioneta.
+          - generic [ref=e14]:
+            - generic [ref=e15]:
+              - generic [ref=e16]: 15K+
+              - generic [ref=e17]: Vehículos
+            - generic [ref=e18]:
+              - generic [ref=e19]: 500+
+              - generic [ref=e20]: Dealers
+            - generic [ref=e21]:
+              - generic [ref=e22]: 50K+
+              - generic [ref=e23]: Usuarios
+        - generic [ref=e24]: © 2026 OKLA. Todos los derechos reservados.
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - heading "Bienvenido de vuelta" [level=1] [ref=e29]
+        - paragraph [ref=e30]: Ingresa a tu cuenta para continuar
+      - generic [ref=e31]:
+        - button "Google" [ref=e32] [cursor=pointer]:
+          - img
+          - text: Google
+        - button "Apple" [ref=e33] [cursor=pointer]:
+          - img
+          - text: Apple
+      - generic [ref=e37]: o continúa con email
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - text: Email
+          - generic [ref=e40]:
+            - img [ref=e41]
+            - textbox "Email" [ref=e46]:
+              - /placeholder: tu@email.com
+        - generic [ref=e47]:
+          - text: Contraseña
+          - generic [ref=e48]:
+            - img [ref=e49]
+            - textbox "Contraseña" [ref=e54]:
+              - /placeholder: ••••••••
+            - button [ref=e55] [cursor=pointer]:
+              - img [ref=e56]
+        - generic [ref=e59]:
+          - generic [ref=e60] [cursor=pointer]:
+            - checkbox "Recordarme" [ref=e61]
+            - generic [ref=e62]: Recordarme
+          - link "¿Olvidaste tu contraseña?" [ref=e63] [cursor=pointer]:
+            - /url: /recuperar-contrasena
+        - button "Iniciar sesión" [ref=e64] [cursor=pointer]
+      - paragraph [ref=e65]:
+        - text: ¿No tienes cuenta?
+        - link "Regístrate gratis" [ref=e66] [cursor=pointer]:
+          - /url: /registro
+  - region "Notifications alt+T"
+  - alert [ref=e67]
+```

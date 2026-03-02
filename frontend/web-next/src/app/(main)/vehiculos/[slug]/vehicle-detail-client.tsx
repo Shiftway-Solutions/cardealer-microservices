@@ -6,6 +6,7 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import {
   VehicleGallery,
@@ -14,6 +15,7 @@ import {
   VehicleTabs,
   SimilarVehicles,
 } from '@/components/vehicle-detail';
+import { VehicleChatWidget } from '@/components/vehicle-detail/VehicleChatWidget';
 import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { ReviewsSection } from '@/components/reviews';
 import type { Vehicle } from '@/types';
@@ -24,6 +26,16 @@ interface VehicleDetailClientProps {
 
 export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const title = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  const searchParams = useSearchParams();
+
+  // Open chat if ?chat=open query param is present or user clicks "Chat en vivo"
+  const [chatOpen, setChatOpen] = React.useState(
+    searchParams.get('chat') === 'open'
+  );
+
+  const handleOpenChat = React.useCallback(() => {
+    setChatOpen(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -54,7 +66,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Mobile: Seller Card */}
             <div className="lg:hidden">
-              <SellerCard vehicle={vehicle} />
+              <SellerCard vehicle={vehicle} onChatClick={handleOpenChat} />
             </div>
 
             {/* Tabs - Description, Specs, Features */}
@@ -68,7 +80,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
               <VehicleHeader vehicle={vehicle} />
 
               {/* Seller info */}
-              <SellerCard vehicle={vehicle} />
+              <SellerCard vehicle={vehicle} onChatClick={handleOpenChat} />
             </div>
           </div>
         </div>
@@ -101,6 +113,13 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           />
         </div>
       </div>
+
+      {/* ChatbotService Widget — Vehicle-specific AI chat */}
+      <VehicleChatWidget
+        vehicle={vehicle}
+        isOpenInitial={chatOpen}
+        onOpenChange={setChatOpen}
+      />
     </div>
   );
 }

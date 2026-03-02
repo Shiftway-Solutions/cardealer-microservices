@@ -33,5 +33,11 @@ public enum Video360Provider
     /// Shotstack - $50/mes, $0.05/vehículo
     /// Calidad: Profesional
     /// </summary>
-    Shotstack = 4
+    Shotstack = 4,
+    
+    /// <summary>
+    /// Local FFmpeg - Procesamiento local sin costo ni API key
+    /// Calidad: Alta (depends on hardware)
+    /// </summary>
+    Local = 5
 }

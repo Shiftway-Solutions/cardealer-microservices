@@ -4205,6 +4205,110 @@ spec:
         - name: tmp
           emptyDir: {}
 
+
+---
+# ==========================================================
+# VIDEO 360 SERVICE (single microservice: FFmpeg + bg removal)
+# ==========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video360service
+  namespace: okla
+  labels:
+    app: video360service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video360service
+  template:
+    metadata:
+      labels:
+        app: video360service
+    spec:
+      serviceAccountName: okla-backend
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: video360service
+      imagePullSecrets:
+        - name: registry-credentials
+      containers:
+        - name: video360service
+          image: ghcr.io/gregorymorenoiem/video360service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: REMOVEBG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: video360service-secrets
+                  key: REMOVEBG_API_KEY
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: global-config
+            - secretRef:
+                name: video360service-db-secret
+                optional: true
+            - secretRef:
+                name: jwt-secrets
+            - secretRef:
+                name: redis-secrets
+            - secretRef:
+                name: s3-secrets
+                optional: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi
 ---
 # =============================================================================
 # VEHICLE INTELLIGENCE SERVICE

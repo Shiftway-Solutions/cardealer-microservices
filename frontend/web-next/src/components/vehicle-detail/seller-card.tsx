@@ -29,6 +29,8 @@ import type { Vehicle } from '@/types';
 interface SellerCardProps {
   vehicle: Vehicle;
   className?: string;
+  /** Callback to open the ChatbotService chat widget */
+  onChatClick?: () => void;
 }
 
 // Extended vehicle type with seller info (to be enhanced)
@@ -51,7 +53,7 @@ interface VehicleWithSeller extends Vehicle {
   };
 }
 
-export function SellerCard({ vehicle, className }: SellerCardProps) {
+export function SellerCard({ vehicle, className, onChatClick }: SellerCardProps) {
   const [showPhone, setShowPhone] = React.useState(false);
   const vehicleWithSeller = vehicle as VehicleWithSeller;
   const seller = vehicleWithSeller.seller;
@@ -170,15 +172,13 @@ export function SellerCard({ vehicle, className }: SellerCardProps) {
 
       {/* Contact Buttons */}
       <div className="mt-6 space-y-2.5">
-        {/* PRIMARY CTA: Internal live chat — highest priority */}
+        {/* PRIMARY CTA: Open AI chat about this vehicle */}
         <Button
           className="h-11 w-full gap-2 bg-[#00A870] text-base font-semibold text-white shadow-md hover:bg-[#008F60]"
-          asChild
+          onClick={onChatClick}
         >
-          <Link href={`/mensajes/nuevo?vehicleId=${vehicle.id}&sellerId=${sellerData.id}`}>
-            <MessageSquare className="h-5 w-5" />
-            Chat en vivo
-          </Link>
+          <MessageSquare className="h-5 w-5" />
+          Chat en vivo
         </Button>
 
         {/* SECONDARY: WhatsApp */}

@@ -25,7 +25,7 @@ public static class DependencyInjection
         services.Configure<ImgixSettings>(configuration.GetSection("Providers:Imgix"));
         services.Configure<ShotstackSettings>(configuration.GetSection("Providers:Shotstack"));
         services.Configure<S3StorageSettings>(configuration.GetSection("Storage:S3"));
-        
+
         // Database
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<Video360DbContext>(options =>
@@ -34,41 +34,48 @@ public static class DependencyInjection
                 npgsql.MigrationsAssembly(typeof(Video360DbContext).Assembly.FullName);
                 npgsql.EnableRetryOnFailure(3);
             }));
-        
+
         // Repositories
         services.AddScoped<IVideo360JobRepository, Video360JobRepository>();
         services.AddScoped<IProviderConfigurationRepository, ProviderConfigurationRepository>();
         services.AddScoped<IUsageRecordRepository, UsageRecordRepository>();
-        
-        // Providers (HttpClient configured)
+
+        // ── Frame Extraction Providers ──────────────────────────────────────────────
+        // LocalFfmpegProvider is first (highest priority, free, no API key required)
+        services.AddScoped<LocalFfmpegProvider>();
         services.AddHttpClient<IVideo360Provider, FfmpegApiProvider>();
         services.AddHttpClient<IVideo360Provider, ApyHubProvider>();
         services.AddHttpClient<IVideo360Provider, CloudinaryProvider>();
         services.AddHttpClient<IVideo360Provider, ImgixProvider>();
         services.AddHttpClient<IVideo360Provider, ShotstackProvider>();
-        
-        // Register all providers explicitly for DI resolution
+
+        // Register all providers explicitly for DI resolution (Local is first = highest priority)
         services.AddScoped<FfmpegApiProvider>();
         services.AddScoped<ApyHubProvider>();
         services.AddScoped<CloudinaryProvider>();
         services.AddScoped<ImgixProvider>();
         services.AddScoped<ShotstackProvider>();
-        
-        // Provider collection for factory
+
+        // Provider collection for factory (Local is always first)
         services.AddScoped<IEnumerable<IVideo360Provider>>(sp => new List<IVideo360Provider>
         {
+            sp.GetRequiredService<LocalFfmpegProvider>(),   // ← FREE, no API key needed
             sp.GetRequiredService<FfmpegApiProvider>(),
             sp.GetRequiredService<ApyHubProvider>(),
             sp.GetRequiredService<CloudinaryProvider>(),
             sp.GetRequiredService<ImgixProvider>(),
             sp.GetRequiredService<ShotstackProvider>()
         });
-        
-        // Services
+
+        // ── Background Removal ─────────────────────────────────────────────────────
+        // Uses remove.bg API if REMOVEBG_API_KEY is set; otherwise gracefully skips
+        services.AddHttpClient<IBackgroundRemovalService, RemoveBgService>();
+
+        // ── Core Services ──────────────────────────────────────────────────────────
         services.AddScoped<IVideo360ProviderFactory, Video360ProviderFactory>();
         services.AddHttpClient<IVideoStorageService, VideoStorageService>();
         services.AddScoped<IVideo360Orchestrator, Video360Orchestrator>();
-        
+
         return services;
     }
 }

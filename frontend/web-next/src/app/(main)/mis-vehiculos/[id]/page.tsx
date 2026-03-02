@@ -52,6 +52,7 @@ import {
   CheckCircle,
   RefreshCw,
   Loader2,
+  RotateCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -65,6 +66,7 @@ import {
   useProvinces,
 } from '@/hooks/use-vehicles';
 import type { UpdateVehicleRequest } from '@/services/vehicles';
+import { Vehicle360UploadWizard } from '@/components/vehicles/Vehicle360UploadWizard';
 
 // =============================================================================
 // TYPES
@@ -390,6 +392,10 @@ export default function EditVehiclePage() {
             <TabsTrigger value="settings" className="data-[state=active]:bg-primary/10">
               <Settings className="mr-2 h-4 w-4" />
               Configuración
+            </TabsTrigger>
+            <TabsTrigger value="view360" className="data-[state=active]:bg-primary/10">
+              <RotateCw className="mr-2 h-4 w-4" />
+              Vista 360°
             </TabsTrigger>
           </TabsList>
 
@@ -776,6 +782,16 @@ export default function EditVehiclePage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Vista 360° Tab */}
+          <TabsContent value="view360">
+            <Vehicle360UploadWizard
+              vehicleId={vehicle.id}
+              onComplete={() => {
+                toast.success('Vista 360° procesada correctamente.');
+              }}
+            />
           </TabsContent>
         </Tabs>
 

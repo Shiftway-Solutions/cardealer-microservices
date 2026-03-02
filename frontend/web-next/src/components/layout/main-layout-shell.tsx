@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components/layout/footer';
-import { ChatWidget } from '@/components/chat';
+import { SupportAgentWidget } from '@/components/chat/SupportAgentWidget';
 
 // Lazy-load Navbar — it's a heavy component (1000+ lines, icons, popovers, auth state)
 // Skeleton is shown immediately while the full Navbar loads
@@ -38,6 +38,13 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
   // Dealer portal has its own header, sidebar, and layout — skip global Navbar/Footer
   const isDealerPortal = pathname.startsWith('/dealer');
 
+  // Vehicle detail pages use ChatbotService widget, search page uses SearchAgent widget
+  // Don't render the global SupportAgent on these pages to avoid chatbot conflicts
+  const isVehicleDetailPage =
+    pathname.startsWith('/vehiculos/') && pathname !== '/vehiculos';
+  const isVehicleSearchPage = pathname === '/vehiculos';
+  const hideSupportWidget = isVehicleDetailPage || isVehicleSearchPage;
+
   if (isDealerPortal) {
     return <>{children}</>;
   }
@@ -55,7 +62,7 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
-      <ChatWidget />
+      {!hideSupportWidget && <SupportAgentWidget />}
     </div>
   );
 }

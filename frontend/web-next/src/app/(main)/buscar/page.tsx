@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Filter, X, MapPin, Sparkles, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import AiSearchBar from '@/components/search/ai-search-bar';
 
 // Loading skeleton for search
 function SearchLoading() {
@@ -113,6 +114,14 @@ function SearchContent() {
           <p className="text-primary-foreground/80 mb-6 text-lg">
             Encuentra tu próximo vehículo entre miles de opciones
           </p>
+
+          {/* AI Search Bar */}
+          <AiSearchBar
+            onFiltersApplied={aiFilters => {
+              setFilters({ ...filters, ...aiFilters } as typeof filters);
+            }}
+            className="[&_input]:text-foreground [&_input]:placeholder:text-muted-foreground [&_.text-muted-foreground]:text-primary-foreground/70 mb-6 [&_.text-amber-600]:text-amber-200 [&_.text-destructive]:text-red-300 [&_input]:bg-white/95"
+          />
 
           {/* Quick Filters */}
           <div className="flex flex-wrap gap-2">

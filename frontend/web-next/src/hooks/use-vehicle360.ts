@@ -25,9 +25,17 @@ export function useUpload360Video() {
   return useMutation<
     ProcessingJob,
     Error,
-    { file: File; vehicleId: string; onProgress?: (p: number) => void }
+    {
+      file: File;
+      vehicleId: string;
+      onProgress?: (p: number) => void;
+      frameCount?: number;
+      imageFormat?: 'Jpeg' | 'Png' | 'WebP';
+      quality?: 'Low' | 'Medium' | 'High' | 'Ultra';
+    }
   >({
-    mutationFn: ({ file, vehicleId, onProgress }) => uploadVideo(file, vehicleId, onProgress),
+    mutationFn: ({ file, vehicleId, onProgress, frameCount, imageFormat, quality }) =>
+      uploadVideo(file, vehicleId, onProgress, frameCount, imageFormat, quality),
   });
 }
 

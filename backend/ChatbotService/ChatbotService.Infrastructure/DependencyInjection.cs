@@ -57,8 +57,8 @@ public static class DependencyInjection
             return new VehicleEmbeddingRepository(connectionString, logger);
         });
 
-        // Core Services
-        services.AddScoped<ILlmService, LlmService>();
+        // Core Services — Claude Sonnet 4.5 (Anthropic API)
+        services.AddScoped<ILlmService, ClaudeLlmService>();
         services.AddScoped<IAutoLearningService, AutoLearningService>();
         services.AddScoped<IHealthMonitoringService, HealthMonitoringService>();
         services.AddScoped<IReportingService, ReportingService>();
@@ -92,14 +92,12 @@ public static class DependencyInjection
         // Observability — .NET 8 Metrics
         services.AddSingleton<ChatbotMetrics>();
 
-        // HTTP Client para LLM Server (chat completions)
-        // Puede apuntar a: llm-server local, HuggingFace Inference Endpoints, OpenAI, Groq, etc.
-        // NOTE: NO se agregan Polly policies aquí porque LlmService ya tiene su propio
-        // retry + circuit breaker interno. Duplicar policies causa retries en cascada.
+        // HTTP Client para Claude API (Anthropic)
+        // NOTE: NO se agregan Polly policies porque ClaudeLlmService maneja errores internamente.
         services.AddHttpClient("LlmServer", client =>
         {
-            client.BaseAddress = new Uri(configuration["LlmService:ServerUrl"] ?? "http://llm-server:8000");
-            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["LlmService:TimeoutSeconds"] ?? "60"));
+            client.BaseAddress = new Uri(configuration["LlmService:ServerUrl"] ?? "https://api.anthropic.com");
+            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["LlmService:TimeoutSeconds"] ?? "120"));
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         })
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler

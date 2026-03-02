@@ -105,6 +105,12 @@ public record ChatbotResponse
     public string? ChatMode { get; init; }
     public bool IsHumanMode { get; init; }
     
+    // DealerChatAgent — Intent Scoring
+    public int IntentScore { get; init; }
+    public string? Clasificacion { get; init; }
+    public string? ModuloActivo { get; init; }
+    public bool HandoffActivado { get; init; }
+    
     // Información de límites
     public int RemainingInteractions { get; init; }
     public bool InteractionLimitReached { get; init; }

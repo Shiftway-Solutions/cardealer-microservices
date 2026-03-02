@@ -202,10 +202,7 @@ export default function AdminDealersPage() {
           <h1 className="text-foreground text-3xl font-bold">Dealers</h1>
           <p className="text-muted-foreground">Gestiona los dealers de la plataforma</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => handleFilterChange('status', 'pending')}
-        >
+        <Button variant="outline" onClick={() => handleFilterChange('status', 'pending')}>
           <Clock className="mr-2 h-4 w-4" />
           Pendientes ({stats?.pending || 0})
         </Button>
@@ -229,8 +226,8 @@ export default function AdminDealersPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-xl font-bold">{stats?.active || 0}</p>
