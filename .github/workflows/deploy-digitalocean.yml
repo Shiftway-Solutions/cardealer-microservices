@@ -252,6 +252,13 @@ jobs:
 
           # Deploy ChatbotService + LLM Server (separate manifest)
           echo "🤖 Applying ChatbotService + LLM Server..."
+          # Fix: remove value-based env vars that conflict with valueFrom in the YAML.
+          # This can happen when env vars were previously set via `kubectl set env`
+          # (storing raw `value:`) but the manifest now uses `valueFrom: secretKeyRef`.
+          # Kubernetes 3-way merge would otherwise combine both fields → validation error.
+          kubectl set env deployment/chatbotservice \
+            LlmService__ApiKey- \
+            -n okla 2>/dev/null || true
           kubectl apply -f k8s/chatbotservice.yaml
 
           # Restart deployments to pick up new secrets
