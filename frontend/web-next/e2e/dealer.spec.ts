@@ -575,14 +575,16 @@ test.describe('Phase 7: Vehicle Creation & Publishing', () => {
 // ===========================================================================
 test.describe('Phase 8: UI Smoke Tests', () => {
   test('Vehicle detail page renders with correct data', async ({ page }) => {
-    const id = vehicleId || '3778c87b-b1e3-4be0-a40f-362dbfcee262'; // fallback to audit vehicle
+    // Use a known Active vehicle for UI testing — PendingReview vehicles redirect to login.
+    // '3778c87b' = Toyota Camry 2023 SE (Active, publicly accessible)
+    const id = '3778c87b-b1e3-4be0-a40f-362dbfcee262';
     await page.goto(`/vehicles/${id}`);
     await page.waitForLoadState('networkidle');
 
     const body = await page.textContent('body');
-    // Should render vehicle info — at minimum some known content
+    // Should render vehicle info — at minimum known content from Toyota Camry 2023 SE
     expect(body).toBeTruthy();
-    expect(body?.toLowerCase()).toMatch(/toyota|corolla|precio|price|santo domingo/i);
+    expect(body?.toLowerCase()).toMatch(/toyota|camry|precio|price|2023/i);
   });
 
   test('/dealers listing page renders without errors', async ({ page }) => {
