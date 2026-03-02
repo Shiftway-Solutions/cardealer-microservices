@@ -41,6 +41,10 @@ public class CsrfValidationMiddleware
         "/api/chat/message",
         "/api/chat/end",
         "/api/chat/transfer",
+        // AI Agent APIs: JWT-authenticated only — CSRF redundant (no browser cookies involved)
+        "/api/search-agent/",
+        "/api/support/",
+        "/api/reco-agent/",
         "/swagger",
         "/metrics",
     };
