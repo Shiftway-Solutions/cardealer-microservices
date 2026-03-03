@@ -56,23 +56,23 @@ public class GetHomepageRotationQueryHandler : IRequestHandler<GetHomepageRotati
                 // - If vehicle DB already has flags set (via campaign sync), use those.
                 // - Otherwise fall back to the rotation section context.
                 var isFeatured = d?.IsFeatured ?? !isPremiumSection;
-                var isPremium  = d?.IsPremium  ?? isPremiumSection;
+                var isPremium = d?.IsPremium ?? isPremiumSection;
 
                 return new RotatedVehicleDto(
                     CampaignId: v.CampaignId,
-                    VehicleId:  v.VehicleId,
-                    OwnerId:    v.OwnerId,
-                    OwnerType:  v.OwnerType,
-                    Position:   v.Position,
-                    Score:      v.Score,
-                    Title:      d?.Title,
-                    Slug:       d?.Slug,
-                    ImageUrl:   d?.PrimaryImageUrl,
-                    Price:      d?.Price ?? 0m,
-                    Currency:   d?.Currency ?? "DOP",
-                    Location:   d?.Location,
+                    VehicleId: v.VehicleId,
+                    OwnerId: v.OwnerId,
+                    OwnerType: v.OwnerType,
+                    Position: v.Position,
+                    Score: v.Score,
+                    Title: d?.Title,
+                    Slug: d?.Slug,
+                    ImageUrl: d?.PrimaryImageUrl,
+                    Price: d?.Price ?? 0m,
+                    Currency: d?.Currency ?? "DOP",
+                    Location: d?.Location,
                     IsFeatured: isFeatured,
-                    IsPremium:  isPremium
+                    IsPremium: isPremium
                 );
             })
             .ToList();

@@ -132,20 +132,20 @@ public class BillingPaymentCompletedConsumer : BackgroundService
             var payload = JsonSerializer.Serialize(new
             {
                 CampaignId = campaignId,
-                VehicleId  = vehicleId,
+                VehicleId = vehicleId,
                 PlacementType = placementType,
                 ActivatedAt = DateTime.UtcNow
             });
 
             var props = _publishChannel.CreateBasicProperties();
-            props.Persistent    = true;
-            props.ContentType   = "application/json";
+            props.Persistent = true;
+            props.ContentType = "application/json";
 
             _publishChannel.BasicPublish(
-                exchange:   ExchangeName,
+                exchange: ExchangeName,
                 routingKey: "advertising.campaign.activated",
                 basicProperties: props,
-                body:       Encoding.UTF8.GetBytes(payload));
+                body: Encoding.UTF8.GetBytes(payload));
 
             _logger.LogInformation(
                 "Published advertising.campaign.activated for campaign {CampaignId}", campaignId);

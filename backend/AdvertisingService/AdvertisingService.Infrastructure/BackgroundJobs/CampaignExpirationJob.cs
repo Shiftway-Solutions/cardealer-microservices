@@ -23,9 +23,9 @@ public class CampaignExpirationJob : BackgroundService
         IConnection rabbitConnection,
         ILogger<CampaignExpirationJob> logger)
     {
-        _scopeFactory     = scopeFactory;
+        _scopeFactory = scopeFactory;
         _rabbitConnection = rabbitConnection;
-        _logger           = logger;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,8 +50,8 @@ public class CampaignExpirationJob : BackgroundService
     private async Task CheckAndExpireCampaignsAsync(CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
-        var campaignRepo  = scope.ServiceProvider.GetRequiredService<IAdCampaignRepository>();
-        var cacheService  = scope.ServiceProvider.GetRequiredService<IHomepageRotationCacheService>();
+        var campaignRepo = scope.ServiceProvider.GetRequiredService<IAdCampaignRepository>();
+        var cacheService = scope.ServiceProvider.GetRequiredService<IHomepageRotationCacheService>();
 
         var expiredCount = 0;
 
@@ -87,20 +87,20 @@ public class CampaignExpirationJob : BackgroundService
             using var channel = _rabbitConnection.CreateModel();
             var payload = JsonSerializer.Serialize(new
             {
-                CampaignId  = campaignId,
-                VehicleId   = vehicleId,
+                CampaignId = campaignId,
+                VehicleId = vehicleId,
                 CompletedAt = DateTime.UtcNow
             });
 
             var props = channel.CreateBasicProperties();
-            props.Persistent  = true;
+            props.Persistent = true;
             props.ContentType = "application/json";
 
             channel.BasicPublish(
-                exchange:        ExchangeName,
-                routingKey:      "advertising.campaign.completed",
+                exchange: ExchangeName,
+                routingKey: "advertising.campaign.completed",
                 basicProperties: props,
-                body:            Encoding.UTF8.GetBytes(payload));
+                body: Encoding.UTF8.GetBytes(payload));
 
             _logger.LogDebug(
                 "Published advertising.campaign.completed for campaign {CampaignId}", campaignId);
