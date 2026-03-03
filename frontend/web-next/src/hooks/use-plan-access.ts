@@ -19,7 +19,7 @@ import {
   DEALER_PLAN_LIMITS,
   SellerPlan,
   SELLER_PLAN_LIMITS,
-} from '@cardealer/shared/types';
+} from '@/lib/plan-config';
 
 // =============================================================================
 // TYPES
