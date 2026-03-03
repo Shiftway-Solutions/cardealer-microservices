@@ -9,7 +9,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: false,
   retries: 1,
-  workers: 2,
+  workers: 1,
+  timeout: 60000,
   reporter: [
     ['line'],
     ['html', { outputFolder: 'playwright-report-prod', open: 'never' }],

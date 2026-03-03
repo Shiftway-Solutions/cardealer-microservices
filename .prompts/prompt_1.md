@@ -1,6 +1,4 @@
-Hay una nueva tarea, la tarea 2, que esta compuesta por multiples tareas. Se me paso decirte que este chatbot "ChatbotService", responde a nombre del dealer que hizo la publicacion y solo pueda hablar de las informaciones que tenga dicho dealer en su inventario.
-
-En el home implementame el search con lenguaje natural y cuado le de a buarcar redireccina a la vista "https://okla.com.do/vehiculos" con todos los filtros aplicados.
+hay otra nueva tarea la tarea 3, que es implementar en la plataforma el modelo de negocio de okla segun el tutorial.
 
 y tambien quiero que me implementes en la plataforma el modelo de negocion de okla y que los precios y todo lo que sea necesario que sea configurable. Este es el modelo de negocio, "ANÁLISIS DE NEGOCIO Y ECONÓMICO
 MODELO FREEMIUM OKLA MARKETPLACE
@@ -658,10 +656,6 @@ CONCLUSIÓN ESTRATÉGICA: OKLA debe entrar al mercado con publicaciones ilimitad
 Análisis de Negocio y Económico OKLA Marketplace v3.0 | Febrero 2026
 PMI PMBOK 7th Ed. · IEEE Std 1058-1998 · ISO 31000:2018 · BABOK v3 | Modelo Freemium + Publicidad + DealerChatAgent SaaS
 "
-
-Hazme tambien un tutorial de como configurar estas foncionalidades en el panel admnin.
-
-hay otra nueva tarea la tarea 3, que es implementar en la plataforma 
 
 Luego haz las pruebas end to end en produccion despues que se aplique el ci/cd de todas las funcionales que has hecho para probar que funcionan, pero antes de esto tienes que monitoriar el procesos completo de ci/cd, hasta que todos los cambios enten en produccion y luegos haces las pruebas e2e donde pureba todas las funcionalidades que has hecho.
 

@@ -45,19 +45,20 @@
 
 ### 1.3 Roles y Permisos
 
-| Rol | Acceso |
-|-----|--------|
+| Rol            | Acceso                                                                                |
+| -------------- | ------------------------------------------------------------------------------------- |
 | **SuperAdmin** | Acceso total: configuración de plataforma, gestión de equipo, roles, secretos de pago |
-| **Admin** | Gestión de dealers, usuarios, vehículos, moderación, reportes |
-| **Moderator** | Moderación de vehículos, reviews, reportes de contenido |
-| **Support** | Soporte al usuario, mensajes, tickets |
-| **Analyst** | Analytics y reportes (solo lectura) |
+| **Admin**      | Gestión de dealers, usuarios, vehículos, moderación, reportes                         |
+| **Moderator**  | Moderación de vehículos, reviews, reportes de contenido                               |
+| **Support**    | Soporte al usuario, mensajes, tickets                                                 |
+| **Analyst**    | Analytics y reportes (solo lectura)                                                   |
 
 > ⚠️ **Importante:** Solo los usuarios con rol **SuperAdmin** pueden modificar la configuración de precios, proveedores de pago y settings de la plataforma.
 
 ### 1.4 Dashboard Principal
 
 Al acceder a `/admin`, verás el dashboard con:
+
 - **Tarjetas de estadísticas**: Total de usuarios, vehículos activos, dealers registrados, MRR (Ingreso Mensual Recurrente)
 - **Acciones pendientes**: Items de moderación, verificaciones KYC, reportes abiertos
 - **Actividad reciente**: Últimas acciones realizadas en la plataforma
@@ -71,12 +72,12 @@ Al acceder a `/admin`, verás el dashboard con:
 
 OKLA utiliza un modelo freemium con 4 niveles diseñados para maximizar la adopción y conversión de dealers:
 
-| Plan | Precio/mes | Objetivo | Margen OKLA |
-|------|-----------|----------|-------------|
-| **LIBRE** | $0 (gratis) | Adquisición masiva de dealers y listings | N/A (lead gen) |
-| **VISIBLE** | $29/mes | Primer upgrade — visibilidad mejorada | 95% ($27.50) |
-| **PRO** | $89/mes | Acceso a ChatAgent + analytics avanzados | 24% ($21) |
-| **ÉLITE** | $199/mes | Todo ilimitado + showcase homepage | 47% a escala |
+| Plan        | Precio/mes  | Objetivo                                 | Margen OKLA    |
+| ----------- | ----------- | ---------------------------------------- | -------------- |
+| **LIBRE**   | $0 (gratis) | Adquisición masiva de dealers y listings | N/A (lead gen) |
+| **VISIBLE** | $29/mes     | Primer upgrade — visibilidad mejorada    | 95% ($27.50)   |
+| **PRO**     | $89/mes     | Acceso a ChatAgent + analytics avanzados | 24% ($21)      |
+| **ÉLITE**   | $199/mes    | Todo ilimitado + showcase homepage       | 47% a escala   |
 
 ### 2.2 Configurar Precios de Planes
 
@@ -85,15 +86,15 @@ OKLA utiliza un modelo freemium con 4 niveles diseñados para maximizar la adopc
 1. Navega a **`/admin/configuracion`** en el menú lateral
 2. En la sección **"Precios y Comisiones"** (icono 💲), localiza los campos de planes:
 
-| Campo en el Panel | Clave de Configuración | Valor Recomendado |
-|---|---|---|
-| Plan Starter | `pricing.dealer_starter` | $29.00 (Plan VISIBLE) |
-| Plan Pro | `pricing.dealer_pro` | $89.00 (Plan PRO) |
-| Plan Enterprise | `pricing.dealer_enterprise` | $199.00 (Plan ÉLITE) |
+| Campo en el Panel | Clave de Configuración      | Valor Recomendado     |
+| ----------------- | --------------------------- | --------------------- |
+| Plan Starter      | `pricing.dealer_starter`    | $29.00 (Plan VISIBLE) |
+| Plan Pro          | `pricing.dealer_pro`        | $89.00 (Plan PRO)     |
+| Plan Enterprise   | `pricing.dealer_enterprise` | $199.00 (Plan ÉLITE)  |
 
 3. Modifica los valores en el campo de moneda (prefijo RD$)
 4. Haz clic en **"Guardar Cambios"** (botón verde en la parte superior)
-5. Espera la confirmación: *"Configuración guardada exitosamente"*
+5. Espera la confirmación: _"Configuración guardada exitosamente"_
 
 > 💡 **Nota sobre el Plan LIBRE:** No requiere configuración de precio ya que es gratuito por defecto. Todos los dealers que se registren sin plan activo están automáticamente en el plan LIBRE.
 
@@ -101,16 +102,17 @@ OKLA utiliza un modelo freemium con 4 niveles diseñados para maximizar la adopc
 
 En la misma sección de **"Precios y Comisiones"**, configura los límites:
 
-| Campo | Clave | LIBRE | VISIBLE | PRO | ÉLITE |
-|-------|-------|-------|---------|-----|-------|
-| Vehículos máx. Starter | `pricing.starter_max_vehicles` | Ilimitado | 50 | — | — |
-| Vehículos máx. Pro | `pricing.pro_max_vehicles` | — | — | 200 | — |
-| Fotos máx. (gratis) | `pricing.free_max_photos` | 5 | — | — | — |
-| Fotos máx. Starter | `pricing.starter_max_photos` | — | 15 | — | — |
-| Fotos máx. Pro | `pricing.pro_max_photos` | — | — | 30 | — |
-| Fotos máx. Enterprise | `pricing.enterprise_max_photos` | — | — | — | 50 |
+| Campo                  | Clave                           | LIBRE     | VISIBLE | PRO | ÉLITE |
+| ---------------------- | ------------------------------- | --------- | ------- | --- | ----- |
+| Vehículos máx. Starter | `pricing.starter_max_vehicles`  | Ilimitado | 50      | —   | —     |
+| Vehículos máx. Pro     | `pricing.pro_max_vehicles`      | —         | —       | 200 | —     |
+| Fotos máx. (gratis)    | `pricing.free_max_photos`       | 5         | —       | —   | —     |
+| Fotos máx. Starter     | `pricing.starter_max_photos`    | —         | 15      | —   | —     |
+| Fotos máx. Pro         | `pricing.pro_max_photos`        | —         | —       | 30  | —     |
+| Fotos máx. Enterprise  | `pricing.enterprise_max_photos` | —         | —       | —   | 50    |
 
 **Pasos:**
+
 1. En `/admin/configuracion`, busca la sección de **límites por plan**
 2. Para cada plan, establece el número máximo de vehículos y fotos
 3. Para el plan LIBRE, configura `pricing.free_max_photos` = **5** (fotos por vehículo)
@@ -120,20 +122,20 @@ En la misma sección de **"Precios y Comisiones"**, configura los límites:
 
 Referencia de funcionalidades incluidas por plan:
 
-| Funcionalidad | LIBRE | VISIBLE ($29) | PRO ($89) | ÉLITE ($199) |
-|---|---|---|---|---|
-| Publicar vehículos | ✅ Ilimitado | ✅ Ilimitado | ✅ Ilimitado | ✅ Ilimitado |
-| Prioridad en búsquedas | Estándar | Media | Alta | Top |
-| Vehículos destacados/mes | — | 3 | 10 | 25 |
-| Créditos publicitarios/mes | — | $15 | $45 | $120 |
-| Badge "Dealer Verificado OKLA" | — | ✅ | ✅ Dorado | ✅ Premium |
-| Dashboard Analytics | — | Básico | Avanzado | Completo + exportar |
-| ChatAgent Web | — | — | ✅ 500 conv/mes | ✅ Ilimitado |
-| ChatAgent WhatsApp | — | — | ✅ 500 conv/mes | ✅ Ilimitado |
-| Agendamiento de citas | — | — | ✅ | ✅ + recordatorios WA |
-| Valoración IA (PricingAgent) | 1 gratis | 5/mes | Ilimitada | Ilimitada + PDF |
-| Perfil público dealer | Básico | Mejorado | Premium | Premium + showcase |
-| Soporte OKLA | FAQ | Email 48h | Chat 12h | Dedicado 4h |
+| Funcionalidad                  | LIBRE        | VISIBLE ($29) | PRO ($89)       | ÉLITE ($199)          |
+| ------------------------------ | ------------ | ------------- | --------------- | --------------------- |
+| Publicar vehículos             | ✅ Ilimitado | ✅ Ilimitado  | ✅ Ilimitado    | ✅ Ilimitado          |
+| Prioridad en búsquedas         | Estándar     | Media         | Alta            | Top                   |
+| Vehículos destacados/mes       | —            | 3             | 10              | 25                    |
+| Créditos publicitarios/mes     | —            | $15           | $45             | $120                  |
+| Badge "Dealer Verificado OKLA" | —            | ✅            | ✅ Dorado       | ✅ Premium            |
+| Dashboard Analytics            | —            | Básico        | Avanzado        | Completo + exportar   |
+| ChatAgent Web                  | —            | —             | ✅ 500 conv/mes | ✅ Ilimitado          |
+| ChatAgent WhatsApp             | —            | —             | ✅ 500 conv/mes | ✅ Ilimitado          |
+| Agendamiento de citas          | —            | —             | ✅              | ✅ + recordatorios WA |
+| Valoración IA (PricingAgent)   | 1 gratis     | 5/mes         | Ilimitada       | Ilimitada + PDF       |
+| Perfil público dealer          | Básico       | Mejorado      | Premium         | Premium + showcase    |
+| Soporte OKLA                   | FAQ          | Email 48h     | Chat 12h        | Dedicado 4h           |
 
 ---
 
@@ -147,51 +149,52 @@ La página de configuración organiza los settings por categorías. Haz clic en 
 
 ### 3.2 Precios de Publicaciones
 
-| Campo | Clave | Descripción | Valor Sugerido |
-|-------|-------|-------------|----------------|
-| Publicación Básica | `pricing.basic_listing` | Publicación estándar (gratis para plan LIBRE) | $0.00 |
-| Publicación Destacada | `pricing.featured_listing` | Badge dorado + prioridad (7 días) | $6.00 |
-| Publicación Premium | `pricing.premium_listing` | Top resultados (30 días) | $20.00 |
-| Plan Vendedor Premium | `pricing.seller_premium_price` | Plan mensual vendedor individual | $29.00 |
-| Precio publicación individual | `pricing.individual_listing_price` | Vendedor no-dealer, por publicación | $0.00 |
+| Campo                         | Clave                              | Descripción                                   | Valor Sugerido |
+| ----------------------------- | ---------------------------------- | --------------------------------------------- | -------------- |
+| Publicación Básica            | `pricing.basic_listing`            | Publicación estándar (gratis para plan LIBRE) | $0.00          |
+| Publicación Destacada         | `pricing.featured_listing`         | Badge dorado + prioridad (7 días)             | $6.00          |
+| Publicación Premium           | `pricing.premium_listing`          | Top resultados (30 días)                      | $20.00         |
+| Plan Vendedor Premium         | `pricing.seller_premium_price`     | Plan mensual vendedor individual              | $29.00         |
+| Precio publicación individual | `pricing.individual_listing_price` | Vendedor no-dealer, por publicación           | $0.00          |
 
 ### 3.3 Duración de Publicaciones
 
-| Campo | Clave | Valor Sugerido |
-|-------|-------|----------------|
-| Duración publicación gratuita | `pricing.basic_listing_days` | 90 días |
-| Duración publicación individual | `pricing.individual_listing_days` | 30 días |
+| Campo                           | Clave                             | Valor Sugerido |
+| ------------------------------- | --------------------------------- | -------------- |
+| Duración publicación gratuita   | `pricing.basic_listing_days`      | 90 días        |
+| Duración publicación individual | `pricing.individual_listing_days` | 30 días        |
 
 ### 3.4 Precios de Boosts
 
 Los boosts permiten a los dealers impulsar la visibilidad de vehículos individuales:
 
-| Campo | Clave | Valor Sugerido |
-|-------|-------|----------------|
-| Boost Básico | `pricing.boost_basic_price` | $2.50 |
-| Boost Básico (días) | `pricing.boost_basic_days` | 3 |
-| Boost Pro | `pricing.boost_pro_price` | $7.00 |
-| Boost Pro (días) | `pricing.boost_pro_days` | 7 |
-| Boost Premium | `pricing.boost_premium_price` | $20.00 |
-| Boost Premium (días) | `pricing.boost_premium_days` | 30 |
+| Campo                | Clave                         | Valor Sugerido |
+| -------------------- | ----------------------------- | -------------- |
+| Boost Básico         | `pricing.boost_basic_price`   | $2.50          |
+| Boost Básico (días)  | `pricing.boost_basic_days`    | 3              |
+| Boost Pro            | `pricing.boost_pro_price`     | $7.00          |
+| Boost Pro (días)     | `pricing.boost_pro_days`      | 7              |
+| Boost Premium        | `pricing.boost_premium_price` | $20.00         |
+| Boost Premium (días) | `pricing.boost_premium_days`  | 30             |
 
 ### 3.5 Comisiones e Impuestos
 
-| Campo | Clave | Valor Sugerido |
-|-------|-------|----------------|
+| Campo                   | Clave                         | Valor Sugerido                          |
+| ----------------------- | ----------------------------- | --------------------------------------- |
 | Comisión plataforma (%) | `pricing.platform_commission` | 0 (OKLA no cobra comisión sobre ventas) |
-| ITBIS (%) | `pricing.itbis_percentage` | 18 (tasa estándar RD) |
-| Moneda | `pricing.currency` | DOP |
+| ITBIS (%)               | `pricing.itbis_percentage`    | 18 (tasa estándar RD)                   |
+| Moneda                  | `pricing.currency`            | DOP                                     |
 
 ### 3.6 Configuración Early Bird
 
-| Campo | Clave | Valor Sugerido |
-|-------|-------|----------------|
-| Descuento Early Bird (%) | `pricing.early_bird_discount` | 30 |
-| Fecha límite Early Bird | `pricing.early_bird_deadline` | 2026-06-30 |
-| Meses gratis Early Bird | `pricing.early_bird_free_months` | 3 |
+| Campo                    | Clave                            | Valor Sugerido |
+| ------------------------ | -------------------------------- | -------------- |
+| Descuento Early Bird (%) | `pricing.early_bird_discount`    | 30             |
+| Fecha límite Early Bird  | `pricing.early_bird_deadline`    | 2026-06-30     |
+| Meses gratis Early Bird  | `pricing.early_bird_free_months` | 3              |
 
 **Pasos para guardar:**
+
 1. Modifica los valores necesarios
 2. Los campos de moneda muestran el prefijo **RD$** automáticamente
 3. Presiona **"Guardar Cambios"** en la barra superior
@@ -210,15 +213,15 @@ OKLA ofrece productos publicitarios que generan ingresos de margen casi puro (~1
 
 ### 4.2 Tabla de Productos y Precios
 
-| Producto | Precio/día | Precio/semana | Precio/mes | Costo OKLA |
-|----------|-----------|---------------|-----------|------------|
-| **Listing Destacado** (por vehículo) | $0.50 | $2.50 | $6.00 | ~$0 |
-| **Posición Top 3** (por vehículo) | $1.50 | $7.00 | $20.00 | ~$0 |
-| **Oferta del Día** (homepage + email) | $15.00 | N/A | N/A | ~$0 |
-| **Banner Homepage** (máx. 3 simultáneos) | N/A | N/A | $120.00 | ~$0 |
-| **Dealer Showcase** (directorio) | N/A | N/A | $50.00 | ~$0 |
-| **Pack Alertas Email** | N/A | N/A | $35.00 | ~$0.10 |
-| **PAQUETE VISIBILIDAD TOTAL** (bundle) | N/A | N/A | $175.00 | ~$0.10 |
+| Producto                                 | Precio/día | Precio/semana | Precio/mes | Costo OKLA |
+| ---------------------------------------- | ---------- | ------------- | ---------- | ---------- |
+| **Listing Destacado** (por vehículo)     | $0.50      | $2.50         | $6.00      | ~$0        |
+| **Posición Top 3** (por vehículo)        | $1.50      | $7.00         | $20.00     | ~$0        |
+| **Oferta del Día** (homepage + email)    | $15.00     | N/A           | N/A        | ~$0        |
+| **Banner Homepage** (máx. 3 simultáneos) | N/A        | N/A           | $120.00    | ~$0        |
+| **Dealer Showcase** (directorio)         | N/A        | N/A           | $50.00     | ~$0        |
+| **Pack Alertas Email**                   | N/A        | N/A           | $35.00     | ~$0.10     |
+| **PAQUETE VISIBILIDAD TOTAL** (bundle)   | N/A        | N/A           | $175.00    | ~$0.10     |
 
 ### 4.3 Configurar Listings Destacados
 
@@ -267,6 +270,7 @@ Actualmente se gestiona a través de los boosts configurados en la sección de p
 ### 4.7 Gestión de Banners Activos
 
 En la vista de banners (`/admin/banners`), cada banner muestra:
+
 - **Preview visual** de la imagen
 - **Estado**: Activo/Inactivo (toggle)
 - **Estadísticas**: Impresiones, Clics, CTR (Click-Through Rate)
@@ -283,21 +287,21 @@ OKLA Coins son créditos prepagados que los dealers compran para usar en cualqui
 
 ### 5.2 Paquetes de Créditos
 
-| Paquete | Créditos Base | Bonus | Total | Precio |
-|---------|--------------|-------|-------|--------|
-| **Pack Básico** | 2,500 | — | 2,500 | $25.00 |
-| **Pack Intermedio** (+10%) | 5,000 | +500 | 5,500 | $50.00 |
-| **Pack Profesional** (+20%) | 10,000 | +2,000 | 12,000 | $100.00 |
-| **Pack Dealer** (+30%) | 25,000 | +7,500 | 32,500 | $250.00 |
+| Paquete                     | Créditos Base | Bonus  | Total  | Precio  |
+| --------------------------- | ------------- | ------ | ------ | ------- |
+| **Pack Básico**             | 2,500         | —      | 2,500  | $25.00  |
+| **Pack Intermedio** (+10%)  | 5,000         | +500   | 5,500  | $50.00  |
+| **Pack Profesional** (+20%) | 10,000        | +2,000 | 12,000 | $100.00 |
+| **Pack Dealer** (+30%)      | 25,000        | +7,500 | 32,500 | $250.00 |
 
 ### 5.3 Tabla de Conversión: Créditos ↔ Productos
 
-| Producto | Créditos/día | Créditos/semana | Equivalencia |
-|----------|-------------|----------------|--------------|
-| Listing Destacado | 50 cr | 250 cr | 1 Pack Básico = 50 días destacado |
-| Posición Top 3 | 150 cr | 750 cr | 1 Pack Básico = 16 días Top 3 |
-| Oferta del Día | 1,500 cr | — | 1 Pack Intermedio = 3 Ofertas del Día |
-| Dealer Showcase | — | — | 5,000 cr/mes ($50) |
+| Producto          | Créditos/día | Créditos/semana | Equivalencia                          |
+| ----------------- | ------------ | --------------- | ------------------------------------- |
+| Listing Destacado | 50 cr        | 250 cr          | 1 Pack Básico = 50 días destacado     |
+| Posición Top 3    | 150 cr       | 750 cr          | 1 Pack Básico = 16 días Top 3         |
+| Oferta del Día    | 1,500 cr     | —               | 1 Pack Intermedio = 3 Ofertas del Día |
+| Dealer Showcase   | —            | —               | 5,000 cr/mes ($50)                    |
 
 ### 5.4 Cómo Configurar OKLA Coins
 
@@ -319,14 +323,14 @@ OKLA Coins son créditos prepagados que los dealers compran para usar en cualqui
 
 OKLA integra con 6 proveedores de pago, priorizando opciones locales de República Dominicana:
 
-| Proveedor | Tipo | Mercado | Estado |
-|-----------|------|---------|--------|
-| **Azul** 🇩🇴 | Pasarela local (VISA/MC) | RD Principal | Listo para configurar |
-| **CardNET** 🇩🇴 | Pasarela local | RD Secundario | Listo para configurar |
-| **PixelPay** 🌎 | Pasarela regional | Centroamérica/Caribe | Listo para configurar |
-| **Fygaro** 🌎 | Pagos recurrentes | Suscripciones | Listo para configurar |
-| **Stripe** 🌐 | Pasarela internacional | Internacional | Listo para configurar |
-| **PayPal** 🌐 | Billetera digital | Internacional | Listo para configurar |
+| Proveedor       | Tipo                     | Mercado              | Estado                |
+| --------------- | ------------------------ | -------------------- | --------------------- |
+| **Azul** 🇩🇴     | Pasarela local (VISA/MC) | RD Principal         | Listo para configurar |
+| **CardNET** 🇩🇴  | Pasarela local           | RD Secundario        | Listo para configurar |
+| **PixelPay** 🌎 | Pasarela regional        | Centroamérica/Caribe | Listo para configurar |
+| **Fygaro** 🌎   | Pagos recurrentes        | Suscripciones        | Listo para configurar |
+| **Stripe** 🌐   | Pasarela internacional   | Internacional        | Listo para configurar |
+| **PayPal** 🌐   | Billetera digital        | Internacional        | Listo para configurar |
 
 ### 6.2 Configurar Azul (Proveedor Principal RD)
 
@@ -336,14 +340,14 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle **"Habilitado"**
 3. Configura:
 
-| Campo | Clave | Descripción |
-|-------|-------|-------------|
-| Ambiente | `billing.azul_environment` | `sandbox` (pruebas) o `production` |
-| Nombre del Comercio | `billing.azul_merchant_name` | "OKLA Marketplace SRL" |
-| Merchant ID | `billing.azul_merchant_id` | Proporcionado por Azul |
-| API Key | `billing.azul_api_key` | 🔒 Campo secreto — clic en 👁️ para ver |
-| Tipo de Comercio | `billing.azul_merchant_type` | Tipo MCC proporcionado por Azul |
-| Código de Moneda | `billing.azul_currency_code` | `214` (DOP) |
+| Campo               | Clave                        | Descripción                            |
+| ------------------- | ---------------------------- | -------------------------------------- |
+| Ambiente            | `billing.azul_environment`   | `sandbox` (pruebas) o `production`     |
+| Nombre del Comercio | `billing.azul_merchant_name` | "OKLA Marketplace SRL"                 |
+| Merchant ID         | `billing.azul_merchant_id`   | Proporcionado por Azul                 |
+| API Key             | `billing.azul_api_key`       | 🔒 Campo secreto — clic en 👁️ para ver |
+| Tipo de Comercio    | `billing.azul_merchant_type` | Tipo MCC proporcionado por Azul        |
+| Código de Moneda    | `billing.azul_currency_code` | `214` (DOP)                            |
 
 4. Haz clic en **"Guardar"**
 5. Los campos secretos (API Key) se guardan de forma encriptada
@@ -356,10 +360,10 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle
 3. Configura:
 
-| Campo | Clave |
-|-------|-------|
-| Ambiente | `billing.cardnet_environment` |
-| API Key | `billing.cardnet_api_key` 🔒 |
+| Campo       | Clave                         |
+| ----------- | ----------------------------- |
+| Ambiente    | `billing.cardnet_environment` |
+| API Key     | `billing.cardnet_api_key` 🔒  |
 | Terminal ID | `billing.cardnet_terminal_id` |
 | Merchant ID | `billing.cardnet_merchant_id` |
 
@@ -369,11 +373,11 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle
 3. Configura:
 
-| Campo | Clave |
-|-------|-------|
-| Ambiente | `billing.pixelpay_environment` |
-| Public Key | `billing.pixelpay_public_key` 🔒 |
-| Secret Key | `billing.pixelpay_secret_key` 🔒 |
+| Campo          | Clave                                |
+| -------------- | ------------------------------------ |
+| Ambiente       | `billing.pixelpay_environment`       |
+| Public Key     | `billing.pixelpay_public_key` 🔒     |
+| Secret Key     | `billing.pixelpay_secret_key` 🔒     |
 | Webhook Secret | `billing.pixelpay_webhook_secret` 🔒 |
 
 ### 6.5 Configurar Fygaro (Suscripciones Recurrentes)
@@ -382,12 +386,12 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle
 3. Configura:
 
-| Campo | Clave |
-|-------|-------|
-| Ambiente | `billing.fygaro_environment` |
-| API Key | `billing.fygaro_api_key` 🔒 |
-| Merchant ID | `billing.fygaro_merchant_id` |
-| Webhook Secret | `billing.fygaro_webhook_secret` 🔒 |
+| Campo                   | Clave                                 |
+| ----------------------- | ------------------------------------- |
+| Ambiente                | `billing.fygaro_environment`          |
+| API Key                 | `billing.fygaro_api_key` 🔒           |
+| Merchant ID             | `billing.fygaro_merchant_id`          |
+| Webhook Secret          | `billing.fygaro_webhook_secret` 🔒    |
 | Habilitar suscripciones | `billing.fygaro_enable_subscriptions` |
 
 > 💡 **Recomendación:** Fygaro es ideal para las suscripciones recurrentes de los planes dealer (VISIBLE, PRO, ÉLITE) porque maneja automáticamente los cobros mensuales.
@@ -398,13 +402,13 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle
 3. Configura:
 
-| Campo | Clave |
-|-------|-------|
-| Ambiente | `billing.stripe_environment` |
-| Publishable Key | `billing.stripe_publishable_key` |
-| Secret Key | `billing.stripe_secret_key` 🔒 |
-| Webhook Secret | `billing.stripe_webhook_secret` 🔒 |
-| Días de prueba | `billing.stripe_trial_days` |
+| Campo           | Clave                              |
+| --------------- | ---------------------------------- |
+| Ambiente        | `billing.stripe_environment`       |
+| Publishable Key | `billing.stripe_publishable_key`   |
+| Secret Key      | `billing.stripe_secret_key` 🔒     |
+| Webhook Secret  | `billing.stripe_webhook_secret` 🔒 |
+| Días de prueba  | `billing.stripe_trial_days`        |
 
 ### 6.7 Configurar PayPal
 
@@ -412,10 +416,10 @@ OKLA integra con 6 proveedores de pago, priorizando opciones locales de Repúbli
 2. Activa el toggle
 3. Configura:
 
-| Campo | Clave |
-|-------|-------|
-| Ambiente | `billing.paypal_environment` |
-| Client ID | `billing.paypal_client_id` |
+| Campo         | Clave                             |
+| ------------- | --------------------------------- |
+| Ambiente      | `billing.paypal_environment`      |
+| Client ID     | `billing.paypal_client_id`        |
 | Client Secret | `billing.paypal_client_secret` 🔒 |
 
 ### 6.8 Seguridad de Credenciales de Pago
@@ -442,11 +446,11 @@ El programa Early Bird ofrece beneficios especiales a los primeros dealers que s
 2. Verás el estado actual del programa (Activo/Inactivo)
 3. Haz clic en **"Configurar"** para ajustar:
 
-| Parámetro | Descripción | Valor Recomendado |
-|-----------|-------------|-------------------|
-| **Espacios totales** | Número máximo de dealers Early Bird | 50 |
-| **Descuento (%)** | Porcentaje de descuento permanente | 30% |
-| **Lock-in (meses)** | Tiempo mínimo de permanencia | 12 meses |
+| Parámetro            | Descripción                         | Valor Recomendado |
+| -------------------- | ----------------------------------- | ----------------- |
+| **Espacios totales** | Número máximo de dealers Early Bird | 50                |
+| **Descuento (%)**    | Porcentaje de descuento permanente  | 30%               |
+| **Lock-in (meses)**  | Tiempo mínimo de permanencia        | 12 meses          |
 
 4. El panel muestra una **barra de progreso** con los espacios usados vs. disponibles
 
@@ -454,14 +458,14 @@ El programa Early Bird ofrece beneficios especiales a los primeros dealers que s
 
 En la sección inferior de la página, una tabla muestra:
 
-| Columna | Descripción |
-|---------|-------------|
-| Dealer | Nombre del dealer |
-| Plan | Plan contratado (VISIBLE/PRO/ÉLITE) |
-| Fecha de Ingreso | Cuándo se unió al programa |
-| Descuento | Porcentaje aplicado |
-| Ahorro/Mes | Cuánto ahorra el dealer |
-| Estado | Activo/Expirado/Cancelado |
+| Columna          | Descripción                         |
+| ---------------- | ----------------------------------- |
+| Dealer           | Nombre del dealer                   |
+| Plan             | Plan contratado (VISIBLE/PRO/ÉLITE) |
+| Fecha de Ingreso | Cuándo se unió al programa          |
+| Descuento        | Porcentaje aplicado                 |
+| Ahorro/Mes       | Cuánto ahorra el dealer             |
+| Estado           | Activo/Expirado/Cancelado           |
 
 ### 7.4 Configurar en Settings Generales
 
@@ -493,16 +497,16 @@ La vista de banners muestra una cuadrícula con todos los banners creados. Cada 
 1. En `/admin/banners`, haz clic en **"Nuevo Banner"**
 2. Rellena el formulario:
 
-| Campo | Descripción | Ejemplo |
-|-------|-------------|---------|
-| Título | Nombre interno del banner | "Banner Toyota Premium Motors" |
-| Imagen | Upload de imagen (728×90, 300×250, o responsive) | — |
-| URL Destino | Link al hacer clic | `https://okla.com.do/dealer/toyota-premium` |
-| Posición | Ubicación en la web | `hero` / `sidebar` / `inline` / `popup` |
-| Fecha Inicio | Cuándo se activa | 2026-03-01 |
-| Fecha Fin | Cuándo expira | 2026-03-31 |
-| Desktop | Mostrar en escritorio | ✅ |
-| Mobile | Mostrar en móvil | ✅ |
+| Campo        | Descripción                                      | Ejemplo                                     |
+| ------------ | ------------------------------------------------ | ------------------------------------------- |
+| Título       | Nombre interno del banner                        | "Banner Toyota Premium Motors"              |
+| Imagen       | Upload de imagen (728×90, 300×250, o responsive) | —                                           |
+| URL Destino  | Link al hacer clic                               | `https://okla.com.do/dealer/toyota-premium` |
+| Posición     | Ubicación en la web                              | `hero` / `sidebar` / `inline` / `popup`     |
+| Fecha Inicio | Cuándo se activa                                 | 2026-03-01                                  |
+| Fecha Fin    | Cuándo expira                                    | 2026-03-31                                  |
+| Desktop      | Mostrar en escritorio                            | ✅                                          |
+| Mobile       | Mostrar en móvil                                 | ✅                                          |
 
 3. Guarda y activa el banner
 
@@ -511,6 +515,7 @@ La vista de banners muestra una cuadrícula con todos los banners creados. Cada 
 **Ruta:** `/admin/contenido`
 
 La página de contenido agrupa tres secciones:
+
 - **Banners:** Acceso rápido a la gestión de banners
 - **Páginas estáticas:** Editar páginas como "Términos", "Privacidad", "Sobre Nosotros"
 - **Blog:** Gestión de artículos del blog OKLA
@@ -526,6 +531,7 @@ La página de contenido agrupa tres secciones:
 La página de dealers muestra una vista completa con:
 
 **Estadísticas superiores (5 tarjetas):**
+
 - Total de dealers registrados
 - Dealers activos
 - Dealers pendientes de verificación
@@ -533,6 +539,7 @@ La página de dealers muestra una vista completa con:
 - MRR (Monthly Recurring Revenue) total
 
 **Filtros disponibles:**
+
 - 🔍 **Búsqueda:** Por nombre, email o RNC del dealer
 - 📊 **Estado:** Todos / Activo / Pendiente / Suspendido
 - 💰 **Plan:** Starter (VISIBLE) / Pro / Enterprise (ÉLITE)
@@ -540,18 +547,19 @@ La página de dealers muestra una vista completa con:
 
 ### 9.2 Acciones sobre Dealers
 
-| Acción | Disponible cuando | Descripción |
-|--------|-------------------|-------------|
-| **Ver detalle** | Siempre | Navega al perfil completo del dealer |
-| **Verificar** | Estado = Pendiente | Marca al dealer como verificado (badge) |
-| **Suspender** | Estado = Activo | Suspende al dealer con motivo obligatorio |
-| **Reactivar** | Estado = Suspendido | Restaura acceso al dealer |
+| Acción          | Disponible cuando   | Descripción                               |
+| --------------- | ------------------- | ----------------------------------------- |
+| **Ver detalle** | Siempre             | Navega al perfil completo del dealer      |
+| **Verificar**   | Estado = Pendiente  | Marca al dealer como verificado (badge)   |
+| **Suspender**   | Estado = Activo     | Suspende al dealer con motivo obligatorio |
+| **Reactivar**   | Estado = Suspendido | Restaura acceso al dealer                 |
 
 ### 9.3 Detalle del Dealer
 
 **Ruta:** `/admin/dealers/[id]`
 
 En la vista de detalle de cada dealer puedes ver:
+
 - Información del negocio (nombre, dirección, RNC, contacto)
 - Plan actual y fecha de renovación
 - Listado de vehículos publicados
@@ -566,6 +574,7 @@ En la vista de detalle de cada dealer puedes ver:
 Este panel muestra un resumen de todas las suscripciones activas:
 
 **Tarjetas de estadísticas:**
+
 - **Total de suscripciones**
 - **Suscripciones activas** (con porcentaje)
 - **MRR** en RD$ (con cálculo anualizado)
@@ -573,21 +582,22 @@ Este panel muestra un resumen de todas las suscripciones activas:
 
 **Distribución por plan:**
 3 tarjetas con el desglose de dealers en cada plan:
+
 - VISIBLE ($29) — cantidad y porcentaje
 - PRO ($89) — cantidad y porcentaje
 - ÉLITE ($199) — cantidad y porcentaje
 
 **Tabla de suscripciones:**
 
-| Columna | Descripción |
-|---------|-------------|
-| Dealer | Nombre del dealer |
-| Plan | VISIBLE / PRO / ÉLITE |
-| Ciclo | Mensual / Anual |
-| Monto | Precio pagado |
-| Vehículos | Cantidad publicada |
-| Estado | Activa / Trial / Vencida / Suspendida / Cancelada |
-| Próximo Cobro | Fecha del siguiente cobro |
+| Columna       | Descripción                                       |
+| ------------- | ------------------------------------------------- |
+| Dealer        | Nombre del dealer                                 |
+| Plan          | VISIBLE / PRO / ÉLITE                             |
+| Ciclo         | Mensual / Anual                                   |
+| Monto         | Precio pagado                                     |
+| Vehículos     | Cantidad publicada                                |
+| Estado        | Activa / Trial / Vencida / Suspendida / Cancelada |
+| Próximo Cobro | Fecha del siguiente cobro                         |
 
 **Filtros:** Buscar por nombre + filtrar por plan + filtrar por estado
 
@@ -614,28 +624,29 @@ El panel de facturación muestra métricas financieras en tiempo real:
 
 **Tarjetas de revenue (4 métricas principales):**
 
-| Métrica | Descripción | Color |
-|---------|-------------|-------|
-| **MRR** | Ingreso Mensual Recurrente | Verde (gradiente primario) |
-| **ARR** | Ingreso Anual Recurrente (MRR × 12) | Azul |
-| **Suscripciones Activas** | Número de suscripciones pagando | Púrpura |
-| **Churn Rate** | Tasa de cancelación mensual | Rojo/Verde |
+| Métrica                   | Descripción                         | Color                      |
+| ------------------------- | ----------------------------------- | -------------------------- |
+| **MRR**                   | Ingreso Mensual Recurrente          | Verde (gradiente primario) |
+| **ARR**                   | Ingreso Anual Recurrente (MRR × 12) | Azul                       |
+| **Suscripciones Activas** | Número de suscripciones pagando     | Púrpura                    |
+| **Churn Rate**            | Tasa de cancelación mensual         | Rojo/Verde                 |
 
 ### 10.2 Transacciones Recientes
 
 La sección de transacciones muestra las últimas operaciones:
 
-| Campo | Descripción |
-|-------|-------------|
-| Dealer | Nombre del dealer que pagó |
-| Plan | Plan suscrito |
-| Fecha | Fecha de la transacción |
-| Monto | Cantidad pagada |
+| Campo  | Descripción                               |
+| ------ | ----------------------------------------- |
+| Dealer | Nombre del dealer que pagó                |
+| Plan   | Plan suscrito                             |
+| Fecha  | Fecha de la transacción                   |
+| Monto  | Cantidad pagada                           |
 | Estado | Completado ✅ / Pendiente ⏳ / Fallido ❌ |
 
 ### 10.3 Pagos Pendientes
 
 Sección especial (fondo ámbar) que destaca pagos que no se han procesado:
+
 - Nombre del dealer
 - Monto adeudado
 - Fecha de vencimiento
@@ -645,6 +656,7 @@ Sección especial (fondo ámbar) que destaca pagos que no se han procesado:
 ### 10.4 Revenue por Plan
 
 Desglose visual de ingresos por cada plan:
+
 - Dot de color + nombre del plan + monto de revenue
 - Porcentaje del ingreso total
 - Número de suscriptores
@@ -667,30 +679,30 @@ El panel de analytics proporciona visibilidad completa del rendimiento:
 
 ### 11.2 Métricas Disponibles
 
-| Sección | Endpoint | Datos |
-|---------|----------|-------|
-| **Overview** | `/api/admin/analytics/overview` | Resumen general de la plataforma |
-| **Tráfico Semanal** | `/api/admin/analytics/weekly` | Visitantes por día de la semana |
-| **Top Vehículos** | `/api/admin/analytics/top-vehicles` | Vehículos más buscados/vistos |
-| **Fuentes de Tráfico** | `/api/admin/analytics/traffic-sources` | Orgánico, social, directo, referral |
-| **Dispositivos** | `/api/admin/analytics/devices` | Desktop vs. Mobile vs. Tablet |
-| **Conversiones** | `/api/admin/analytics/conversions` | Tasas de conversión por embudo |
-| **Canales de Revenue** | `/api/admin/analytics/revenue-channels` | Ingresos por canal |
+| Sección                | Endpoint                                | Datos                               |
+| ---------------------- | --------------------------------------- | ----------------------------------- |
+| **Overview**           | `/api/admin/analytics/overview`         | Resumen general de la plataforma    |
+| **Tráfico Semanal**    | `/api/admin/analytics/weekly`           | Visitantes por día de la semana     |
+| **Top Vehículos**      | `/api/admin/analytics/top-vehicles`     | Vehículos más buscados/vistos       |
+| **Fuentes de Tráfico** | `/api/admin/analytics/traffic-sources`  | Orgánico, social, directo, referral |
+| **Dispositivos**       | `/api/admin/analytics/devices`          | Desktop vs. Mobile vs. Tablet       |
+| **Conversiones**       | `/api/admin/analytics/conversions`      | Tasas de conversión por embudo      |
+| **Canales de Revenue** | `/api/admin/analytics/revenue-channels` | Ingresos por canal                  |
 
 ### 11.3 KPIs Clave para el Modelo de Negocio
 
 Monitorea estos indicadores para medir la salud del negocio:
 
-| KPI | Fórmula | Meta |
-|-----|---------|------|
-| **MRR** | Suma de suscripciones activas | > $2,215 (break-even) |
-| **Tasa de conversión Free→Paid** | Dealers pagos / Dealers totales | > 25% |
-| **ARPU** | MRR / Dealers pagos | > $60 |
-| **Churn mensual** | Cancelaciones / Suscripciones activas | < 5% |
-| **Dealers activos** | Dealers con al menos 1 listing activo | > 45 (break-even) |
-| **Listings por dealer** | Total listings / Total dealers | > 20 |
-| **Vistas por listing** | Total vistas / Total listings | > 50/mes |
-| **Lead rate** | Contactos / Vistas | > 3% |
+| KPI                              | Fórmula                               | Meta                  |
+| -------------------------------- | ------------------------------------- | --------------------- |
+| **MRR**                          | Suma de suscripciones activas         | > $2,215 (break-even) |
+| **Tasa de conversión Free→Paid** | Dealers pagos / Dealers totales       | > 25%                 |
+| **ARPU**                         | MRR / Dealers pagos                   | > $60                 |
+| **Churn mensual**                | Cancelaciones / Suscripciones activas | < 5%                  |
+| **Dealers activos**              | Dealers con al menos 1 listing activo | > 45 (break-even)     |
+| **Listings por dealer**          | Total listings / Total dealers        | > 20                  |
+| **Vistas por listing**           | Total vistas / Total listings         | > 50/mes              |
+| **Lead rate**                    | Contactos / Vistas                    | > 3%                  |
 
 ### 11.4 Exportar Analytics
 
@@ -708,12 +720,12 @@ El DealerChatAgent es una IA que responde consultas de compradores **en nombre d
 
 ### 12.2 Límites por Plan
 
-| Plan | ChatAgent Web | ChatAgent WhatsApp | Human Handoff |
-|------|--------------|--------------------|----|
-| LIBRE | ❌ | ❌ | ❌ |
-| VISIBLE | ❌ | ❌ | ❌ |
-| PRO | ✅ 500 conv/mes | ✅ 500 conv/mes | Email alert |
-| ÉLITE | ✅ Ilimitado | ✅ Ilimitado | Live chat + CRM |
+| Plan    | ChatAgent Web   | ChatAgent WhatsApp | Human Handoff   |
+| ------- | --------------- | ------------------ | --------------- |
+| LIBRE   | ❌              | ❌                 | ❌              |
+| VISIBLE | ❌              | ❌                 | ❌              |
+| PRO     | ✅ 500 conv/mes | ✅ 500 conv/mes    | Email alert     |
+| ÉLITE   | ✅ Ilimitado    | ✅ Ilimitado       | Live chat + CRM |
 
 ### 12.3 Cómo Funciona
 
@@ -730,6 +742,7 @@ El DealerChatAgent es una IA que responde consultas de compradores **en nombre d
 **Ruta:** `/admin/search-agent` (módulo de agentes IA)
 
 Desde esta sección puedes:
+
 - Ver el uso de conversaciones por dealer
 - Monitorear el consumo de API (Claude)
 - Ver alertas cuando un dealer PRO se acerca al límite de 500 conversaciones
@@ -738,10 +751,10 @@ Desde esta sección puedes:
 
 ### 12.5 Costos de API
 
-| Plan | Costo estimado OKLA/mes | Incluido en plan |
-|------|------------------------|------------------|
-| PRO (500 conv) | ~$68 | Sí ($89 plan) |
-| ÉLITE (ilimitado) | ~$228 máx | Sí ($199 plan) |
+| Plan              | Costo estimado OKLA/mes | Incluido en plan |
+| ----------------- | ----------------------- | ---------------- |
+| PRO (500 conv)    | ~$68                    | Sí ($89 plan)    |
+| ÉLITE (ilimitado) | ~$228 máx               | Sí ($199 plan)   |
 
 > 💡 **Nota sobre margen ÉLITE:** El plan ÉLITE puede tener margen negativo al inicio (-15%), pero con caching optimizado y mayor volumen, el margen se normaliza al 47%. Se recomienda un límite soft de 2,000 conversaciones/mes para ÉLITE con cobro de $0.08/conversación adicional.
 
@@ -754,12 +767,14 @@ Desde esta sección puedes:
 **Ruta:** `/admin/vehiculos`
 
 **Estadísticas superiores:**
+
 - Total de vehículos
 - Vehículos activos
 - Pendientes de aprobación
 - Vehículos destacados
 
 **Filtros:**
+
 - 🔍 Búsqueda por marca, modelo, título
 - 📊 Estado: Pendiente / Aprobado / Rechazado
 - 👤 Tipo de vendedor: Particular / Dealer
@@ -767,12 +782,12 @@ Desde esta sección puedes:
 
 ### 13.2 Acciones de Moderación
 
-| Acción | Descripción |
-|--------|-------------|
-| **Aprobar** | Publica el vehículo en la plataforma |
-| **Rechazar** | Devuelve al vendedor con motivo |
+| Acción       | Descripción                            |
+| ------------ | -------------------------------------- |
+| **Aprobar**  | Publica el vehículo en la plataforma   |
+| **Rechazar** | Devuelve al vendedor con motivo        |
 | **Destacar** | Activa/desactiva el badge de destacado |
-| **Eliminar** | Soft-delete del vehículo |
+| **Eliminar** | Soft-delete del vehículo               |
 
 ### 13.3 Flujo de Moderación
 
@@ -791,36 +806,37 @@ Desde esta sección puedes:
 
 ### 14.2 Tipos de Promociones
 
-| Tipo | Descripción | Ejemplo |
-|------|-------------|---------|
-| **Promoción general** | Descuento en suscripciones | "30% off primer mes" |
-| **Descuento** | Reducción de precio directo | "$10 off Plan VISIBLE" |
-| **Bundle** | Paquete de productos | "Paquete Visibilidad Total" |
-| **Early Bird** | Para primeros adoptantes | "3 meses gratis Early Bird" |
+| Tipo                  | Descripción                 | Ejemplo                     |
+| --------------------- | --------------------------- | --------------------------- |
+| **Promoción general** | Descuento en suscripciones  | "30% off primer mes"        |
+| **Descuento**         | Reducción de precio directo | "$10 off Plan VISIBLE"      |
+| **Bundle**            | Paquete de productos        | "Paquete Visibilidad Total" |
+| **Early Bird**        | Para primeros adoptantes    | "3 meses gratis Early Bird" |
 
 ### 14.3 Crear una Promoción
 
 1. En `/admin/promociones`, haz clic en **"Nueva Promoción"**
 2. Configura:
 
-| Campo | Descripción |
-|-------|-------------|
-| Nombre | Nombre de la promoción |
-| Descripción | Texto explicativo |
-| Tipo | Promoción / Descuento / Bundle / Early Bird |
-| Código | Código promocional (ej: `OKLA30`) |
-| Descuento (%) | Porcentaje de descuento |
-| Monto máx. descuento | Tope del descuento en $ |
-| Usos máximos | Cuántas veces se puede usar |
-| Fecha inicio | Cuándo se activa |
-| Fecha fin | Cuándo expira |
-| Plan aplicable | A qué plan(es) aplica |
+| Campo                | Descripción                                 |
+| -------------------- | ------------------------------------------- |
+| Nombre               | Nombre de la promoción                      |
+| Descripción          | Texto explicativo                           |
+| Tipo                 | Promoción / Descuento / Bundle / Early Bird |
+| Código               | Código promocional (ej: `OKLA30`)           |
+| Descuento (%)        | Porcentaje de descuento                     |
+| Monto máx. descuento | Tope del descuento en $                     |
+| Usos máximos         | Cuántas veces se puede usar                 |
+| Fecha inicio         | Cuándo se activa                            |
+| Fecha fin            | Cuándo expira                               |
+| Plan aplicable       | A qué plan(es) aplica                       |
 
 3. Guarda y activa la promoción
 
 ### 14.4 Monitorear Promociones
 
 Cada promoción muestra:
+
 - **Estado:** Activa / Programada / Expirada / Pausada / Finalizada
 - **Impresiones:** Cuántas veces se mostró
 - **Clics:** Cuántas veces se hizo clic
@@ -836,6 +852,7 @@ Cada promoción muestra:
 **Ruta:** `/admin/configuracion` → Categoría **"Seguridad"**
 
 Los settings de seguridad incluyen:
+
 - Rate limiting
 - CORS
 - JWT configuration
@@ -849,6 +866,7 @@ Los feature flags permiten activar/desactivar funcionalidades sin desplegar cód
 **Ruta:** `/admin/configuracion` → Sección **"Feature Flags"**
 
 Cada feature flag muestra:
+
 - Nombre de la funcionalidad
 - Toggle de activación
 - Porcentaje de rollout (si aplica)
@@ -858,6 +876,7 @@ Cada feature flag muestra:
 **Ruta:** `/admin/logs`
 
 Registra todas las acciones realizadas por administradores:
+
 - Quién realizó la acción
 - Qué acción (crear, modificar, eliminar, aprobar, rechazar)
 - Sobre qué entidad (dealer, vehículo, usuario)
@@ -927,20 +946,20 @@ pricing.early_bird_free_months = 3
 
 ### 16.3 Fases del Negocio
 
-| Fase | Período | Acción en Admin | Meta |
-|------|---------|----------------|------|
-| **F1** | Meses 1-3 | Todos los planes en $0. Solo captar dealers. | 50 dealers, 500 listings |
-| **F2** | Meses 4-6 | Activar VISIBLE y PRO. 30 días gratis. Activar boosts. | 100 dealers, 2,000 listings |
-| **F3** | Meses 7-12 | Activar ÉLITE. Activar ChatAgent. Activar banners. | 200 dealers, 8,000 listings |
-| **F4** | Año 2+ | Todos los productos activos. Servicios financieros. | 400+ dealers, 25,000+ listings |
+| Fase   | Período    | Acción en Admin                                        | Meta                           |
+| ------ | ---------- | ------------------------------------------------------ | ------------------------------ |
+| **F1** | Meses 1-3  | Todos los planes en $0. Solo captar dealers.           | 50 dealers, 500 listings       |
+| **F2** | Meses 4-6  | Activar VISIBLE y PRO. 30 días gratis. Activar boosts. | 100 dealers, 2,000 listings    |
+| **F3** | Meses 7-12 | Activar ÉLITE. Activar ChatAgent. Activar banners.     | 200 dealers, 8,000 listings    |
+| **F4** | Año 2+     | Todos los productos activos. Servicios financieros.    | 400+ dealers, 25,000+ listings |
 
 ### 16.4 Break-Even Reference
 
-| Escenario | Dealers Necesarios | MRR Necesario |
-|-----------|-------------------|---------------|
-| **Break-even marketplace** | 45 dealers activos | $2,215/mes |
-| **Rentabilidad + ChatAgent** | 50 dealers | $2,059+ neto |
-| **Escala completa** | 200 dealers | $18,260+ neto |
+| Escenario                    | Dealers Necesarios | MRR Necesario |
+| ---------------------------- | ------------------ | ------------- |
+| **Break-even marketplace**   | 45 dealers activos | $2,215/mes    |
+| **Rentabilidad + ChatAgent** | 50 dealers         | $2,059+ neto  |
+| **Escala completa**          | 200 dealers        | $18,260+ neto |
 
 ---
 
@@ -964,34 +983,34 @@ pricing.early_bird_free_months = 3
 
 ## 🔗 Links Rápidos del Panel Admin
 
-| Sección | URL | Descripción |
-|---------|-----|-------------|
-| Dashboard | `/admin` | Vista general |
+| Sección       | URL                    | Descripción               |
+| ------------- | ---------------------- | ------------------------- |
+| Dashboard     | `/admin`               | Vista general             |
 | Configuración | `/admin/configuracion` | Settings de la plataforma |
-| Dealers | `/admin/dealers` | Gestión de dealers |
-| Suscripciones | `/admin/suscripciones` | Suscripciones activas |
-| Facturación | `/admin/facturacion` | Revenue y pagos |
-| Vehículos | `/admin/vehiculos` | Moderación de vehículos |
-| Analytics | `/admin/analytics` | Métricas y reportes |
-| Banners | `/admin/banners` | Publicidad visual |
-| Promociones | `/admin/promociones` | Códigos y campañas |
-| Early Bird | `/admin/early-bird` | Programa early adopters |
-| Contenido | `/admin/contenido` | Páginas y blog |
-| KYC | `/admin/kyc` | Verificación de identidad |
-| Reportes | `/admin/reportes` | Reportes de contenido |
-| Reviews | `/admin/reviews` | Moderación de reviews |
-| Usuarios | `/admin/usuarios` | Gestión de usuarios |
-| Equipo | `/admin/equipo` | Equipo interno |
-| Roles | `/admin/roles` | Permisos y roles |
-| Mensajes | `/admin/mensajes` | Inbox del admin |
-| Soporte | `/admin/soporte` | Tickets de soporte |
-| Logs | `/admin/logs` | Auditoría |
-| Sistema | `/admin/sistema` | Salud del sistema |
-| Compliance | `/admin/compliance` | Cumplimiento |
-| Mantenimiento | `/admin/mantenimiento` | Modo mantenimiento |
-| Search Agent | `/admin/search-agent` | Agente IA de búsqueda |
+| Dealers       | `/admin/dealers`       | Gestión de dealers        |
+| Suscripciones | `/admin/suscripciones` | Suscripciones activas     |
+| Facturación   | `/admin/facturacion`   | Revenue y pagos           |
+| Vehículos     | `/admin/vehiculos`     | Moderación de vehículos   |
+| Analytics     | `/admin/analytics`     | Métricas y reportes       |
+| Banners       | `/admin/banners`       | Publicidad visual         |
+| Promociones   | `/admin/promociones`   | Códigos y campañas        |
+| Early Bird    | `/admin/early-bird`    | Programa early adopters   |
+| Contenido     | `/admin/contenido`     | Páginas y blog            |
+| KYC           | `/admin/kyc`           | Verificación de identidad |
+| Reportes      | `/admin/reportes`      | Reportes de contenido     |
+| Reviews       | `/admin/reviews`       | Moderación de reviews     |
+| Usuarios      | `/admin/usuarios`      | Gestión de usuarios       |
+| Equipo        | `/admin/equipo`        | Equipo interno            |
+| Roles         | `/admin/roles`         | Permisos y roles          |
+| Mensajes      | `/admin/mensajes`      | Inbox del admin           |
+| Soporte       | `/admin/soporte`       | Tickets de soporte        |
+| Logs          | `/admin/logs`          | Auditoría                 |
+| Sistema       | `/admin/sistema`       | Salud del sistema         |
+| Compliance    | `/admin/compliance`    | Cumplimiento              |
+| Mantenimiento | `/admin/mantenimiento` | Modo mantenimiento        |
+| Search Agent  | `/admin/search-agent`  | Agente IA de búsqueda     |
 
 ---
 
-*Tutorial creado por el equipo de desarrollo OKLA — Febrero 2026*
-*Para soporte técnico, contactar al equipo de desarrollo vía Slack #okla-dev*
+_Tutorial creado por el equipo de desarrollo OKLA — Febrero 2026_
+_Para soporte técnico, contactar al equipo de desarrollo vía Slack #okla-dev_
