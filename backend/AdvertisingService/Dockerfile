@@ -49,3 +49,5 @@ ENTRYPOINT ["dotnet", "AdvertisingService.Api.dll"]
 
 # CI build trigger - rebuild docker image
 
+
+# CI trigger: GHCR package created, retry push 1772574680
