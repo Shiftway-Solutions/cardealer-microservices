@@ -357,6 +357,14 @@ export function VenderPricing() {
           </ul>
           <Button asChild className="w-full bg-gray-900 hover:bg-gray-800">
             <Link href="/publicar?plan=pro">Elegir PRO</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  </section>
+  );
+}
+
 // =============================================================================
 // SELLER REDIRECT — redirects already-registered sellers away from /vender
 // =============================================================================
