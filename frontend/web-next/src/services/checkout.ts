@@ -213,6 +213,56 @@ const staticProducts: Record<string, Product> = {
       'White label',
     ],
   },
+  'seller-gratis': {
+    id: 'seller-gratis',
+    name: 'Plan Vendedor Gratis',
+    description: 'Plan gratuito para vendedores individuales',
+    price: 0,
+    currency: 'DOP',
+    type: 'subscription',
+    features: [
+      '1 publicación activa',
+      'Hasta 10 fotos por vehículo',
+      'Duración: 30 días',
+      'Contacto por WhatsApp',
+    ],
+  },
+  'seller-premium': {
+    id: 'seller-premium',
+    name: 'Plan Vendedor Premium',
+    description: 'Vende más rápido con herramientas premium',
+    price: 1699,
+    currency: 'DOP',
+    type: 'subscription',
+    features: [
+      'Hasta 5 publicaciones activas',
+      '30 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Prioridad en búsquedas',
+      'Badge verificado',
+      '2 destacadas/mes',
+      'Estadísticas detalladas',
+    ],
+  },
+  'seller-pro': {
+    id: 'seller-pro',
+    name: 'Plan Vendedor PRO',
+    description: 'Máxima visibilidad para vendedores profesionales',
+    price: 3499,
+    currency: 'DOP',
+    type: 'subscription',
+    features: [
+      'Hasta 15 publicaciones activas',
+      '50 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Máxima prioridad',
+      'Badge verificado',
+      '5 destacadas/mes',
+      'Analytics avanzados',
+      'Alertas de baja de precio',
+      'Soporte prioritario',
+    ],
+  },
 };
 
 // =============================================================================
@@ -464,6 +514,20 @@ export function updateProductsWithPricing(pricing: PlatformPricing): void {
     if (pricing.individualListingDays) {
       staticProducts['listing-single'].duration = pricing.individualListingDays;
     }
+  }
+
+  // Update seller plans
+  if (staticProducts['seller-gratis']) {
+    staticProducts['seller-gratis'].price = pricing.sellerGratis;
+    staticProducts['seller-gratis'].currency = pricing.currency as 'DOP' | 'USD';
+  }
+  if (staticProducts['seller-premium']) {
+    staticProducts['seller-premium'].price = pricing.sellerPremium;
+    staticProducts['seller-premium'].currency = pricing.currency as 'DOP' | 'USD';
+  }
+  if (staticProducts['seller-pro']) {
+    staticProducts['seller-pro'].price = pricing.sellerProPlan;
+    staticProducts['seller-pro'].currency = pricing.currency as 'DOP' | 'USD';
   }
 }
 

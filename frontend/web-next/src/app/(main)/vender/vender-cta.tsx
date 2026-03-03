@@ -214,18 +214,16 @@ export function VenderPricing() {
   const { pricing, formatPrice } = usePlatformPricing();
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-3">
       {/* Free Plan */}
       <Card className="border-border border-2">
         <CardContent className="p-6">
           <div className="mb-4">
-            <h3 className="text-foreground text-xl font-bold">Gratuito</h3>
+            <h3 className="text-foreground text-xl font-bold">Gratis</h3>
             <p className="text-muted-foreground text-sm">Para vendedores ocasionales</p>
           </div>
           <div className="mb-6">
-            <span className="text-foreground text-4xl font-bold">
-              {formatPrice(pricing.basicListing)}
-            </span>
+            <span className="text-foreground text-4xl font-bold">RD$0</span>
           </div>
           <ul className="mb-6 space-y-3">
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -233,7 +231,7 @@ export function VenderPricing() {
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
-              Hasta {pricing.freeMaxPhotos} fotos
+              Hasta {pricing.freeMaxPhotos} fotos por vehículo
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
@@ -266,7 +264,7 @@ export function VenderPricing() {
           </div>
           <div className="mb-6">
             <span className="text-foreground text-4xl font-bold">
-              {formatPrice(pricing.sellerPremiumPrice)}
+              {formatPrice(pricing.sellerPremium)}
             </span>
             <span className="text-muted-foreground text-sm">/mes</span>
           </div>
@@ -277,7 +275,11 @@ export function VenderPricing() {
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
-              Fotos ilimitadas
+              Hasta 30 fotos por vehículo
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Publicaciones permanentes
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
@@ -289,6 +291,10 @@ export function VenderPricing() {
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              2 destacadas/mes
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
               Estadísticas detalladas
             </li>
           </ul>
@@ -297,10 +303,60 @@ export function VenderPricing() {
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
+      {/* PRO Plan */}
+      <Card className="border-border border-2">
+        <CardContent className="p-6">
+          <div className="mb-4">
+            <h3 className="text-foreground text-xl font-bold">PRO</h3>
+            <p className="text-muted-foreground text-sm">Máxima visibilidad</p>
+          </div>
+          <div className="mb-6">
+            <span className="text-foreground text-4xl font-bold">
+              {formatPrice(pricing.sellerProPlan)}
+            </span>
+            <span className="text-muted-foreground text-sm">/mes</span>
+          </div>
+          <ul className="mb-6 space-y-3">
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Hasta 15 publicaciones activas
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Hasta 50 fotos por vehículo
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Publicaciones permanentes
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Máxima prioridad en búsquedas
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Badge de vendedor verificado
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              5 destacadas/mes
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Analytics avanzados
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Alertas automáticas de baja de precio
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />
+              Soporte prioritario
+            </li>
+          </ul>
+          <Button asChild className="w-full bg-gray-900 hover:bg-gray-800">
+            <Link href="/publicar?plan=pro">Elegir PRO</Link>
 // =============================================================================
 // SELLER REDIRECT — redirects already-registered sellers away from /vender
 // =============================================================================

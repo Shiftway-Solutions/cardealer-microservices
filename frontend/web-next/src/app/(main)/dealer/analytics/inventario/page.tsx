@@ -29,8 +29,9 @@ import {
 import Link from 'next/link';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
+import { PlanGate } from '@/components/plan/plan-gate';
 
-export default function InventoryAnalyticsPage() {
+function InventoryAnalyticsContent() {
   const { data: dealer } = useCurrentDealer();
   const { data: vehiclesData, isLoading } = useVehiclesByDealer(dealer?.id || '');
 
@@ -336,5 +337,13 @@ export default function InventoryAnalyticsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function InventoryAnalyticsPage() {
+  return (
+    <PlanGate feature="analytics">
+      <InventoryAnalyticsContent />
+    </PlanGate>
   );
 }

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3, Eye, Star, Car, TrendingUp, MessageSquare, Clock } from 'lucide-react';
 import { userService } from '@/services/users';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // ─── Metric Card ─────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ function MetricCard({ label, value, icon: Icon, color, bgColor, isLoading }: Met
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function EstadisticasPage() {
+function EstadisticasContent() {
   const { user } = useAuth();
 
   // Seller profile → needed to get seller-level stats
@@ -207,5 +208,12 @@ export default function EstadisticasPage() {
         </Card>
       </div>
     </div>
+  );
+}
+export default function EstadisticasPage() {
+  return (
+    <PlanGate feature="detailedStats">
+      <EstadisticasContent />
+    </PlanGate>
   );
 }

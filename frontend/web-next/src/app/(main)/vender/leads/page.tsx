@@ -36,6 +36,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 interface Lead {
   id: string;
@@ -72,7 +73,7 @@ interface LeadStats {
   lost: number;
 }
 
-export default function SellerLeadsPage() {
+function SellerLeadsContent() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats>({
     total: 0,
@@ -513,5 +514,13 @@ export default function SellerLeadsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function SellerLeadsPage() {
+  return (
+    <PlanGate feature="leadManagement">
+      <SellerLeadsContent />
+    </PlanGate>
   );
 }

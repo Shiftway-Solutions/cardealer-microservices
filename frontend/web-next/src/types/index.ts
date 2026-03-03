@@ -273,6 +273,8 @@ export type VerificationStatus =
 
 export type DealerPlan = 'none' | 'libre' | 'visible' | 'pro' | 'elite';
 
+export type SellerPlan = 'gratis' | 'premium' | 'pro';
+
 // -----------------------------------------------------------------------------
 // API Types
 // -----------------------------------------------------------------------------

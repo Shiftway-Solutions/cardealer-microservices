@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useTrends, useExportReport, useMonthlyReport } from '@/hooks/use-dealer-analytics';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // =============================================================================
 // HELPERS
@@ -111,7 +112,7 @@ function ReportsSkeleton() {
 // MAIN PAGE COMPONENT
 // =============================================================================
 
-export default function DealerReportsPage() {
+function DealerReportsContent() {
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
   const { data: stats, isLoading: isStatsLoading } = useDealerStats(dealer?.id);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
@@ -545,4 +546,12 @@ function getMonthDate(offset: number): string {
   date.setMonth(date.getMonth() + offset);
   date.setDate(1);
   return date.toISOString();
+}
+
+export default function DealerReportsPage() {
+  return (
+    <PlanGate feature="detailedStats">
+      <DealerReportsContent />
+    </PlanGate>
+  );
 }

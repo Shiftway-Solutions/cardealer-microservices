@@ -41,6 +41,7 @@ import {
   useExportReport,
 } from '@/hooks/use-dealer-analytics';
 import type { VehiclePerformance } from '@/services/dealer-analytics';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // =============================================================================
 // HELPERS
@@ -114,7 +115,7 @@ function SalesAnalyticsSkeleton() {
 // MAIN PAGE
 // =============================================================================
 
-export default function SalesAnalyticsPage() {
+function SalesAnalyticsContent() {
   const [period, setPeriod] = useState('month');
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
   const dealerId = dealer?.id || '';
@@ -489,5 +490,13 @@ export default function SalesAnalyticsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SalesAnalyticsPage() {
+  return (
+    <PlanGate feature="analytics">
+      <SalesAnalyticsContent />
+    </PlanGate>
   );
 }

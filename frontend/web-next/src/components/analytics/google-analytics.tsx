@@ -287,6 +287,36 @@ export function trackDealerSubscription(subscription: {
 }
 
 /**
+ * Track seller subscription
+ */
+export function trackSellerSubscription(subscription: {
+  sellerId: string;
+  plan: 'gratis' | 'premium' | 'pro';
+  value: number;
+}) {
+  trackEvent('seller_subscription', {
+    seller_id: subscription.sellerId,
+    plan: subscription.plan,
+    value: subscription.value,
+  });
+
+  if (subscription.value > 0) {
+    trackEvent('purchase', {
+      transaction_id: `seller_sub_${subscription.sellerId}_${Date.now()}`,
+      currency: 'DOP',
+      value: subscription.value,
+      items: [
+        {
+          item_id: `seller_plan_${subscription.plan}`,
+          item_name: `Seller Plan ${subscription.plan}`,
+          price: subscription.value,
+        },
+      ],
+    });
+  }
+}
+
+/**
  * Track user sign up
  */
 export function trackSignUp(method: 'email' | 'google' | 'facebook') {
@@ -386,6 +416,7 @@ export function useAnalytics() {
     trackListingCreated,
     trackPurchase,
     trackDealerSubscription,
+    trackSellerSubscription,
     trackSignUp,
     trackLogin,
     trackShare,

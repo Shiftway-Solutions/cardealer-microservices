@@ -32,6 +32,7 @@ import {
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { useEngagement, useTrends, useExportReport } from '@/hooks/use-dealer-analytics';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // Skeleton for stats loading
 function StatsSkeleton() {
@@ -50,7 +51,7 @@ function StatsSkeleton() {
   );
 }
 
-export default function AnalyticsPage() {
+function AnalyticsPageContent() {
   // Get current dealer
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
 
@@ -476,5 +477,13 @@ export default function AnalyticsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <PlanGate feature="analytics">
+      <AnalyticsPageContent />
+    </PlanGate>
   );
 }

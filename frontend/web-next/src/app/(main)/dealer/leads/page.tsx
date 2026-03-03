@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PlanGate } from '@/components/plan/plan-gate';
 import {
   Users,
   Search,
@@ -128,7 +129,7 @@ const formatTime = (date: string) => {
   return `Hace ${diffDays} día(s)`;
 };
 
-export default function LeadsPage() {
+function LeadsPageContent() {
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('all');
 
@@ -506,5 +507,13 @@ function LeadsTabContent({
         </Card>
       ))}
     </div>
+  );
+}
+
+export default function LeadsPage() {
+  return (
+    <PlanGate feature="leadManagement">
+      <LeadsPageContent />
+    </PlanGate>
   );
 }

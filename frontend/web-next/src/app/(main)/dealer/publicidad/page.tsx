@@ -22,6 +22,7 @@ import {
   useCampaignReport,
 } from '@/hooks/use-advertising';
 import type { AdCampaignSummary, CampaignStatus } from '@/types/advertising';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // =============================================================================
 // HELPERS
@@ -201,7 +202,7 @@ function CampaignReportPanel({ campaignId }: { campaignId: string }) {
 // MAIN PAGE
 // =============================================================================
 
-export default function DealerPublicidadPage() {
+function DealerPublicidadContent() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -354,5 +355,13 @@ export default function DealerPublicidadPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function DealerPublicidadPage() {
+  return (
+    <PlanGate feature="featuredListings">
+      <DealerPublicidadContent />
+    </PlanGate>
   );
 }

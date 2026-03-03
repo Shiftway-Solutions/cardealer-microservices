@@ -38,6 +38,7 @@ import {
 import Link from 'next/link';
 import { useLead, useUpdateLead } from '@/hooks/use-crm';
 import type { LeadDto, LeadStatus } from '@/services/crm';
+import { PlanGate } from '@/components/plan/plan-gate';
 import { toast } from 'sonner';
 import { sanitizeText } from '@/lib/security/sanitize';
 
@@ -118,7 +119,7 @@ function formatDate(dateString: string) {
 // Main Page Component
 // ============================================================================
 
-export default function LeadDetailPage() {
+function LeadDetailContent() {
   const params = useParams();
   const leadId = params.id as string;
   const [notes, setNotes] = useState('');
@@ -485,5 +486,13 @@ export default function LeadDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeadDetailPage() {
+  return (
+    <PlanGate feature="leadManagement">
+      <LeadDetailContent />
+    </PlanGate>
   );
 }

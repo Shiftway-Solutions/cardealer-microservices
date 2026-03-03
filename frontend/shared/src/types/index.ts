@@ -69,6 +69,96 @@ export enum DealerPlan {
 }
 
 /**
+ * Planes de suscripción para vendedores individuales
+ */
+export enum SellerPlan {
+  GRATIS = 'gratis', // 1 publicación, 10 fotos, 30 días
+  PREMIUM = 'premium', // 5 publicaciones, fotos ilimitadas, prioridad
+  PRO = 'pro', // 15 publicaciones, analytics, badge, WhatsApp
+}
+
+/**
+ * Features disponibles por plan de vendedor individual
+ */
+export interface SellerPlanFeatures {
+  maxListings: number; // Máximo de publicaciones activas
+  maxImages: number; // Imágenes por vehículo
+  listingDuration: number; // Duración en días (0 = permanente)
+  analyticsAccess: boolean; // Acceso a estadísticas detalladas
+  searchPriority: boolean; // Prioridad en resultados de búsqueda
+  verifiedBadge: boolean; // Badge de vendedor verificado
+  featuredListings: number; // Publicaciones destacadas permitidas/mes
+  whatsappContact: boolean; // Contacto por WhatsApp
+  detailedStats: boolean; // Estadísticas detalladas de vistas/clicks
+  boostAvailable: boolean; // Puede comprar boosts individuales
+  socialSharing: boolean; // Compartir en redes con preview optimizado
+  priceDropAlerts: boolean; // Alertas automáticas de baja de precio
+}
+
+/**
+ * Configuración de límites por plan de vendedor
+ */
+export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
+  [SellerPlan.GRATIS]: {
+    maxListings: 1,
+    maxImages: 10,
+    listingDuration: 30,
+    analyticsAccess: false,
+    searchPriority: false,
+    verifiedBadge: false,
+    featuredListings: 0,
+    whatsappContact: true,
+    detailedStats: false,
+    boostAvailable: false,
+    socialSharing: false,
+    priceDropAlerts: false,
+  },
+  [SellerPlan.PREMIUM]: {
+    maxListings: 5,
+    maxImages: 30,
+    listingDuration: 0, // Permanente mientras activa suscripción
+    analyticsAccess: true,
+    searchPriority: true,
+    verifiedBadge: true,
+    featuredListings: 2,
+    whatsappContact: true,
+    detailedStats: true,
+    boostAvailable: true,
+    socialSharing: true,
+    priceDropAlerts: false,
+  },
+  [SellerPlan.PRO]: {
+    maxListings: 15,
+    maxImages: 50,
+    listingDuration: 0, // Permanente
+    analyticsAccess: true,
+    searchPriority: true,
+    verifiedBadge: true,
+    featuredListings: 5,
+    whatsappContact: true,
+    detailedStats: true,
+    boostAvailable: true,
+    socialSharing: true,
+    priceDropAlerts: true,
+  },
+};
+
+/**
+ * Información de suscripción de vendedor individual
+ */
+export interface SellerSubscription {
+  plan: SellerPlan;
+  status: 'active' | 'canceled' | 'expired' | 'trial';
+  startDate: string;
+  endDate?: string;
+  features: SellerPlanFeatures;
+  usage: {
+    currentListings: number;
+    featuredUsed: number;
+  };
+}
+
+/**
  * Permisos granulares para empleados de dealers
  */
 export enum DealerPermission {

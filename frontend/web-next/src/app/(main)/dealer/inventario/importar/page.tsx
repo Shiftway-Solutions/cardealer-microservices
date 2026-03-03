@@ -30,8 +30,9 @@ import {
   useImportHistory,
   useDownloadImportTemplate,
 } from '@/hooks/use-dealer-analytics';
+import { PlanGate } from '@/components/plan/plan-gate';
 
-export default function DealerImportPage() {
+function DealerImportContent() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -349,5 +350,13 @@ export default function DealerImportPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function DealerImportPage() {
+  return (
+    <PlanGate feature="bulkUpload">
+      <DealerImportContent />
+    </PlanGate>
   );
 }

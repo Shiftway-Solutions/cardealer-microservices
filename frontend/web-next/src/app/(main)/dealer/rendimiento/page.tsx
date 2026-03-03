@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { dealerAnalyticsService } from '@/services/dealer-analytics';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 interface PerformanceMetrics {
   overview: {
@@ -45,7 +46,7 @@ interface PerformanceMetrics {
   };
 }
 
-export default function RendimientoPage() {
+function RendimientoContent() {
   const { data: dealer } = useCurrentDealer();
   const [metrics, setMetrics] = React.useState<PerformanceMetrics | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -301,5 +302,13 @@ export default function RendimientoPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function RendimientoPage() {
+  return (
+    <PlanGate feature="analytics">
+      <RendimientoContent />
+    </PlanGate>
   );
 }

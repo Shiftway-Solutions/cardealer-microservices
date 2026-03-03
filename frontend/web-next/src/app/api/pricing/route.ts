@@ -35,6 +35,10 @@ export interface PlatformPricing {
   dealerVisible: number;
   dealerPro: number;
   dealerElite: number;
+  // Planes Seller Individual (3 niveles)
+  sellerGratis: number;
+  sellerPremium: number;
+  sellerProPlan: number;
   // Boosts
   boostBasicPrice: number;
   boostBasicDays: number;
@@ -75,6 +79,10 @@ const DEFAULT_PRICING: PlatformPricing = {
   dealerVisible: 1699,
   dealerPro: 5199,
   dealerElite: 11599,
+  // Planes Seller Individual (DOP mensuales) - GRATIS/PREMIUM/PRO
+  sellerGratis: 0,
+  sellerPremium: 1699,
+  sellerProPlan: 3499,
   // Boosts
   boostBasicPrice: 499,
   boostBasicDays: 3,

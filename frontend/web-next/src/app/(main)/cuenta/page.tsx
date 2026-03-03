@@ -46,6 +46,7 @@ import {
   BookOpen,
   Sparkles,
   MapPin,
+  Crown,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,6 +64,8 @@ import { getAppointmentTypeLabel } from '@/services/appointments';
 import { useSellerByUserId, useSellerStats } from '@/hooks/use-seller';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useAlertStats } from '@/hooks/use-alerts';
+import { PlanBadge, PlanUsageBar } from '@/components/plan/plan-gate';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -257,9 +260,12 @@ function DealerDashboard() {
           {dealerLoading ? (
             <Skeleton className="mb-1 h-8 w-52" />
           ) : (
-            <h1 className="text-foreground text-2xl font-bold">
-              {dealer?.businessName ?? 'Portal Dealer'}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-foreground text-2xl font-bold">
+                {dealer?.businessName ?? 'Portal Dealer'}
+              </h1>
+              <PlanBadge showUpgradeLink />
+            </div>
           )}
           <p className="text-muted-foreground">Panel de control del concesionario</p>
         </div>
@@ -433,7 +439,7 @@ function DealerDashboard() {
           <CardTitle className="text-base">Acciones Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <QuickActionTile
               href="/dealer/inventario"
               icon={Package}
@@ -448,6 +454,12 @@ function DealerDashboard() {
               color="green"
             />
             <QuickActionTile href="/dealer/citas" icon={Calendar} label="Citas" color="yellow" />
+            <QuickActionTile
+              href="/dealer/suscripcion"
+              icon={Crown}
+              label="Mi Plan"
+              color="green"
+            />
           </div>
         </CardContent>
       </Card>
@@ -477,7 +489,10 @@ function SellerDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Mi Panel de Vendedor</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-foreground text-2xl font-bold">Mi Panel de Vendedor</h1>
+            <PlanBadge showUpgradeLink />
+          </div>
           <p className="text-muted-foreground">Gestiona tus publicaciones y consultas</p>
         </div>
         {!kycLoading && canSell && (
@@ -570,7 +585,7 @@ function SellerDashboard() {
           <CardTitle className="text-base">Acciones Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <QuickActionTile
               href="/cuenta/mis-vehiculos"
               icon={Car}
@@ -590,6 +605,12 @@ function SellerDashboard() {
               color="green"
             />
             <QuickActionTile href="/cuenta/pagos" icon={CreditCard} label="Pagos" color="yellow" />
+            <QuickActionTile
+              href="/cuenta/suscripcion"
+              icon={Sparkles}
+              label="Mi Plan"
+              color="green"
+            />
           </div>
         </CardContent>
       </Card>

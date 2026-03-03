@@ -38,6 +38,7 @@ import {
   getTrendIcon,
 } from '@/services/vehicle-intelligence';
 import { toast } from 'sonner';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 // ============================================================================
 // Skeleton Components
@@ -151,7 +152,7 @@ function calculateSuggestedPrice(vehicle: { price: number; createdAt?: string })
 // Main Component
 // ============================================================================
 
-export default function DealerPricingPage() {
+function DealerPricingContent() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedVehicleId, setSelectedVehicleId] = React.useState<string | null>(null);
 
@@ -548,5 +549,13 @@ export default function DealerPricingPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function DealerPricingPage() {
+  return (
+    <PlanGate feature="marketPriceAnalysis">
+      <DealerPricingContent />
+    </PlanGate>
   );
 }
