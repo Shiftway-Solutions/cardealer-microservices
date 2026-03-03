@@ -11,7 +11,7 @@ export type CampaignStatus =
   | 'Cancelled'
   | 'Completed'
   | 'Expired';
-export type CampaignPricingModel = 'PerView' | 'PerClick' | 'PerDay' | 'FixedMonthly';
+export type CampaignPricingModel = 'PerView' | 'PerClick' | 'PerDay' | 'FixedMonthly' | 'FlatFee';
 export type RotationAlgorithmType =
   | 'WeightedRandom'
   | 'RoundRobin'
@@ -55,12 +55,16 @@ export interface AdCampaignSummary {
 }
 
 export interface CreateCampaignRequest {
+  name?: string;
   ownerId: string;
   ownerType: string;
-  vehicleId: string;
+  vehicleId?: string;
+  vehicleIds?: string[];
   placementType: AdPlacementType;
   pricingModel: CampaignPricingModel;
   totalBudget: number;
+  dailyBudget?: number;
+  bidAmount?: number;
   startDate: string;
   endDate: string;
 }

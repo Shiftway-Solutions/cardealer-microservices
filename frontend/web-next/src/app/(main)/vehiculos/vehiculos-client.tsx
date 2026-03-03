@@ -452,11 +452,7 @@ export default function VehiculosClient() {
           {topSponsored.length > 0 && currentPage === 1 && allVehicles.length > 0 && (
             <>
               {topSponsored.slice(0, 2).map((sv: SponsoredVehicle) => (
-                <SponsoredVehicleCard
-                  key={sv.id}
-                  vehicle={sv}
-                  variant="horizontal"
-                />
+                <SponsoredVehicleCard key={sv.id} vehicle={sv} variant="horizontal" />
               ))}
             </>
           )}
@@ -471,12 +467,13 @@ export default function VehiculosClient() {
               />
               {(i + 1) % 6 === 0 && <AdSlotLeaderboard />}
               {/* Inline sponsored every 10 items */}
-              {(i + 1) % 10 === 0 && inlineSponsored[Math.floor(i / 10) % inlineSponsored.length] && (
-                <SponsoredVehicleCard
-                  vehicle={inlineSponsored[Math.floor(i / 10) % inlineSponsored.length]}
-                  variant="horizontal"
-                />
-              )}
+              {(i + 1) % 10 === 0 &&
+                inlineSponsored[Math.floor(i / 10) % inlineSponsored.length] && (
+                  <SponsoredVehicleCard
+                    vehicle={inlineSponsored[Math.floor(i / 10) % inlineSponsored.length]}
+                    variant="horizontal"
+                  />
+                )}
             </React.Fragment>
           ))}
         </>
@@ -489,13 +486,7 @@ export default function VehiculosClient() {
     // Top sponsored results (positions 1-3, only on first page)
     if (topSponsored.length > 0 && currentPage === 1) {
       topSponsored.slice(0, 3).forEach((sv: SponsoredVehicle) => {
-        items.push(
-          <SponsoredVehicleCard
-            key={`sp-top-${sv.id}`}
-            vehicle={sv}
-            priority
-          />
-        );
+        items.push(<SponsoredVehicleCard key={`sp-top-${sv.id}`} vehicle={sv} priority />);
       });
     }
 
@@ -750,10 +741,7 @@ export default function VehiculosClient() {
 
                 {/* Sidebar sponsored vehicles */}
                 {inlineSponsored.length > 0 && (
-                  <SidebarAdUnit
-                    vehicles={inlineSponsored.slice(0, 2)}
-                    className="mt-4"
-                  />
+                  <SidebarAdUnit vehicles={inlineSponsored.slice(0, 2)} className="mt-4" />
                 )}
               </div>
             </div>

@@ -74,12 +74,14 @@ export default function PublicarFotosPage() {
   useState(() => {
     if (vehicle?.images) {
       setPhotos(
-        vehicle.images.map((img: { url?: string; category?: string; isPrimary?: boolean }, index: number) => ({
-          id: `existing-${index}`,
-          url: img.url ?? '',
-          category: img.category || 'general',
-          isPrimary: img.isPrimary || index === 0,
-        }))
+        vehicle.images.map(
+          (img: { url?: string; category?: string; isPrimary?: boolean }, index: number) => ({
+            id: `existing-${index}`,
+            url: img.url ?? '',
+            category: img.category || 'general',
+            isPrimary: img.isPrimary || index === 0,
+          })
+        )
       );
     }
   });
@@ -207,7 +209,7 @@ export default function PublicarFotosPage() {
           </div>
           <div className="text-right">
             <p className="text-muted-foreground text-sm">Progreso</p>
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-primary text-2xl font-bold">
               {uploadedCount}/{totalRequired}
             </p>
           </div>
@@ -240,9 +242,7 @@ export default function PublicarFotosPage() {
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`border-border flex w-full items-center justify-between border-b px-4 py-3 transition-colors last:border-b-0 ${
-                        isActive
-                          ? 'border-l-4 border-l-primary bg-primary/10'
-                          : 'hover:bg-muted/50'
+                        isActive ? 'border-l-primary bg-primary/10 border-l-4' : 'hover:bg-muted/50'
                       }`}
                     >
                       <div className="text-left">
@@ -255,7 +255,7 @@ export default function PublicarFotosPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {isComplete ? (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="text-primary h-4 w-4" />
                         ) : cat.required > 0 ? (
                           <Badge variant="outline" className="text-xs">
                             {catPhotos}/{cat.required}
@@ -305,7 +305,7 @@ export default function PublicarFotosPage() {
               <CardContent className="py-12 text-center">
                 {isUploading ? (
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <Loader2 className="text-primary h-12 w-12 animate-spin" />
                     <p className="text-foreground text-lg font-medium">Subiendo fotos...</p>
                     <Progress
                       value={
@@ -338,10 +338,7 @@ export default function PublicarFotosPage() {
                       id="photo-upload"
                     />
                     <label htmlFor="photo-upload">
-                      <Button
-                        className="cursor-pointer bg-primary hover:bg-primary/90"
-                        asChild
-                      >
+                      <Button className="bg-primary hover:bg-primary/90 cursor-pointer" asChild>
                         <span>
                           <ImagePlus className="mr-2 h-4 w-4" />
                           Seleccionar Archivos
@@ -388,7 +385,7 @@ export default function PublicarFotosPage() {
 
                         {/* Primary badge */}
                         {photo.isPrimary && (
-                          <Badge className="absolute top-2 right-2 bg-primary/100">
+                          <Badge className="bg-primary/100 absolute top-2 right-2">
                             <Star className="mr-1 h-3 w-3" />
                             Principal
                           </Badge>
@@ -412,7 +409,7 @@ export default function PublicarFotosPage() {
                     {/* Add more button */}
                     <label
                       htmlFor="photo-upload"
-                      className="border-border bg-muted/50 text-muted-foreground flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary"
+                      className="border-border bg-muted/50 text-muted-foreground hover:border-primary hover:bg-primary/10 hover:text-primary flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
                     >
                       <ImagePlus className="mb-2 h-8 w-8" />
                       <span className="text-sm">Agregar</span>

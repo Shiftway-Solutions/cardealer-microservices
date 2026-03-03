@@ -72,14 +72,15 @@ export function useSponsoredVehicles(
 ) {
   return useQuery({
     queryKey: [...adKeys.sponsored(slot), options?.searchQuery, options?.count],
-    queryFn: () => fetchSponsoredVehicles(slot, {
-      searchQuery: options?.searchQuery,
-      count: options?.count,
-      region: options?.region,
-      make: options?.make,
-    }),
-    staleTime: 5 * 60 * 1000,  // 5 minutes
-    gcTime: 10 * 60 * 1000,    // 10 minutes
+    queryFn: () =>
+      fetchSponsoredVehicles(slot, {
+        searchQuery: options?.searchQuery,
+        count: options?.count,
+        region: options?.region,
+        make: options?.make,
+      }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: options?.enabled !== false,
     refetchOnWindowFocus: false,
   });
@@ -195,12 +196,19 @@ export function useInterleavedResults<T extends { id: string }>(
   const insertPositions = options?.insertPositions ?? [0, 1, 2, 8, 15, 23];
   const maxSponsored = options?.maxSponsored ?? sponsoredVehicles.length;
 
-  const interleaved: Array<{ type: 'organic'; data: T } | { type: 'sponsored'; data: SponsoredVehicle }> = [];
+  const interleaved: Array<
+    { type: 'organic'; data: T } | { type: 'sponsored'; data: SponsoredVehicle }
+  > = [];
 
   let sponsoredIndex = 0;
   let organicIndex = 0;
 
-  for (let i = 0; organicIndex < organicResults.length || sponsoredIndex < Math.min(maxSponsored, sponsoredVehicles.length); i++) {
+  for (
+    let i = 0;
+    organicIndex < organicResults.length ||
+    sponsoredIndex < Math.min(maxSponsored, sponsoredVehicles.length);
+    i++
+  ) {
     if (
       insertPositions.includes(i) &&
       sponsoredIndex < Math.min(maxSponsored, sponsoredVehicles.length)

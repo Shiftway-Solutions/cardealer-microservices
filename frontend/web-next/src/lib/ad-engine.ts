@@ -36,11 +36,15 @@ import {
  * Each component normalized to 1-10 scale.
  */
 export function computeQualityScore(components: QualityScoreComponents): QualityScore {
-  const score = Math.min(10, Math.max(1,
-    (components.expectedCtr * 0.35) +
-    (components.adRelevance * 0.40) +
-    (components.landingExperience * 0.25)
-  ));
+  const score = Math.min(
+    10,
+    Math.max(
+      1,
+      components.expectedCtr * 0.35 +
+        components.adRelevance * 0.4 +
+        components.landingExperience * 0.25
+    )
+  );
 
   return {
     components,
@@ -54,7 +58,7 @@ export function computeQualityScore(components: QualityScoreComponents): Quality
  * Returns a score from 1-10.
  */
 export function estimateExpectedCtr(params: {
-  dealerHistoricalCtr?: number;  // e.g., 0.05 = 5%
+  dealerHistoricalCtr?: number; // e.g., 0.05 = 5%
   vehicleMake?: string;
   vehicleYear?: number;
   photoCount?: number;
@@ -64,14 +68,12 @@ export function estimateExpectedCtr(params: {
 
   // Dealer historical CTR (normalized)
   if (params.dealerHistoricalCtr !== undefined) {
-    const ctrNormalized = Math.min(params.dealerHistoricalCtr / 0.10, 1); // 10% CTR = max
+    const ctrNormalized = Math.min(params.dealerHistoricalCtr / 0.1, 1); // 10% CTR = max
     score += ctrNormalized * 3; // up to +3 points
   }
 
   // Popular makes get higher CTR
-  const makeMultiplier = params.vehicleMake
-    ? (BRAND_MULTIPLIERS[params.vehicleMake] || 1.0)
-    : 1.0;
+  const makeMultiplier = params.vehicleMake ? BRAND_MULTIPLIERS[params.vehicleMake] || 1.0 : 1.0;
   score += (makeMultiplier - 1) * 2;
 
   // Recent vehicles get higher CTR
@@ -137,9 +139,9 @@ export function calculateLandingExperience(params: {
   photoCount?: number;
   hasPrice?: boolean;
   hasDescription?: boolean;
-  dealerResponseTime?: number;  // hours
+  dealerResponseTime?: number; // hours
   isVerified?: boolean;
-  dealerRating?: number;        // 1-5
+  dealerRating?: number; // 1-5
 }): number {
   let score = 5;
 
@@ -214,7 +216,7 @@ export function calculateContextMultiplier(params: {
 
   // Geo match boosts relevance
   if (params.geoMatchScore !== undefined) {
-    multiplier *= (0.8 + params.geoMatchScore * 0.4); // 0.8 to 1.2
+    multiplier *= 0.8 + params.geoMatchScore * 0.4; // 0.8 to 1.2
   }
 
   // Brand match boost
@@ -237,10 +239,7 @@ export function calculateContextMultiplier(params: {
  * @param slotPosition - The ad slot being auctioned
  * @returns Auction results ordered by position
  */
-export function runGspAuction(
-  bids: AdBid[],
-  slotPosition: AdSlotPosition
-): SlotAuction {
+export function runGspAuction(bids: AdBid[], slotPosition: AdSlotPosition): SlotAuction {
   const slotConfig = AD_SLOT_CONFIGS.find(c => c.position === slotPosition);
   const maxPositions = slotConfig?.maxAds ?? 3;
   const floorPrice = slotConfig?.cpcFloor ?? slotConfig?.cpmFloor ?? 50;
@@ -305,24 +304,26 @@ export function runGspAuction(
 
 /** Behavior event weights for PIS calculation */
 const PIS_EVENT_WEIGHTS: Record<string, { weight: number; decayDays: number }> = {
-  'active_search':         { weight: 8,  decayDays: 7 },
-  'view_detail_60s':       { weight: 5,  decayDays: 5 },
-  'view_okla_score':       { weight: 6,  decayDays: 10 },
-  'contact_whatsapp':      { weight: 12, decayDays: 3 },
-  'fill_test_drive_form':  { weight: 15, decayDays: 2 },
-  'compare_vehicles':      { weight: 7,  decayDays: 7 },
-  'view_score_section':    { weight: 4,  decayDays: 14 },
-  'session_return_48_72h': { weight: 3,  decayDays: 5 },
+  active_search: { weight: 8, decayDays: 7 },
+  view_detail_60s: { weight: 5, decayDays: 5 },
+  view_okla_score: { weight: 6, decayDays: 10 },
+  contact_whatsapp: { weight: 12, decayDays: 3 },
+  fill_test_drive_form: { weight: 15, decayDays: 2 },
+  compare_vehicles: { weight: 7, decayDays: 7 },
+  view_score_section: { weight: 4, decayDays: 14 },
+  session_return_48_72h: { weight: 3, decayDays: 5 },
 };
 
 /**
  * Calculate Purchase Intent Score for a user based on behavior events.
  */
-export function calculatePurchaseIntentScore(events: Array<{
-  type: string;
-  timestamp: string;
-  count?: number;
-}>): PurchaseIntentScore {
+export function calculatePurchaseIntentScore(
+  events: Array<{
+    type: string;
+    timestamp: string;
+    count?: number;
+  }>
+): PurchaseIntentScore {
   const now = Date.now();
   let totalScore = 0;
 
@@ -388,12 +389,14 @@ export function calculatePacingRate(params: {
   if (params.hoursRemaining <= 0 || params.budgetRemaining <= 0) return 0;
 
   const hourWeight = DEFAULT_HOUR_WEIGHTS.find(h => h.hour === params.currentHour);
-  const weight = hourWeight?.conversionWeight ?? (1 / 24);
+  const weight = hourWeight?.conversionWeight ?? 1 / 24;
 
   // Normalize weight relative to remaining hours
-  const remainingWeightSum = DEFAULT_HOUR_WEIGHTS
-    .filter(h => h.hour >= params.currentHour)
-    .reduce((sum, h) => sum + h.conversionWeight, 0) || 1;
+  const remainingWeightSum =
+    DEFAULT_HOUR_WEIGHTS.filter(h => h.hour >= params.currentHour).reduce(
+      (sum, h) => sum + h.conversionWeight,
+      0
+    ) || 1;
 
   const normalizedWeight = weight / remainingWeightSum;
   return params.budgetRemaining * normalizedWeight;
@@ -432,10 +435,7 @@ export function isWithinFrequencyCap(params: {
   const cap = DEFAULT_FREQUENCY_CAPS.find(c => c.adType === params.adType);
   if (!cap) return true;
 
-  return (
-    params.dailyImpressions < cap.maxPerDay &&
-    params.weeklyImpressions < cap.maxPerWeek
-  );
+  return params.dailyImpressions < cap.maxPerDay && params.weeklyImpressions < cap.maxPerWeek;
 }
 
 // ---------------------------------------------------------------------------
@@ -448,8 +448,8 @@ export function isWithinFrequencyCap(params: {
  * If IVT_Score > 0.70, traffic is invalid.
  */
 export function calculateIvtScore(params: {
-  botProbability: number;    // 0-1
-  anomalyPattern: number;    // 0-1
+  botProbability: number; // 0-1
+  anomalyPattern: number; // 0-1
   deviceFingerprintRisk: number; // 0-1
 }): InvalidTrafficScore {
   const score =
@@ -462,7 +462,7 @@ export function calculateIvtScore(params: {
     anomalyPattern: params.anomalyPattern,
     deviceFingerprintRisk: params.deviceFingerprintRisk,
     score: Math.round(score * 100) / 100,
-    isInvalid: score > 0.70,
+    isInvalid: score > 0.7,
   };
 }
 
@@ -475,10 +475,10 @@ export function calculateIvtScore(params: {
  */
 export function calculateRoi(params: {
   monthlyBudget: number;
-  estimatedCtr?: number;     // default 5%
+  estimatedCtr?: number; // default 5%
   estimatedLeadRate?: number; // default 12%
   estimatedConvRate?: number; // default 35%
-  averageMargin?: number;    // default RD$50,000
+  averageMargin?: number; // default RD$50,000
 }): RoiCalculation {
   const ctr = params.estimatedCtr ?? 0.05;
   const leadRate = params.estimatedLeadRate ?? 0.12;
@@ -495,12 +495,11 @@ export function calculateRoi(params: {
   const cpl = leads > 0 ? params.monthlyBudget / leads : 0;
   const cac = sales > 0 ? params.monthlyBudget / sales : 0;
   const totalRevenue = sales * margin;
-  const roi = params.monthlyBudget > 0
-    ? ((totalRevenue - params.monthlyBudget) / params.monthlyBudget) * 100
-    : 0;
-  const returnPerDollar = params.monthlyBudget > 0
-    ? totalRevenue / params.monthlyBudget
-    : 0;
+  const roi =
+    params.monthlyBudget > 0
+      ? ((totalRevenue - params.monthlyBudget) / params.monthlyBudget) * 100
+      : 0;
+  const returnPerDollar = params.monthlyBudget > 0 ? totalRevenue / params.monthlyBudget : 0;
 
   return {
     monthlyBudget: params.monthlyBudget,

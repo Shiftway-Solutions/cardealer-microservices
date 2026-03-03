@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateSponsoredVehiclesForSlot } from '@/lib/ad-engine';
 import type { AdSlotPosition } from '@/types/ads';
 
+// BFF pattern: server-side route uses INTERNAL_API_URL for Gateway
+const API_URL =
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
+
 /**
  * GET /api/advertising/sponsored
  * Returns sponsored vehicles for a given ad slot position.
- * In production, this proxies to the ad server backend.
- * Currently serves demo data from the local ad engine.
+ * Proxies to the backend ad server, with client-side ad engine as fallback.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -21,13 +24,32 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // In production: proxy to backend ad server
-    // const backendUrl = `${process.env.GATEWAY_URL}/api/advertising/sponsored?${searchParams.toString()}`;
-    // const res = await fetch(backendUrl);
-    // const data = await res.json();
-    // return NextResponse.json(data);
+    // Try backend first
+    const backendUrl = `${API_URL}/api/advertising/rotation/${slot}`;
+    const res = await fetch(backendUrl, {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 300 }, // cache 5 min
+    });
 
-    // For now: generate demo sponsored vehicles
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json({
+        success: true,
+        data: data.data?.items || data.data || [],
+        meta: {
+          slot,
+          count: (data.data?.items || data.data || []).length,
+          auctionTimestamp: new Date().toISOString(),
+          source: 'backend',
+        },
+      });
+    }
+  } catch {
+    // Backend unavailable — fall through to local engine
+  }
+
+  // Fallback: generate demo sponsored vehicles from client-side engine
+  try {
     const vehicles = generateSponsoredVehiclesForSlot(
       slot,
       count ? parseInt(count, 10) : undefined
@@ -40,6 +62,7 @@ export async function GET(request: NextRequest) {
         slot,
         count: vehicles.length,
         auctionTimestamp: new Date().toISOString(),
+        source: 'demo',
       },
     });
   } catch {

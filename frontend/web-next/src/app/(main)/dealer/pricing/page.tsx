@@ -28,10 +28,7 @@ import {
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { useDemandByCategory, useCreatePriceAnalysis } from '@/hooks/use-vehicle-intelligence';
-import {
-  formatPrice,
-  getRecommendationType,
-} from '@/services/vehicle-intelligence';
+import { formatPrice, getRecommendationType } from '@/services/vehicle-intelligence';
 import { toast } from 'sonner';
 import { PlanGate } from '@/components/plan/plan-gate';
 

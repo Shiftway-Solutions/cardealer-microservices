@@ -9,7 +9,17 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, MapPin, Camera, Fuel, Gauge, Settings2, BadgeCheck, Sparkles, TrendingUp } from 'lucide-react';
+import {
+  Heart,
+  MapPin,
+  Camera,
+  Fuel,
+  Gauge,
+  Settings2,
+  BadgeCheck,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { SponsoredVehicle, AdSlotPosition } from '@/types/ads';
@@ -39,7 +49,8 @@ export function SponsoredBadge({ tier, className, size = 'sm' }: SponsoredBadgeP
     premium: {
       label: 'Premium',
       icon: Sparkles,
-      className: 'bg-gradient-to-r from-violet-50/90 to-purple-50/90 text-purple-700 border-purple-200/60',
+      className:
+        'bg-gradient-to-r from-violet-50/90 to-purple-50/90 text-purple-700 border-purple-200/60',
     },
   };
 
@@ -50,7 +61,7 @@ export function SponsoredBadge({ tier, className, size = 'sm' }: SponsoredBadgeP
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border backdrop-blur-sm font-medium',
+        'inline-flex items-center gap-1 rounded-full border font-medium backdrop-blur-sm',
         isSmall ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs',
         config.className,
         className
@@ -86,7 +97,9 @@ function useAdImpression(
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impressionToken, timestamp: Date.now() }),
-          }).catch(() => {/* silent */});
+          }).catch(() => {
+            /* silent */
+          });
           observer.disconnect();
         }
       },
@@ -139,7 +152,9 @@ export function SponsoredVehicleCard({
         position: vehicle.auctionPosition,
         timestamp: Date.now(),
       }),
-    }).catch(() => {/* silent */});
+    }).catch(() => {
+      /* silent */
+    });
   }, [vehicle, onClick]);
 
   const formatPrice = (price: number, currency: string) => {
@@ -161,10 +176,10 @@ export function SponsoredVehicleCard({
     return (
       <div ref={cardRef} className={cn('group', className)}>
         <Link href={vehicleUrl} onClick={handleClick} className="block">
-          <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-white">
+          <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
             <div className="relative aspect-[4/3]">
               <Image
-                src={imgError ? fallbackImage : (vehicle.imageUrl || fallbackImage)}
+                src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
                 alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                 fill
                 className="object-cover"
@@ -176,10 +191,10 @@ export function SponsoredVehicleCard({
               </div>
             </div>
             <CardContent className="p-3">
-              <p className="font-semibold text-sm text-slate-900 truncate">
+              <p className="truncate text-sm font-semibold text-slate-900">
                 {vehicle.year} {vehicle.make} {vehicle.model}
               </p>
-              <p className="text-base font-bold text-emerald-600 mt-1">
+              <p className="mt-1 text-base font-bold text-emerald-600">
                 {formatPrice(vehicle.price, vehicle.currency)}
               </p>
             </CardContent>
@@ -193,11 +208,11 @@ export function SponsoredVehicleCard({
     return (
       <div ref={cardRef} className={cn('group', className)}>
         <Link href={vehicleUrl} onClick={handleClick} className="block">
-          <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-white">
+          <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
             <div className="flex">
               <div className="relative w-48 flex-shrink-0">
                 <Image
-                  src={imgError ? fallbackImage : (vehicle.imageUrl || fallbackImage)}
+                  src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
                   alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                   fill
                   className="object-cover"
@@ -207,26 +222,38 @@ export function SponsoredVehicleCard({
                   <SponsoredBadge tier={vehicle.sponsorTier} />
                 </div>
               </div>
-              <CardContent className="p-4 flex-1 flex flex-col justify-between">
+              <CardContent className="flex flex-1 flex-col justify-between p-4">
                 <div>
                   <h3 className="font-semibold text-slate-900">
                     {vehicle.year} {vehicle.make} {vehicle.model}
-                    {vehicle.trim && <span className="text-slate-500 font-normal ml-1">{vehicle.trim}</span>}
+                    {vehicle.trim && (
+                      <span className="ml-1 font-normal text-slate-500">{vehicle.trim}</span>
+                    )}
                   </h3>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><Gauge className="h-3 w-3" />{formatMileage(vehicle.mileage)}</span>
-                    <span className="flex items-center gap-1"><Settings2 className="h-3 w-3" />{vehicle.transmission}</span>
-                    <span className="flex items-center gap-1"><Fuel className="h-3 w-3" />{vehicle.fuelType}</span>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Gauge className="h-3 w-3" />
+                      {formatMileage(vehicle.mileage)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Settings2 className="h-3 w-3" />
+                      {vehicle.transmission}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Fuel className="h-3 w-3" />
+                      {vehicle.fuelType}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-end justify-between mt-2">
+                <div className="mt-2 flex items-end justify-between">
                   <div>
                     <p className="text-lg font-bold text-emerald-600">
                       {formatPrice(vehicle.price, vehicle.currency)}
                     </p>
                   </div>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />{vehicle.location}
+                  <span className="flex items-center gap-1 text-xs text-slate-400">
+                    <MapPin className="h-3 w-3" />
+                    {vehicle.location}
                   </span>
                 </div>
               </CardContent>
@@ -241,27 +268,27 @@ export function SponsoredVehicleCard({
   return (
     <div ref={cardRef} className={cn('group', className)}>
       <Link href={vehicleUrl} onClick={handleClick} className="block">
-        <Card className="overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-white group-hover:-translate-y-0.5">
+        <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 hover:shadow-lg">
           {/* Image Container */}
           <div className="relative aspect-[16/10] overflow-hidden">
             <Image
-              src={imgError ? fallbackImage : (vehicle.imageUrl || fallbackImage)}
+              src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
               alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
               onError={() => setImgError(true)}
               priority={priority}
             />
 
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
             {/* Top badges row */}
-            <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
+            <div className="absolute top-2.5 right-2.5 left-2.5 flex items-start justify-between">
               <div className="flex items-center gap-1.5">
                 <SponsoredBadge tier={vehicle.sponsorTier} />
                 {vehicle.isVerified && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/90 text-white px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
                     <BadgeCheck className="h-2.5 w-2.5" />
                     Verificado
                   </span>
@@ -270,15 +297,18 @@ export function SponsoredVehicleCard({
               {showFavoriteButton && (
                 <button
                   type="button"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.preventDefault();
                     e.stopPropagation();
                     setIsFavorite(!isFavorite);
                   }}
-                  className="rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+                  className="rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
                 >
                   <Heart
-                    className={cn('h-4 w-4 transition-colors', isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600')}
+                    className={cn(
+                      'h-4 w-4 transition-colors',
+                      isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'
+                    )}
                   />
                 </button>
               )}
@@ -287,7 +317,7 @@ export function SponsoredVehicleCard({
             {/* Photo count badge */}
             {vehicle.photoCount && vehicle.photoCount > 0 && (
               <div className="absolute bottom-2.5 left-2.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-black/60 text-white px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
                   <Camera className="h-2.5 w-2.5" />
                   {vehicle.photoCount}
                 </span>
@@ -296,8 +326,8 @@ export function SponsoredVehicleCard({
 
             {/* Dealer badge */}
             {vehicle.dealerName && (
-              <div className="absolute bottom-2.5 right-2.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-blue-600/90 text-white px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+              <div className="absolute right-2.5 bottom-2.5">
+                <span className="inline-flex items-center gap-1 rounded-md bg-blue-600/90 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
                   Dealer
                 </span>
               </div>
@@ -307,15 +337,15 @@ export function SponsoredVehicleCard({
           {/* Card Content */}
           <CardContent className="p-3.5">
             {/* Title */}
-            <h3 className="font-semibold text-[15px] text-slate-900 leading-tight truncate">
+            <h3 className="truncate text-[15px] leading-tight font-semibold text-slate-900">
               {vehicle.year} {vehicle.make} {vehicle.model}
               {vehicle.trim && (
-                <span className="text-slate-500 font-normal ml-1 text-sm">{vehicle.trim}</span>
+                <span className="ml-1 text-sm font-normal text-slate-500">{vehicle.trim}</span>
               )}
             </h3>
 
             {/* Specs row */}
-            <div className="flex items-center gap-2.5 mt-2 text-xs text-slate-500">
+            <div className="mt-2 flex items-center gap-2.5 text-xs text-slate-500">
               <span className="flex items-center gap-1">
                 <Gauge className="h-3.5 w-3.5 text-slate-400" />
                 {formatMileage(vehicle.mileage)}
@@ -333,19 +363,19 @@ export function SponsoredVehicleCard({
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-1 mt-2 text-xs text-slate-500">
+            <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
               <MapPin className="h-3 w-3 text-slate-400" />
               {vehicle.location}
             </div>
 
             {/* Price */}
-            <div className="flex items-end justify-between mt-3 pt-3 border-t border-slate-100">
+            <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-3">
               <div>
-                <p className="text-lg font-bold text-emerald-600 leading-none">
+                <p className="text-lg leading-none font-bold text-emerald-600">
                   {formatPrice(vehicle.price, vehicle.currency)}
                 </p>
                 {vehicle.monthlyPayment && (
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="mt-0.5 text-[11px] text-slate-400">
                     ~{formatPrice(vehicle.monthlyPayment, vehicle.currency)}/mes
                   </p>
                 )}
@@ -353,14 +383,14 @@ export function SponsoredVehicleCard({
               {vehicle.dealerRating && (
                 <div className="flex items-center gap-1 text-xs">
                   <span className="text-amber-500">★</span>
-                  <span className="text-slate-600 font-medium">{vehicle.dealerRating}</span>
+                  <span className="font-medium text-slate-600">{vehicle.dealerRating}</span>
                 </div>
               )}
             </div>
 
             {/* CTA on hover */}
-            <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-full py-2 rounded-lg bg-emerald-600 text-white text-center text-sm font-medium hover:bg-emerald-700 transition-colors">
+            <div className="mt-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="w-full rounded-lg bg-emerald-600 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-700">
                 Contactar vendedor
               </div>
             </div>
@@ -411,19 +441,19 @@ export function SponsoredSection({
   return (
     <section className={cn('relative', className)}>
       {showHeader && title && (
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-            {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
           </div>
           <SponsoredBadge tier="sponsored" size="md" />
         </div>
       )}
 
       {variant === 'scroll' ? (
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
-          {vehicles.map((v) => (
-            <div key={v.id} className="flex-shrink-0 w-[280px] snap-start">
+        <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4">
+          {vehicles.map(v => (
+            <div key={v.id} className="w-[280px] flex-shrink-0 snap-start">
               <SponsoredVehicleCard
                 vehicle={v}
                 variant={cardVariant}
@@ -435,7 +465,7 @@ export function SponsoredSection({
         </div>
       ) : variant === 'inline' ? (
         <div className="flex flex-col gap-3">
-          {vehicles.map((v) => (
+          {vehicles.map(v => (
             <SponsoredVehicleCard
               key={v.id}
               vehicle={v}
@@ -475,18 +505,13 @@ interface InlineAdSlotProps {
   onClick?: (vehicle: SponsoredVehicle) => void;
 }
 
-export function InlineAdSlot({
-  vehicles,
-  className,
-  onImpression,
-  onClick,
-}: InlineAdSlotProps) {
+export function InlineAdSlot({ vehicles, className, onImpression, onClick }: InlineAdSlotProps) {
   if (!vehicles.length) return null;
 
   // Render a single sponsored card that blends into the grid
   return (
     <>
-      {vehicles.map((v) => (
+      {vehicles.map(v => (
         <SponsoredVehicleCard
           key={v.id}
           vehicle={v}
@@ -511,12 +536,7 @@ interface SidebarAdUnitProps {
   onClick?: (vehicle: SponsoredVehicle) => void;
 }
 
-export function SidebarAdUnit({
-  vehicles,
-  className,
-  onImpression,
-  onClick,
-}: SidebarAdUnitProps) {
+export function SidebarAdUnit({ vehicles, className, onImpression, onClick }: SidebarAdUnitProps) {
   if (!vehicles.length) return null;
 
   return (
@@ -525,7 +545,7 @@ export function SidebarAdUnit({
         <h3 className="text-sm font-medium text-slate-700">Recomendados</h3>
         <SponsoredBadge tier="sponsored" />
       </div>
-      {vehicles.map((v) => (
+      {vehicles.map(v => (
         <SponsoredVehicleCard
           key={v.id}
           vehicle={v}
@@ -575,7 +595,9 @@ export function NativeBannerAd({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impressionToken, type: 'banner', timestamp: Date.now() }),
-          }).catch(() => {/* silent */});
+          }).catch(() => {
+            /* silent */
+          });
           observer.disconnect();
         }
       },
@@ -590,25 +612,25 @@ export function NativeBannerAd({
     <div ref={bannerRef} className={cn('relative overflow-hidden rounded-2xl', className)}>
       <div className={cn('bg-gradient-to-r p-6 sm:p-8', backgroundGradient)}>
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-1/2 w-48 h-48 bg-white/5 rounded-full translate-y-1/2" />
+        <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5" />
+        <div className="absolute bottom-0 left-1/2 h-48 w-48 translate-y-1/2 rounded-full bg-white/5" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white">{title}</h3>
-            <p className="text-sm sm:text-base text-white/80 mt-1 max-w-md">{subtitle}</p>
+            <h3 className="text-xl font-bold text-white sm:text-2xl">{title}</h3>
+            <p className="mt-1 max-w-md text-sm text-white/80 sm:text-base">{subtitle}</p>
           </div>
           <Link
             href={ctaUrl}
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-white text-emerald-700 font-semibold text-sm hover:bg-white/90 transition-colors shadow-lg shadow-black/10 whitespace-nowrap"
+            className="inline-flex items-center rounded-xl bg-white px-6 py-3 text-sm font-semibold whitespace-nowrap text-emerald-700 shadow-lg shadow-black/10 transition-colors hover:bg-white/90"
           >
             {ctaText}
           </Link>
         </div>
 
         {/* Subtle sponsor indicator */}
-        <div className="absolute bottom-2 right-3">
-          <span className="text-[9px] text-white/40 font-medium">Patrocinado</span>
+        <div className="absolute right-3 bottom-2">
+          <span className="text-[9px] font-medium text-white/40">Patrocinado</span>
         </div>
       </div>
     </div>

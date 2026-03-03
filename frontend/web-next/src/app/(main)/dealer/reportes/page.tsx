@@ -119,13 +119,8 @@ function DealerReportsContent() {
   const dealerId = dealer?.id || '';
 
   const exportMutation = useExportReport(dealerId);
-  const {
-    data: viewsTrend,
-    isError: isTrendsError,
-  } = useTrends(dealerId, 'views');
-  const {
-    isError: isReportError,
-  } = useMonthlyReport(dealerId);
+  const { data: viewsTrend, isError: isTrendsError } = useTrends(dealerId, 'views');
+  const { isError: isReportError } = useMonthlyReport(dealerId);
 
   const isLoading = isDealerLoading || isStatsLoading;
   const hasAnalyticsError = isTrendsError || isReportError;

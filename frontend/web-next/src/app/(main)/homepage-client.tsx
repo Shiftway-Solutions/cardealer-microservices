@@ -279,7 +279,7 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
           )}
           {/* Insert native banner ad after 2nd category */}
           {index === 1 && (
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
               <NativeBannerAd
                 title="¿Eres dealer? Llega a más compradores"
                 subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."

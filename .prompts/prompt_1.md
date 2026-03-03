@@ -1,4 +1,4 @@
-Ahora necesito que me crees la UI y todo lo necesario donde el dealer y el seeler pagan por publicidad o por paquetes publicitarios para utilizarlo en la plataforma. Audita de forma profunda y profesiona para hacerlo de la meejor manera para que el seller o dealer tenga una experiencia de usuario de calidad.
+Hay una nueva tarea. Ahora necesito que me crees la UI y todo lo necesario donde el dealer y el seeler pagan por publicidad o por paquetes publicitarios para utilizarlo en la plataforma. Audita de forma profunda y profesiona para hacerlo de la meejor manera para que el seller o dealer tenga una experiencia de usuario de calidad. Y ponme a funcionar todo el backend de los que tiene que ver con la publicidad y tambien la parte donde usuario compra publicidad y la parte donde el algoritmo de publicidad es configurado por parte de los administradores.
 
 Corrigme todos los errorees entoncdos en "/tmp/e2e-task5.log"
 

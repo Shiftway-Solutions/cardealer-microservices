@@ -45,11 +45,11 @@ interface FraudSignals {
 function detectFraudSignals(): FraudSignals {
   const now = Date.now();
   const sessionDuration = (now - trackingState.sessionStart) / 1000;
-  const totalClicks = Array.from(trackingState.clicks.values())
-    .reduce((sum, c) => sum + c.count, 0);
-  const clicksPerMinute = sessionDuration > 0
-    ? (totalClicks / (sessionDuration / 60))
-    : 0;
+  const totalClicks = Array.from(trackingState.clicks.values()).reduce(
+    (sum, c) => sum + c.count,
+    0
+  );
+  const clicksPerMinute = sessionDuration > 0 ? totalClicks / (sessionDuration / 60) : 0;
 
   // Check for suspiciously regular click patterns
   const clickTimes = Array.from(trackingState.clicks.values())
@@ -126,7 +126,9 @@ export function recordImpression(params: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       keepalive: true,
-    }).catch(() => {/* silent */});
+    }).catch(() => {
+      /* silent */
+    });
   }
 }
 
@@ -173,7 +175,9 @@ export function recordClick(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     keepalive: true,
-  }).catch(() => {/* silent */});
+  }).catch(() => {
+    /* silent */
+  });
 
   return { isLikelyFraud };
 }
@@ -260,10 +264,7 @@ export function useAdPerformanceMetrics(dealerId?: string) {
 /**
  * Hook to calculate viewability metrics (IAB standard: 50% visible for 1s).
  */
-export function useViewability(
-  ref: React.RefObject<HTMLElement | null>,
-  onViewable?: () => void
-) {
+export function useViewability(ref: React.RefObject<HTMLElement | null>, onViewable?: () => void) {
   const viewableTracked = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

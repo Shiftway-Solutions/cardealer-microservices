@@ -341,7 +341,14 @@ export default function SellerRegistrationPage() {
           setSellerProfileId(result.sellerProfileId);
         } catch (err: unknown) {
           // Enhanced error handling for conversion failures
-          const error = err as { message?: string; response?: { status: number; config?: { url?: string }; data?: { detail?: string } }; status?: number; code?: string; requiresKyc?: boolean; redirectUrl?: string };
+          const error = err as {
+            message?: string;
+            response?: { status: number; config?: { url?: string }; data?: { detail?: string } };
+            status?: number;
+            code?: string;
+            requiresKyc?: boolean;
+            redirectUrl?: string;
+          };
 
           // Check for 401 Unauthorized (auth token issue)
           if (error?.response?.status === 401 || error?.status === 401) {

@@ -50,13 +50,17 @@ export default function RoiCalculatorPage() {
   const [convRate, setConvRate] = useState(35);
   const [margin, setMargin] = useState(50000);
 
-  const roi = useMemo(() => calculateRoi({
-    monthlyBudget: budget,
-    estimatedCtr: ctr / 100,
-    estimatedLeadRate: leadRate / 100,
-    estimatedConvRate: convRate / 100,
-    averageMargin: margin,
-  }), [budget, ctr, leadRate, convRate, margin]);
+  const roi = useMemo(
+    () =>
+      calculateRoi({
+        monthlyBudget: budget,
+        estimatedCtr: ctr / 100,
+        estimatedLeadRate: leadRate / 100,
+        estimatedConvRate: convRate / 100,
+        averageMargin: margin,
+      }),
+    [budget, ctr, leadRate, convRate, margin]
+  );
 
   const BUDGET_PRESETS = [2500, 5000, 10000, 25000, 50000];
 
@@ -65,10 +69,10 @@ export default function RoiCalculatorPage() {
       {/* Header */}
       <div className="border-b bg-white">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="mb-4 flex items-center gap-3">
             <Link
               href="/dealer/publicidad"
-              className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              className="flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-700"
             >
               <ArrowLeft className="h-4 w-4" />
               Publicidad
@@ -79,10 +83,8 @@ export default function RoiCalculatorPage() {
               <Calculator className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                Calculadora de ROI Publicitario
-              </h1>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h1 className="text-2xl font-bold text-slate-900">Calculadora de ROI Publicitario</h1>
+              <p className="mt-0.5 text-sm text-slate-500">
                 Estima el retorno de inversión de tu publicidad en OKLA
               </p>
             </div>
@@ -93,34 +95,32 @@ export default function RoiCalculatorPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-5">
           {/* Input Panel */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Budget */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                   <DollarSign className="h-4 w-4 text-emerald-600" />
                   Presupuesto Mensual
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-3xl font-bold text-emerald-600">
-                  {formatCurrency(budget)}
-                </div>
+                <div className="text-3xl font-bold text-emerald-600">{formatCurrency(budget)}</div>
                 <input
                   type="range"
                   min={1000}
                   max={100000}
                   step={500}
                   value={budget}
-                  onChange={(e) => setBudget(Number(e.target.value))}
+                  onChange={e => setBudget(Number(e.target.value))}
                   className="w-full accent-emerald-600"
                 />
                 <div className="flex flex-wrap gap-2">
-                  {BUDGET_PRESETS.map((preset) => (
+                  {BUDGET_PRESETS.map(preset => (
                     <button
                       key={preset}
                       onClick={() => setBudget(preset)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                         budget === preset
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -136,14 +136,14 @@ export default function RoiCalculatorPage() {
             {/* Advanced Settings */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                   <Target className="h-4 w-4 text-blue-600" />
                   Parámetros (ajustables)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-xs text-slate-500 mb-1 block">
+                  <label className="mb-1 block text-xs text-slate-500">
                     Tasa de clics (CTR): {ctr}%
                   </label>
                   <input
@@ -152,7 +152,7 @@ export default function RoiCalculatorPage() {
                     max={15}
                     step={0.5}
                     value={ctr}
-                    onChange={(e) => setCtr(Number(e.target.value))}
+                    onChange={e => setCtr(Number(e.target.value))}
                     className="w-full accent-blue-600"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
@@ -163,7 +163,7 @@ export default function RoiCalculatorPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-500 mb-1 block">
+                  <label className="mb-1 block text-xs text-slate-500">
                     Tasa de leads: {leadRate}%
                   </label>
                   <input
@@ -172,13 +172,13 @@ export default function RoiCalculatorPage() {
                     max={25}
                     step={1}
                     value={leadRate}
-                    onChange={(e) => setLeadRate(Number(e.target.value))}
+                    onChange={e => setLeadRate(Number(e.target.value))}
                     className="w-full accent-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-500 mb-1 block">
+                  <label className="mb-1 block text-xs text-slate-500">
                     Tasa de conversión: {convRate}%
                   </label>
                   <input
@@ -187,13 +187,13 @@ export default function RoiCalculatorPage() {
                     max={60}
                     step={5}
                     value={convRate}
-                    onChange={(e) => setConvRate(Number(e.target.value))}
+                    onChange={e => setConvRate(Number(e.target.value))}
                     className="w-full accent-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-500 mb-1 block">
+                  <label className="mb-1 block text-xs text-slate-500">
                     Margen por venta: {formatCurrency(margin)}
                   </label>
                   <input
@@ -202,7 +202,7 @@ export default function RoiCalculatorPage() {
                     max={150000}
                     step={5000}
                     value={margin}
-                    onChange={(e) => setMargin(Number(e.target.value))}
+                    onChange={e => setMargin(Number(e.target.value))}
                     className="w-full accent-blue-600"
                   />
                 </div>
@@ -211,14 +211,14 @@ export default function RoiCalculatorPage() {
           </div>
 
           {/* Results Panel */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="space-y-6 lg:col-span-3">
             {/* ROI Hero */}
             <Card className="overflow-hidden">
               <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white">
                 <p className="text-sm font-medium text-white/80">Retorno de inversión estimado</p>
-                <div className="flex items-end gap-3 mt-2">
+                <div className="mt-2 flex items-end gap-3">
                   <span className="text-5xl font-bold">{roi.roi.toLocaleString()}%</span>
-                  <span className="text-lg text-white/80 mb-1">ROI</span>
+                  <span className="mb-1 text-lg text-white/80">ROI</span>
                 </div>
                 <p className="mt-2 text-sm text-white/70">
                   Por cada RD$1 invertido, recibes{' '}
@@ -228,9 +228,9 @@ export default function RoiCalculatorPage() {
             </Card>
 
             {/* Funnel Metrics */}
-            <div className="grid gap-3 grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <Card className="p-4">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
+                <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <Eye className="h-4 w-4" />
                   <span className="text-xs font-medium">Impresiones</span>
                 </div>
@@ -239,65 +239,59 @@ export default function RoiCalculatorPage() {
                 </p>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
+                <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <MousePointerClick className="h-4 w-4" />
                   <span className="text-xs font-medium">Clics</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">
                   {roi.estimatedClicks.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400">
-                  CPC: {formatCurrency(roi.estimatedCpc)}
-                </p>
+                <p className="text-xs text-slate-400">CPC: {formatCurrency(roi.estimatedCpc)}</p>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center gap-2 text-slate-500 mb-2">
+                <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <Phone className="h-4 w-4" />
                   <span className="text-xs font-medium">Leads</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">
                   {roi.estimatedLeads.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400">
-                  CPL: {formatCurrency(roi.estimatedCpl)}
-                </p>
+                <p className="text-xs text-slate-400">CPL: {formatCurrency(roi.estimatedCpl)}</p>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center gap-2 text-emerald-600 mb-2">
+                <div className="mb-2 flex items-center gap-2 text-emerald-600">
                   <TrendingUp className="h-4 w-4" />
                   <span className="text-xs font-medium">Ventas Estimadas</span>
                 </div>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {roi.estimatedSales}
-                </p>
-                <p className="text-xs text-slate-400">
-                  CAC: {formatCurrency(roi.estimatedCac)}
-                </p>
+                <p className="text-2xl font-bold text-emerald-600">{roi.estimatedSales}</p>
+                <p className="text-xs text-slate-400">CAC: {formatCurrency(roi.estimatedCac)}</p>
               </Card>
             </div>
 
             {/* Revenue Summary */}
             <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                   <BarChart3 className="h-5 w-5 text-emerald-600" />
                   Resumen de Revenue
                 </h3>
               </div>
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                <div className="flex items-center justify-between border-b border-slate-100 py-2">
                   <span className="text-sm text-slate-600">Inversión publicitaria</span>
                   <span className="font-semibold text-red-600">
                     -{formatCurrency(roi.monthlyBudget)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                  <span className="text-sm text-slate-600">Revenue por ventas ({roi.estimatedSales} ventas)</span>
+                <div className="flex items-center justify-between border-b border-slate-100 py-2">
+                  <span className="text-sm text-slate-600">
+                    Revenue por ventas ({roi.estimatedSales} ventas)
+                  </span>
                   <span className="font-semibold text-emerald-600">
                     +{formatCurrency(roi.totalRevenue)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between py-2 bg-emerald-50 -mx-6 px-6 rounded-lg">
+                <div className="-mx-6 flex items-center justify-between rounded-lg bg-emerald-50 px-6 py-2">
                   <span className="text-sm font-bold text-emerald-900">Ganancia neta estimada</span>
                   <span className="text-xl font-bold text-emerald-600">
                     {formatCurrency(roi.totalRevenue - roi.monthlyBudget)}
@@ -309,21 +303,21 @@ export default function RoiCalculatorPage() {
             {/* CTA */}
             <div className="flex items-center gap-3">
               <Button
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-base font-semibold rounded-xl"
+                className="flex-1 rounded-xl bg-emerald-600 py-6 text-base font-semibold text-white hover:bg-emerald-700"
                 asChild
               >
                 <Link href="/dealer/publicidad">
-                  <Zap className="h-5 w-5 mr-2" />
+                  <Zap className="mr-2 h-5 w-5" />
                   Crear mi primera campaña
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
 
             {/* Trust Note */}
             <p className="text-center text-xs text-slate-400">
-              * Estimaciones basadas en métricas promedio del mercado automotriz de RD.
-              Los resultados pueden variar según el inventario, la calidad del anuncio y la competencia.
+              * Estimaciones basadas en métricas promedio del mercado automotriz de RD. Los
+              resultados pueden variar según el inventario, la calidad del anuncio y la competencia.
             </p>
           </div>
         </div>
