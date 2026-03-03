@@ -509,51 +509,63 @@ export interface PlanInfo {
 // Default DEALER_PLANS (updated dynamically via updateDealerPlansWithPricing)
 export const DEALER_PLANS: PlanInfo[] = [
   {
-    plan: 'starter',
-    name: 'Starter',
-    price: 2899,
-    maxListings: 20,
+    plan: 'libre',
+    name: 'LIBRE',
+    price: 0,
+    maxListings: -1, // unlimited
     features: [
-      'Hasta 20 vehículos',
-      'Dashboard básico',
-      'Soporte por email',
-      'Badge de verificación',
-      'Perfil de dealer',
+      'Vehículos ilimitados',
+      'Panel de control básico',
       'Estadísticas básicas',
+      'Perfil de dealer',
+      'Soporte por email',
+    ],
+  },
+  {
+    plan: 'visible',
+    name: 'VISIBLE',
+    price: 1699,
+    maxListings: -1, // unlimited
+    features: [
+      'Vehículos ilimitados',
+      'Badge de verificación',
+      'Visibilidad mejorada en búsquedas',
+      'Estadísticas avanzadas',
+      'Perfil destacado',
+      '3 publicaciones destacadas/mes',
+      'Soporte prioritario',
     ],
   },
   {
     plan: 'pro',
-    name: 'Pro',
-    price: 7499,
-    maxListings: 75,
+    name: 'PRO',
+    price: 5199,
+    maxListings: -1, // unlimited
     isPopular: true,
     features: [
-      'Hasta 75 vehículos',
-      'Dashboard avanzado',
-      'Soporte prioritario',
-      'Badge de verificación',
-      'Perfil destacado',
-      'Estadísticas avanzadas',
-      'CRM integrado',
-      'Importación CSV',
+      'Todo de VISIBLE +',
+      'ChatAgent IA integrado',
+      'CRM de leads completo',
+      '10 publicaciones destacadas/mes',
+      'Importación CSV / bulk',
+      'Boosts incluidos',
+      'Integración WhatsApp',
     ],
   },
   {
-    plan: 'enterprise',
-    name: 'Enterprise',
-    price: 17499,
+    plan: 'elite',
+    name: 'ÉLITE',
+    price: 11599,
     maxListings: -1, // unlimited
     features: [
-      'Vehículos ilimitados',
-      'Dashboard premium',
-      'Soporte 24/7',
-      'Badge premium',
-      'Perfil destacado',
-      'Analytics completo',
-      'CRM avanzado',
+      'Todo de PRO +',
+      'Manager dedicado',
       'API access',
+      '50 publicaciones destacadas/mes',
       'Múltiples ubicaciones',
+      'Empleados ilimitados',
+      'White label',
+      'Soporte 24/7',
     ],
   },
 ];
@@ -562,25 +574,22 @@ export const DEALER_PLANS: PlanInfo[] = [
  * Update DEALER_PLANS with dynamic pricing from ConfigurationService
  */
 export function updateDealerPlansWithPricing(pricing: {
-  dealerStarter: number;
+  dealerLibre: number;
+  dealerVisible: number;
   dealerPro: number;
-  dealerEnterprise: number;
-  starterMaxVehicles: number;
-  proMaxVehicles: number;
+  dealerElite: number;
   earlyBirdDiscount: number;
   earlyBirdDeadline: string;
   earlyBirdFreeMonths: number;
 }): void {
-  // Update Starter
-  DEALER_PLANS[0].price = pricing.dealerStarter;
-  DEALER_PLANS[0].maxListings = pricing.starterMaxVehicles;
-  DEALER_PLANS[0].features[0] = `Hasta ${pricing.starterMaxVehicles} vehículos`;
-  // Update Pro
-  DEALER_PLANS[1].price = pricing.dealerPro;
-  DEALER_PLANS[1].maxListings = pricing.proMaxVehicles;
-  DEALER_PLANS[1].features[0] = `Hasta ${pricing.proMaxVehicles} vehículos`;
-  // Update Enterprise
-  DEALER_PLANS[2].price = pricing.dealerEnterprise;
+  // Update LIBRE
+  DEALER_PLANS[0].price = pricing.dealerLibre;
+  // Update VISIBLE
+  DEALER_PLANS[1].price = pricing.dealerVisible;
+  // Update PRO
+  DEALER_PLANS[2].price = pricing.dealerPro;
+  // Update ÉLITE
+  DEALER_PLANS[3].price = pricing.dealerElite;
 
   // Update early bird config
   _earlyBirdDiscount = pricing.earlyBirdDiscount;

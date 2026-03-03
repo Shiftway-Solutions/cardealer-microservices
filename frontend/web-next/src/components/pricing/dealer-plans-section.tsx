@@ -18,46 +18,55 @@ export function DealerPlansSection() {
 
   const plans = [
     {
-      name: 'Starter',
-      price: formatPrice(pricing.dealerStarter),
+      name: 'LIBRE',
+      price: formatPrice(pricing.dealerLibre),
       period: '/mes',
-      description: 'Para dealers pequeños',
+      description: 'Para empezar sin costo',
       features: [
-        `Hasta ${pricing.starterMaxVehicles} vehículos`,
-        '1 ubicación',
-        'Analytics básico',
+        'Vehículos ilimitados',
+        'Panel básico',
+        'Estadísticas básicas',
         'Soporte por email',
       ],
-      cta: 'Comenzar',
+      cta: 'Comenzar Gratis',
       highlighted: false,
     },
     {
-      name: 'Profesional',
+      name: 'VISIBLE',
+      price: formatPrice(pricing.dealerVisible),
+      period: '/mes',
+      description: 'Más visibilidad',
+      features: [
+        'Vehículos ilimitados',
+        'Badge verificado',
+        'Visibilidad mejorada',
+        'Stats avanzadas',
+        '3 destacados/mes',
+      ],
+      cta: 'Elegir Plan',
+      highlighted: false,
+    },
+    {
+      name: 'PRO',
       price: formatPrice(pricing.dealerPro),
       period: '/mes',
       description: 'El más popular',
       features: [
-        `Hasta ${pricing.proMaxVehicles} vehículos`,
-        '3 ubicaciones',
-        'Analytics Pro + CRM',
-        'Boost de listados',
-        'Soporte prioritario',
+        'Todo de VISIBLE +',
+        'ChatAgent IA',
+        'CRM de leads',
+        'Boosts incluidos',
+        'Integración WhatsApp',
       ],
       cta: 'Elegir Plan',
       highlighted: true,
     },
     {
-      name: 'Enterprise',
-      price: formatPrice(pricing.dealerEnterprise),
+      name: 'ÉLITE',
+      price: formatPrice(pricing.dealerElite),
       period: '/mes',
       description: 'Para grandes dealers',
-      features: [
-        'Vehículos ilimitados',
-        'Ubicaciones ilimitadas',
-        'Analytics + API',
-        'Manager dedicado',
-        'White label',
-      ],
+      features: ['Todo de PRO +', 'Manager dedicado', 'API access', 'White label', 'Soporte 24/7'],
       cta: 'Contactar',
       highlighted: false,
     },
@@ -65,8 +74,8 @@ export function DealerPlansSection() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-8 md:grid-cols-3">
-        {[1, 2, 3].map(i => (
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map(i => (
           <Card key={i} className="border-border animate-pulse">
             <CardContent className="p-8">
               <div className="mb-4 h-6 w-24 rounded bg-gray-200" />
@@ -84,7 +93,7 @@ export function DealerPlansSection() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-3">
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
       {plans.map((plan, index) => (
         <Card
           key={index}

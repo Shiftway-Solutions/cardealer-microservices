@@ -261,7 +261,7 @@ export function trackPurchase(transaction: {
  */
 export function trackDealerSubscription(subscription: {
   dealerId: string;
-  plan: 'starter' | 'pro' | 'enterprise';
+  plan: 'libre' | 'visible' | 'pro' | 'elite';
   value: number;
   isEarlyBird?: boolean;
 }) {

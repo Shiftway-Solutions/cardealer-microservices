@@ -36,35 +36,41 @@ const formatPrice = (price: number) => {
 };
 
 // Plan features (dynamic based on pricing config)
-function getPlanFeatures(pricing: {
-  starterMaxVehicles: number;
-  proMaxVehicles: number;
-  earlyBirdFreeMonths: number;
-}) {
+function getPlanFeatures(pricing: { earlyBirdFreeMonths: number }) {
   return {
-    starter: [
-      `${pricing.starterMaxVehicles} vehículos activos`,
+    libre: [
+      'Vehículos ilimitados',
       'Panel de control básico',
       'Estadísticas básicas',
       'Soporte por email',
     ],
-    pro: [
-      `${pricing.proMaxVehicles} vehículos activos`,
-      'Panel de control completo',
+    visible: [
+      'Vehículos ilimitados',
+      'Badge de verificación',
+      'Visibilidad mejorada en búsquedas',
       'Estadísticas avanzadas',
-      '5 publicaciones destacadas/mes',
-      'CRM integrado',
+      'Perfil destacado',
+      '3 publicaciones destacadas/mes',
       'Soporte prioritario',
     ],
-    enterprise: [
-      'Vehículos ilimitados',
-      'Panel de control completo',
-      'Estadísticas avanzadas + API',
-      '15 publicaciones destacadas/mes',
-      'CRM integrado + WhatsApp',
+    pro: [
+      'Todo de VISIBLE +',
+      'ChatAgent IA integrado',
+      'CRM de leads completo',
+      '10 publicaciones destacadas/mes',
+      'Importación CSV / bulk',
+      'Boosts incluidos',
+      'Integración WhatsApp',
+    ],
+    elite: [
+      'Todo de PRO +',
+      'Manager dedicado',
+      'API access',
+      '50 publicaciones destacadas/mes',
       'Múltiples ubicaciones',
       'Empleados ilimitados',
-      'Soporte 24/7 + Manager dedicado',
+      'White label',
+      'Soporte 24/7',
     ],
   } as Record<string, string[]>;
 }
@@ -107,8 +113,8 @@ function SubscriptionSkeleton() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
-        {[1, 2, 3].map(i => (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map(i => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-6 w-24" />
@@ -215,7 +221,7 @@ export default function DealerSubscriptionPage() {
       </div>
 
       {/* Early Bird Banner */}
-      {earlyBird.isActive && dealer.plan === 'starter' && (
+      {earlyBird.isActive && dealer.plan === 'libre' && (
         <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -241,11 +247,11 @@ export default function DealerSubscriptionPage() {
       )}
 
       {/* Current Plan */}
-      <Card className="border-primary bg-gradient-to-r from-primary/5 to-white">
+      <Card className="border-primary from-primary/5 bg-gradient-to-r to-white">
         <CardContent className="p-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="flex items-center gap-4">
-              <div className="rounded-xl bg-primary p-3">
+              <div className="bg-primary rounded-xl p-3">
                 <Crown className="h-8 w-8 text-white" />
               </div>
               <div>
@@ -288,10 +294,10 @@ export default function DealerSubscriptionPage() {
                   <Button variant="outline" onClick={handleCancel}>
                     Cancelar Plan
                   </Button>
-                  {dealer.plan !== 'enterprise' && (
+                  {dealer.plan !== 'elite' && (
                     <Button
                       className="bg-primary hover:bg-primary/90"
-                      onClick={() => handleUpgrade('enterprise')}
+                      onClick={() => handleUpgrade('elite')}
                       disabled={changePlanMutation.isPending}
                     >
                       {changePlanMutation.isPending ? (
@@ -299,7 +305,7 @@ export default function DealerSubscriptionPage() {
                       ) : (
                         <Zap className="mr-2 h-4 w-4" />
                       )}
-                      Upgrade a Enterprise
+                      Upgrade a ÉLITE
                     </Button>
                   )}
                 </>
@@ -327,7 +333,7 @@ export default function DealerSubscriptionPage() {
             </div>
             <div className="bg-muted h-3 overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-primary/100"
+                className="bg-primary/100 h-full rounded-full"
                 style={{ width: `${vehicleUsagePercent}%` }}
               />
             </div>
@@ -350,7 +356,13 @@ export default function DealerSubscriptionPage() {
               <span className="text-muted-foreground">
                 de{' '}
                 {usage?.maxFeatured ||
-                  (dealer.plan === 'starter' ? 0 : dealer.plan === 'pro' ? 5 : 15)}
+                  (dealer.plan === 'libre'
+                    ? 0
+                    : dealer.plan === 'visible'
+                      ? 3
+                      : dealer.plan === 'pro'
+                        ? 10
+                        : 50)}
               </span>
             </div>
             <div className="bg-muted h-3 overflow-hidden rounded-full">
@@ -372,7 +384,7 @@ export default function DealerSubscriptionPage() {
       {/* All Plans */}
       <div>
         <h2 className="mb-4 text-xl font-bold">Todos los Planes</h2>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {dealerPlans.map(plan => {
             const isCurrent = plan.plan === dealer.plan;
             const features = PLAN_FEATURES[plan.plan] || [];
@@ -385,7 +397,7 @@ export default function DealerSubscriptionPage() {
                 key={plan.plan}
                 className={`relative ${
                   plan.isPopular ? 'border-primary shadow-lg' : ''
-                } ${isCurrent ? 'ring-2 ring-primary' : ''}`}
+                } ${isCurrent ? 'ring-primary ring-2' : ''}`}
               >
                 {plan.isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -410,7 +422,7 @@ export default function DealerSubscriptionPage() {
                         <span className="text-muted-foreground text-lg line-through">
                           {formatPrice(plan.price)}
                         </span>
-                        <span className="ml-2 text-3xl font-bold text-primary">
+                        <span className="text-primary ml-2 text-3xl font-bold">
                           {formatPrice(earlyBirdPrice)}
                         </span>
                       </>
@@ -424,7 +436,7 @@ export default function DealerSubscriptionPage() {
                   <ul className="mb-6 space-y-3">
                     {features.map((feature, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 flex-shrink-0 text-primary" />
+                        <Check className="text-primary h-4 w-4 flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
@@ -433,9 +445,9 @@ export default function DealerSubscriptionPage() {
                     <Button variant="outline" className="w-full" disabled>
                       Plan Actual
                     </Button>
-                  ) : plan.plan === 'enterprise' ? (
+                  ) : plan.plan === 'elite' ? (
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 w-full"
                       onClick={() => handleUpgrade(plan.plan)}
                       disabled={changePlanMutation.isPending}
                     >
@@ -444,7 +456,7 @@ export default function DealerSubscriptionPage() {
                       )}
                       Upgrade
                     </Button>
-                  ) : plan.plan === 'starter' && dealer.plan !== 'starter' ? (
+                  ) : plan.plan === 'libre' && dealer.plan !== 'libre' ? (
                     <Button
                       variant="outline"
                       className="text-muted-foreground w-full"
@@ -481,64 +493,98 @@ export default function DealerSubscriptionPage() {
               <thead>
                 <tr className="border-border border-b">
                   <th className="p-3 text-left">Característica</th>
-                  <th className="p-3 text-center">Starter</th>
-                  <th className="bg-primary/10 p-3 text-center">Pro</th>
-                  <th className="p-3 text-center">Enterprise</th>
+                  <th className="p-3 text-center">LIBRE</th>
+                  <th className="p-3 text-center">VISIBLE</th>
+                  <th className="bg-primary/10 p-3 text-center">PRO</th>
+                  <th className="p-3 text-center">ÉLITE</th>
                 </tr>
               </thead>
               <tbody>
                 {[
                   {
                     feature: 'Vehículos activos',
-                    starter: String(pricing.starterMaxVehicles),
-                    pro: String(pricing.proMaxVehicles),
-                    enterprise: 'Ilimitado',
+                    libre: 'Ilimitado',
+                    visible: 'Ilimitado',
+                    pro: 'Ilimitado',
+                    elite: 'Ilimitado',
                   },
                   {
                     feature: 'Fotos por vehículo',
-                    starter: String(pricing.starterMaxPhotos),
+                    libre: String(pricing.freeMaxPhotos),
+                    visible: String(pricing.visibleMaxPhotos),
                     pro: String(pricing.proMaxPhotos),
-                    enterprise: String(pricing.enterpriseMaxPhotos),
+                    elite: String(pricing.eliteMaxPhotos),
                   },
-                  { feature: 'Destacados/mes', starter: '0', pro: '5', enterprise: '15' },
+                  { feature: 'Destacados/mes', libre: '0', visible: '3', pro: '10', elite: '50' },
                   {
                     feature: 'Estadísticas',
-                    starter: 'Básicas',
+                    libre: 'Básicas',
+                    visible: 'Avanzadas',
                     pro: 'Avanzadas',
-                    enterprise: 'Avanzadas + API',
+                    elite: 'Avanzadas + API',
                   },
-                  { feature: 'CRM', starter: false, pro: true, enterprise: true },
+                  {
+                    feature: 'Badge verificado',
+                    libre: false,
+                    visible: true,
+                    pro: true,
+                    elite: true,
+                  },
+                  { feature: 'ChatAgent IA', libre: false, visible: false, pro: true, elite: true },
+                  { feature: 'CRM', libre: false, visible: false, pro: true, elite: true },
+                  {
+                    feature: 'Boosts incluidos',
+                    libre: false,
+                    visible: false,
+                    pro: true,
+                    elite: true,
+                  },
+                  { feature: 'WhatsApp', libre: false, visible: false, pro: true, elite: true },
                   {
                     feature: 'Múltiples ubicaciones',
-                    starter: false,
+                    libre: false,
+                    visible: false,
                     pro: false,
-                    enterprise: true,
+                    elite: true,
                   },
-                  { feature: 'Empleados', starter: '1', pro: '5', enterprise: 'Ilimitado' },
+                  { feature: 'API access', libre: false, visible: false, pro: false, elite: true },
+                  { feature: 'Empleados', libre: '1', visible: '1', pro: '5', elite: 'Ilimitado' },
                   {
                     feature: 'Soporte',
-                    starter: 'Email',
+                    libre: 'Email',
+                    visible: 'Prioritario',
                     pro: 'Prioritario',
-                    enterprise: '24/7 + Manager',
+                    elite: '24/7 + Manager',
                   },
                 ].map(row => (
                   <tr key={row.feature} className="border-border border-b">
                     <td className="p-3 font-medium">{row.feature}</td>
                     <td className="p-3 text-center">
-                      {typeof row.starter === 'boolean' ? (
-                        row.starter ? (
-                          <Check className="mx-auto h-4 w-4 text-primary" />
+                      {typeof row.libre === 'boolean' ? (
+                        row.libre ? (
+                          <Check className="text-primary mx-auto h-4 w-4" />
                         ) : (
                           '—'
                         )
                       ) : (
-                        row.starter
+                        row.libre
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
+                      {typeof row.visible === 'boolean' ? (
+                        row.visible ? (
+                          <Check className="text-primary mx-auto h-4 w-4" />
+                        ) : (
+                          '—'
+                        )
+                      ) : (
+                        row.visible
                       )}
                     </td>
                     <td className="bg-primary/10 p-3 text-center">
                       {typeof row.pro === 'boolean' ? (
                         row.pro ? (
-                          <Check className="mx-auto h-4 w-4 text-primary" />
+                          <Check className="text-primary mx-auto h-4 w-4" />
                         ) : (
                           '—'
                         )
@@ -547,14 +593,14 @@ export default function DealerSubscriptionPage() {
                       )}
                     </td>
                     <td className="p-3 text-center">
-                      {typeof row.enterprise === 'boolean' ? (
-                        row.enterprise ? (
-                          <Check className="mx-auto h-4 w-4 text-primary" />
+                      {typeof row.elite === 'boolean' ? (
+                        row.elite ? (
+                          <Check className="text-primary mx-auto h-4 w-4" />
                         ) : (
                           '—'
                         )
                       ) : (
-                        row.enterprise
+                        row.elite
                       )}
                     </td>
                   </tr>

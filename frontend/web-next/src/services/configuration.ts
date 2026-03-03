@@ -211,22 +211,28 @@ export const CONFIG_CATEGORIES = {
         type: 'currency' as const,
         hint: 'Precio por publicación individual (vendedor no-dealer)',
       },
-      // --- Planes Dealer ---
+      // --- Planes Dealer (4 niveles) ---
       {
-        key: 'pricing.dealer_starter',
-        label: 'Plan Starter',
+        key: 'pricing.dealer_libre',
+        label: 'Plan LIBRE',
+        type: 'currency' as const,
+        hint: 'Gratis ($0)',
+      },
+      {
+        key: 'pricing.dealer_visible',
+        label: 'Plan VISIBLE',
         type: 'currency' as const,
         hint: 'Mensual',
       },
       {
         key: 'pricing.dealer_pro',
-        label: 'Plan Pro',
+        label: 'Plan PRO',
         type: 'currency' as const,
         hint: 'Mensual',
       },
       {
-        key: 'pricing.dealer_enterprise',
-        label: 'Plan Enterprise',
+        key: 'pricing.dealer_elite',
+        label: 'Plan ÉLITE',
         type: 'currency' as const,
         hint: 'Mensual',
       },
@@ -280,42 +286,30 @@ export const CONFIG_CATEGORIES = {
         type: 'number' as const,
         hint: 'Días que dura una publicación pagada',
       },
-      // --- Límites por plan ---
-      {
-        key: 'pricing.starter_max_vehicles',
-        label: 'Vehículos máx. Starter',
-        type: 'number' as const,
-        hint: 'Límite de vehículos plan Starter',
-      },
-      {
-        key: 'pricing.pro_max_vehicles',
-        label: 'Vehículos máx. Pro',
-        type: 'number' as const,
-        hint: 'Límite de vehículos plan Pro',
-      },
+      // --- Límites por plan (fotos) ---
       {
         key: 'pricing.free_max_photos',
-        label: 'Fotos máx. (gratis)',
+        label: 'Fotos máx. (LIBRE)',
         type: 'number' as const,
-        hint: 'Fotos por vehículo plan gratuito',
+        hint: 'Fotos por vehículo plan LIBRE',
       },
       {
-        key: 'pricing.starter_max_photos',
-        label: 'Fotos máx. Starter',
+        key: 'pricing.visible_max_photos',
+        label: 'Fotos máx. VISIBLE',
         type: 'number' as const,
-        hint: 'Fotos por vehículo plan Starter',
+        hint: 'Fotos por vehículo plan VISIBLE',
       },
       {
         key: 'pricing.pro_max_photos',
-        label: 'Fotos máx. Pro',
+        label: 'Fotos máx. PRO',
         type: 'number' as const,
-        hint: 'Fotos por vehículo plan Pro',
+        hint: 'Fotos por vehículo plan PRO',
       },
       {
-        key: 'pricing.enterprise_max_photos',
-        label: 'Fotos máx. Enterprise',
+        key: 'pricing.elite_max_photos',
+        label: 'Fotos máx. ÉLITE',
         type: 'number' as const,
-        hint: 'Fotos por vehículo plan Enterprise',
+        hint: 'Fotos por vehículo plan ÉLITE',
       },
       // --- Comisiones e impuestos ---
       {

@@ -271,7 +271,7 @@ export type VerificationStatus =
   | 'verified'
   | 'rejected';
 
-export type DealerPlan = 'none' | 'starter' | 'pro' | 'enterprise';
+export type DealerPlan = 'none' | 'libre' | 'visible' | 'pro' | 'elite';
 
 // -----------------------------------------------------------------------------
 // API Types

@@ -116,7 +116,7 @@ const mockDealersAdmin = [
     phone: '+18095559999',
     status: 'pending',
     verificationStatus: 'pending',
-    plan: 'starter',
+    plan: 'libre',
     activeListingsCount: 0,
     city: 'Santiago',
     createdAt: '2026-01-28T10:00:00Z',

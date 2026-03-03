@@ -112,12 +112,14 @@ const getStatusBadge = (status: string) => {
 
 const getPlanBadge = (plan: string) => {
   switch (plan) {
-    case 'enterprise':
-      return <Badge className="bg-purple-100 text-purple-700">Enterprise</Badge>;
+    case 'elite':
+      return <Badge className="bg-amber-100 text-amber-700">ÉLITE</Badge>;
     case 'pro':
-      return <Badge className="bg-blue-100 text-blue-700">Pro</Badge>;
-    case 'starter':
-      return <Badge className="bg-muted text-foreground">Starter</Badge>;
+      return <Badge className="bg-purple-100 text-purple-700">PRO</Badge>;
+    case 'visible':
+      return <Badge className="bg-blue-100 text-blue-700">VISIBLE</Badge>;
+    case 'libre':
+      return <Badge className="bg-muted text-foreground">LIBRE</Badge>;
     default:
       return <Badge variant="outline">{plan}</Badge>;
   }
@@ -256,8 +258,8 @@ export default function AdminDealersPage() {
                 <Car className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-xl font-bold">{stats?.byPlan?.enterprise || 0}</p>
-                <p className="text-muted-foreground text-xs">Enterprise</p>
+                <p className="text-xl font-bold">{stats?.byPlan?.elite || 0}</p>
+                <p className="text-muted-foreground text-xs">ÉLITE</p>
               </div>
             </div>
           </CardContent>
@@ -316,9 +318,10 @@ export default function AdminDealersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="starter">Starter</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
+                <SelectItem value="libre">LIBRE</SelectItem>
+                <SelectItem value="visible">VISIBLE</SelectItem>
+                <SelectItem value="pro">PRO</SelectItem>
+                <SelectItem value="elite">ÉLITE</SelectItem>
               </SelectContent>
             </Select>
             <Select

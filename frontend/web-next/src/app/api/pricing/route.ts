@@ -30,10 +30,11 @@ export interface PlatformPricing {
   premiumListing: number;
   sellerPremiumPrice: number;
   individualListingPrice: number;
-  // Planes Dealer
-  dealerStarter: number;
+  // Planes Dealer (4 niveles)
+  dealerLibre: number;
+  dealerVisible: number;
   dealerPro: number;
-  dealerEnterprise: number;
+  dealerElite: number;
   // Boosts
   boostBasicPrice: number;
   boostBasicDays: number;
@@ -44,13 +45,11 @@ export interface PlatformPricing {
   // Duraciones
   basicListingDays: number;
   individualListingDays: number;
-  // Límites por plan
-  starterMaxVehicles: number;
-  proMaxVehicles: number;
+  // Límites por plan (fotos)
   freeMaxPhotos: number;
-  starterMaxPhotos: number;
+  visibleMaxPhotos: number;
   proMaxPhotos: number;
-  enterpriseMaxPhotos: number;
+  eliteMaxPhotos: number;
   // Comisiones
   platformCommission: number;
   itbisPercentage: number;
@@ -71,10 +70,11 @@ const DEFAULT_PRICING: PlatformPricing = {
   premiumListing: 2999,
   sellerPremiumPrice: 1699,
   individualListingPrice: 1699,
-  // Planes Dealer (DOP mensuales)
-  dealerStarter: 2899,
-  dealerPro: 7499,
-  dealerEnterprise: 17499,
+  // Planes Dealer (DOP mensuales) - LIBRE/VISIBLE/PRO/ÉLITE
+  dealerLibre: 0,
+  dealerVisible: 1699,
+  dealerPro: 5199,
+  dealerElite: 11599,
   // Boosts
   boostBasicPrice: 499,
   boostBasicDays: 3,
@@ -85,13 +85,11 @@ const DEFAULT_PRICING: PlatformPricing = {
   // Duraciones
   basicListingDays: 30,
   individualListingDays: 45,
-  // Límites por plan
-  starterMaxVehicles: 20,
-  proMaxVehicles: 75,
+  // Límites por plan (fotos por vehículo)
   freeMaxPhotos: 10,
-  starterMaxPhotos: 25,
+  visibleMaxPhotos: 25,
   proMaxPhotos: 40,
-  enterpriseMaxPhotos: 50,
+  eliteMaxPhotos: 50,
   // Comisiones
   platformCommission: 2.5,
   itbisPercentage: 18,

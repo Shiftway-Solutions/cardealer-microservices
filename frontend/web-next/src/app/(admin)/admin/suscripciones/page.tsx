@@ -28,13 +28,14 @@ import {
   Crown,
   Star,
   Zap,
+  Eye,
 } from 'lucide-react';
 
 interface Subscription {
   id: string;
   dealerName: string;
   dealerEmail: string;
-  plan: 'starter' | 'professional' | 'enterprise';
+  plan: 'libre' | 'visible' | 'pro' | 'elite';
   status: 'active' | 'trial' | 'past_due' | 'cancelled' | 'expired';
   amount: number;
   billingCycle: 'monthly' | 'annual';
@@ -45,20 +46,27 @@ interface Subscription {
 }
 
 const planConfig = {
-  starter: { label: 'Starter', icon: Zap, color: 'text-blue-600', bg: 'bg-blue-50', price: 49 },
-  professional: {
-    label: 'Professional',
+  libre: { label: 'LIBRE', icon: Zap, color: 'text-gray-600', bg: 'bg-gray-50', price: 0 },
+  visible: {
+    label: 'VISIBLE',
+    icon: Eye,
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    price: 1699,
+  },
+  pro: {
+    label: 'PRO',
     icon: Star,
     color: 'text-purple-600',
     bg: 'bg-purple-50',
-    price: 149,
+    price: 5199,
   },
-  enterprise: {
-    label: 'Enterprise',
+  elite: {
+    label: 'ÉLITE',
     icon: Crown,
     color: 'text-amber-600',
     bg: 'bg-amber-50',
-    price: 299,
+    price: 11599,
   },
 };
 
@@ -187,8 +195,8 @@ export default function SuscripcionesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <DollarSign className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <DollarSign className="text-primary h-6 w-6" />
             </div>
             <div>
               <p className="text-muted-foreground text-sm">MRR</p>
@@ -210,7 +218,7 @@ export default function SuscripcionesPage() {
       </div>
 
       {/* Plan Distribution */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(planConfig).map(([key, plan]) => {
           const PlanIcon = plan.icon;
           const count = stats.byPlan[key] ?? 0;
@@ -249,9 +257,10 @@ export default function SuscripcionesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los Planes</SelectItem>
-              <SelectItem value="starter">Starter</SelectItem>
-              <SelectItem value="professional">Professional</SelectItem>
-              <SelectItem value="enterprise">Enterprise</SelectItem>
+              <SelectItem value="libre">LIBRE</SelectItem>
+              <SelectItem value="visible">VISIBLE</SelectItem>
+              <SelectItem value="pro">PRO</SelectItem>
+              <SelectItem value="elite">ÉLITE</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>

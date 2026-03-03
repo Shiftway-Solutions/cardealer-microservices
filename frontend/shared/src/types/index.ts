@@ -62,10 +62,10 @@ export enum PlatformRole {
  * Planes de suscripción para dealers
  */
 export enum DealerPlan {
-  FREE = 'free', // Plan gratuito inicial (3 listings, sin analytics)
-  BASIC = 'basic', // 5 listings, analytics básicos
-  PRO = 'pro', // 25 listings, analytics avanzados, bulk upload
-  ENTERPRISE = 'enterprise', // Ilimitado, API access, white label
+  LIBRE = 'libre', // Plan gratuito: listados ilimitados, stats básicas
+  VISIBLE = 'visible', // Visibilidad mejorada, badge verificado, stats avanzadas
+  PRO = 'pro', // ChatAgent, CRM, boosts, analytics avanzados
+  ELITE = 'elite', // Manager dedicado, API access, white label
 }
 
 /**
@@ -189,9 +189,9 @@ export interface DealerPlanFeatures {
  * Configuración de límites por plan
  */
 export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
-  [DealerPlan.FREE]: {
-    maxListings: 3,
-    maxImages: 5,
+  [DealerPlan.LIBRE]: {
+    maxListings: 999999, // Ilimitado
+    maxImages: 10,
     analyticsAccess: false,
     marketPriceAnalysis: false,
     bulkUpload: false,
@@ -203,13 +203,13 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     prioritySupport: false,
     whatsappIntegration: false,
   },
-  [DealerPlan.BASIC]: {
-    maxListings: 50,
-    maxImages: 10,
+  [DealerPlan.VISIBLE]: {
+    maxListings: 999999, // Ilimitado
+    maxImages: 25,
     analyticsAccess: true,
     marketPriceAnalysis: false,
     bulkUpload: true,
-    featuredListings: 2,
+    featuredListings: 3,
     leadManagement: true,
     emailAutomation: false,
     customBranding: false,
@@ -218,8 +218,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     whatsappIntegration: false,
   },
   [DealerPlan.PRO]: {
-    maxListings: 200,
-    maxImages: 20,
+    maxListings: 999999, // Ilimitado
+    maxImages: 40,
     analyticsAccess: true,
     marketPriceAnalysis: true,
     bulkUpload: true,
@@ -231,7 +231,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     prioritySupport: true,
     whatsappIntegration: true,
   },
-  [DealerPlan.ENTERPRISE]: {
+  [DealerPlan.ELITE]: {
     maxListings: 999999, // Ilimitado
     maxImages: 50,
     analyticsAccess: true,

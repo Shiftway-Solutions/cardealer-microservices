@@ -138,35 +138,48 @@ const staticProducts: Record<string, Product> = {
       'Estadísticas avanzadas',
     ],
   },
-  'dealer-starter': {
-    id: 'dealer-starter',
-    name: 'Plan Dealer Starter',
-    description: 'Plan mensual para dealers pequeños',
-    price: 2999,
+  'dealer-libre': {
+    id: 'dealer-libre',
+    name: 'Plan Dealer LIBRE',
+    description: 'Plan gratuito para dealers',
+    price: 0,
     currency: 'DOP',
     type: 'subscription',
     features: [
-      'Hasta 20 vehículos',
-      'Dashboard básico',
+      'Vehículos ilimitados',
+      'Panel de control básico',
       'Soporte por email',
+      'Estadísticas básicas',
+    ],
+  },
+  'dealer-visible': {
+    id: 'dealer-visible',
+    name: 'Plan Dealer VISIBLE',
+    description: 'Visibilidad mejorada para dealers',
+    price: 1699,
+    currency: 'DOP',
+    type: 'subscription',
+    features: [
+      'Vehículos ilimitados',
       'Badge de verificación',
+      'Visibilidad mejorada',
+      'Estadísticas avanzadas',
+      '3 destacados/mes',
     ],
   },
   'dealer-pro': {
     id: 'dealer-pro',
-    name: 'Plan Dealer Pro',
-    description: 'Plan mensual para dealers medianos',
-    price: 5999,
-    originalPrice: 7499,
+    name: 'Plan Dealer PRO',
+    description: 'Plan completo para dealers profesionales',
+    price: 5199,
     currency: 'DOP',
     type: 'subscription',
     features: [
-      'Hasta 50 vehículos',
-      'Dashboard completo',
+      'Todo de VISIBLE +',
+      'ChatAgent IA',
       'CRM integrado',
-      'Analytics avanzados',
-      'Soporte prioritario',
-      'Múltiples usuarios',
+      'Boosts incluidos',
+      'Integración WhatsApp',
     ],
   },
   'listing-single': {
@@ -184,20 +197,20 @@ const staticProducts: Record<string, Product> = {
       'Estadísticas básicas',
     ],
   },
-  'dealer-enterprise': {
-    id: 'dealer-enterprise',
-    name: 'Plan Dealer Enterprise',
-    description: 'Plan mensual para grandes dealers',
-    price: 49999,
+  'dealer-elite': {
+    id: 'dealer-elite',
+    name: 'Plan Dealer ÉLITE',
+    description: 'Plan premium para grandes dealers',
+    price: 11599,
     currency: 'DOP',
     type: 'subscription',
     features: [
-      'Vehículos ilimitados',
-      'Dashboard premium',
-      'CRM avanzado + WhatsApp',
-      'Analytics completo + API',
+      'Todo de PRO +',
+      'Manager dedicado',
+      'API access',
       'Múltiples ubicaciones',
-      'Soporte 24/7 + Manager dedicado',
+      'Soporte 24/7',
+      'White label',
     ],
   },
 };
@@ -428,17 +441,21 @@ export function updateProductsWithPricing(pricing: PlatformPricing): void {
   }
 
   // Update dealer plans
-  if (staticProducts['dealer-starter']) {
-    staticProducts['dealer-starter'].price = pricing.dealerStarter;
-    staticProducts['dealer-starter'].currency = pricing.currency as 'DOP' | 'USD';
+  if (staticProducts['dealer-libre']) {
+    staticProducts['dealer-libre'].price = pricing.dealerLibre;
+    staticProducts['dealer-libre'].currency = pricing.currency as 'DOP' | 'USD';
+  }
+  if (staticProducts['dealer-visible']) {
+    staticProducts['dealer-visible'].price = pricing.dealerVisible;
+    staticProducts['dealer-visible'].currency = pricing.currency as 'DOP' | 'USD';
   }
   if (staticProducts['dealer-pro']) {
     staticProducts['dealer-pro'].price = pricing.dealerPro;
     staticProducts['dealer-pro'].currency = pricing.currency as 'DOP' | 'USD';
   }
-  if (staticProducts['dealer-enterprise']) {
-    staticProducts['dealer-enterprise'].price = pricing.dealerEnterprise;
-    staticProducts['dealer-enterprise'].currency = pricing.currency as 'DOP' | 'USD';
+  if (staticProducts['dealer-elite']) {
+    staticProducts['dealer-elite'].price = pricing.dealerElite;
+    staticProducts['dealer-elite'].currency = pricing.currency as 'DOP' | 'USD';
   }
 
   // Update listing-single

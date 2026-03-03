@@ -135,7 +135,7 @@ export interface AdminDealer {
   phone: string;
   status: 'active' | 'pending' | 'suspended' | 'rejected';
   verified: boolean;
-  plan: 'starter' | 'pro' | 'enterprise' | 'none';
+  plan: 'libre' | 'visible' | 'pro' | 'elite' | 'none';
   vehiclesCount: number;
   salesCount: number;
   rating: number;
