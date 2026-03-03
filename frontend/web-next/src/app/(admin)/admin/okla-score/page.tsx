@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
 import {
   ShieldCheck,
   Rocket,
@@ -23,7 +21,6 @@ import {
   Globe,
   Database,
   BarChart3,
-  Shield,
 } from 'lucide-react';
 
 // =============================================================================

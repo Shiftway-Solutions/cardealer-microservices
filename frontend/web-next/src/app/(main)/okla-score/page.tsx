@@ -1,19 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScoreReport } from '@/components/okla-score/score-report';
-import { ScoreGauge } from '@/components/okla-score/score-gauge';
 import { useCalculateScore, useVinDecode } from '@/hooks/use-okla-score';
 import type { OklaScoreReport } from '@/types/okla-score';
 import {
   Search,
   ShieldCheck,
   AlertTriangle,
-  TrendingDown,
   DollarSign,
   Loader2,
   Info,

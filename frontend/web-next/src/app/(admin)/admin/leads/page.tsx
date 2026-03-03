@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import type { PredictedLead, LeadListResponse, LeadScoreLevel } from '@/types/analytics';
 import {
   Users,
@@ -13,20 +12,13 @@ import {
   ThermometerSun,
   Snowflake,
   Target,
-  Phone,
-  MessageSquare,
   Car,
-  TrendingUp,
   Search,
-  Heart,
-  DollarSign,
   Smartphone,
   Monitor,
   Tablet,
-  Globe,
   Clock,
   Eye,
-  ArrowUpRight,
   Filter,
   BarChart3,
   Brain,

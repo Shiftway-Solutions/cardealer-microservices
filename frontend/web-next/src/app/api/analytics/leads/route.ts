@@ -8,7 +8,7 @@ import type { PredictedLead, LeadListResponse, DeviceInfo } from '@/types/analyt
 // Uses the lead-prediction-engine for AI-powered scoring.
 // =============================================================================
 
-const API_URL =
+const _API_URL =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
 export async function GET(request: NextRequest) {
