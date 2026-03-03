@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * GET /api/advertising/rotation/:section
- * BFF route for ad rotation endpoints (FeaturedSpot, PremiumSpot, etc.)
- * Proxies to backend AdvertisingService with demo fallback.
+ * GET /api/advertising/rotation/[...path]
+ * BFF catch-all route for ad rotation endpoints (FeaturedSpot, PremiumSpot, etc.)
+ * Proxies to backend AdvertisingService with demo data fallback.
+ *
+ * Handles:
+ *   /api/advertising/rotation/FeaturedSpot
+ *   /api/advertising/rotation/PremiumSpot
+ *   /api/advertising/rotation/config/:section
+ *   /api/advertising/rotation/refresh
  */
 
 const API_URL =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ section: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const { section } = await params;
+  const { path } = await params;
+  const section = path.join('/');
 
   try {
-    const backendUrl = `${API_URL}/api/advertising/rotation/${section}`;
+    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
     const res = await fetch(backendUrl, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 300 },
@@ -30,7 +37,7 @@ export async function GET(
     // Backend unavailable — fall through to demo data
   }
 
-  // Fallback: return demo rotation data
+  // Fallback: return demo rotation data for known sections
   const demoItems = getDemoRotationItems(section);
   return NextResponse.json({
     success: true,
@@ -38,8 +45,66 @@ export async function GET(
       items: demoItems,
       section,
       rotatedAt: new Date().toISOString(),
+      source: 'demo',
     },
   });
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const section = path.join('/');
+
+  try {
+    const body = await request.json().catch(() => null);
+    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
+    const res = await fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json(data);
+    }
+  } catch {
+    // Backend unavailable
+  }
+
+  return NextResponse.json({ success: true, refreshed: false, source: 'demo' });
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const section = path.join('/');
+
+  try {
+    const body = await request.json();
+    const backendUrl = `${API_URL}/api/advertising/rotation/${section}${request.nextUrl.search}`;
+    const res = await fetch(backendUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return NextResponse.json(data);
+    }
+  } catch {
+    // Backend unavailable
+  }
+
+  return NextResponse.json(
+    { success: false, error: 'AdvertisingService unavailable' },
+    { status: 503 }
+  );
 }
 
 function getDemoRotationItems(section: string) {
@@ -133,7 +198,7 @@ function getDemoRotationItems(section: string) {
     },
   ];
 
-  if (section === 'PremiumSpot' || section === 'PremiumBanner') {
+  if (section.includes('Premium')) {
     return premium;
   }
   return featured;
