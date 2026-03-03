@@ -69,7 +69,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
@@ -78,7 +77,10 @@ import { useVehicleSearch } from '@/hooks/use-vehicle-search';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
 import { useAuth } from '@/hooks/use-auth';
+import { useSponsoredSearch } from '@/hooks/use-ads';
+import { SponsoredVehicleCard, SponsoredBadge, SidebarAdUnit } from '@/components/advertising/native-ads';
 import type { VehicleCardData } from '@/types';
+import type { SponsoredVehicle } from '@/types/ads';
 
 // =============================================================================
 // CONSTANTS
@@ -258,6 +260,9 @@ export default function VehiculosClient() {
 
   // Favorites
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  // Sponsored search results (native ads)
+  const { topSponsored, inlineSponsored } = useSponsoredSearch(filters.query);
 
   // Derived
   const vehicles = results?.vehicles ?? [];
@@ -443,6 +448,18 @@ export default function VehiculosClient() {
     if (viewMode === 'list') {
       return (
         <>
+          {/* Top sponsored results in list view */}
+          {topSponsored.length > 0 && currentPage === 1 && allVehicles.length > 0 && (
+            <>
+              {topSponsored.slice(0, 2).map((sv: SponsoredVehicle) => (
+                <SponsoredVehicleCard
+                  key={sv.id}
+                  vehicle={sv}
+                  variant="horizontal"
+                />
+              ))}
+            </>
+          )}
           {allVehicles.map((vehicle: VehicleCardData, i: number) => (
             <React.Fragment key={vehicle.id}>
               <VehicleCard
@@ -453,14 +470,36 @@ export default function VehiculosClient() {
                 priority={i < 3}
               />
               {(i + 1) % 6 === 0 && <AdSlotLeaderboard />}
+              {/* Inline sponsored every 10 items */}
+              {(i + 1) % 10 === 0 && inlineSponsored[Math.floor(i / 10) % inlineSponsored.length] && (
+                <SponsoredVehicleCard
+                  vehicle={inlineSponsored[Math.floor(i / 10) % inlineSponsored.length]}
+                  variant="horizontal"
+                />
+              )}
             </React.Fragment>
           ))}
         </>
       );
     }
 
-    // Grid: insert leaderboard every 6 cards
+    // Grid: insert sponsored results + leaderboard
     const items: React.ReactNode[] = [];
+
+    // Top sponsored results (positions 1-3, only on first page)
+    if (topSponsored.length > 0 && currentPage === 1) {
+      topSponsored.slice(0, 3).forEach((sv: SponsoredVehicle) => {
+        items.push(
+          <SponsoredVehicleCard
+            key={`sp-top-${sv.id}`}
+            vehicle={sv}
+            priority
+          />
+        );
+      });
+    }
+
+    let inlineSponsoredIdx = 0;
     allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
       items.push(
         <VehicleCard
@@ -473,6 +512,16 @@ export default function VehiculosClient() {
       );
       if ((i + 1) % 6 === 0) {
         items.push(<AdSlotLeaderboard key={`ad-${i}`} />);
+      }
+      // Insert inline sponsored every 8 organic results
+      if ((i + 1) % 8 === 0 && inlineSponsoredIdx < inlineSponsored.length) {
+        items.push(
+          <SponsoredVehicleCard
+            key={`sp-inline-${inlineSponsored[inlineSponsoredIdx].id}`}
+            vehicle={inlineSponsored[inlineSponsoredIdx]}
+          />
+        );
+        inlineSponsoredIdx++;
       }
     });
     return items;
@@ -698,6 +747,14 @@ export default function VehiculosClient() {
 
                 {/* Sidebar ad slot */}
                 <AdSlotRectangle className="mt-4" />
+
+                {/* Sidebar sponsored vehicles */}
+                {inlineSponsored.length > 0 && (
+                  <SidebarAdUnit
+                    vehicles={inlineSponsored.slice(0, 2)}
+                    className="mt-4"
+                  />
+                )}
               </div>
             </div>
           </aside>

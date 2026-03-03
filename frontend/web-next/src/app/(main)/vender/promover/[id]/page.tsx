@@ -10,6 +10,7 @@
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Star,
@@ -245,10 +246,11 @@ export default function PromoteVehiclePage() {
         <CardContent className="flex items-center gap-4 p-4">
           <div className="bg-muted relative h-20 w-28 flex-shrink-0 overflow-hidden rounded-lg">
             {vehicle.images?.[0] ? (
-              <img
+              <Image
                 src={vehicle.images[0].url}
                 alt={`${vehicle.make} ${vehicle.model}`}
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center">

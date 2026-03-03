@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -17,12 +17,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Camera,
   Upload,
-  X,
   Check,
   ChevronRight,
   ChevronLeft,
   Info,
-  GripVertical,
   Star,
   Trash2,
   ImagePlus,
@@ -31,7 +29,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { uploadImages, type UploadProgress } from '@/services/media';
+import { uploadImages } from '@/services/media';
 import { useVehicle, useUpdateVehicle } from '@/hooks/use-vehicles';
 
 // =============================================================================
@@ -76,7 +74,7 @@ export default function PublicarFotosPage() {
   useState(() => {
     if (vehicle?.images) {
       setPhotos(
-        vehicle.images.map((img: any, index: number) => ({
+        vehicle.images.map((img: { url?: string; category?: string; isPrimary?: boolean }, index: number) => ({
           id: `existing-${index}`,
           url: img.url,
           category: img.category || 'general',

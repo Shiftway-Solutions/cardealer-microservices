@@ -36,7 +36,7 @@ const formatPrice = (price: number) => {
 };
 
 // Plan features (dynamic based on pricing config)
-function getPlanFeatures(pricing: { earlyBirdFreeMonths: number }) {
+function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
   return {
     libre: [
       'Vehículos ilimitados',
@@ -144,7 +144,7 @@ export default function DealerSubscriptionPage() {
   const dealerId = dealer?.id ?? '';
   const { data: subscription, isLoading: isSubscriptionLoading } = useSubscription(dealerId);
   const { data: usage } = useUsageMetrics(dealerId);
-  const { data: plans } = usePlans();
+  usePlans();
   const changePlanMutation = useChangePlan(dealerId);
   const cancelMutation = useCancelSubscription(dealerId);
   const earlyBird = useEarlyBird();

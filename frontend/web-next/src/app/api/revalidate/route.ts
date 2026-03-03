@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }

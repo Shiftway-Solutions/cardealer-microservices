@@ -48,6 +48,7 @@ import {
   MapPin,
   Crown,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useCanSell } from '@/hooks/use-kyc';
@@ -64,8 +65,7 @@ import { getAppointmentTypeLabel } from '@/services/appointments';
 import { useSellerByUserId, useSellerStats } from '@/hooks/use-seller';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useAlertStats } from '@/hooks/use-alerts';
-import { PlanBadge, PlanUsageBar } from '@/components/plan/plan-gate';
-import { usePlanAccess } from '@/hooks/use-plan-access';
+import { PlanBadge } from '@/components/plan/plan-gate';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -908,7 +908,7 @@ function FavoriteMiniCard({
       {/* Image */}
       <div className="bg-muted relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg">
         {v.imageUrl ? (
-          <img src={v.imageUrl} alt={title} className="h-full w-full object-cover" />
+          <Image src={v.imageUrl} alt={title} fill className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-2xl">🚗</div>
         )}
@@ -1025,7 +1025,8 @@ function LeadStatusBadge({ status }: { status: string }) {
 }
 
 /** QuickAction: large tile (BuyerDashboard) */
-function QuickAction({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _QuickAction({
   href,
   icon: Icon,
   label,
@@ -1070,6 +1071,7 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
   };
 
   const config = statusConfig[vehicle.status] || statusConfig.pending;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const daysUntilExpiry = Math.ceil(
     (new Date(vehicle.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
@@ -1078,11 +1080,13 @@ function VehicleListItem({ vehicle }: { vehicle: UserVehicleDto }) {
   return (
     <div className="border-border hover:border-border flex gap-4 rounded-lg border p-4 transition-colors">
       {/* Image */}
-      <div className="bg-muted h-18 w-24 flex-shrink-0 overflow-hidden rounded-lg">
-        <img
+      <div className="bg-muted relative h-18 w-24 flex-shrink-0 overflow-hidden rounded-lg">
+        {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
+        <Image
           src={vehicle.imageUrl || '/images/vehicle-placeholder.jpg'}
           alt={vehicle.title}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
         />
       </div>
 

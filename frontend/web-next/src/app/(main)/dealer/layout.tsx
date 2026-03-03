@@ -32,7 +32,6 @@ import {
   Bell,
   HelpCircle,
   Menu,
-  X,
   Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

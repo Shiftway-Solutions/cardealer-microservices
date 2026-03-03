@@ -29,7 +29,7 @@ export default function OAuthCallbackPage() {
   const params = useParams();
   const provider = params.provider as string;
   const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [_isProcessing, setIsProcessing] = useState(true);
   const { refreshUser } = useAuth();
 
   // Prevent duplicate calls (React StrictMode causes useEffect to run twice)

@@ -214,15 +214,15 @@ function SalesAnalyticsContent() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <DollarSign className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <DollarSign className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Ingresos</p>
                 <p className="text-2xl font-bold">{formatPrice(kpis?.totalRevenue || 0)}</p>
                 <div className="flex items-center text-xs">
                   {(kpis?.revenueChange ?? 0) >= 0 ? (
-                    <span className="flex items-center text-primary">
+                    <span className="text-primary flex items-center">
                       <TrendingUp className="mr-1 h-3 w-3" />+
                       {(kpis?.revenueChange ?? 0).toFixed(1)}%
                     </span>
@@ -306,7 +306,7 @@ function SalesAnalyticsContent() {
           </div>
           <div className="bg-muted h-4 w-full rounded-full">
             <div
-              className="h-4 rounded-full bg-primary/100 transition-all"
+              className="bg-primary/100 h-4 rounded-full transition-all"
               style={{ width: `${monthlyProgress}%` }}
             />
           </div>
@@ -335,8 +335,8 @@ function SalesAnalyticsContent() {
                     className="bg-muted/50 flex items-center justify-between rounded-lg p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
-                        <Car className="h-4 w-4 text-primary" />
+                      <div className="bg-primary/10 rounded-lg p-2">
+                        <Car className="text-primary h-4 w-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">
@@ -349,7 +349,7 @@ function SalesAnalyticsContent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-primary">
+                      <p className="text-primary font-bold">
                         {formatPrice(vehicle.vehiclePrice || 0)}
                       </p>
                       <p className="text-muted-foreground text-xs">{vehicle.daysOnMarket} días</p>
@@ -425,7 +425,7 @@ function SalesAnalyticsContent() {
               <div className="bg-muted/50 rounded-lg p-4 text-center">
                 <p className="text-muted-foreground text-sm">Vendidos</p>
                 <p className="mt-1 text-2xl font-bold">{snapshot.soldVehicles}</p>
-                <p className="text-sm text-primary">este período</p>
+                <p className="text-primary text-sm">este período</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-4 text-center">
                 <p className="text-muted-foreground text-sm">Valor Inventario</p>
@@ -460,7 +460,7 @@ function SalesAnalyticsContent() {
                   return (
                     <div key={idx} className="flex flex-1 flex-col items-center">
                       <div
-                        className="w-full rounded-t bg-primary/100"
+                        className="bg-primary/100 w-full rounded-t"
                         style={{ height: `${(point.value / maxVal) * 200}px` }}
                         title={`${point.label}: ${formatPrice(point.value)}`}
                       />

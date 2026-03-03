@@ -14,6 +14,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import * as React from 'react';
 import { toast } from 'sonner';
 import {
@@ -157,9 +158,11 @@ function ReviewManagementCard({ review, sellerId }: ReviewManagementCardProps) {
             {/* Avatar */}
             <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold">
               {review.reviewerAvatarUrl ? (
-                <img
+                <Image
                   src={review.reviewerAvatarUrl}
                   alt=""
+                  width={40}
+                  height={40}
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (

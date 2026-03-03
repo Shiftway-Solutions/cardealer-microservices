@@ -14,7 +14,7 @@
 'use client';
 
 import * as React from 'react';
-import { useParams, notFound, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { ReviewsSection } from '@/components/reviews';
 import { AppointmentCalendar } from '@/components/appointments';
 import { ChatWidget } from '@/components/chat/ChatWidget';
-import type { VehicleCardData } from '@/types';
 
 // =============================================================================
 // LOADING SKELETON

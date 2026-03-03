@@ -16,11 +16,7 @@ import {
   getDemandPrediction,
   type PriceSuggestionRequest,
   type CreatePriceAnalysisRequest,
-  type PriceSuggestion,
   type PriceAnalysis,
-  type CategoryDemand,
-  type MarketAnalysis,
-  type DemandPrediction,
 } from '@/services/vehicle-intelligence';
 
 // ============================================================================

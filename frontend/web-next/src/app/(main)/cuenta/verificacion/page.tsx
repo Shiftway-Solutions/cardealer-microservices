@@ -186,7 +186,7 @@ export default function VerificacionPage() {
     }
   }, []);
 
-  const { saveDraft, clearDraft } = useKYCDraft({
+  const { clearDraft } = useKYCDraft({
     userId: user?.id,
     currentStep,
     formData: { personalInfo, address },

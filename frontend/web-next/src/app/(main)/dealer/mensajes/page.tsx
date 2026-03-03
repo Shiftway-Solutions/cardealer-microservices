@@ -37,8 +37,6 @@ import {
   formatRelativeTime,
   getStatusColor,
   getStatusLabel,
-  type ReceivedInquiry,
-  type ContactMessage,
 } from '@/services/contact';
 import { toast } from 'sonner';
 
@@ -93,7 +91,7 @@ export default function DealerMessagesPage() {
     refetch: refetchConversations,
   } = useReceivedInquiries();
 
-  const { data: unreadCount } = useUnreadCount();
+  const { data: _unreadCount } = useUnreadCount();
 
   const { data: conversationDetail, isLoading: messagesLoading } = useConversation(
     selectedConversation || ''

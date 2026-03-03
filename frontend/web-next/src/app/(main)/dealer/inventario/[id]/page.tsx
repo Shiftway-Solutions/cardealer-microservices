@@ -43,8 +43,6 @@ import {
   Eye,
   Trash2,
   Upload,
-  Image as ImageIcon,
-  X,
   GripVertical,
   Plus,
   TrendingUp,

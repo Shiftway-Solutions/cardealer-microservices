@@ -6,7 +6,7 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,7 +14,6 @@ import {
   TrendingUp,
   CreditCard,
   Users,
-  FileText,
   Download,
   Calendar,
   ArrowUpRight,
@@ -33,8 +32,8 @@ import { formatPrice } from '@/lib/format';
 
 export default function AdminBillingPage() {
   const { data: revenue, isLoading: loadingRevenue } = useRevenueStats();
-  const { data: transactions = [], isLoading: loadingTx } = useRecentTransactions();
-  const { data: pendingPayments = [], isLoading: loadingPending } = usePendingPaymentsAdmin();
+  const { data: transactions = [] } = useRecentTransactions();
+  const { data: pendingPayments = [] } = usePendingPaymentsAdmin();
   const { data: planRevenue = [], isLoading: loadingPlans } = useRevenueByPlan();
 
   return (

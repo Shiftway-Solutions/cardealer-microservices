@@ -438,7 +438,7 @@ export async function markMatchesAsSeen(id: string): Promise<void> {
  * Navigation to /vehiculos with the saved search params is handled
  * directly in the UI (busquedas/page.tsx handleRunSearch).
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function runSavedSearch(_id: string): Promise<void> {
   return Promise.resolve();
 }

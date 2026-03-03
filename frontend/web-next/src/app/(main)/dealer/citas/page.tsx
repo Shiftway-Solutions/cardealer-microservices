@@ -14,12 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Calendar,
-  Clock,
-  User,
   Car,
   Phone,
   Mail,
-  MapPin,
   Check,
   X,
   ChevronLeft,
@@ -31,7 +28,6 @@ import {
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import {
   useDealerAppointments,
-  useAppointmentsByDate,
   useConfirmAppointment,
   useCancelAppointment,
   useCompleteAppointment,
@@ -43,7 +39,6 @@ import {
   getAppointmentTypeIcon,
   formatAppointmentTime,
   calculateAppointmentStats,
-  type Appointment,
   type AppointmentStatus,
   type AppointmentType,
 } from '@/services/appointments';
@@ -455,7 +450,7 @@ export default function DealerAppointmentsPage() {
 
                           {appointment.clientNotes && (
                             <p className="mt-2 text-sm text-muted-foreground italic">
-                              "{appointment.clientNotes}"
+                              &ldquo;{appointment.clientNotes}&rdquo;
                             </p>
                           )}
                         </div>

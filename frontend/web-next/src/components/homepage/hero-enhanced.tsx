@@ -11,8 +11,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Car, Shield, Star, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Search, ChevronDown, Shield, Star, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';

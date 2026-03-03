@@ -13,8 +13,7 @@
  */
 
 import * as React from 'react';
-import { RotateCcw, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';

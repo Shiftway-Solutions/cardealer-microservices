@@ -290,8 +290,7 @@ export function VenderPricing() {
               Badge de vendedor verificado
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-[#00A870]" />
-              2 destacadas/mes
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />2 destacadas/mes
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />
@@ -339,8 +338,7 @@ export function VenderPricing() {
               Badge de vendedor verificado
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-[#00A870]" />
-              5 destacadas/mes
+              <CheckCircle className="h-4 w-4 text-[#00A870]" />5 destacadas/mes
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4 text-[#00A870]" />

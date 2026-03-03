@@ -9,17 +9,11 @@
 
 import {
   Shield,
-  Search,
   TrendingUp,
   MessageCircle,
   Camera,
   CreditCard,
   Clock,
-  Users,
-  CheckCircle2,
-  Award,
-  Zap,
-  HeartHandshake,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useInView } from '@/hooks/use-in-view';

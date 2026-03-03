@@ -39,6 +39,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { vehicleService, type CatalogOption } from '@/services/vehicles';
 import type { Vehicle } from '@/types';
 
@@ -519,10 +520,11 @@ export default function EditVehiclePage() {
                   key={img.id || idx}
                   className="bg-muted relative aspect-square overflow-hidden rounded-lg"
                 >
-                  <img
+                  <Image
                     src={img.url}
                     alt={img.alt || `Imagen ${idx + 1}`}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                   {idx === 0 && (
                     <div className="absolute right-0 bottom-0 left-0 bg-black/60 px-2 py-0.5 text-center text-xs text-white">

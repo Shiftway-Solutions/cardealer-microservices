@@ -18,11 +18,9 @@ import {
   Clock,
   CheckCircle,
   MessageSquare,
-  User,
   AlertCircle,
   ChevronRight,
   Send,
-  Loader2,
 } from 'lucide-react';
 import {
   useSupportTickets,
@@ -67,11 +65,10 @@ export default function AdminSupportPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
-  const { data: ticketsData, isLoading } = useSupportTickets();
+  const { data: ticketsData } = useSupportTickets();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const allTickets = ticketsData?.items ?? [];
   const { data: ticketStats } = useTicketStats();
-  const replyTicket = useReplySupportTicket();
-  const updateStatus = useUpdateTicketStatus();
 
   const filteredTickets = useMemo(
     () =>
@@ -150,8 +147,8 @@ export default function AdminSupportPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
@@ -271,7 +268,7 @@ export default function AdminSupportPage() {
 
                 <div className="border-border border-t pt-4">
                   <Textarea placeholder="Escribir respuesta..." className="mb-3" />
-                  <Button className="w-full bg-primary hover:bg-primary/90">
+                  <Button className="bg-primary hover:bg-primary/90 w-full">
                     <Send className="mr-2 h-4 w-4" />
                     Enviar Respuesta
                   </Button>

@@ -6,11 +6,11 @@
 
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,8 +24,6 @@ import {
   Smartphone,
   Globe,
   Lock,
-  Key,
-  AlertTriangle,
   Check,
   Loader2,
 } from 'lucide-react';
@@ -38,8 +36,6 @@ import {
 } from '@/hooks/use-dealer-settings';
 import {
   defaultNotificationSettings,
-  defaultSecuritySettings,
-  sessionTimeoutOptions,
   type NotificationSettings,
 } from '@/services/dealer-settings';
 import { toast } from 'sonner';
@@ -116,7 +112,9 @@ export default function DealerSettingsPage() {
   // Sync settings when loaded
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setNotifications(settings.notifications);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setSessionTimeout(settings.security.sessionTimeoutMinutes);
     }
   }, [settings]);
@@ -151,7 +149,6 @@ export default function DealerSettingsPage() {
   }
 
   const isSaving = updateNotifications.isPending || updateSecurity.isPending;
-  const twoFactorEnabled = settings?.security.twoFactorEnabled || false;
   const activeEmployees = employees?.filter(e => e.status === 'Active') || [];
   const maxEmployees = Math.floor((dealer?.maxActiveListings || 15) / 3);
 
@@ -367,9 +364,11 @@ export default function DealerSettingsPage() {
                   >
                     <div className="flex items-center gap-3">
                       {employee.avatarUrl ? (
-                        <img
+                        <Image
                           src={employee.avatarUrl}
                           alt={employee.name}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (

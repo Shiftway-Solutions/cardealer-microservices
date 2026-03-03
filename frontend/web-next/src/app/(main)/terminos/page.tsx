@@ -38,7 +38,7 @@ export default function TerminosPage() {
             <div className="prose prose-gray max-w-none">
               <h2>1. Aceptación de los Términos</h2>
               <p>
-                Al acceder y utilizar la plataforma OKLA (en adelante, "la Plataforma"), usted
+                Al acceder y utilizar la plataforma OKLA (en adelante, &ldquo;la Plataforma&rdquo;), usted
                 acepta estar sujeto a estos Términos y Condiciones de Uso. Si no está de acuerdo con
                 alguna parte de estos términos, no podrá acceder al servicio.
               </p>
@@ -107,7 +107,7 @@ export default function TerminosPage() {
               </p>
 
               <h2>8. Limitación de Responsabilidad</h2>
-              <p>OKLA proporciona la Plataforma "tal como está" y no garantiza:</p>
+              <p>OKLA proporciona la Plataforma &ldquo;tal como está&rdquo; y no garantiza:</p>
               <ul>
                 <li>La precisión de la información proporcionada por los usuarios</li>
                 <li>La calidad, seguridad o legalidad de los vehículos anunciados</li>

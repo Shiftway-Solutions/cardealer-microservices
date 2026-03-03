@@ -4,8 +4,7 @@
  * Route: /prensa
  */
 
-import Link from 'next/link';
-import { Newspaper, Download, Mail, Phone, ExternalLink } from 'lucide-react';
+import { Newspaper, Download, Mail, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

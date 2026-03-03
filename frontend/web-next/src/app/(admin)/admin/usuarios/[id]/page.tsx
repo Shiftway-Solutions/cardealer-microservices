@@ -10,14 +10,13 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminUser, useUpdateUserStatus, useVerifyUser } from '@/hooks/use-admin';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ArrowLeft,
-  User,
   Mail,
   Phone,
   Calendar,
@@ -29,9 +28,7 @@ import {
   Ban,
   CheckCircle,
   AlertTriangle,
-  MoreVertical,
   Clock,
-  Eye,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';

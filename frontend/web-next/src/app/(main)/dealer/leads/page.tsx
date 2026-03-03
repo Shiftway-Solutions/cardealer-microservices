@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,13 +33,11 @@ import {
   Star,
   TrendingUp,
   ChevronRight,
-  UserCheck,
-  UserX,
   Calendar,
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
-import { useLeads, useLeadStats, useDeleteLead, useUpdateLead } from '@/hooks/use-crm';
+import { useLeadStats, useDeleteLead, useUpdateLead } from '@/hooks/use-crm';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import {
   getLeadStatusColor,
@@ -47,7 +45,6 @@ import {
   formatLeadName,
   type LeadDto,
 } from '@/services/crm';
-import { toast } from 'sonner';
 
 // Loading skeleton for stats
 function StatsSkeleton() {
@@ -134,7 +131,7 @@ function LeadsPageContent() {
   const [statusFilter, setStatusFilter] = React.useState('all');
 
   // API hooks
-  const { data: dealer } = useCurrentDealer();
+  const { data: _dealer } = useCurrentDealer();
   const {
     data: stats,
     leads,
@@ -142,8 +139,8 @@ function LeadsPageContent() {
     error: statsError,
     refetch,
   } = useLeadStats();
-  const { mutate: deleteLead } = useDeleteLead();
-  const { mutate: updateLead } = useUpdateLead();
+  const { mutate: _deleteLead } = useDeleteLead();
+  const { mutate: _updateLead } = useUpdateLead();
 
   const isLoading = isStatsLoading;
 
@@ -325,7 +322,7 @@ function LeadsPageContent() {
                           <div className="flex items-center gap-2">
                             <Link
                               href={`/dealer/leads/${lead.id}`}
-                              className="font-semibold transition-colors hover:text-primary"
+                              className="hover:text-primary font-semibold transition-colors"
                             >
                               {formatLeadName(lead)}
                             </Link>
@@ -484,7 +481,7 @@ function LeadsTabContent({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/dealer/leads/${lead.id}`}
-                      className="font-semibold transition-colors hover:text-primary"
+                      className="hover:text-primary font-semibold transition-colors"
                     >
                       {formatLeadName(lead)}
                     </Link>

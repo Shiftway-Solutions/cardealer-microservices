@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || 'default';
     const price = searchParams.get('price');
     const year = searchParams.get('year');
-    const image = searchParams.get('image');
+    const _image = searchParams.get('image');
 
     // Vehicle OG Image
     if (type === 'vehicle') {

@@ -15,7 +15,6 @@ import {
   updateLead,
   deleteLead,
   calculateLeadStats,
-  type LeadDto,
   type LeadStatus,
   type CreateLeadRequest,
   type UpdateLeadRequest,

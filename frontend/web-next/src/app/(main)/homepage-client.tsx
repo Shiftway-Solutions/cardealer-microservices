@@ -21,7 +21,9 @@ import {
   type FeaturedListingItem,
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
+import { SponsoredSection, NativeBannerAd } from '@/components/advertising/native-ads';
 import { useBrands, useCategories } from '@/hooks/use-advertising';
+import { useHomepageAds } from '@/hooks/use-ads';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
 import {
   transformHomepageVehicleToVehicle,
@@ -117,6 +119,9 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
   const { data: apiBrands } = useBrands();
   const { data: apiCategories } = useCategories();
 
+  // Sponsored vehicles for native ad slots
+  const { gridSponsored, recommendedSponsored, categorySponsored } = useHomepageAds();
+
   const dynamicBrands = useMemo(() => {
     if (!apiBrands || apiBrands.length === 0) return undefined;
     return apiBrands
@@ -206,6 +211,21 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         </div>
       </section>
 
+      {/* Sponsored: Recomendados para Ti — Native ad section */}
+      {recommendedSponsored.length > 0 && (
+        <section className="bg-gradient-to-b from-slate-50 to-white py-12 lg:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SponsoredSection
+              title="Recomendados para Ti"
+              subtitle="Vehículos seleccionados basados en las tendencias del mercado"
+              vehicles={recommendedSponsored}
+              variant="grid"
+              columns={3}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Featured Sponsored Vehicles */}
       <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={8} />
 
@@ -231,16 +251,59 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
       </section>
 
       {/* Dynamic Category Sections */}
-      {categorySections.slice(0, 4).map(section => (
-        <FeaturedSection
-          key={section.slug}
-          title={section.name}
-          subtitle={section.subtitle}
-          listings={transformSectionVehicles(section)}
-          viewAllHref={section.viewAllHref}
-          accentColor={section.accentColor}
-        />
+      {categorySections.slice(0, 4).map((section, index) => (
+        <div key={section.slug}>
+          <FeaturedSection
+            title={section.name}
+            subtitle={section.subtitle}
+            listings={transformSectionVehicles(section)}
+            viewAllHref={section.viewAllHref}
+            accentColor={section.accentColor}
+          />
+          {/* Insert sponsored scroll between 1st and 2nd category */}
+          {index === 0 && categorySponsored.length > 0 && (
+            <section className="bg-white py-10">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <SponsoredSection
+                  title="Oportunidades del Día"
+                  subtitle="Ofertas de dealers verificados que podrían interesarte"
+                  vehicles={categorySponsored}
+                  variant="scroll"
+                />
+              </div>
+            </section>
+          )}
+          {/* Insert native banner ad after 2nd category */}
+          {index === 1 && (
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+              <NativeBannerAd
+                title="¿Eres dealer? Llega a más compradores"
+                subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
+                ctaText="Conocer más"
+                ctaUrl="/dealers"
+                backgroundGradient="from-emerald-600 to-teal-700"
+                impressionToken={`banner-dealer-cta-${Date.now()}`}
+              />
+            </div>
+          )}
+        </div>
       ))}
+
+      {/* Sponsored: Grid before Why Choose — Last ad placement */}
+      {gridSponsored.length > 0 && (
+        <section className="bg-gradient-to-b from-white to-slate-50 py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SponsoredSection
+              title="También te pueden interesar"
+              subtitle="Vehículos populares en tu zona"
+              vehicles={gridSponsored}
+              variant="grid"
+              columns={3}
+              cardVariant="default"
+            />
+          </div>
+        </section>
+      )}
 
       {/* Why Choose OKLA */}
       <WhyChooseUs variant="grid" />

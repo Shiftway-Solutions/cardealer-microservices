@@ -54,10 +54,10 @@ import {
   authService,
   type Session,
   type TwoFactorSetupResponse,
-  type SecuritySettings,
   type DeletionReasonString,
 } from '@/services/auth';
 import { useAuth } from '@/hooks/use-auth';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -217,9 +217,12 @@ function TwoFactorSetupDialog({
           {setupData?.qrCodeUrl && setupData.qrCodeUrl.startsWith('data:image/') && (
             <div className="flex justify-center">
               <div className="bg-card rounded-lg border p-3">
-                <img
+                <Image
                   src={setupData.qrCodeUrl}
                   alt="QR Code para 2FA"
+                  width={160}
+                  height={160}
+                  unoptimized
                   className="h-40 w-40 sm:h-48 sm:w-48"
                 />
               </div>
@@ -672,7 +675,7 @@ function DeleteAccountDialog({
 // ============================================================
 
 export default function SecurityPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 

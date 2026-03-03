@@ -38,7 +38,7 @@ import {
   getPaymentMethodBrand,
   formatBillingDate,
 } from '@/services/dealer-billing';
-import type { Invoice, PaymentMethodInfo } from '@/services/dealer-billing';
+import type { Invoice } from '@/services/dealer-billing';
 import { toast } from 'sonner';
 
 // ============================================================================

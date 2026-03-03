@@ -4,7 +4,6 @@
  * Route: /empleos
  */
 
-import Link from 'next/link';
 import { Briefcase, MapPin, Users, Heart, Zap, Globe, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

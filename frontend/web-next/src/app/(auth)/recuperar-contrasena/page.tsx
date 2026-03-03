@@ -60,8 +60,7 @@ export default function ForgotPasswordPage() {
 
     try {
       await authService.forgotPassword(email);
-    } catch (err) {
-      setError('Error al reenviar el email');
+    } catch (_err) {
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +74,10 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Revisa tu email</h1>
+          <h1 className="text-foreground text-2xl font-bold">Revisa tu email</h1>
           <p className="text-muted-foreground">
             Hemos enviado instrucciones de recuperación a{' '}
-            <span className="font-medium text-foreground">{email}</span>
+            <span className="text-foreground font-medium">{email}</span>
           </p>
         </div>
 
@@ -109,7 +108,9 @@ export default function ForgotPasswordPage() {
               )}
             </Button>
           ) : resendTimer > 0 ? (
-            <p className="text-sm text-muted-foreground">Puedes reenviar en {resendTimer} segundos</p>
+            <p className="text-muted-foreground text-sm">
+              Puedes reenviar en {resendTimer} segundos
+            </p>
           ) : null}
 
           <Link href="/login">
@@ -128,7 +129,7 @@ export default function ForgotPasswordPage() {
       {/* Back link */}
       <Link
         href="/login"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al inicio de sesión
@@ -136,7 +137,7 @@ export default function ForgotPasswordPage() {
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-foreground">¿Olvidaste tu contraseña?</h1>
+        <h1 className="text-foreground text-2xl font-bold">¿Olvidaste tu contraseña?</h1>
         <p className="text-muted-foreground">
           No te preocupes, te enviaremos instrucciones para recuperarla.
         </p>
@@ -155,7 +156,7 @@ export default function ForgotPasswordPage() {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Mail className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="email"
               type="email"
@@ -185,7 +186,7 @@ export default function ForgotPasswordPage() {
       </form>
 
       {/* Login link */}
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         ¿Recordaste tu contraseña?{' '}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Inicia sesión

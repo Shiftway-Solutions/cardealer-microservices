@@ -12,7 +12,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,7 +33,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Upload,
   Shield,
   Star,
   TrendingUp,
@@ -263,8 +262,8 @@ export default function DealerRegistrationPage() {
                   ))}
                 </div>
                 <p className="mb-4 text-white italic">
-                  "Desde que me uní a OKLA, mis ventas aumentaron un 40%. El panel es muy fácil de
-                  usar."
+                  &ldquo;Desde que me uní a OKLA, mis ventas aumentaron un 40%. El panel es muy
+                  fácil de usar.&rdquo;
                 </p>
                 <p className="text-primary/40 font-medium">— Carlos, Auto Premium RD</p>
               </div>

@@ -25,14 +25,10 @@ import {
   decodeVinBatch,
   type CreateVehicleRequest,
   type UpdateVehicleRequest,
-  type SmartVinDecodeResult,
-  type VinExistsResponse,
-  type BatchVinDecodeResponse,
 } from '@/services/vehicles';
 import {
   getPriceSuggestion,
   type PriceSuggestionRequest,
-  type PriceSuggestion,
 } from '@/services/vehicle-intelligence';
 import type { VehicleSearchParams } from '@/types';
 

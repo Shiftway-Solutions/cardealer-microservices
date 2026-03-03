@@ -10,7 +10,7 @@
 
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ComponentType, ReactNode } from 'react';
+import { ComponentType } from 'react';
 
 // =============================================================================
 // LOADING FALLBACKS (SKELETONS)

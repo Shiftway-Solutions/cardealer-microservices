@@ -18,7 +18,7 @@ import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehi
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Save, Send, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 
 // ============================================================
 // Types

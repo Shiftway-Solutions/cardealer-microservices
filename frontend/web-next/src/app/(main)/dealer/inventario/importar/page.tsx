@@ -128,10 +128,10 @@ function DealerImportContent() {
       <Card className="border-primary bg-primary/10">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <FileSpreadsheet className="h-8 w-8 flex-shrink-0 text-primary" />
+            <FileSpreadsheet className="text-primary h-8 w-8 flex-shrink-0" />
             <div>
-              <h3 className="mb-2 font-semibold text-primary">¿Primera vez importando?</h3>
-              <p className="mb-3 text-sm text-primary">
+              <h3 className="text-primary mb-2 font-semibold">¿Primera vez importando?</h3>
+              <p className="text-primary mb-3 text-sm">
                 Descarga nuestra plantilla para asegurarte de que tu archivo tenga el formato
                 correcto. Incluye todas las columnas requeridas y ejemplos de datos.
               </p>
@@ -277,7 +277,7 @@ function DealerImportContent() {
               'color',
             ].map(field => (
               <div key={field} className="bg-muted/50 flex items-center gap-2 rounded-lg p-3">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="text-primary h-4 w-4" />
                 <span className="text-sm font-medium capitalize">{field}</span>
               </div>
             ))}
@@ -324,8 +324,8 @@ function DealerImportContent() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-primary" />
-                        <span className="text-sm text-primary">
+                        <CheckCircle className="text-primary h-4 w-4" />
+                        <span className="text-primary text-sm">
                           {item.successful || 0} exitosos
                         </span>
                       </div>

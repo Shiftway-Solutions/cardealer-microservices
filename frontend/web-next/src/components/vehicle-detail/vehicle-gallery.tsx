@@ -8,7 +8,6 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Expand, X, Play, View } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { VehicleImage } from '@/types';

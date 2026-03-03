@@ -40,8 +40,6 @@ import {
   AlertTriangle,
   Eye,
   Trash2,
-  MoreVertical,
-  Loader2,
 } from 'lucide-react';
 import {
   useAdminReviews,
@@ -58,13 +56,12 @@ export default function ReviewsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('pending');
 
-  const { data: pendingData, isLoading: loadingPending } = useAdminReviews();
+  const { data: pendingData } = useAdminReviews();
   const pendingReviews = pendingData?.items ?? [];
-  const { data: reportedReviews = [], isLoading: loadingReported } = useReportedReviews();
+  const { data: reportedReviews = [] } = useReportedReviews();
   const { data: stats } = useAdminReviewStats();
   const approveReview = useApproveReview();
   const rejectReview = useRejectReview();
-  const deleteReview = useDeleteReviewAdmin();
 
   // Use centralized formatDateTime from @/lib/utils
   const formatDate = formatDateTime;
@@ -129,8 +126,8 @@ export default function ReviewsPage() {
         <Card className="border-slate-700 bg-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/95 p-2">
-                <CheckCircle className="h-5 w-5 text-primary/80" />
+              <div className="bg-primary/95 rounded-lg p-2">
+                <CheckCircle className="text-primary/80 h-5 w-5" />
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Aprobados Hoy</p>

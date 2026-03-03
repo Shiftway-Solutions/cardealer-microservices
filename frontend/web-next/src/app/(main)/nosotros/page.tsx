@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { Building2, Users, Target, Award, Car, MapPin, Mail, Phone } from 'lucide-react';
+import { Users, Target, Award, Car, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 

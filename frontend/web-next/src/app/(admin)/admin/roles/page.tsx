@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Shield,
-  Users,
   Plus,
   Edit,
   Trash2,
@@ -43,7 +42,6 @@ import {
   type RoleListItem,
   type RoleDetails,
   type PermissionListItem,
-  type PermissionDto,
 } from '@/services/roles';
 
 // ============================================================

@@ -7,25 +7,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { TicketStatusBadge, PriorityBadge } from '@/components/dashboard';
-import {
-  MessageSquare,
-  Search,
-  Mail,
-  MailOpen,
-  Clock,
-  User,
-  AlertCircle,
-  CheckCircle,
-  Send,
-  Filter,
-  Loader2,
-} from 'lucide-react';
-import { useAdminMessages, useMarkMessageRead } from '@/hooks/use-admin-extended';
+import { Search, Mail, MailOpen, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAdminMessages } from '@/hooks/use-admin-extended';
 import type { AdminMessage } from '@/services/admin-extended';
 
 // Status and Priority badges now use shared components from @/components/dashboard
@@ -34,10 +22,10 @@ export default function AdminMessagesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { data: messagesData, isLoading } = useAdminMessages();
-  const markRead = useMarkMessageRead();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const allMessages = messagesData?.items ?? [];
 
-  const [selectedTicket, setSelectedTicket] = useState<AdminMessage | null>(null);
+  const [_selectedTicket, setSelectedTicket] = useState<AdminMessage | null>(null);
 
   const filteredTickets = useMemo(
     () =>
@@ -117,8 +105,8 @@ export default function AdminMessagesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{isLoading ? '—' : resolvedCount}</p>

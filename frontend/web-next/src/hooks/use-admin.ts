@@ -39,7 +39,6 @@ import {
   approveModerationItem,
   rejectModerationItem,
   type UserFilters,
-  type AdminUserDetail,
   type VehicleFilters,
   type DealerFilters,
   type ReportFilters,

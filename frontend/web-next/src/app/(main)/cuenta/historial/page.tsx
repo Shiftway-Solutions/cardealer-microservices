@@ -84,7 +84,9 @@ function HistoryError({ onRetry }: { onRetry: () => void }) {
       <CardContent className="flex flex-col items-center py-16 text-center">
         <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
         <h3 className="mb-2 font-semibold">Error al cargar historial</h3>
-        <p className="mb-4 text-sm text-muted-foreground">No se pudo cargar tu historial de vistas</p>
+        <p className="text-muted-foreground mb-4 text-sm">
+          No se pudo cargar tu historial de vistas
+        </p>
         <Button variant="outline" onClick={onRetry}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Reintentar
@@ -104,7 +106,7 @@ function EmptyState() {
       <CardContent className="py-16 text-center">
         <History className="mx-auto mb-4 h-16 w-16 text-gray-300" />
         <h3 className="mb-2 text-xl font-semibold">Historial vacío</h3>
-        <p className="mb-6 text-muted-foreground">Los vehículos que visites aparecerán aquí</p>
+        <p className="text-muted-foreground mb-6">Los vehículos que visites aparecerán aquí</p>
         <Button asChild className="bg-primary hover:bg-primary/90">
           <Link href="/vehiculos">Explorar Vehículos</Link>
         </Button>
@@ -150,12 +152,12 @@ function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryIt
           {/* Image */}
           <Link
             href={`/vehiculos/${vehicle.slug}`}
-            className="relative flex h-20 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted"
+            className="bg-muted relative flex h-20 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg"
           >
             {vehicle.imageUrl ? (
               <Image src={vehicle.imageUrl} alt={vehicle.title} fill className="object-cover" />
             ) : (
-              <Car className="h-8 w-8 text-muted-foreground" />
+              <Car className="text-muted-foreground h-8 w-8" />
             )}
             {!isAvailable && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -177,14 +179,14 @@ function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryIt
                   <h3 className="truncate font-semibold">{vehicle.title}</h3>
                   {isFavorite && <Heart className="h-4 w-4 shrink-0 fill-red-500 text-red-500" />}
                 </Link>
-                <p className="text-sm text-muted-foreground">{vehicle.dealerName}</p>
+                <p className="text-muted-foreground text-sm">{vehicle.dealerName}</p>
               </div>
-              <p className="shrink-0 text-xl font-bold text-primary">
+              <p className="text-primary shrink-0 text-xl font-bold">
                 {formatPrice(vehicle.price)}
               </p>
             </div>
 
-            <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <div className="text-muted-foreground mt-2 flex flex-wrap gap-3 text-sm">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 {vehicle.year}
@@ -197,7 +199,7 @@ function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryIt
                 <MapPin className="h-3 w-3" />
                 {vehicle.location}
               </span>
-              <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="text-muted-foreground flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {historyService.formatTimeAgo(viewedAt)}
               </span>
@@ -224,7 +226,9 @@ function HistoryItem({ item, onRemove, isRemoving, onToggleFavorite }: HistoryIt
               size="icon"
               onClick={() => onToggleFavorite(vehicle.id, isFavorite)}
               className={cn(
-                isFavorite ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-red-500'
+                isFavorite
+                  ? 'text-red-500 hover:text-red-600'
+                  : 'text-muted-foreground hover:text-red-500'
               )}
             >
               <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} />
@@ -253,7 +257,7 @@ export default function HistoryPage() {
   const [removingId, setRemovingId] = React.useState<string | null>(null);
 
   // Get favorites hook for toggle functionality
-  const { toggleFavorite, isFavorite } = useFavorites();
+  const { toggleFavorite } = useFavorites();
 
   // Fetch history
   const { data, isLoading, error, refetch } = useQuery({
@@ -318,7 +322,7 @@ export default function HistoryPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Historial</h1>
+          <h1 className="text-foreground text-2xl font-bold">Historial</h1>
           <p className="text-muted-foreground">Vehículos que has visto recientemente</p>
         </div>
         <HistoryError onRetry={refetch} />
@@ -331,7 +335,7 @@ export default function HistoryPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Historial</h1>
+          <h1 className="text-foreground text-2xl font-bold">Historial</h1>
           <p className="text-muted-foreground">Vehículos que has visto recientemente</p>
         </div>
         <EmptyState />
@@ -344,7 +348,7 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Historial</h1>
+          <h1 className="text-foreground text-2xl font-bold">Historial</h1>
           <p className="text-muted-foreground">Vehículos que has visto recientemente</p>
         </div>
         <AlertDialog>
@@ -384,12 +388,12 @@ export default function HistoryPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Eye className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Eye className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{items.length}</p>
-                <p className="text-sm text-muted-foreground">Vistos</p>
+                <p className="text-muted-foreground text-sm">Vistos</p>
               </div>
             </div>
           </CardContent>
@@ -402,7 +406,7 @@ export default function HistoryPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalFavorites}</p>
-                <p className="text-sm text-muted-foreground">Favoritos</p>
+                <p className="text-muted-foreground text-sm">Favoritos</p>
               </div>
             </div>
           </CardContent>
@@ -415,7 +419,9 @@ export default function HistoryPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{daysInHistory}</p>
-                <p className="text-sm text-muted-foreground">{daysInHistory === 1 ? 'Día' : 'Días'}</p>
+                <p className="text-muted-foreground text-sm">
+                  {daysInHistory === 1 ? 'Día' : 'Días'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -426,7 +432,7 @@ export default function HistoryPage() {
       {Object.entries(groupedHistory).map(([date, dateItems]) => (
         <div key={date}>
           <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
+            <Calendar className="text-muted-foreground h-5 w-5" />
             {date}
           </h2>
           <div className="space-y-3">

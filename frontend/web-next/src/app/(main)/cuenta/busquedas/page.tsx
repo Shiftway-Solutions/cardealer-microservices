@@ -31,8 +31,6 @@ import {
   useToggleSavedSearch,
   useDeleteSavedSearch,
   useAlertStats,
-  formatNotifyFrequency,
-  buildSearchDescription,
   type SavedSearch,
 } from '@/hooks/use-alerts';
 import type { VehicleSearchParams } from '@/types';

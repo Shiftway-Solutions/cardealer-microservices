@@ -21,13 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, User, Mail, Phone, Shield, Building2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, Shield, Building2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCurrentDealer, useDealerLocations } from '@/hooks/use-dealers';
 import { useInviteEmployee, useAvailableRoles } from '@/hooks/use-dealer-employees';
 import type { DealerRole } from '@/services/dealer-employees';
 import { toast } from 'sonner';
-import { sanitizeText, sanitizeEmail, sanitizePhone } from '@/lib/security/sanitize';
+import { sanitizeEmail } from '@/lib/security/sanitize';
 
 export default function NewEmployeePage() {
   const router = useRouter();

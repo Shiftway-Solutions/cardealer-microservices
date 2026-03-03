@@ -25,7 +25,6 @@ import {
   Phone,
   Check,
   X,
-  AlertCircle,
   ShoppingBag,
   Tag,
 } from 'lucide-react';

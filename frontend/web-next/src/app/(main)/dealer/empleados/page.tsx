@@ -37,12 +37,12 @@ import {
 } from '@/hooks/use-dealer-employees';
 import {
   getRoleLabel,
-  getRoleColor,
   getInitials,
   formatJoinDate,
   type DealerRole,
 } from '@/services/dealer-employees';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 // ============================================================================
 // Skeleton Components
@@ -336,9 +336,11 @@ export default function DealerEmployeesPage() {
                       }`}
                     >
                       {employee.avatarUrl ? (
-                        <img
+                        <Image
                           src={employee.avatarUrl}
                           alt={employee.name}
+                          width={48}
+                          height={48}
                           className="h-12 w-12 rounded-full object-cover"
                         />
                       ) : (

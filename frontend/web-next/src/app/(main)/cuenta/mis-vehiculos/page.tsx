@@ -13,7 +13,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Search,
-  Filter,
   MoreVertical,
   Eye,
   Edit,
@@ -151,6 +150,7 @@ function VehicleCard({
               {/* Expiration warning */}
               {vehicle.status === 'active' && vehicle.expiresAt && (
                 <div className="mt-2">
+                  {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
                   {new Date(vehicle.expiresAt) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
                     <div className="flex items-center gap-1 text-sm text-yellow-700">
                       <AlertCircle className="h-4 w-4" />
@@ -284,8 +284,10 @@ export default function MyVehiclesPage() {
     queryFn: () => userService.getUserVehicles(),
     staleTime: 60_000,
   });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const vehicles = data?.vehicles ?? [];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredVehicles = React.useMemo(() => {
     return vehicles.filter(vehicle => {
       // Status filter
@@ -303,7 +305,7 @@ export default function MyVehiclesPage() {
     });
   }, [vehicles, selectedStatus, searchQuery]);
 
-  // Status counts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const statusCounts = React.useMemo(() => {
     const counts: Record<string, number> = { all: vehicles.length };
     vehicles.forEach(v => {

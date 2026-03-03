@@ -13,9 +13,6 @@ import {
   replyToContactRequest,
   markMessageAsRead,
   getUnreadCount,
-  type ContactRequestSummary,
-  type ReceivedInquiry,
-  type ContactRequestDetail,
   type CreateContactRequestDto,
 } from '@/services/contact';
 

@@ -14,12 +14,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrentDealer } from '@/hooks/use-dealers';
-import {
-  DealerPlan,
-  DEALER_PLAN_LIMITS,
-  SellerPlan,
-  SELLER_PLAN_LIMITS,
-} from '@/lib/plan-config';
+import { DealerPlan, DEALER_PLAN_LIMITS, SellerPlan, SELLER_PLAN_LIMITS } from '@/lib/plan-config';
 
 // =============================================================================
 // TYPES

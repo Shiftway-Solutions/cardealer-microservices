@@ -11,30 +11,15 @@
 import * as React from 'react';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
-import {
-  X,
-  Plus,
-  ArrowLeft,
-  Check,
-  Minus,
-  Car,
-  Gauge,
-  Fuel,
-  Settings,
-  MapPin,
-  Share2,
-  Loader2,
-} from 'lucide-react';
+import { X, Plus, ArrowLeft, Check, Minus, Car, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useVehiclesByIds } from '@/hooks/use-vehicles';
-import { useLocalComparison, useComparisonSpecs } from '@/hooks/use-comparisons';
+import { useLocalComparison } from '@/hooks/use-comparisons';
 import type { VehicleCardData } from '@/types';
 
 // =============================================================================
@@ -108,7 +93,7 @@ function CompareContent() {
   const vehicleIds = urlIds.length > 0 ? urlIds : localComparison.vehicleIds;
 
   // Fetch vehicles data
-  const { data: vehiclesData, isLoading, error } = useVehiclesByIds(vehicleIds);
+  const { data: vehiclesData, isLoading, error: _error } = useVehiclesByIds(vehicleIds);
 
   // Map to CompareVehicle type
   const vehicles: CompareVehicle[] = React.useMemo(() => {
@@ -250,11 +235,12 @@ function CompareContent() {
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="bg-muted aspect-[16/10] overflow-hidden">
-                <img
+              <div className="bg-muted relative aspect-[16/10] overflow-hidden">
+                <Image
                   src={vehicle.imageUrl}
                   alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
 

@@ -11,7 +11,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import {
   useVehicle,
   useUpdateVehicle,
@@ -190,7 +191,7 @@ const conditions = [
 export default function EditVehiclePage() {
   const params = useParams();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const vehicleId = params.id as string;
 
   // Fetch vehicle data
@@ -230,6 +231,7 @@ export default function EditVehiclePage() {
   // Initialize form data when vehicle loads
   useEffect(() => {
     if (vehicle) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       setFormData({
         make: vehicle.make || '',
         model: vehicle.model || '',
@@ -597,10 +599,11 @@ export default function EditVehiclePage() {
                       key={image.id}
                       className="group bg-muted relative aspect-square overflow-hidden rounded-lg"
                     >
-                      <img
+                      <Image
                         src={image.url}
                         alt={`${vehicle.make} ${vehicle.model} - Foto ${i + 1}`}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button

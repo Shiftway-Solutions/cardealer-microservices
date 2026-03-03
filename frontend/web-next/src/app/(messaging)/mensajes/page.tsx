@@ -57,7 +57,6 @@ import {
   messagingService,
   type Conversation,
   type Message,
-  type ConversationDetail,
 } from '@/services/messaging';
 
 // =============================================================================
@@ -402,7 +401,7 @@ export default function MessagesPage() {
   const messages = conversationDetail?.messages || [];
 
   // Count stats
-  const unreadCount = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+  const _unreadCount = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">

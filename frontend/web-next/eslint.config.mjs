@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
+import unusedImports from 'eslint-plugin-unused-imports';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -30,6 +31,9 @@ const eslintConfig = defineConfig([
   // Downgrade strict rules to warnings to avoid blocking CI/CD.
   // These should be fixed incrementally by the team.
   {
+    plugins: {
+      'unused-imports': unusedImports,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       'react/no-unescaped-entities': 'warn',
@@ -38,6 +42,19 @@ const eslintConfig = defineConfig([
       'react-hooks/preserve-manual-memoization': 'warn',
       'prefer-const': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
+      // Auto-fixable unused imports
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 ]);

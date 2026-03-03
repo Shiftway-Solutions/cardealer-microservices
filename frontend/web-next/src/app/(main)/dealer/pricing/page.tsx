@@ -8,7 +8,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -31,11 +31,6 @@ import { useDemandByCategory, useCreatePriceAnalysis } from '@/hooks/use-vehicle
 import {
   formatPrice,
   getRecommendationType,
-  getRecommendationColor,
-  getRecommendationLabel,
-  getDemandColor,
-  getDemandLabel,
-  getTrendIcon,
 } from '@/services/vehicle-intelligence';
 import { toast } from 'sonner';
 import { PlanGate } from '@/components/plan/plan-gate';
@@ -177,6 +172,7 @@ function DealerPricingContent() {
   const isLoading = dealerLoading || vehiclesLoading;
 
   // Filter vehicles by search
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredVehicles = React.useMemo(() => {
     if (!searchQuery) return vehicles;
     const query = searchQuery.toLowerCase();
@@ -189,6 +185,7 @@ function DealerPricingContent() {
   }, [vehicles, searchQuery]);
 
   // Calculate stats
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stats = React.useMemo(() => {
     if (vehicles.length === 0) {
       return { avgPrice: 0, totalVehicles: 0, needsAdjustment: 0, potentialGain: 0 };
@@ -196,6 +193,7 @@ function DealerPricingContent() {
 
     const avgPrice = vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length;
     const needsAdjustment = vehicles.filter(v => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       const daysListed = v.createdAt
         ? Math.ceil((Date.now() - new Date(v.createdAt).getTime()) / (1000 * 60 * 60 * 24))
         : 0;
@@ -273,8 +271,8 @@ function DealerPricingContent() {
   if (!dealer) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium text-muted-foreground">
+        <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
+        <p className="text-muted-foreground text-lg font-medium">
           Necesitas una cuenta de dealer para acceder a esta función
         </p>
       </div>
@@ -300,12 +298,12 @@ function DealerPricingContent() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <DollarSign className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <DollarSign className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatPrice(stats.avgPrice)}</p>
-                <p className="text-sm text-muted-foreground">Precio Promedio</p>
+                <p className="text-muted-foreground text-sm">Precio Promedio</p>
               </div>
             </div>
           </CardContent>
@@ -318,7 +316,7 @@ function DealerPricingContent() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalVehicles}</p>
-                <p className="text-sm text-muted-foreground">Vehículos Activos</p>
+                <p className="text-muted-foreground text-sm">Vehículos Activos</p>
               </div>
             </div>
           </CardContent>
@@ -331,7 +329,7 @@ function DealerPricingContent() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.needsAdjustment}</p>
-                <p className="text-sm text-muted-foreground">Requieren Ajuste</p>
+                <p className="text-muted-foreground text-sm">Requieren Ajuste</p>
               </div>
             </div>
           </CardContent>
@@ -344,7 +342,7 @@ function DealerPricingContent() {
               </div>
               <div>
                 <p className="text-2xl font-bold">+{(stats.potentialGain * 100).toFixed(0)}%</p>
-                <p className="text-sm text-muted-foreground">Potencial Ganancia</p>
+                <p className="text-muted-foreground text-sm">Potencial Ganancia</p>
               </div>
             </div>
           </CardContent>
@@ -372,7 +370,7 @@ function DealerPricingContent() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           placeholder="Buscar en tu inventario..."
           className="pl-10"
@@ -386,8 +384,8 @@ function DealerPricingContent() {
         {filteredVehicles.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Car className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">
+              <Car className="text-muted-foreground mb-4 h-12 w-12" />
+              <p className="text-muted-foreground text-lg font-medium">
                 {searchQuery
                   ? 'No se encontraron vehículos'
                   : 'No tienes vehículos en tu inventario'}
@@ -424,11 +422,11 @@ function DealerPricingContent() {
 
                       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
                         <div>
-                          <p className="text-sm text-muted-foreground">Tu Precio</p>
+                          <p className="text-muted-foreground text-sm">Tu Precio</p>
                           <p className="text-xl font-bold">{formatPrice(vehicle.price)}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Precio Sugerido</p>
+                          <p className="text-muted-foreground text-sm">Precio Sugerido</p>
                           <p
                             className={`text-xl font-bold ${
                               recommendation === 'reduce'
@@ -442,13 +440,13 @@ function DealerPricingContent() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Promedio Mercado</p>
-                          <p className="text-xl font-bold text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">Promedio Mercado</p>
+                          <p className="text-muted-foreground text-xl font-bold">
                             {formatPrice(marketAvg)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Diferencia</p>
+                          <p className="text-muted-foreground text-sm">Diferencia</p>
                           <p
                             className={`text-xl font-bold ${
                               vehicle.price > suggestedPrice
@@ -464,7 +462,7 @@ function DealerPricingContent() {
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground lg:gap-6">
+                      <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-4 text-sm lg:gap-6">
                         <span>{daysListed} días publicado</span>
                         <span>{vehicle.viewCount || 0} vistas</span>
                         <span>{vehicle.transmission || 'N/A'}</span>
@@ -509,8 +507,8 @@ function DealerPricingContent() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Tendencia SUVs</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Tendencia SUVs</p>
               <div className="flex items-center gap-2">
                 {(() => {
                   const suvDemand = demandData?.find(d => d.category.toLowerCase() === 'suv');
@@ -518,11 +516,11 @@ function DealerPricingContent() {
                     return (
                       <>
                         {suvDemand.trend === 'up' ? (
-                          <TrendingUp className="h-5 w-5 text-primary" />
+                          <TrendingUp className="text-primary h-5 w-5" />
                         ) : suvDemand.trend === 'down' ? (
                           <TrendingDown className="h-5 w-5 text-red-600" />
                         ) : (
-                          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                          <BarChart3 className="text-muted-foreground h-5 w-5" />
                         )}
                         <span className="font-semibold">Demanda: {suvDemand.demandScore}/100</span>
                       </>
@@ -530,19 +528,19 @@ function DealerPricingContent() {
                   }
                   return (
                     <>
-                      <TrendingUp className="h-5 w-5 text-primary" />
+                      <TrendingUp className="text-primary h-5 w-5" />
                       <span className="font-semibold">+5.2% este mes</span>
                     </>
                   );
                 })()}
               </div>
             </div>
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Mejor día para publicar</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Mejor día para publicar</p>
               <p className="font-semibold">Domingo 6-8 PM</p>
             </div>
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="mb-1 text-sm text-muted-foreground">Precio promedio zona</p>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-muted-foreground mb-1 text-sm">Precio promedio zona</p>
               <p className="font-semibold">{formatPrice(stats.avgPrice || 1350000)}</p>
             </div>
           </div>

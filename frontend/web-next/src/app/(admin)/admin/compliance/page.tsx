@@ -10,18 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Shield,
-  AlertTriangle,
-  CheckCircle,
-  FileText,
-  Download,
-  Calendar,
-  Building2,
-  Eye,
-  Clock,
-  Loader2,
-} from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, FileText, Download, Eye } from 'lucide-react';
 import {
   useAmlAlerts,
   useDgiiReports,
@@ -47,8 +36,8 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function AdminCompliancePage() {
-  const { data: amlAlerts = [], isLoading: loadingAlerts } = useAmlAlerts();
-  const { data: dgiiReports = [], isLoading: loadingReports } = useDgiiReports();
+  const { data: amlAlerts = [] } = useAmlAlerts();
+  const { data: dgiiReports = [] } = useDgiiReports();
   const { data: stats, isLoading: loadingStats } = useComplianceStats();
   const submitReport = useSubmitDgiiReport();
 
@@ -100,8 +89,8 @@ export default function AdminCompliancePage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <CheckCircle className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
@@ -239,7 +228,7 @@ export default function AdminCompliancePage() {
                           </p>
                         )}
                         {report.submittedAt && (
-                          <p className="mt-1 text-xs text-primary">
+                          <p className="text-primary mt-1 text-xs">
                             Enviado: {new Date(report.submittedAt).toLocaleDateString('es-DO')}
                           </p>
                         )}

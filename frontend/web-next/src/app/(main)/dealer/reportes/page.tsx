@@ -50,7 +50,7 @@ const formatNumber = (num: number) => {
 const getChangeIndicator = (change: number) => {
   if (change > 0) {
     return (
-      <span className="flex items-center text-sm text-primary">
+      <span className="text-primary flex items-center text-sm">
         <TrendingUp className="mr-1 h-4 w-4" />+{change.toFixed(1)}%
       </span>
     );
@@ -90,7 +90,7 @@ function ReportsSkeleton() {
       </div>
       <Card className="bg-primary">
         <CardContent className="p-6">
-          <Skeleton className="h-12 w-64 bg-primary/100" />
+          <Skeleton className="bg-primary/100 h-12 w-64" />
         </CardContent>
       </Card>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -122,12 +122,9 @@ function DealerReportsContent() {
   const {
     data: viewsTrend,
     isError: isTrendsError,
-    error: trendsError,
   } = useTrends(dealerId, 'views');
   const {
-    data: monthlyReport,
     isError: isReportError,
-    error: reportError,
   } = useMonthlyReport(dealerId);
 
   const isLoading = isDealerLoading || isStatsLoading;
@@ -226,7 +223,7 @@ function DealerReportsContent() {
       </div>
 
       {/* Period Indicator */}
-      <Card className="bg-gradient-to-r from-primary to-primary/90 text-white">
+      <Card className="from-primary to-primary/90 bg-gradient-to-r text-white">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -273,7 +270,7 @@ function DealerReportsContent() {
         <Card>
           <CardContent className="p-4">
             <div className="mb-2 flex items-center justify-between">
-              <DollarSign className="h-5 w-5 text-primary" />
+              <DollarSign className="text-primary h-5 w-5" />
               {getChangeIndicator(stats?.revenueChange || 0)}
             </div>
             <p className="text-2xl font-bold">
@@ -425,12 +422,12 @@ function DealerReportsContent() {
               </p>
               <p className="text-sm text-purple-600">Leads Este Mes</p>
             </div>
-            <div className="rounded-lg bg-primary/10 p-4 text-center">
-              <DollarSign className="mx-auto mb-2 h-8 w-8 text-primary" />
-              <p className="text-3xl font-bold text-primary">
+            <div className="bg-primary/10 rounded-lg p-4 text-center">
+              <DollarSign className="text-primary mx-auto mb-2 h-8 w-8" />
+              <p className="text-primary text-3xl font-bold">
                 {formatPrice(stats?.revenueThisMonth || 0)}
               </p>
-              <p className="text-sm text-primary">Ingresos Este Mes</p>
+              <p className="text-primary text-sm">Ingresos Este Mes</p>
             </div>
           </div>
         </CardContent>

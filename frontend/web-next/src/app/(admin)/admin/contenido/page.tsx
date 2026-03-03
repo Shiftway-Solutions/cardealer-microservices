@@ -10,22 +10,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   FileText,
-  Image,
-  Video,
+  Image as ImageIcon,
   Plus,
   Edit,
   Trash2,
   Eye,
-  Calendar,
   Globe,
-  LayoutGrid,
   Megaphone,
-  Settings,
-  Search,
-  Loader2,
 } from 'lucide-react';
 import {
   useBanners,
@@ -53,9 +46,9 @@ const getStatusBadge = (status: string) => {
 
 export default function AdminContentPage() {
   const [activeTab, setActiveTab] = useState<'banners' | 'pages' | 'blog'>('banners');
-  const { data: banners = [], isLoading: loadingBanners } = useBanners();
-  const { data: pages = [], isLoading: loadingPages } = useStaticPages();
-  const { data: blogPosts = [], isLoading: loadingBlog } = useBlogPosts();
+  const { data: banners = [] } = useBanners();
+  const { data: pages = [] } = useStaticPages();
+  const { data: blogPosts = [] } = useBlogPosts();
   const { data: overview } = useContentOverview();
   const deleteBanner = useDeleteBanner();
 
@@ -123,10 +116,7 @@ export default function AdminContentPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex h-16 w-32 items-center justify-center rounded bg-gradient-to-r from-gray-200 to-gray-300">
-                      <Image className="text-muted-foreground h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{banner.title}</h4>
+                      <ImageIcon className="text-muted-foreground h-6 w-6" />
                       <p className="text-muted-foreground text-sm">
                         Ubicación: {banner.placement.replace('_', ' ')}
                       </p>
@@ -235,7 +225,7 @@ export default function AdminContentPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="bg-muted flex h-14 w-20 items-center justify-center rounded">
-                      <Image className="text-muted-foreground h-5 w-5" />
+                      <ImageIcon className="text-muted-foreground h-5 w-5" />
                     </div>
                     <div>
                       <h4 className="font-medium">{post.title}</h4>
@@ -294,7 +284,7 @@ export default function AdminContentPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Globe className="h-8 w-8 text-primary" />
+              <Globe className="text-primary h-8 w-8" />
               <div>
                 <p className="text-2xl font-bold">{blogPosts.length}</p>
                 <p className="text-muted-foreground text-sm">Artículos</p>

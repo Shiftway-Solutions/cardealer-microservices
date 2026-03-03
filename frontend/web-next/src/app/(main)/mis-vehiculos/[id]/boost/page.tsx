@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,10 +21,8 @@ import {
   Zap,
   Star,
   Crown,
-  ChevronRight,
   Shield,
   CreditCard,
-  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
@@ -118,7 +116,7 @@ export default function BoostVehiclePage() {
 
   const [selectedPlan, setSelectedPlan] = useState('pro');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { boostPlans, testimonials, formatPrice, isLoading } = useBoostPlans();
+  const { boostPlans, testimonials } = useBoostPlans();
 
   const vehicleTitle = vehicle
     ? `${vehicle.make} ${vehicle.model} ${vehicle.year}`
@@ -391,7 +389,7 @@ export default function BoostVehiclePage() {
                       <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="text-muted-foreground mb-4 text-sm">"{testimonial.text}"</p>
+                  <p className="text-muted-foreground mb-4 text-sm">&ldquo;{testimonial.text}&rdquo;</p>
                   <div>
                     <p className="text-sm font-medium">{testimonial.name}</p>
                     <p className="text-muted-foreground text-xs">{testimonial.vehicle}</p>

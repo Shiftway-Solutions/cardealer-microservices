@@ -17,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   Eye,
   Users,
   Car,
@@ -298,7 +297,7 @@ function AnalyticsPageContent() {
                           <div className="flex-1">
                             <div className="mb-1 flex items-center gap-2">
                               <div
-                                className="h-3 rounded-full bg-primary/100"
+                                className="bg-primary/100 h-3 rounded-full"
                                 style={{ width: `${(day.views / maxViews) * 100}%` }}
                               />
                               <span className="text-muted-foreground text-xs">{day.views}</span>
@@ -322,7 +321,7 @@ function AnalyticsPageContent() {
                 </div>
                 <div className="border-border mt-4 flex items-center justify-center gap-6 border-t pt-4">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-primary/100" />
+                    <div className="bg-primary/100 h-3 w-3 rounded-full" />
                     <span className="text-muted-foreground text-sm">Vistas</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -351,7 +350,7 @@ function AnalyticsPageContent() {
                         </div>
                         <div className="bg-muted h-2 overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full bg-primary/100"
+                            className="bg-primary/100 h-full rounded-full"
                             style={{ width: `${source.percentage}%` }}
                           />
                         </div>

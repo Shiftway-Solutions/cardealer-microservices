@@ -9,7 +9,6 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import {
   Search,
   ChevronDown,
@@ -299,7 +298,7 @@ export default function AyudaPage() {
               {filteredCategories.length === 0 ? (
                 <div className="py-12 text-center">
                   <p className="text-muted-foreground">
-                    No encontramos resultados para "{searchQuery}".
+                    No encontramos resultados para &ldquo;{searchQuery}&rdquo;.
                   </p>
                   <Button
                     variant="link"

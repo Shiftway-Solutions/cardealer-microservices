@@ -11,6 +11,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -77,9 +78,11 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full">
                     {user.avatarUrl ? (
-                      <img
+                      <Image
                         src={user.avatarUrl}
                         alt=""
+                        width={48}
+                        height={48}
                         className="h-12 w-12 rounded-full object-cover"
                         onError={e => {
                           e.currentTarget.style.display = 'none';

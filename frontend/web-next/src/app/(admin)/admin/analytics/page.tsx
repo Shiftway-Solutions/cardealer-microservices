@@ -11,13 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   Users,
   Car,
   Eye,
   DollarSign,
-  Calendar,
   Download,
   ArrowUpRight,
   ArrowDownRight,

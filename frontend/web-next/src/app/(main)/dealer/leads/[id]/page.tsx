@@ -20,15 +20,12 @@ import {
   User,
   Mail,
   Phone,
-  Car,
   Calendar,
-  Clock,
   MessageSquare,
   Send,
   CheckCircle,
   Star,
   Archive,
-  MoreVertical,
   AlertCircle,
   RefreshCw,
   Briefcase,
@@ -37,7 +34,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useLead, useUpdateLead } from '@/hooks/use-crm';
-import type { LeadDto, LeadStatus } from '@/services/crm';
+import type { LeadStatus } from '@/services/crm';
 import { PlanGate } from '@/components/plan/plan-gate';
 import { toast } from 'sonner';
 import { sanitizeText } from '@/lib/security/sanitize';
@@ -153,7 +150,7 @@ function LeadDetailContent() {
 
   const handleSaveNotes = async () => {
     if (!lead || !notes.trim()) return;
-    const sanitized = sanitizeText(notes.trim(), { maxLength: 1000 });
+    const _sanitized = sanitizeText(notes.trim(), { maxLength: 1000 });
     try {
       await updateLead.mutateAsync({
         id: lead.id,
@@ -395,7 +392,7 @@ function LeadDetailContent() {
               {lead.estimatedValue && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Valor Estimado</span>
-                  <span className="font-medium text-primary">
+                  <span className="text-primary font-medium">
                     RD$ {lead.estimatedValue.toLocaleString()}
                   </span>
                 </div>
@@ -411,9 +408,7 @@ function LeadDetailContent() {
               {lead.convertedAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Convertido</span>
-                  <span className="font-medium text-primary">
-                    {formatDate(lead.convertedAt)}
-                  </span>
+                  <span className="text-primary font-medium">{formatDate(lead.convertedAt)}</span>
                 </div>
               )}
             </CardContent>
@@ -426,7 +421,7 @@ function LeadDetailContent() {
                 <>
                   {lead.status === 'New' && (
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 w-full"
                       onClick={() => handleUpdateStatus('Contacted')}
                       disabled={updateLead.isPending}
                     >
@@ -456,7 +451,7 @@ function LeadDetailContent() {
                   )}
                   {lead.status === 'Negotiating' && (
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 w-full"
                       onClick={() => handleUpdateStatus('Won')}
                       disabled={updateLead.isPending}
                     >

@@ -37,7 +37,6 @@ import { toast } from 'sonner';
 import {
   checkoutService,
   updateProductsWithPricing,
-  type Product,
   type CreateCheckoutRequest,
   type AvailableProvider,
 } from '@/services/checkout';

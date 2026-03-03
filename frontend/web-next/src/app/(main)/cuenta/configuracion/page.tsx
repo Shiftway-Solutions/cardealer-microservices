@@ -162,7 +162,7 @@ export default function SettingsPage() {
   const [deletionOtherReason, setDeletionOtherReason] = React.useState('');
   const [confirmationCode, setConfirmationCode] = React.useState('');
   const [deletionPassword, setDeletionPassword] = React.useState('');
-  const [deletionRequestId, setDeletionRequestId] = React.useState('');
+  const [_deletionRequestId, setDeletionRequestId] = React.useState('');
   const [gracePeriodEndsAt, setGracePeriodEndsAt] = React.useState('');
   const [isDeletionLoading, setIsDeletionLoading] = React.useState(false);
   const [deletionError, setDeletionError] = React.useState<string | null>(null);

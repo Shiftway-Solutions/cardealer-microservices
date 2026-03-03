@@ -18,12 +18,9 @@ import {
   getAvailability,
   getTodayAppointments,
   calculateAppointmentStats,
-  type Appointment,
   type CreateAppointmentDto,
   type UpdateAppointmentDto,
   type AppointmentFilters,
-  type AvailabilityResponse,
-  type AppointmentStats,
 } from '@/services/appointments';
 
 // ============================================================================

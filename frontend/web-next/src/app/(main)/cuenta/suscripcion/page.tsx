@@ -13,16 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Crown,
-  Check,
-  Zap,
-  Sparkles,
-  BarChart3,
-  Loader2,
-  X,
-  ArrowRight,
-} from 'lucide-react';
+import { Crown, Check, Zap, Sparkles, BarChart3, Loader2, X, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { usePlanAccess } from '@/hooks/use-plan-access';
@@ -84,8 +75,7 @@ function getPlanFeatures() {
 
 export default function SellerSubscriptionPage() {
   useAuth();
-  const { currentPlan, maxListings, maxImages, featuredPerMonth, isLoading } =
-    usePlanAccess();
+  const { currentPlan, maxListings, maxImages, featuredPerMonth, isLoading } = usePlanAccess();
   const { pricing } = usePlatformPricing();
   const [changingPlan, setChangingPlan] = useState<string | null>(null);
 

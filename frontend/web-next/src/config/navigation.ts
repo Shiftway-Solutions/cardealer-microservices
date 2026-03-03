@@ -38,7 +38,6 @@ import {
   LayoutDashboard,
   ScrollText,
   Wrench,
-  CalendarDays,
   Brain,
   type LucideIcon,
 } from 'lucide-react';

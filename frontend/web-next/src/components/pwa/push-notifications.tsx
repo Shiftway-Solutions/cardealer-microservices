@@ -103,7 +103,7 @@ export function usePushNotifications(
       const registration = await navigator.serviceWorker.ready;
 
       // Check if already subscribed
-      let existingSubscription = await registration.pushManager.getSubscription();
+      const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
         setSubscription(existingSubscription);
         setIsLoading(false);

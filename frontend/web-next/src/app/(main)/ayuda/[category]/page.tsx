@@ -5,8 +5,7 @@
  */
 
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, FileText, Clock, ChevronRight } from 'lucide-react';
 
 // Mock data

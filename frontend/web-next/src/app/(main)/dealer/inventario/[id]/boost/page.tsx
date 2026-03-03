@@ -10,25 +10,23 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft,
   Zap,
   TrendingUp,
   Eye,
-  Star,
   Check,
   Clock,
-  BarChart3,
   Car,
   Sparkles,
   Crown,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useVehicle } from '@/hooks/use-vehicles';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 import { useCurrentDealer } from '@/hooks/use-dealers';
@@ -96,7 +94,7 @@ export default function DealerVehicleBoostPage() {
   const createCampaignMutation = useCreateCampaign();
   const [selectedPlan, setSelectedPlan] = useState<string>('pro');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { boostPlans, formatPrice, isLoading } = useDealerBoostPlans();
+  const { boostPlans } = useDealerBoostPlans();
 
   const vehicleTitle = vehicle ? `${vehicle.make} ${vehicle.model} ${vehicle.year}` : '';
 
@@ -220,9 +218,11 @@ export default function DealerVehicleBoostPage() {
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             {vehicle.images?.[0]?.url ? (
-              <img
+              <Image
                 src={vehicle.images[0].url}
                 alt={vehicleTitle}
+                width={96}
+                height={72}
                 className="h-18 w-24 rounded-lg object-cover"
               />
             ) : (

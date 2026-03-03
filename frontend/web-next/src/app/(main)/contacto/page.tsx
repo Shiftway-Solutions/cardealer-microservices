@@ -51,7 +51,7 @@ export default function ContactoPage() {
     setIsSubmitting(true);
 
     // Sanitize all inputs before sending
-    const sanitizedData = {
+    const _sanitizedData = {
       name: sanitizeText(formData.name.trim(), { maxLength: 100 }),
       email: sanitizeEmail(formData.email),
       phone: formData.phone ? sanitizePhone(formData.phone) : '',

@@ -47,7 +47,6 @@ import {
   ChevronRight,
   Eye,
   CheckCircle,
-  XCircle,
   Clock,
   Star,
   Car,
@@ -58,7 +57,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {

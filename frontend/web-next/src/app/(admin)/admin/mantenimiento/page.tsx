@@ -23,7 +23,6 @@ import {
   Calendar,
   Clock,
   Settings,
-  Bell,
   CheckCircle,
   Loader2,
   Play,
@@ -72,9 +71,7 @@ function getStatusBadge(status: string) {
     case 'Scheduled':
       return <Badge className="border-blue-200 bg-blue-100 text-blue-700">Programado</Badge>;
     case 'Completed':
-      return (
-        <Badge className="border-primary bg-primary/10 text-primary">Completado</Badge>
-      );
+      return <Badge className="border-primary bg-primary/10 text-primary">Completado</Badge>;
     case 'Cancelled':
       return <Badge className="border-gray-200 bg-gray-100 text-gray-600">Cancelado</Badge>;
     default:
@@ -290,7 +287,7 @@ export default function AdminMaintenancePage() {
     }
   };
 
-  const handleComplete = async (id: string) => {
+  const _handleComplete = async (id: string) => {
     setActionLoading(`complete-${id}`);
     try {
       await maintenanceService.complete(id);
@@ -389,7 +386,7 @@ export default function AdminMaintenancePage() {
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/10 p-4 text-primary">
+        <div className="border-primary bg-primary/10 text-primary flex items-center gap-3 rounded-lg border p-4">
           <CheckCircle className="h-5 w-5 flex-shrink-0" />
           <p className="text-sm">{success}</p>
         </div>
@@ -410,7 +407,7 @@ export default function AdminMaintenancePage() {
                 {isMaintenanceActive ? (
                   <AlertTriangle className="h-8 w-8 text-red-600" />
                 ) : (
-                  <CheckCircle className="h-8 w-8 text-primary" />
+                  <CheckCircle className="text-primary h-8 w-8" />
                 )}
               </div>
               <div>
@@ -448,7 +445,7 @@ export default function AdminMaintenancePage() {
                 Desactivar
               </Button>
             ) : (
-              <div className="flex items-center gap-2 text-sm text-primary">
+              <div className="text-primary flex items-center gap-2 text-sm">
                 <Server className="h-4 w-4" />
                 Online
               </div>
@@ -770,7 +767,7 @@ export default function AdminMaintenancePage() {
                       }`}
                     >
                       {window.status === MaintenanceStatus.Completed ? (
-                        <CheckCircle className="h-5 w-5 text-primary" />
+                        <CheckCircle className="text-primary h-5 w-5" />
                       ) : (
                         <XCircle className="h-5 w-5 text-gray-500" />
                       )}

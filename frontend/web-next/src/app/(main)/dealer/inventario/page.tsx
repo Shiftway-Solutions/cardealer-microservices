@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,6 @@ import {
   Search,
   Plus,
   Upload,
-  Filter,
   MoreHorizontal,
   Eye,
   Edit,
@@ -48,7 +47,8 @@ import {
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useVehiclesByDealer, useDeleteVehicle, useUpdateVehicle } from '@/hooks/use-vehicles';
 import { toast } from 'sonner';
-import type { Vehicle, VehicleStatus } from '@/types';
+import Image from 'next/image';
+import type { VehicleStatus } from '@/types';
 
 // Default vehicle image
 const DEFAULT_VEHICLE_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200';
@@ -163,7 +163,7 @@ export default function InventoryPage() {
       await deleteVehicle.mutateAsync(vehicleId);
       toast.success('Vehículo eliminado correctamente');
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast.error('No se pudo eliminar el vehículo');
     }
   };
@@ -182,7 +182,7 @@ export default function InventoryPage() {
       });
       toast.success(`Vehículo ${newStatus === 'active' ? 'activado' : 'pausado'}`);
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast.error('No se pudo actualizar el estado del vehículo');
     }
   };
@@ -405,9 +405,11 @@ export default function InventoryPage() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <img
+                              <Image
                                 src={image}
                                 alt={title}
+                                width={64}
+                                height={48}
                                 className="h-12 w-16 rounded object-cover"
                               />
                               <div>

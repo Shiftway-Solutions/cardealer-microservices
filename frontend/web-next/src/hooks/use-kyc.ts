@@ -12,9 +12,7 @@ import {
   KYCStatus,
   DocumentType,
   isVerifiedForSelling,
-  type KYCProfile,
   type CreateKYCProfileRequest,
-  type DocumentData,
   type LivenessData,
 } from '@/services/kyc';
 import { useAuth } from './use-auth';

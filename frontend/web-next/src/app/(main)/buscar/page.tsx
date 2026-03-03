@@ -77,16 +77,8 @@ const quickFilters: QuickFilter[] = [
 
 // Main search content
 function SearchContent() {
-  const {
-    filters,
-    setFilters,
-    clearFilters,
-    results,
-    isLoading,
-    isFetching,
-    error,
-    activeFilterCount,
-  } = useVehicleSearch();
+  const { filters, setFilters, clearFilters, results, isLoading, isFetching, activeFilterCount } =
+    useVehicleSearch();
 
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
   const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>([]);

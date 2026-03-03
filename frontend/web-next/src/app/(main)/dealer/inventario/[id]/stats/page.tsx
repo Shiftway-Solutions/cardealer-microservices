@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Heart,
   TrendingUp,
-  Clock,
   Smartphone,
   Monitor,
   Tablet,

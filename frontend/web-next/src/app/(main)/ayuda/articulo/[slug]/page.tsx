@@ -75,7 +75,7 @@ Puedes ordenar los resultados por:
 };
 
 export default async function HelpArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+  const { slug: _slug } = await params;
   // In real app, fetch article by slug
   const article = mockArticle;
 
@@ -88,10 +88,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
             Centro de Ayuda
           </Link>
           <span className="text-muted-foreground">/</span>
-          <Link
-            href={`/ayuda/${article.category}`}
-            className="text-primary hover:text-primary"
-          >
+          <Link href={`/ayuda/${article.category}`} className="text-primary hover:text-primary">
             {article.categoryName}
           </Link>
           <span className="text-muted-foreground">/</span>
@@ -204,7 +201,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
                 <p className="text-muted-foreground mb-4 text-sm">
                   Si no encontraste lo que buscabas, nuestro equipo está disponible para ayudarte.
                 </p>
-                <Button className="w-full bg-primary hover:bg-primary/90">
+                <Button className="bg-primary hover:bg-primary/90 w-full">
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Contactar Soporte
                 </Button>

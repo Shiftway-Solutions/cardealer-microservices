@@ -286,8 +286,8 @@ function FavoriteCard({ favorite, onRemove, onToggleNotify, isRemoving }: Favori
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Eliminar de favoritos?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    "{vehicle.title}" será eliminado de tus favoritos. Puedes volver a agregarlo en
-                    cualquier momento.
+                    &ldquo;{vehicle.title}&rdquo; será eliminado de tus favoritos. Puedes volver a
+                    agregarlo en cualquier momento.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -472,7 +472,9 @@ export default function FavoritesPage() {
         </div>
       ) : (
         <div className="py-12 text-center">
-          <p className="text-muted-foreground">No se encontraron resultados para "{searchQuery}"</p>
+          <p className="text-muted-foreground">
+            No se encontraron resultados para &ldquo;{searchQuery}&rdquo;
+          </p>
           <Button variant="link" onClick={() => setSearchQuery('')} className="mt-2">
             Limpiar búsqueda
           </Button>
