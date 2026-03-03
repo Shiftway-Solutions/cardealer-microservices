@@ -47,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 ENTRYPOINT ["dotnet", "AdvertisingService.Api.dll"]
 
-# CI build trigger 2026-03-03
+# CI build trigger - rebuild docker image
