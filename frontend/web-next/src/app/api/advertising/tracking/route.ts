@@ -29,10 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    return NextResponse.json(
-      { success: false, error: 'Tracking failed' },
-      { status: res.status }
-    );
+    return NextResponse.json({ success: false, error: 'Tracking failed' }, { status: res.status });
   } catch {
     // Tracking failures should not break the user experience
     return NextResponse.json({ success: true });

@@ -34,11 +34,7 @@ import {
   useRefreshRotation,
   usePricingEstimate,
 } from '@/hooks/use-advertising';
-import type {
-  AdPlacementType,
-  RotationAlgorithmType,
-  PlatformReport,
-} from '@/types/advertising';
+import type { AdPlacementType, RotationAlgorithmType, PlatformReport } from '@/types/advertising';
 import {
   Megaphone,
   BarChart3,
@@ -124,7 +120,7 @@ function PlatformOverviewTab() {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
+        {[1, 2, 3, 4].map(i => (
           <Card key={i}>
             <CardContent className="p-6">
               <div className="h-16 animate-pulse rounded bg-slate-100" />
@@ -180,10 +176,8 @@ function PlatformOverviewTab() {
     <div className="space-y-6">
       {/* Period selector */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          Métricas de los últimos {daysBack} días
-        </p>
-        <Select value={daysBack.toString()} onValueChange={(v) => setDaysBack(Number(v))}>
+        <p className="text-sm text-slate-500">Métricas de los últimos {daysBack} días</p>
+        <Select value={daysBack.toString()} onValueChange={v => setDaysBack(Number(v))}>
           <SelectTrigger className="w-[140px]">
             <SelectValue />
           </SelectTrigger>
@@ -197,7 +191,7 @@ function PlatformOverviewTab() {
 
       {/* KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((m) => (
+        {metrics.map(m => (
           <Card key={m.label}>
             <CardContent className="flex items-center gap-4 p-5">
               <div className={cn('rounded-lg p-3', m.color)}>
@@ -215,34 +209,30 @@ function PlatformOverviewTab() {
       {/* Revenue summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <BarChart3 className="h-4 w-4 text-emerald-600" />
             Resumen de Ingresos
           </CardTitle>
-          <CardDescription>
-            Desglose de rendimiento publicitario del periodo
-          </CardDescription>
+          <CardDescription>Desglose de rendimiento publicitario del periodo</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-lg bg-slate-50 p-4">
-              <p className="text-xs text-slate-500 mb-1">Clics Totales</p>
+              <p className="mb-1 text-xs text-slate-500">Clics Totales</p>
               <p className="text-2xl font-bold">{formatNumber(data.totalClicks)}</p>
-              <div className="flex items-center gap-1 mt-1 text-xs text-emerald-600">
+              <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
                 <ArrowUpRight className="h-3 w-3" />
                 <span>vs periodo anterior</span>
               </div>
             </div>
             <div className="rounded-lg bg-slate-50 p-4">
-              <p className="text-xs text-slate-500 mb-1">CPC Promedio</p>
+              <p className="mb-1 text-xs text-slate-500">CPC Promedio</p>
               <p className="text-2xl font-bold">
-                {data.totalClicks > 0
-                  ? formatCurrency(data.totalRevenue / data.totalClicks)
-                  : '—'}
+                {data.totalClicks > 0 ? formatCurrency(data.totalRevenue / data.totalClicks) : '—'}
               </p>
             </div>
             <div className="rounded-lg bg-slate-50 p-4">
-              <p className="text-xs text-slate-500 mb-1">CPM Promedio</p>
+              <p className="mb-1 text-xs text-slate-500">CPM Promedio</p>
               <p className="text-2xl font-bold">
                 {data.totalImpressions > 0
                   ? formatCurrency((data.totalRevenue / data.totalImpressions) * 1000)
@@ -254,15 +244,15 @@ function PlatformOverviewTab() {
           {/* Daily chart placeholder */}
           {data.dailyData.length > 0 && (
             <div className="mt-6">
-              <p className="text-xs font-medium text-slate-500 mb-3">Últimos {daysBack} días</p>
-              <div className="flex items-end gap-1 h-32">
+              <p className="mb-3 text-xs font-medium text-slate-500">Últimos {daysBack} días</p>
+              <div className="flex h-32 items-end gap-1">
                 {data.dailyData.slice(-30).map((d, i) => {
-                  const maxSpent = Math.max(...data.dailyData.map((x) => x.spent), 1);
+                  const maxSpent = Math.max(...data.dailyData.map(x => x.spent), 1);
                   const height = (d.spent / maxSpent) * 100;
                   return (
                     <div
                       key={i}
-                      className="flex-1 bg-emerald-200 hover:bg-emerald-400 rounded-t transition-colors"
+                      className="flex-1 rounded-t bg-emerald-200 transition-colors hover:bg-emerald-400"
                       style={{ height: `${Math.max(height, 2)}%` }}
                       title={`${d.date}: ${formatCurrency(d.spent)}`}
                     />
@@ -277,7 +267,7 @@ function PlatformOverviewTab() {
       {isError && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
             <div>
               <p className="text-sm font-medium text-amber-900">Backend no disponible</p>
               <p className="text-xs text-amber-700">
@@ -343,7 +333,7 @@ function RotationConfigTab() {
     <div className="space-y-6">
       {/* Placement selector */}
       <div className="flex items-center gap-3">
-        {PLACEMENTS.map((p) => (
+        {PLACEMENTS.map(p => (
           <Button
             key={p.value}
             variant={selectedPlacement === p.value ? 'default' : 'outline'}
@@ -361,7 +351,9 @@ function RotationConfigTab() {
             onClick={handleRefresh}
             disabled={refreshMutation.isPending}
           >
-            <RefreshCw className={cn('h-4 w-4 mr-1', refreshMutation.isPending && 'animate-spin')} />
+            <RefreshCw
+              className={cn('mr-1 h-4 w-4', refreshMutation.isPending && 'animate-spin')}
+            />
             Refrescar Ahora
           </Button>
         </div>
@@ -369,7 +361,7 @@ function RotationConfigTab() {
 
       {isLoading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="h-20 animate-pulse rounded-lg bg-slate-100" />
           ))}
         </div>
@@ -378,7 +370,7 @@ function RotationConfigTab() {
           {/* Algorithm Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <Zap className="h-4 w-4 text-emerald-600" />
                 Algoritmo de Rotación
               </CardTitle>
@@ -387,11 +379,11 @@ function RotationConfigTab() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {ALGORITHMS.map((algo) => (
+              {ALGORITHMS.map(algo => (
                 <label
                   key={algo.value}
                   className={cn(
-                    'flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors',
+                    'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
                     form.algorithm === algo.value
                       ? 'border-emerald-500 bg-emerald-50'
                       : 'hover:bg-slate-50'
@@ -402,7 +394,7 @@ function RotationConfigTab() {
                     name="algorithm"
                     value={algo.value}
                     checked={form.algorithm === algo.value}
-                    onChange={() => setForm((f) => ({ ...f, algorithm: algo.value }))}
+                    onChange={() => setForm(f => ({ ...f, algorithm: algo.value }))}
                     className="mt-1 accent-emerald-600"
                   />
                   <div>
@@ -417,12 +409,13 @@ function RotationConfigTab() {
           {/* Parameters */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <SlidersHorizontal className="h-4 w-4 text-blue-600" />
                 Parámetros
               </CardTitle>
               <CardDescription className="text-xs">
-                Ajusta los parámetros de rotación para &ldquo;{PLACEMENTS.find(p => p.value === selectedPlacement)?.label}&rdquo;
+                Ajusta los parámetros de rotación para &ldquo;
+                {PLACEMENTS.find(p => p.value === selectedPlacement)?.label}&rdquo;
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -436,14 +429,14 @@ function RotationConfigTab() {
                 </div>
                 <Switch
                   checked={form.isActive}
-                  onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
+                  onCheckedChange={v => setForm(f => ({ ...f, isActive: v }))}
                 />
               </div>
 
               {/* Max Slots */}
               <div>
                 <Label className="text-sm">Slots Máximos</Label>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="mb-2 text-xs text-slate-500">
                   Cantidad de campañas visibles simultáneamente
                 </p>
                 <Input
@@ -451,16 +444,14 @@ function RotationConfigTab() {
                   min={1}
                   max={20}
                   value={form.maxSlots}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, maxSlots: parseInt(e.target.value) || 1 }))
-                  }
+                  onChange={e => setForm(f => ({ ...f, maxSlots: parseInt(e.target.value) || 1 }))}
                 />
               </div>
 
               {/* Rotation Interval */}
               <div>
                 <Label className="text-sm">Intervalo de Rotación (minutos)</Label>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="mb-2 text-xs text-slate-500">
                   Cada cuántos minutos se refresca la selección
                 </p>
                 <Input
@@ -468,8 +459,8 @@ function RotationConfigTab() {
                   min={5}
                   max={1440}
                   value={form.rotationIntervalMinutes}
-                  onChange={(e) =>
-                    setForm((f) => ({
+                  onChange={e =>
+                    setForm(f => ({
                       ...f,
                       rotationIntervalMinutes: parseInt(e.target.value) || 30,
                     }))
@@ -480,7 +471,7 @@ function RotationConfigTab() {
               {/* Min Quality Score */}
               <div>
                 <Label className="text-sm">Quality Score Mínimo</Label>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="mb-2 text-xs text-slate-500">
                   Campañas por debajo de este score no se muestran (0.0 – 1.0)
                 </p>
                 <div className="flex items-center gap-3">
@@ -489,15 +480,15 @@ function RotationConfigTab() {
                     min={0}
                     max={100}
                     value={Math.round(form.minQualityScore * 100)}
-                    onChange={(e) =>
-                      setForm((f) => ({
+                    onChange={e =>
+                      setForm(f => ({
                         ...f,
                         minQualityScore: parseInt(e.target.value) / 100,
                       }))
                     }
                     className="flex-1 accent-emerald-600"
                   />
-                  <span className="text-sm font-medium w-12 text-right">
+                  <span className="w-12 text-right text-sm font-medium">
                     {form.minQualityScore.toFixed(2)}
                   </span>
                 </div>
@@ -509,7 +500,7 @@ function RotationConfigTab() {
                 disabled={updateMutation.isPending}
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 {updateMutation.isPending ? 'Guardando...' : 'Guardar Configuración'}
               </Button>
             </CardContent>
@@ -532,7 +523,7 @@ function PricingConfigTab() {
     <div className="space-y-6">
       {/* Placement selector */}
       <div className="flex items-center gap-3">
-        {PLACEMENTS.map((p) => (
+        {PLACEMENTS.map(p => (
           <Button
             key={p.value}
             variant={selectedPlacement === p.value ? 'default' : 'outline'}
@@ -547,44 +538,46 @@ function PricingConfigTab() {
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-100" />
           ))}
         </div>
       ) : pricing ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {pricing.pricingModels.map((model) => (
+          {pricing.pricingModels.map(model => (
             <Card key={model.model} className="relative">
               <CardContent className="p-5">
-                <Badge
-                  variant="outline"
-                  className="mb-3 text-xs"
-                >
+                <Badge variant="outline" className="mb-3 text-xs">
                   {model.model}
                 </Badge>
                 <p className="text-2xl font-bold text-slate-900">
                   {formatCurrency(model.pricePerUnit)}
-                  <span className="text-xs font-normal text-slate-500 ml-1">
-                    / {model.model === 'PerView' ? 'vista' : model.model === 'PerClick' ? 'clic' : model.model === 'PerDay' ? 'día' : 'mes'}
+                  <span className="ml-1 text-xs font-normal text-slate-500">
+                    /{' '}
+                    {model.model === 'PerView'
+                      ? 'vista'
+                      : model.model === 'PerClick'
+                        ? 'clic'
+                        : model.model === 'PerDay'
+                          ? 'día'
+                          : 'mes'}
                   </span>
                 </p>
-                <p className="text-sm text-slate-500 mt-1">{model.description}</p>
+                <p className="mt-1 text-sm text-slate-500">{model.description}</p>
                 <div className="mt-3 flex items-center gap-1 text-xs text-emerald-600">
-                  <Activity className="h-3 w-3" />
-                  ~{model.estimatedDailyViews.toLocaleString()} vistas/día estimadas
+                  <Activity className="h-3 w-3" />~{model.estimatedDailyViews.toLocaleString()}{' '}
+                  vistas/día estimadas
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <Card className="bg-slate-50 border-dashed">
+        <Card className="border-dashed bg-slate-50">
           <CardContent className="py-8 text-center">
-            <DollarSign className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm text-slate-500">
-              No se pudo cargar la información de precios
-            </p>
-            <p className="text-xs text-slate-400 mt-1">
+            <DollarSign className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+            <p className="text-sm text-slate-500">No se pudo cargar la información de precios</p>
+            <p className="mt-1 text-xs text-slate-400">
               Verifica que el servicio de publicidad esté disponible
             </p>
           </CardContent>
@@ -594,7 +587,7 @@ function PricingConfigTab() {
       {/* Pricing strategy info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-blue-600" />
             Estrategia de Precios
           </CardTitle>
@@ -602,32 +595,32 @@ function PricingConfigTab() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+              <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
               <div>
                 <p className="text-sm font-medium text-slate-900">GSP Auction (Segunda Subasta)</p>
                 <p className="text-xs text-slate-500">
-                  Los anunciantes pagan el precio del segundo postor más alto más $1 DOP.
-                  Esto incentiva ofertas honestas y maximiza ingresos.
+                  Los anunciantes pagan el precio del segundo postor más alto más $1 DOP. Esto
+                  incentiva ofertas honestas y maximiza ingresos.
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+              <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
               <div>
                 <p className="text-sm font-medium text-slate-900">Quality Score Multiplier</p>
                 <p className="text-xs text-slate-500">
-                  La posición se determina por: Bid × Quality Score. Campañas con mejor CTR
-                  y relevancia ganan posiciones más altas a menor costo.
+                  La posición se determina por: Bid × Quality Score. Campañas con mejor CTR y
+                  relevancia ganan posiciones más altas a menor costo.
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+              <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-purple-500" />
               <div>
                 <p className="text-sm font-medium text-slate-900">Floor Price</p>
                 <p className="text-xs text-slate-500">
-                  Precio mínimo configurado por placement type. Los precios mostrados arriba
-                  son los mínimos del mercado. El precio final depende de la competencia.
+                  Precio mínimo configurado por placement type. Los precios mostrados arriba son los
+                  mínimos del mercado. El precio final depende de la competencia.
                 </p>
               </div>
             </div>
@@ -651,7 +644,10 @@ function QualityScoreTab() {
   });
 
   const totalWeight =
-    weights.ctrWeight + weights.relevanceWeight + weights.landingQualityWeight + weights.freshnessBonusWeight;
+    weights.ctrWeight +
+    weights.relevanceWeight +
+    weights.landingQualityWeight +
+    weights.freshnessBonusWeight;
 
   const factors = [
     {
@@ -684,20 +680,20 @@ function QualityScoreTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
             <Sparkles className="h-4 w-4 text-emerald-600" />
             Fórmula de Quality Score
           </CardTitle>
           <CardDescription className="text-xs">
-            Ajusta los pesos de cada factor en el cálculo del Quality Score.
-            El score final determina la posición y el costo real de cada anuncio.
+            Ajusta los pesos de cada factor en el cálculo del Quality Score. El score final
+            determina la posición y el costo real de cada anuncio.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Visual weight bar */}
           <div>
-            <div className="flex h-4 rounded-full overflow-hidden">
-              {factors.map((f) => (
+            <div className="flex h-4 overflow-hidden rounded-full">
+              {factors.map(f => (
                 <div
                   key={f.key}
                   className={cn(f.color, 'transition-all')}
@@ -708,7 +704,7 @@ function QualityScoreTab() {
               ))}
             </div>
             {totalWeight !== 100 && (
-              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+              <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
                 <AlertTriangle className="h-3 w-3" />
                 Los pesos suman {totalWeight}%. Se recomienda que sumen 100%.
               </p>
@@ -717,24 +713,22 @@ function QualityScoreTab() {
 
           {/* Sliders */}
           <div className="space-y-5">
-            {factors.map((f) => (
+            {factors.map(f => (
               <div key={f.key}>
-                <div className="flex items-center justify-between mb-1">
+                <div className="mb-1 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={cn('w-2.5 h-2.5 rounded-full', f.color)} />
+                    <div className={cn('h-2.5 w-2.5 rounded-full', f.color)} />
                     <Label className="text-sm">{f.label}</Label>
                   </div>
                   <span className="text-sm font-bold tabular-nums">{weights[f.key]}%</span>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{f.description}</p>
+                <p className="mb-2 text-xs text-slate-500">{f.description}</p>
                 <input
                   type="range"
                   min={0}
                   max={100}
                   value={weights[f.key]}
-                  onChange={(e) =>
-                    setWeights((w) => ({ ...w, [f.key]: parseInt(e.target.value) }))
-                  }
+                  onChange={e => setWeights(w => ({ ...w, [f.key]: parseInt(e.target.value) }))}
                   className="w-full accent-emerald-600"
                 />
               </div>
@@ -749,7 +743,7 @@ function QualityScoreTab() {
               })
             }
           >
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="mr-2 h-4 w-4" />
             Guardar Pesos
           </Button>
         </CardContent>
@@ -763,13 +757,33 @@ function QualityScoreTab() {
         <CardContent>
           <div className="space-y-3">
             {[
-              { range: '0.8 – 1.0', label: 'Excelente', color: 'bg-emerald-500', desc: 'Descuento en CPC, posiciones premium' },
-              { range: '0.6 – 0.79', label: 'Bueno', color: 'bg-blue-500', desc: 'Precio de mercado, rotación normal' },
-              { range: '0.4 – 0.59', label: 'Promedio', color: 'bg-amber-500', desc: 'Ligero sobrecargo, menos impresiones' },
-              { range: '0.0 – 0.39', label: 'Bajo', color: 'bg-red-500', desc: 'Excluido de rotación si < min quality score' },
-            ].map((tier) => (
+              {
+                range: '0.8 – 1.0',
+                label: 'Excelente',
+                color: 'bg-emerald-500',
+                desc: 'Descuento en CPC, posiciones premium',
+              },
+              {
+                range: '0.6 – 0.79',
+                label: 'Bueno',
+                color: 'bg-blue-500',
+                desc: 'Precio de mercado, rotación normal',
+              },
+              {
+                range: '0.4 – 0.59',
+                label: 'Promedio',
+                color: 'bg-amber-500',
+                desc: 'Ligero sobrecargo, menos impresiones',
+              },
+              {
+                range: '0.0 – 0.39',
+                label: 'Bajo',
+                color: 'bg-red-500',
+                desc: 'Excluido de rotación si < min quality score',
+              },
+            ].map(tier => (
               <div key={tier.range} className="flex items-center gap-3">
-                <div className={cn('w-3 h-3 rounded-full shrink-0', tier.color)} />
+                <div className={cn('h-3 w-3 shrink-0 rounded-full', tier.color)} />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-slate-900">{tier.range}</span>
@@ -798,7 +812,7 @@ export default function AdminPublicidadPage() {
       {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
             <Megaphone className="h-6 w-6 text-emerald-600" />
             Publicidad
           </h1>
@@ -812,19 +826,19 @@ export default function AdminPublicidadPage() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
-            <BarChart3 className="h-4 w-4 hidden sm:block" />
+            <BarChart3 className="hidden h-4 w-4 sm:block" />
             Métricas
           </TabsTrigger>
           <TabsTrigger value="rotation" className="gap-1.5 text-xs sm:text-sm">
-            <Settings2 className="h-4 w-4 hidden sm:block" />
+            <Settings2 className="hidden h-4 w-4 sm:block" />
             Rotación
           </TabsTrigger>
           <TabsTrigger value="pricing" className="gap-1.5 text-xs sm:text-sm">
-            <DollarSign className="h-4 w-4 hidden sm:block" />
+            <DollarSign className="hidden h-4 w-4 sm:block" />
             Precios
           </TabsTrigger>
           <TabsTrigger value="quality" className="gap-1.5 text-xs sm:text-sm">
-            <Sparkles className="h-4 w-4 hidden sm:block" />
+            <Sparkles className="hidden h-4 w-4 sm:block" />
             Quality Score
           </TabsTrigger>
         </TabsList>

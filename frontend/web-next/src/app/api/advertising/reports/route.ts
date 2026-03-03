@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
         break;
       case 'owner':
         if (!id) {
-          return NextResponse.json(
-            { success: false, error: 'Missing owner id' },
-            { status: 400 }
-          );
+          return NextResponse.json({ success: false, error: 'Missing owner id' }, { status: 400 });
         }
         endpoint = `${API_URL}/api/advertising/reports/owner/${id}?ownerType=${ownerType}&daysBack=${daysBack}`;
         break;
@@ -56,9 +53,6 @@ export async function GET(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch reports' },
-      { status: 502 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch reports' }, { status: 502 });
   }
 }

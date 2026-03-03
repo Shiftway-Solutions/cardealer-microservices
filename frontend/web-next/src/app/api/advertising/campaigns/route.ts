@@ -43,10 +43,7 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get('ownerId');
 
     if (!ownerId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing ownerId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Missing ownerId' }, { status: 400 });
     }
 
     const ownerType = searchParams.get('ownerType') || 'Individual';

@@ -201,7 +201,7 @@ export default function AdPackagesPage() {
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
           <Link
             href="/dealer/publicidad"
-            className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-700"
           >
             <ArrowLeft className="h-4 w-4" />
             Publicidad
@@ -245,28 +245,28 @@ export default function AdPackagesPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         {/* Package Cards */}
         <div className="grid gap-6 lg:grid-cols-3">
-          {AD_PACKAGES.map((pkg) => (
+          {AD_PACKAGES.map(pkg => (
             <Card
               key={pkg.id}
               className={cn(
                 'relative overflow-hidden transition-all duration-300 hover:shadow-lg',
-                pkg.popular && 'ring-2 ring-emerald-500 shadow-lg scale-[1.02]',
+                pkg.popular && 'scale-[1.02] shadow-lg ring-2 ring-emerald-500',
                 pkg.bestValue && 'ring-2 ring-amber-400'
               )}
             >
               {/* Popular / Best Value badge */}
               {pkg.popular && (
-                <div className="absolute top-0 right-0 bg-emerald-600 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">
+                <div className="absolute top-0 right-0 rounded-bl-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
                   Más popular
                 </div>
               )}
               {pkg.bestValue && (
-                <div className="absolute top-0 right-0 bg-amber-500 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">
+                <div className="absolute top-0 right-0 rounded-bl-lg bg-amber-500 px-3 py-1 text-xs font-bold text-white">
                   Mejor valor
                 </div>
               )}
 
-              <CardHeader className={cn('pb-4 bg-gradient-to-br', pkg.bgGradient)}>
+              <CardHeader className={cn('bg-gradient-to-br pb-4', pkg.bgGradient)}>
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
@@ -293,27 +293,27 @@ export default function AdPackagesPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="mt-0.5 text-xs text-slate-500">
                     {pkg.duration} días · {formatCurrency(Math.round(pkg.price / pkg.duration))}/día
                   </p>
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-5 space-y-5">
+              <CardContent className="space-y-5 pt-5">
                 {/* Metrics */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-slate-50 p-2">
-                    <Eye className="h-3.5 w-3.5 text-slate-400 mx-auto mb-0.5" />
+                    <Eye className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
                     <p className="text-sm font-bold text-slate-900">{pkg.metrics.impressions}</p>
                     <p className="text-[10px] text-slate-400">Impresiones</p>
                   </div>
                   <div className="rounded-lg bg-slate-50 p-2">
-                    <MousePointerClick className="h-3.5 w-3.5 text-slate-400 mx-auto mb-0.5" />
+                    <MousePointerClick className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
                     <p className="text-sm font-bold text-slate-900">{pkg.metrics.clicks}</p>
                     <p className="text-[10px] text-slate-400">Clics est.</p>
                   </div>
                   <div className="rounded-lg bg-slate-50 p-2">
-                    <TrendingUp className="h-3.5 w-3.5 text-slate-400 mx-auto mb-0.5" />
+                    <TrendingUp className="mx-auto mb-0.5 h-3.5 w-3.5 text-slate-400" />
                     <p className="text-sm font-bold text-slate-900">{pkg.metrics.position}</p>
                     <p className="text-[10px] text-slate-400">Posición</p>
                   </div>
@@ -321,9 +321,9 @@ export default function AdPackagesPage() {
 
                 {/* Features */}
                 <ul className="space-y-2">
-                  {pkg.features.map((feat) => (
+                  {pkg.features.map(feat => (
                     <li key={feat} className="flex items-start gap-2 text-sm">
-                      <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                       <span className="text-slate-700">{feat}</span>
                     </li>
                   ))}
@@ -334,9 +334,9 @@ export default function AdPackagesPage() {
                   className={cn(
                     'w-full',
                     pkg.popular
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                       : pkg.bestValue
-                        ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                        ? 'bg-amber-500 text-white hover:bg-amber-600'
                         : ''
                   )}
                   variant={!pkg.popular && !pkg.bestValue ? 'outline' : 'default'}
@@ -344,9 +344,9 @@ export default function AdPackagesPage() {
                   disabled={isProcessing}
                 >
                   {isProcessing && selectedPackage === pkg.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <Rocket className="h-4 w-4 mr-2" />
+                    <Rocket className="mr-2 h-4 w-4" />
                   )}
                   {isProcessing && selectedPackage === pkg.id ? 'Procesando...' : 'Activar paquete'}
                 </Button>
@@ -357,14 +357,14 @@ export default function AdPackagesPage() {
 
         {/* Custom campaign CTA */}
         <div className="mt-8 rounded-xl border-2 border-dashed border-slate-200 p-6 text-center">
-          <BarChart3 className="h-8 w-8 text-slate-400 mx-auto mb-3" />
+          <BarChart3 className="mx-auto mb-3 h-8 w-8 text-slate-400" />
           <h3 className="font-semibold text-slate-900">¿Necesitas algo personalizado?</h3>
-          <p className="text-sm text-slate-500 mt-1 mb-4">
+          <p className="mt-1 mb-4 text-sm text-slate-500">
             Crea una campaña a medida con presupuesto diario y segmentación avanzada.
           </p>
           <Button asChild variant="outline">
             <Link href="/dealer/publicidad/nueva">
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Crear campaña personalizada
             </Link>
           </Button>
@@ -373,21 +373,21 @@ export default function AdPackagesPage() {
         {/* Trust signals */}
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
-            <Shield className="h-8 w-8 text-emerald-600 shrink-0" />
+            <Shield className="h-8 w-8 shrink-0 text-emerald-600" />
             <div>
               <p className="text-sm font-semibold text-slate-900">Pago seguro</p>
               <p className="text-xs text-slate-500">Procesado por Azul, cifrado SSL</p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
-            <Timer className="h-8 w-8 text-blue-600 shrink-0" />
+            <Timer className="h-8 w-8 shrink-0 text-blue-600" />
             <div>
               <p className="text-sm font-semibold text-slate-900">Activo al instante</p>
               <p className="text-xs text-slate-500">Tu anuncio se activa de inmediato</p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
-            <BarChart3 className="h-8 w-8 text-purple-600 shrink-0" />
+            <BarChart3 className="h-8 w-8 shrink-0 text-purple-600" />
             <div>
               <p className="text-sm font-semibold text-slate-900">Métricas en tiempo real</p>
               <p className="text-xs text-slate-500">Dashboard con resultados al día</p>
@@ -397,14 +397,14 @@ export default function AdPackagesPage() {
 
         {/* Testimonials */}
         <div className="mt-10">
-          <h3 className="text-center text-lg font-semibold text-slate-900 mb-4">
+          <h3 className="mb-4 text-center text-lg font-semibold text-slate-900">
             Lo que dicen nuestros anunciantes
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            {TESTIMONIALS.map((t) => (
-              <Card key={t.author} className="bg-slate-50 border-0">
+            {TESTIMONIALS.map(t => (
+              <Card key={t.author} className="border-0 bg-slate-50">
                 <CardContent className="pt-5">
-                  <div className="flex gap-0.5 mb-2">
+                  <div className="mb-2 flex gap-0.5">
                     {Array.from({ length: t.rating }).map((_, i) => (
                       <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                     ))}
@@ -424,7 +424,7 @@ export default function AdPackagesPage() {
         <div className="mt-8 text-center">
           <Link
             href="/dealer/publicidad/roi"
-            className="text-sm text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-4"
+            className="text-sm font-medium text-emerald-600 underline underline-offset-4 hover:text-emerald-700"
           >
             Calcula tu ROI estimado →
           </Link>

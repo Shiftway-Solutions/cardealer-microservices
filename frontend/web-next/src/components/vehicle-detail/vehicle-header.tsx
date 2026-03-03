@@ -17,6 +17,7 @@ import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DealRatingBadge } from '@/components/ui/deal-rating-badge';
+import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
 import { ShareDialog } from '@/components/ui/share-dialog';
 import { useAuth } from '@/hooks/use-auth';
@@ -105,12 +106,13 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
         {/* Price Section */}
         <div className="border-border mt-6 border-t pt-6" data-testid="vehicle-price">
-          {/* Deal Rating */}
-          {vehicle.dealRating && (
-            <div className="mb-3">
-              <DealRatingBadge rating={vehicle.dealRating} size="lg" />
-            </div>
-          )}
+          {/* Deal Rating + OKLA Score */}
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            {vehicle.dealRating && <DealRatingBadge rating={vehicle.dealRating} size="lg" />}
+            {vehicle.oklaScore != null && vehicle.oklaScore > 0 && (
+              <ScoreBadge score={vehicle.oklaScore} variant="full" />
+            )}
+          </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-3">

@@ -19,6 +19,7 @@ import {
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Badge } from './badge';
 import { DealRatingBadge, type DealRating } from './deal-rating-badge';
+import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
 import type { VehicleCardData } from '@/types';
 
@@ -90,6 +91,11 @@ export function VehicleCard({
           {showDealRating && vehicle.dealRating && (
             <div className="absolute top-2 left-2">
               <DealRatingBadge rating={vehicle.dealRating as DealRating} size="sm" />
+            </div>
+          )}
+          {vehicle.oklaScore != null && vehicle.oklaScore > 0 && (
+            <div className="absolute top-2 right-2">
+              <ScoreBadge score={vehicle.oklaScore} variant="compact" />
             </div>
           )}
         </div>

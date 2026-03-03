@@ -55,6 +55,7 @@ export interface Vehicle {
   favoriteCount?: number;
   rejectionReason?: string;
   vin?: string;
+  oklaScore?: number;
 
   // Seller
   sellerId: string;
@@ -138,6 +139,7 @@ export interface VehicleCardData {
   monthlyPayment?: number;
   dealerName?: string;
   dealerRating?: number;
+  oklaScore?: number;
   // Status and metadata (for dealer inventory)
   status?: VehicleStatus;
   viewCount?: number;

@@ -14,11 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  useCampaignsByOwner,
-  usePauseCampaign,
-  useResumeCampaign,
-} from '@/hooks/use-advertising';
+import { useCampaignsByOwner, usePauseCampaign, useResumeCampaign } from '@/hooks/use-advertising';
 import type { CampaignStatus } from '@/types/advertising';
 import {
   Sparkles,
@@ -85,8 +81,16 @@ function statusBadge(status: CampaignStatus) {
     Expired: 'bg-slate-100 text-slate-500',
   };
   return (
-    <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', map[status] || 'bg-slate-100')}>
-      {status === 'Active' ? 'Activa' : status === 'Paused' ? 'Pausada' : status === 'Completed' ? 'Completada' : status}
+    <span
+      className={cn('rounded-full px-2 py-0.5 text-xs font-medium', map[status] || 'bg-slate-100')}
+    >
+      {status === 'Active'
+        ? 'Activa'
+        : status === 'Paused'
+          ? 'Pausada'
+          : status === 'Completed'
+            ? 'Completada'
+            : status}
     </span>
   );
 }
@@ -103,7 +107,7 @@ export default function SellerAdvertisingPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const campaigns = campaignsData?.items || [];
-  const activeCampaigns = campaigns.filter((c) => c.status === 'Active');
+  const activeCampaigns = campaigns.filter(c => c.status === 'Active');
   const totalImpressions = campaigns.reduce((sum, c) => sum + (c.totalViews || 0), 0);
   const totalClicks = campaigns.reduce((sum, c) => sum + (c.totalClicks || 0), 0);
 
@@ -124,26 +128,28 @@ export default function SellerAdvertisingPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6">
         {/* Overview stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card className="text-center">
             <CardContent className="pt-4 pb-3">
-              <Eye className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-              <p className="text-lg font-bold text-slate-900">{totalImpressions.toLocaleString()}</p>
+              <Eye className="mx-auto mb-1 h-5 w-5 text-blue-500" />
+              <p className="text-lg font-bold text-slate-900">
+                {totalImpressions.toLocaleString()}
+              </p>
               <p className="text-xs text-slate-500">Impresiones</p>
             </CardContent>
           </Card>
           <Card className="text-center">
             <CardContent className="pt-4 pb-3">
-              <MousePointerClick className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
+              <MousePointerClick className="mx-auto mb-1 h-5 w-5 text-emerald-500" />
               <p className="text-lg font-bold text-slate-900">{totalClicks.toLocaleString()}</p>
               <p className="text-xs text-slate-500">Clics</p>
             </CardContent>
           </Card>
           <Card className="text-center">
             <CardContent className="pt-4 pb-3">
-              <TrendingUp className="h-5 w-5 text-purple-500 mx-auto mb-1" />
+              <TrendingUp className="mx-auto mb-1 h-5 w-5 text-purple-500" />
               <p className="text-lg font-bold text-slate-900">{activeCampaigns.length}</p>
               <p className="text-xs text-slate-500">Activas</p>
             </CardContent>
@@ -152,40 +158,50 @@ export default function SellerAdvertisingPage() {
 
         {/* Quick Boost Options */}
         <div>
-          <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
             <Rocket className="h-4 w-4 text-emerald-600" />
             Opciones de Boost
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {BOOST_OPTIONS.map((opt) => (
-              <Card key={opt.id} className={cn('relative', opt.popular && 'ring-2 ring-emerald-500')}>
+            {BOOST_OPTIONS.map(opt => (
+              <Card
+                key={opt.id}
+                className={cn('relative', opt.popular && 'ring-2 ring-emerald-500')}
+              >
                 {opt.popular && (
-                  <Badge className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px]">
+                  <Badge className="absolute top-2 right-2 bg-emerald-600 text-[10px] text-white">
                     Popular
                   </Badge>
                 )}
                 <CardContent className="pt-5">
-                  <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg mb-3', opt.color)}>
+                  <div
+                    className={cn(
+                      'mb-3 flex h-9 w-9 items-center justify-center rounded-lg',
+                      opt.color
+                    )}
+                  >
                     <opt.icon className="h-4.5 w-4.5" />
                   </div>
                   <p className="font-semibold text-slate-900">{opt.name}</p>
-                  <p className="text-xs text-slate-500 mt-1">{opt.description}</p>
-                  <div className="flex items-baseline gap-2 mt-3">
-                    <span className="text-xl font-bold text-slate-900">{formatCurrency(opt.price)}</span>
+                  <p className="mt-1 text-xs text-slate-500">{opt.description}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-xl font-bold text-slate-900">
+                      {formatCurrency(opt.price)}
+                    </span>
                     <span className="text-xs text-slate-400">/ {opt.duration}</span>
                   </div>
                   <Button
                     asChild
                     size="sm"
                     className={cn(
-                      'w-full mt-3',
-                      opt.popular ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''
+                      'mt-3 w-full',
+                      opt.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700' : ''
                     )}
                     variant={opt.popular ? 'default' : 'outline'}
                   >
                     <Link href="/cuenta/mis-vehiculos">
                       Seleccionar vehículo
-                      <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Link>
                   </Button>
                 </CardContent>
@@ -196,41 +212,42 @@ export default function SellerAdvertisingPage() {
 
         {/* Active Campaigns */}
         <div>
-          <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
             <BarChart3 className="h-4 w-4 text-blue-600" />
             Mis Campañas
           </h2>
 
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2].map((i) => (
+              {[1, 2].map(i => (
                 <div key={i} className="h-20 animate-pulse rounded-lg bg-slate-100" />
               ))}
             </div>
           ) : !campaigns.length ? (
-            <Card className="bg-slate-50 border-dashed">
+            <Card className="border-dashed bg-slate-50">
               <CardContent className="py-8 text-center">
-                <Sparkles className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <Sparkles className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                 <p className="text-sm text-slate-500">No tienes campañas activas</p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="mt-1 text-xs text-slate-400">
                   Destaca tus vehículos para vender más rápido
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
-              {campaigns.map((campaign) => (
+              {campaigns.map(campaign => (
                 <Card key={campaign.id} className="overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {campaign.placementType === 'PremiumSpot' ? 'Premium' : 'Destacado'} — {campaign.vehicleId?.slice(0, 8) || 'Paquete'}
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {campaign.placementType === 'PremiumSpot' ? 'Premium' : 'Destacado'} —{' '}
+                            {campaign.vehicleId?.slice(0, 8) || 'Paquete'}
                           </p>
                           {statusBadge(campaign.status)}
                         </div>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
+                        <div className="mt-1 flex items-center gap-4 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
                             {(campaign.totalViews || 0).toLocaleString()}
@@ -240,11 +257,12 @@ export default function SellerAdvertisingPage() {
                             {(campaign.totalClicks || 0).toLocaleString()}
                           </span>
                           <span>
-                            {formatCurrency(campaign.totalBudget - (campaign.remainingBudget || 0))} / {formatCurrency(campaign.totalBudget)}
+                            {formatCurrency(campaign.totalBudget - (campaign.remainingBudget || 0))}{' '}
+                            / {formatCurrency(campaign.totalBudget)}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 ml-2">
+                      <div className="ml-2 flex items-center gap-1">
                         {campaign.status === 'Active' && (
                           <Button
                             variant="ghost"
@@ -283,9 +301,9 @@ export default function SellerAdvertisingPage() {
 
                     {/* Budget bar */}
                     <div className="mt-2">
-                      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
                         <div
-                          className="h-full bg-emerald-500 rounded-full transition-all"
+                          className="h-full rounded-full bg-emerald-500 transition-all"
                           style={{
                             width: `${Math.min(100, ((campaign.totalBudget - (campaign.remainingBudget || 0)) / campaign.totalBudget) * 100)}%`,
                           }}
@@ -294,20 +312,26 @@ export default function SellerAdvertisingPage() {
                     </div>
 
                     {expandedId === campaign.id && (
-                      <div className="mt-3 pt-3 border-t grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-50 rounded p-2">
+                      <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-xs">
+                        <div className="rounded bg-slate-50 p-2">
                           <p className="text-slate-400">CTR</p>
                           <p className="font-semibold text-slate-900">
                             {campaign.totalViews
-                              ? ((campaign.totalClicks || 0) / campaign.totalViews * 100).toFixed(1)
-                              : '0.0'}%
+                              ? (((campaign.totalClicks || 0) / campaign.totalViews) * 100).toFixed(
+                                  1
+                                )
+                              : '0.0'}
+                            %
                           </p>
                         </div>
-                        <div className="bg-slate-50 rounded p-2">
+                        <div className="rounded bg-slate-50 p-2">
                           <p className="text-slate-400">CPC</p>
                           <p className="font-semibold text-slate-900">
                             {campaign.totalClicks
-                              ? formatCurrency((campaign.totalBudget - (campaign.remainingBudget || 0)) / campaign.totalClicks)
+                              ? formatCurrency(
+                                  (campaign.totalBudget - (campaign.remainingBudget || 0)) /
+                                    campaign.totalClicks
+                                )
                               : '—'}
                           </p>
                         </div>
@@ -321,11 +345,9 @@ export default function SellerAdvertisingPage() {
         </div>
 
         {/* Benefits section */}
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 border-emerald-200">
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-emerald-900">
-              ¿Por qué anunciarte en OKLA?
-            </CardTitle>
+            <CardTitle className="text-sm text-emerald-900">¿Por qué anunciarte en OKLA?</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -334,9 +356,9 @@ export default function SellerAdvertisingPage() {
                 'Solo pagas cuando alguien ve o hace clic en tu anuncio',
                 'Resultados medibles en tiempo real',
                 'Cancela o pausa cuando quieras',
-              ].map((item) => (
+              ].map(item => (
                 <li key={item} className="flex items-start gap-2 text-sm text-emerald-800">
-                  <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                   {item}
                 </li>
               ))}
