@@ -5,6 +5,7 @@ using ChatbotService.Domain.Enums;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Application.DTOs;
 using ChatbotService.Application.Services;
+using ChatbotService.Infrastructure.Services;
 
 namespace ChatbotService.Application.Features.Sessions.Commands;
 
@@ -140,6 +141,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     private readonly IQuickResponseRepository _quickResponseRepository;
     private readonly IChatModeStrategyFactory _strategyFactory;
     private readonly ILlmService _llmService;
+    private readonly LlmResponseCacheService _cacheService;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
@@ -149,6 +151,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         IQuickResponseRepository quickResponseRepository,
         IChatModeStrategyFactory strategyFactory,
         ILlmService llmService,
+        LlmResponseCacheService cacheService,
         ILogger<SendMessageCommandHandler> logger)
     {
         _sessionRepository = sessionRepository;
@@ -157,6 +160,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         _quickResponseRepository = quickResponseRepository;
         _strategyFactory = strategyFactory;
         _llmService = llmService;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -315,6 +319,22 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 "Using {Mode} strategy for session {SessionId}, prompt length: {Length}",
                 session.ChatMode, session.Id, systemPrompt.Length);
 
+            // ── 7b. CACHE CHECK: Avoid redundant LLM calls ───────────
+            var cachedResponse = await _cacheService.GetAsync(messageForLlm, systemPrompt, ct);
+            if (cachedResponse != null)
+            {
+                botResponse = cachedResponse.Response;
+                intentName = cachedResponse.Intent;
+                confidenceScore = (decimal)cachedResponse.Confidence;
+                isFallback = false;
+                consumedInteraction = false; // Cache hits don't consume interactions
+
+                _logger.LogInformation(
+                    "Cache HIT for session {SessionId}, saved LLM call. Intent: {Intent}",
+                    session.Id, intentName);
+            }
+            else
+            {
             // ── 8. Llamar al LLM ─────────────────────────────────────
             var llmResult = await _llmService.GenerateResponseAsync(
                 session.SessionToken,
@@ -330,6 +350,11 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             confidenceScore = (decimal)llmResult.ConfidenceScore;
             isFallback = llmResult.IsFallback;
             consumedInteraction = true;
+
+            // ── 9b. CACHE SET: Store response for future hits ─────────
+            _ = _cacheService.SetAsync(
+                messageForLlm, botResponse, intentName,
+                llmResult.ConfidenceScore, isFallback, systemPrompt, ct: ct);
 
             // ── 10. Grounding validation (anti-hallucination) ─────────
             var groundingResult = await strategy.ValidateResponseGroundingAsync(
@@ -374,6 +399,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 "Clasificacion: {Clasificacion}, Modulo: {Modulo}, Handoff: {Handoff}",
                 session.Id, llmResult.IntentScore, llmResult.Clasificacion,
                 llmResult.ModuloActivo, llmResult.HandoffActivado);
+            } // end of cache-miss else block
 
             // ── 11. Incrementar contadores ────────────────────────────
             session.InteractionCount++;

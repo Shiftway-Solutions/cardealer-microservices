@@ -67,13 +67,13 @@ export interface SupportChatMessage {
 
 /**
  * Send a message to the SupportAgent and get a response.
- * Public endpoint — no auth required.
+ * Claude Haiku responds in 300ms-1.5s; timeout set to 15s for safety.
  */
 export async function sendSupportMessage(
   request: SupportMessageRequest
 ): Promise<SupportMessageResponse> {
   const response = await apiClient.post<SupportMessageResponse>('/api/support/message', request, {
-    timeout: 60_000,
+    timeout: 15_000,
   });
   return response.data;
 }

@@ -14,6 +14,13 @@ public class ClaudeSupportService : IClaudeSupportService
     private readonly ILogger<ClaudeSupportService> _logger;
     private readonly string _apiKey;
 
+    // ── P1-1 FIX: Reuse static JsonSerializerOptions (avoid per-request allocation) ──
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     public ClaudeSupportService(
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
@@ -54,19 +61,15 @@ public class ClaudeSupportService : IClaudeSupportService
             Messages = messages
         };
 
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        };
-
-        var requestJson = JsonSerializer.Serialize(requestBody, jsonOptions);
+        var requestJson = JsonSerializer.Serialize(requestBody, _snakeCaseOptions);
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
         request.Headers.Add("x-api-key", _apiKey);
         request.Headers.Add("anthropic-version", "2023-06-01");
+        // Enable prompt caching — ~3K token system prompt cached server-side
+        request.Headers.Add("anthropic-beta", "prompt-caching-2024-07-31");
         request.Content = content;
 
         _logger.LogDebug("Sending support message to Claude. History count={HistoryCount}", conversationHistory.Count);
@@ -81,7 +84,7 @@ public class ClaudeSupportService : IClaudeSupportService
         }
 
         var responseBody = await response.Content.ReadAsStringAsync(ct);
-        var claudeResponse = JsonSerializer.Deserialize<ClaudeResponse>(responseBody, jsonOptions);
+        var claudeResponse = JsonSerializer.Deserialize<ClaudeResponse>(responseBody, _snakeCaseOptions);
 
         if (claudeResponse?.Content == null || claudeResponse.Content.Count == 0)
         {

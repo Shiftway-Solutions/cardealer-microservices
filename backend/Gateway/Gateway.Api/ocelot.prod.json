@@ -2814,7 +2814,7 @@
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
-        "TimeoutValue": 600000
+        "TimeoutValue": 60000
       }
     },
     {

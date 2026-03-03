@@ -121,12 +121,20 @@ public class ClaudeLlmService : ILlmService
                 messages.RemoveAt(0);
             }
 
-            // Build Anthropic API request
+            // Build Anthropic API request with prompt caching
             var request = new ClaudeRequest
             {
                 Model = _settings.ModelId,
                 MaxTokens = _settings.MaxTokens,
-                System = effectiveSystemPrompt,
+                System = new List<SystemPromptBlock>
+                {
+                    new()
+                    {
+                        Type = "text",
+                        Text = effectiveSystemPrompt,
+                        CacheControl = new CacheControl { Type = "ephemeral" }
+                    }
+                },
                 Messages = messages,
                 Temperature = _settings.Temperature
             };
@@ -135,6 +143,9 @@ public class ClaudeLlmService : ILlmService
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, _settings.CompletionsPath);
             httpRequest.Headers.Add("x-api-key", _settings.ApiKey);
             httpRequest.Headers.Add("anthropic-version", ANTHROPIC_VERSION);
+            // Enable prompt caching — system prompt cached server-side for 5 min
+            // Reduces ~90% cost on cached tokens and improves latency by ~200ms
+            httpRequest.Headers.Add("anthropic-beta", "prompt-caching-2024-07-31");
             httpRequest.Content = JsonContent.Create(request, options: _snakeCaseOptions);
 
             var response = await client.SendAsync(httpRequest, llmCts.Token);
@@ -402,9 +413,29 @@ public class ClaudeLlmService : ILlmService
         public string Model { get; set; } = string.Empty;
         [JsonPropertyName("max_tokens")]
         public int MaxTokens { get; set; }
-        public string System { get; set; } = string.Empty;
+        /// <summary>
+        /// System prompt — supports both string and structured format for prompt caching.
+        /// Using structured format with cache_control for Anthropic prompt caching.
+        /// </summary>
+        public object System { get; set; } = string.Empty;
         public List<ClaudeMessage> Messages { get; set; } = new();
         public float Temperature { get; set; }
+    }
+
+    /// <summary>
+    /// Structured system prompt block with cache control for Anthropic prompt caching.
+    /// </summary>
+    private class SystemPromptBlock
+    {
+        public string Type { get; set; } = "text";
+        public string Text { get; set; } = string.Empty;
+        [JsonPropertyName("cache_control")]
+        public CacheControl? CacheControl { get; set; }
+    }
+
+    private class CacheControl
+    {
+        public string Type { get; set; } = "ephemeral";
     }
 
     private class ClaudeMessage

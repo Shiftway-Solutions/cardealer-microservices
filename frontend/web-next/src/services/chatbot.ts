@@ -207,7 +207,7 @@ export async function startChatSession(
 
 /**
  * Send a message to the chatbot and get a response.
- * Timeout set to 10 minutes because LLM inference on CPU takes 2-5 min.
+ * Claude Sonnet responds in 1-5s; timeout set to 30s for safety.
  */
 export async function sendChatMessage(request: SendMessageRequest): Promise<ChatbotResponse> {
   const response = await apiClient.post<ChatbotResponse>(
@@ -216,7 +216,7 @@ export async function sendChatMessage(request: SendMessageRequest): Promise<Chat
       ...request,
       type: request.type ?? 'UserText',
     },
-    { timeout: 60_000 }
+    { timeout: 30_000 }
   );
   return response.data;
 }

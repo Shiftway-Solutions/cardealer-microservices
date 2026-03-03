@@ -93,11 +93,11 @@ public static class DependencyInjection
         services.AddSingleton<ChatbotMetrics>();
 
         // HTTP Client para Claude API (Anthropic)
-        // NOTE: NO se agregan Polly policies porque ClaudeLlmService maneja errores internamente.
+        // Claude Sonnet responds in 1-5s; timeout reduced from 120s to 60s for Claude API
         services.AddHttpClient("LlmServer", client =>
         {
             client.BaseAddress = new Uri(configuration["LlmService:ServerUrl"] ?? "https://api.anthropic.com");
-            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["LlmService:TimeoutSeconds"] ?? "120"));
+            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["LlmService:TimeoutSeconds"] ?? "60"));
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         })
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -107,10 +107,11 @@ public static class DependencyInjection
 
         // HTTP Client para Embedding Server (separado del LLM Server)
         // Puede apuntar a: llm-server local, HuggingFace Inference API (gratis), OpenAI, etc.
+        // Single query embedding should be <1s; reduced timeout from 30s to 10s
         services.AddHttpClient("EmbeddingServer", client =>
         {
             client.BaseAddress = new Uri(configuration["Embedding:ServerUrl"] ?? "http://llm-server:8000");
-            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["Embedding:TimeoutSeconds"] ?? "30"));
+            client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["Embedding:TimeoutSeconds"] ?? "10"));
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         });
 
