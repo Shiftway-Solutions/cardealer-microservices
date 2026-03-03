@@ -8,8 +8,8 @@
  */
 
 import { useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSupportAgent } from '@/hooks/useSupportAgent';
-import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { BotMessageContent } from './BotMessageContent';
 import { X, RotateCcw, Minus, Headphones, AlertCircle, WifiOff } from 'lucide-react';
@@ -117,6 +117,12 @@ function SupportMessageBubble({
 export function SupportAgentWidget() {
   const chat = useSupportAgent({ autoWelcome: true });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  // On vehicle detail and search pages, position support bubble on the left
+  // to avoid conflict with the vehicle chatbot bubble on the right
+  const isVehiclePage = pathname.startsWith('/vehiculos');
+  const bubblePosition = isVehiclePage ? 'left-4 bottom-4' : 'right-4 bottom-4';
 
   // Auto-scroll
   useEffect(() => {
@@ -130,13 +136,31 @@ export function SupportAgentWidget() {
 
   return (
     <>
-      {/* Floating bubble */}
-      <ChatBubble isOpen={chat.isOpen} onClick={chat.toggle} />
+      {/* Floating support bubble — distinct from vehicle chatbot */}
+      <button
+        onClick={chat.toggle}
+        className={`fixed ${bubblePosition} z-[9997] flex items-center gap-2 rounded-full px-4 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+          chat.isOpen
+            ? 'bg-gray-600 hover:bg-gray-700'
+            : 'bg-gradient-to-br from-[#00A870] to-[#009663] hover:from-[#009663] hover:to-[#008555]'
+        }`}
+        aria-label={chat.isOpen ? 'Cerrar soporte' : 'Soporte OKLA'}
+      >
+        {chat.isOpen ? (
+          <X className="h-5 w-5 text-white" />
+        ) : (
+          <>
+            <Headphones className="h-5 w-5 text-white" />
+            <span className="text-sm font-semibold text-white max-sm:hidden">Soporte</span>
+            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
+          </>
+        )}
+      </button>
 
       {/* Panel */}
       {chat.isOpen && (
         <div
-          className="fixed right-4 bottom-20 z-[9999] flex w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950"
+          className={`fixed ${isVehiclePage ? 'left-4' : 'right-4'} bottom-20 z-[9999] flex w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:left-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950`}
           style={{ height: 'min(600px, calc(100vh - 120px))' }}
           role="dialog"
           aria-label="Soporte OKLA"

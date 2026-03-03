@@ -7,9 +7,11 @@ interface ChatBubbleProps {
   isOpen: boolean;
   onClick: () => void;
   unreadCount?: number;
+  /** Position class override for avoiding overlap with other chatbots */
+  positionClass?: string;
 }
 
-export function ChatBubble({ isOpen, onClick, unreadCount = 0 }: ChatBubbleProps) {
+export function ChatBubble({ isOpen, onClick, unreadCount = 0, positionClass }: ChatBubbleProps) {
   const [isAnimated, setIsAnimated] = useState(false);
 
   // Entrance animation
@@ -21,9 +23,9 @@ export function ChatBubble({ isOpen, onClick, unreadCount = 0 }: ChatBubbleProps
   return (
     <button
       onClick={onClick}
-      className={`fixed right-4 bottom-4 z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
-        isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-      } ${
+      className={`fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+        positionClass || 'right-4 bottom-4'
+      } ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'} ${
         isOpen
           ? 'bg-gray-600 hover:bg-gray-700'
           : 'bg-gradient-to-br from-[#00A870] to-[#009663] hover:from-[#009663] hover:to-[#008555]'

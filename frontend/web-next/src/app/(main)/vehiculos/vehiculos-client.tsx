@@ -498,7 +498,7 @@ export default function VehiculosClient() {
               }}
             >
               {isAiSearching ? (
-                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-purple-500" />
+                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-[#00A870]" />
               ) : (
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               )}
@@ -511,7 +511,10 @@ export default function VehiculosClient() {
                   // Clear AI info when user edits
                   if (aiSearchInfo) setAiSearchInfo(null);
                 }}
-                className={cn('h-10 pr-10 pl-9 text-sm', isAiSearching && 'ring-2 ring-purple-300')}
+                className={cn(
+                  'h-10 pr-10 pl-9 text-sm',
+                  isAiSearching && 'ring-2 ring-[#00A870]/40'
+                )}
                 aria-label="Buscar vehículos con IA"
                 disabled={isAiSearching}
               />
@@ -621,18 +624,18 @@ export default function VehiculosClient() {
 
           {/* AI search info banner */}
           {aiSearchInfo && (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-purple-50 px-3 py-1.5 dark:bg-purple-950/30">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-purple-500" />
-              <span className="truncate text-xs text-purple-700 dark:text-purple-300">
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-[#00A870]/5 px-3 py-1.5 dark:bg-[#00A870]/10">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#00A870]" />
+              <span className="truncate text-xs text-[#005236] dark:text-[#4fd4a4]">
                 IA interpretó: <strong>&ldquo;{aiSearchInfo.query}&rdquo;</strong>
               </span>
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:bg-purple-900 dark:text-purple-300">
+                <span className="rounded-full bg-[#00A870]/10 px-2 py-0.5 text-[10px] font-medium text-[#00A870] dark:bg-[#00A870]/20 dark:text-[#4fd4a4]">
                   {Math.round(aiSearchInfo.confidence * 100)}% confianza
                 </span>
-                <span className="text-[10px] text-purple-400">{aiSearchInfo.latencyMs}ms</span>
+                <span className="text-[10px] text-[#00A870]/60">{aiSearchInfo.latencyMs}ms</span>
                 {aiSearchInfo.wasCached && (
-                  <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] text-green-600">
+                  <span className="rounded-full bg-[#00A870]/10 px-1.5 py-0.5 text-[10px] text-[#00A870]">
                     caché
                   </span>
                 )}
@@ -643,7 +646,7 @@ export default function VehiculosClient() {
                     clearFilters();
                     setSearchInput('');
                   }}
-                  className="ml-1 text-purple-400 hover:text-purple-600"
+                  className="ml-1 text-[#00A870]/50 hover:text-[#00A870]"
                 >
                   <X className="h-3 w-3" />
                 </button>

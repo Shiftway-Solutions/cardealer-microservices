@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SupportAgent.Application.DTOs;
+using SupportAgent.Application.Services;
 using SupportAgent.Domain.Entities;
 using SupportAgent.Domain.Interfaces;
 
@@ -30,6 +31,67 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
     {
         var sw = Stopwatch.StartNew();
         var config = await _configRepository.GetActiveConfigAsync(ct);
+
+        // ══════════════════════════════════════════════════════════════
+        // SAFETY LAYER 1: Prompt Injection Detection (pre-LLM)
+        // ══════════════════════════════════════════════════════════════
+        var injectionResult = PromptInjectionDetector.Detect(request.Message);
+        if (injectionResult.ShouldBlock)
+        {
+            _logger.LogWarning(
+                "Prompt injection BLOCKED. Threat={Threat}, Patterns={Patterns}, IP={IP}",
+                injectionResult.ThreatLevel,
+                string.Join(", ", injectionResult.DetectedPatterns),
+                request.IpAddress);
+
+            return new SupportChatResponse
+            {
+                SessionId = request.SessionId ?? Guid.NewGuid().ToString("N"),
+                Response = "Lo siento, no puedo procesar ese mensaje. Si necesitas ayuda, reformula tu pregunta sobre cómo usar OKLA o el proceso de compra de vehículos. 😊",
+                DetectedModule = "blocked",
+                Timestamp = DateTime.UtcNow
+            };
+        }
+
+        // Sanitize medium-threat messages (remove injection tokens but allow through)
+        var processedMessage = request.Message;
+        if (injectionResult.IsInjectionDetected)
+        {
+            processedMessage = PromptInjectionDetector.Sanitize(request.Message);
+            _logger.LogWarning(
+                "Prompt injection SANITIZED. Threat={Threat}, Patterns={Patterns}",
+                injectionResult.ThreatLevel,
+                string.Join(", ", injectionResult.DetectedPatterns));
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // SAFETY LAYER 2: PII Detection & Sanitization (pre-LLM)
+        // ══════════════════════════════════════════════════════════════
+        var piiResult = PiiDetector.Sanitize(processedMessage);
+        if (piiResult.DetectionInfo.WasSanitized)
+        {
+            processedMessage = piiResult.SanitizedMessage;
+            _logger.LogInformation(
+                "PII sanitized from support message. Types={Types}, Session={SessionId}",
+                string.Join(", ", piiResult.DetectionInfo.DetectedTypes),
+                request.SessionId);
+        }
+
+        // If credit card detected, recommend human agent transfer
+        if (piiResult.DetectionInfo.RequiresAgentTransfer)
+        {
+            _logger.LogWarning("Credit card detected in support chat — recommending agent transfer");
+            return new SupportChatResponse
+            {
+                SessionId = request.SessionId ?? Guid.NewGuid().ToString("N"),
+                Response = "🔒 Por tu seguridad, he redactado la información de tu tarjeta. " +
+                           "Nunca compartas datos de tarjeta de crédito en el chat. " +
+                           "Para asuntos de pagos, contacta directamente a soporte@okla.com.do o " +
+                           "llama al equipo de facturación. ¿Puedo ayudarte con algo más?",
+                DetectedModule = "pii_redirect",
+                Timestamp = DateTime.UtcNow
+            };
+        }
 
         // Get or create session
         var sessionId = request.SessionId ?? Guid.NewGuid().ToString("N");
@@ -75,35 +137,57 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
             .ToList();
 
         // Detect module from user message
-        var detectedModule = DetectModule(request.Message);
+        var detectedModule = DetectModule(processedMessage);
 
-        // Save user message
+        // Save user message (with PII already redacted)
         var userMessage = new ChatMessage
         {
             SessionId = session.Id,
             Role = "user",
-            Content = request.Message,
+            Content = processedMessage,
             DetectedModule = detectedModule
         };
         await _sessionRepository.AddMessageAsync(userMessage, ct);
 
-        // Call Claude API
+        // Call Claude API with the sanitized message and enhanced prompt
         var claudeResponse = await _claudeService.SendMessageAsync(
-            request.Message,
+            processedMessage,
             conversationHistory,
-            SupportAgentPrompts.SystemPromptV1,
+            SupportAgentPrompts.SystemPromptV2,
             config.Temperature,
             config.MaxTokens,
             ct);
 
+        // ══════════════════════════════════════════════════════════════
+        // SAFETY LAYER 3: PII Echo-Back Prevention (post-LLM)
+        // ══════════════════════════════════════════════════════════════
+        var sanitizedResponse = PiiDetector.SanitizeResponse(claudeResponse.Response);
+        if (sanitizedResponse != claudeResponse.Response)
+        {
+            _logger.LogWarning("PII echo-back detected and sanitized in SupportAgent response");
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // SAFETY LAYER 4: Output Grounding Validation (post-LLM)
+        // ══════════════════════════════════════════════════════════════
+        var groundingResult = SupportOutputValidator.Validate(sanitizedResponse);
+        if (!groundingResult.IsGrounded)
+        {
+            sanitizedResponse = groundingResult.SanitizedResponse;
+            _logger.LogWarning(
+                "Output grounding violations detected. Violations={Violations}, Session={SessionId}",
+                string.Join(", ", groundingResult.Violations),
+                sessionId);
+        }
+
         sw.Stop();
 
-        // Save assistant message
+        // Save assistant message (sanitized version)
         var assistantMessage = new ChatMessage
         {
             SessionId = session.Id,
             Role = "assistant",
-            Content = claudeResponse.Response,
+            Content = sanitizedResponse,
             DetectedModule = detectedModule,
             InputTokens = claudeResponse.InputTokens,
             OutputTokens = claudeResponse.OutputTokens,
@@ -118,13 +202,14 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
         await _sessionRepository.UpdateAsync(session, ct);
 
         _logger.LogInformation(
-            "SupportAgent response generated. Session={SessionId}, Module={Module}, Tokens={In}/{Out}, Latency={Latency}ms",
-            sessionId, detectedModule, claudeResponse.InputTokens, claudeResponse.OutputTokens, sw.ElapsedMilliseconds);
+            "SupportAgent response generated. Session={SessionId}, Module={Module}, Tokens={In}/{Out}, Latency={Latency}ms, Grounded={IsGrounded}",
+            sessionId, detectedModule, claudeResponse.InputTokens, claudeResponse.OutputTokens,
+            sw.ElapsedMilliseconds, groundingResult.IsGrounded);
 
         return new SupportChatResponse
         {
             SessionId = sessionId,
-            Response = claudeResponse.Response,
+            Response = sanitizedResponse,
             DetectedModule = detectedModule,
             Timestamp = DateTime.UtcNow
         };

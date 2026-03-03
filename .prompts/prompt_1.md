@@ -1,10 +1,7 @@
-haz estas neuvas tareas
-Hazme ahora una prueba end to end y pruebame todos los agentes y chatbot implementdos en produccion.
+Se me paso decirte que este chatbot "ChatbotService", responde a nombre del dealer que hizo la publicacion y solo pueda hablar de las informaciones que tenga dicho dealer en su inventario.
 
-Estos son los usuarios, Este es un seller, gmoreno@okla.com.do, pass: $Gregory1, este usuario es un buyer, "Username: buyer002@okla-test.com
-Password: BuyerTest2026!". Y este es un usuario adminstrador de la plataforma. "Username: admin@okla.local
-Password: Admin123!@#"
+En el home implementame el search con lenguaje natural y cuado le de a buarcar redireccina a la vista "https://okla.com.do/vehiculos" con todos los filtros aplicados.
 
-Me falta un usuario dealer, crea uno con el correo nmateo@okla.com.do y verifica el correo por base de datos y tambien haz la verificacion tu de kyc y luego haz las pruebas end to end en produccion despues que se aplique el ci/cd.
+Luego haz las pruebas end to end en produccion despues que se aplique el ci/cd de todas las funcionales que has hecho para probar que funcionan, pero antes de esto tienes que monitoriar el procesos completo de ci/cd, hasta que todos los cambios enten en produccion y luegos haces las pruebas e2e donde pureba todas las funcionalidades que has hecho.
 
 Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y teminas de trabajar cuando el archivo diga en cualquier parte ya terminaste, pero esto debe estar escrito en mayuscula, si no esta en mayuscula no has terinado. Y sino encuentras este texto en mayuscula pon delay de 60 segundos esparando el mensaje Ya terminaste y cada ves que revisis ponle al delay 60 segundos mas, hazta que encuentres el mensaje ya terminaste en mayuscula. Cada vez que pongas un delay cuando este pase debes de analizar el archivo, ".prompts/prompt-1.md" y si no ha nuevas tareas, busca la palabra ya terminaste en mayuscula y luego pon otros delay de 60 segundos, Este proceso de ponder delay y analizar el archivo ".prompts/prompt-1.md", lo vas a repetir 10 veces, pero si encuentras nuevas tareas se reinicia el conteo y si no hay nada nuevo en el archivo ".prompts/prompt-1.md" de que hacer ya terminaste.

@@ -1,7 +1,3 @@
-Todas las pruebas de flujos se van hacer en produccion. Despues que se ejecute el ci/cd. Lo monitoreas el ci/cd y luego has las pruebas e2e en produccion.
+Se me paso decirte que este chatbot "ChatbotService", responde a nombre del dealer que hizo la publicacion y solo pueda hablar de las informaciones que tenga dicho dealer en su inventario.
 
-Este es un seller, gmoreno@okla.com.do, pass: $Gregory1, este usuario es un buyer, "Username: buyer002@okla-test.com
-Password: BuyerTest2026!". Y este es un usuario adminstrador de la plataforma. "Username: admin@okla.local
-Password: Admin123!@#"
-
-Para que hagas todas las pruebas de lugar con estos usuarios.
+En el home implementame el search con lenguaje natural y cuado le de a buarcar redireccina a la vista "https://okla.com.do/vehiculos" con todos los filtros aplicados.

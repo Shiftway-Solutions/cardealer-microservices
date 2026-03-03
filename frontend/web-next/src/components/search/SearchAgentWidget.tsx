@@ -230,13 +230,13 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
 
   return (
     <>
-      {/* Floating bubble — AI search branded (purple/sparkles) */}
+      {/* Floating bubble — AI search branded (OKLA green/sparkles) */}
       <button
         onClick={() => setIsOpen(o => !o)}
-        className={`fixed right-4 bottom-4 z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:outline-none ${
+        className={`fixed right-4 bottom-4 z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
           isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
-            : 'bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700'
+            : 'bg-gradient-to-br from-[#00A870] to-[#009663] hover:from-[#009663] hover:to-[#008555]'
         }`}
         aria-label={isOpen ? 'Cerrar búsqueda IA' : 'Buscar con IA'}
       >
@@ -245,7 +245,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
         ) : (
           <>
             <Sparkles className="h-6 w-6 text-white" />
-            <span className="absolute inset-0 animate-ping rounded-full bg-purple-500 opacity-20" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
           </>
         )}
       </button>
@@ -259,7 +259,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
           aria-label="Búsqueda con IA"
         >
           {/* Header */}
-          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-purple-500 to-indigo-600 px-4 py-3 text-white">
+          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-[#00A870] to-[#009663] px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
                 <Sparkles className="h-5 w-5" />
@@ -303,8 +303,8 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 {/* Loading */}
                 {msg.isLoading && (
                   <div className="flex gap-2.5 px-4 py-1.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-500" />
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00A870]/10 dark:bg-[#00A870]/20">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-[#00A870]" />
                     </div>
                     <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 dark:bg-gray-800">
                       <span className="text-sm text-gray-500">Analizando tu búsqueda...</span>
@@ -327,7 +327,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 {/* User */}
                 {!msg.isLoading && !msg.isError && !msg.isFromBot && (
                   <div className="flex justify-end px-4 py-1.5">
-                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-purple-500 px-4 py-2.5 text-sm text-white">
+                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[#00A870] px-4 py-2.5 text-sm text-white">
                       {msg.content}
                     </div>
                   </div>
@@ -336,8 +336,8 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 {/* Bot */}
                 {!msg.isLoading && !msg.isError && msg.isFromBot && (
                   <div className="flex gap-2.5 px-4 py-1.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-                      <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00A870]/10 dark:bg-[#00A870]/20">
+                      <Sparkles className="h-3.5 w-3.5 text-[#00A870]" />
                     </div>
                     <div className="max-w-[80%] space-y-2">
                       <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 text-sm dark:bg-gray-800">
@@ -347,7 +347,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                       {/* AI meta badges */}
                       {msg.aiMeta && (
                         <div className="flex flex-wrap gap-1 pl-1">
-                          <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-600">
+                          <span className="rounded-full bg-[#00A870]/10 px-2 py-0.5 text-[10px] font-medium text-[#00A870]">
                             {Math.round(msg.aiMeta.confidence * 100)}% confianza
                           </span>
                           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
@@ -368,7 +368,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                             <button
                               key={i}
                               onClick={() => handleSearch(s)}
-                              className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-600 transition-colors hover:bg-purple-100"
+                              className="rounded-full border border-[#00A870]/30 bg-[#00A870]/5 px-3 py-1.5 text-xs font-medium text-[#00A870] transition-colors hover:bg-[#00A870]/15"
                             >
                               {s}
                             </button>

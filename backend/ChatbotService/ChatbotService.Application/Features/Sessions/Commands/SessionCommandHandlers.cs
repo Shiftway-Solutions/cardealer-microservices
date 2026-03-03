@@ -258,6 +258,27 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
 
         var messageForLlm = piiResult.SanitizedMessage;
 
+        // ── 5b. SEGURIDAD: Content moderation (pre-LLM) ──────────────
+        var inputModeration = ContentModerationFilter.ModerateUserMessage(messageForLlm);
+        if (!inputModeration.IsSafe)
+        {
+            _logger.LogWarning(
+                "Content moderation BLOCKED user input. Category={Category}, Reason={Reason}, Session={SessionId}",
+                inputModeration.Category, inputModeration.Reason, session.Id);
+
+            return new ChatbotResponse
+            {
+                MessageId = Guid.NewGuid(),
+                Response = inputModeration.SuggestedAction
+                    ?? "No puedo procesar ese tipo de mensaje. ¿Hay algo relacionado con el vehículo en lo que pueda ayudarte? 😊",
+                IsFallback = false,
+                IntentName = "content_moderation",
+                ConfidenceScore = 1.0m,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
+
         // ── 6. Quick Response match (bypass LLM, sin costo) ──────────
         var quickResponse = await _quickResponseRepository.FindMatchingAsync(
             config.Id, request.Message, ct);
@@ -321,13 +342,24 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 botResponse = groundingResult.SanitizedResponse;
             }
 
-            // ── 10b. DealerChatAgent: capture intent scoring fields ───
+            // ── 10b. SEGURIDAD: Content moderation on bot output ──────
+            var outputModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
+            if (!outputModeration.IsSafe)
+            {
+                _logger.LogWarning(
+                    "Bot output moderated. Category={Category}, Reason={Reason}, Session={SessionId}",
+                    outputModeration.Category, outputModeration.Reason, session.Id);
+                botResponse = outputModeration.SuggestedAction
+                    ?? "¿Hay algo más sobre el vehículo en lo que pueda ayudarte?";
+            }
+
+            // ── 10c. DealerChatAgent: capture intent scoring fields ───
             intentScore = llmResult.IntentScore;
             clasificacion = llmResult.Clasificacion;
             moduloActivo = llmResult.ModuloActivo;
             handoffActivado = llmResult.HandoffActivado;
 
-            // ── 10c. Auto-trigger handoff if Claude activated it ──────
+            // ── 10d. Auto-trigger handoff if Claude activated it ──────
             if (llmResult.HandoffActivado && session.IsBotActive)
             {
                 session.HandoffStatus = HandoffStatus.PendingHuman;

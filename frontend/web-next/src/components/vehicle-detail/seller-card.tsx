@@ -8,6 +8,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Phone,
   MessageCircle,
@@ -20,10 +21,13 @@ import {
   Bot,
   CalendarDays,
   Store,
+  LogIn,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 import type { Vehicle } from '@/types';
 
 interface SellerCardProps {
@@ -55,6 +59,9 @@ interface VehicleWithSeller extends Vehicle {
 
 export function SellerCard({ vehicle, className, onChatClick }: SellerCardProps) {
   const [showPhone, setShowPhone] = React.useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const vehicleWithSeller = vehicle as VehicleWithSeller;
   const seller = vehicleWithSeller.seller;
   const isDealer = vehicle.sellerType === 'dealer';
@@ -172,14 +179,75 @@ export function SellerCard({ vehicle, className, onChatClick }: SellerCardProps)
 
       {/* Contact Buttons */}
       <div className="mt-6 space-y-2.5">
-        {/* PRIMARY CTA: Open AI chat about this vehicle */}
+        {/* PRIMARY CTA: Chat en vivo — requires auth, redirects to /mensajes */}
         <Button
           className="h-11 w-full gap-2 bg-[#00A870] text-base font-semibold text-white shadow-md hover:bg-[#008F60]"
-          onClick={onChatClick}
+          onClick={() => {
+            if (isAuthenticated) {
+              // Redirect to messaging view with seller context
+              const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+              router.push(
+                `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}`
+              );
+            } else {
+              setShowLoginPrompt(true);
+            }
+          }}
         >
           <MessageSquare className="h-5 w-5" />
           Chat en vivo
         </Button>
+
+        {/* Login prompt for unauthenticated users */}
+        {showLoginPrompt && !isAuthenticated && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                  Inicia sesión para chatear
+                </p>
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                  Necesitas una cuenta para contactar al vendedor por chat. Es gratis y toma menos
+                  de un minuto.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1.5 bg-[#00A870] text-xs text-white hover:bg-[#008F60]"
+                    onClick={() =>
+                      router.push(
+                        `/login?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}}`)}`
+                      )
+                    }
+                  >
+                    <LogIn className="h-3.5 w-3.5" />
+                    Iniciar sesión
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    onClick={() =>
+                      router.push(
+                        `/registro?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}}`)}`
+                      )
+                    }
+                  >
+                    Crear cuenta gratis
+                  </Button>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="text-amber-400 hover:text-amber-600"
+                aria-label="Cerrar"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* SECONDARY: WhatsApp */}
         <Button
@@ -215,11 +283,22 @@ export function SellerCard({ vehicle, className, onChatClick }: SellerCardProps)
         {/* Dealer-specific extras */}
         {isDealer && (
           <>
-            <Button variant="outline" className="w-full gap-2 text-sm" asChild>
-              <Link href={`/dealers/${sellerData.id}?chat=open`}>
-                <Bot className="h-4 w-4" />
-                Chatear con Ana (IA)
-              </Link>
+            <Button
+              variant="outline"
+              className="w-full gap-2 text-sm"
+              onClick={() => {
+                if (isAuthenticated) {
+                  const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+                  router.push(
+                    `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}&dealerChat=true`
+                  );
+                } else {
+                  setShowLoginPrompt(true);
+                }
+              }}
+            >
+              <Bot className="h-4 w-4" />
+              Chatear con Ana (IA)
             </Button>
             <Button variant="outline" className="w-full gap-2 text-sm" asChild>
               <Link href={`/dealers/${sellerData.id}#agendar`}>

@@ -5,6 +5,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SearchAgent.Application.DTOs;
+using SearchAgent.Application.Services;
 using SearchAgent.Domain.Models;
 using SearchAgent.Domain.Entities;
 using SearchAgent.Domain.Interfaces;
@@ -49,6 +50,33 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             };
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // SAFETY LAYER: Prompt Injection Detection (pre-LLM)
+        // ══════════════════════════════════════════════════════════════
+        var injectionResult = PromptInjectionDetector.Detect(request.Query);
+        if (injectionResult.ShouldBlock)
+        {
+            _logger.LogWarning(
+                "Prompt injection BLOCKED in SearchAgent. Patterns={Patterns}, IP={IP}",
+                string.Join(", ", injectionResult.DetectedPatterns),
+                request.IpAddress);
+
+            sw.Stop();
+            return new SearchAgentResultDto
+            {
+                AiFilters = new SearchAgentResponse
+                {
+                    Confianza = 0.0f,
+                    ResultadoMinimoGarantizado = 0,
+                    MensajeUsuario = "¿Buscas un vehículo? Prueba con algo como 'Toyota Corolla 2020 automático' o 'SUV económica'. 🚗",
+                    Advertencias = new List<string> { "Consulta no procesable" }
+                },
+                WasCached = false,
+                LatencyMs = (int)sw.ElapsedMilliseconds,
+                IsAiSearchEnabled = true
+            };
+        }
+
         // 2. Check cache (exact match by query hash)
         string? cachedResponse = null;
         var queryHash = ComputeHash(request.Query.Trim().ToLowerInvariant());
@@ -85,7 +113,10 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             // 5. Enforce business rules post-processing
             EnforceBusinessRules(aiResponse, config);
 
-            // 6. Cache the response
+            // 6. Anti-hallucination: Sanitize response for system prompt leakage
+            PromptInjectionDetector.SanitizeResponse(aiResponse);
+
+            // 7. Cache the response
             if (config.EnableCache)
             {
                 var responseJson = JsonSerializer.Serialize(aiResponse);
