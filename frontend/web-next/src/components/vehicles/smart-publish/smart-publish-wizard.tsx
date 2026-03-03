@@ -10,6 +10,7 @@ import { PhotoUploadManager } from '@/components/vehicles/photos/photo-upload-ma
 import type { PhotoItem } from '@/components/vehicles/photos/photo-card';
 import { PricingStep } from './pricing-step';
 import { ReviewStep } from './review-step';
+import { View360Step } from './view360-step';
 import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import { useSellerByUserId } from '@/hooks/use-seller';
@@ -92,16 +93,18 @@ type WizardStep =
   | 'vin-results'
   | 'info'
   | 'photos'
+  | 'view360'
   | 'pricing'
   | 'review'
   | 'csv-import';
 
-const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'pricing', 'review'];
+const STEP_ORDER: WizardStep[] = ['method', 'info', 'photos', 'view360', 'pricing', 'review'];
 
 const STEP_LABELS: Record<string, string> = {
   method: 'Método',
   info: 'Información',
   photos: 'Fotos',
+  view360: 'Vista 360°',
   pricing: 'Precio',
   review: 'Revisión',
 };
@@ -617,7 +620,7 @@ export function SmartPublishWizard({
       }
       toast.error(err.message || 'Error al publicar el vehículo');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, createVehicle, publishVehicle, draftKey, router]);
 
   const handleSaveDraft = useCallback(() => {
@@ -786,6 +789,15 @@ export function SmartPublishWizard({
             accountType={mode === 'dealer' ? 'dealer' : 'individual'}
             show360Tab={mode === 'dealer'}
             showBgRemoval={mode === 'dealer'}
+          />
+        )}
+
+        {currentStep === 'view360' && (
+          <View360Step
+            vehicleId={formData.vin || undefined}
+            accountType={mode === 'dealer' ? 'dealer' : 'individual'}
+            onSkip={() => setCurrentStep('pricing')}
+            onComplete={() => setCurrentStep('pricing')}
           />
         )}
 

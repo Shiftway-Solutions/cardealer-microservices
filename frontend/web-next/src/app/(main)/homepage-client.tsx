@@ -22,6 +22,7 @@ import {
 } from '@/components/homepage';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { SponsoredSection, NativeBannerAd } from '@/components/advertising/native-ads';
+import { HomepageNlpSearch } from '@/components/homepage/homepage-nlp-search';
 import { useBrands, useCategories } from '@/hooks/use-advertising';
 import { useHomepageAds } from '@/hooks/use-ads';
 import type { BrandConfig, CategoryImageConfig } from '@/types/advertising';
@@ -122,6 +123,32 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
   // Sponsored vehicles for native ad slots
   const { gridSponsored, recommendedSponsored, categorySponsored } = useHomepageAds();
 
+  // Sponsored dealers for brand slider
+  const dealerSponsors = useMemo(() => {
+    // Pull dealer sponsors from the rotation/campaigns (dealers who pay for brand visibility)
+    // This uses the existing advertising system — dealers with active campaigns appear here
+    if (!apiBrands || apiBrands.length === 0) return undefined;
+    return apiBrands
+      .filter(
+        (b: BrandConfig) =>
+          b.isActive &&
+          b.logoUrl &&
+          'dealerId' in b &&
+          (b as unknown as Record<string, unknown>).dealerId
+      )
+      .sort((a: BrandConfig, b: BrandConfig) => a.displayOrder - b.displayOrder)
+      .slice(0, 10)
+      .map((b: BrandConfig) => ({
+        id: b.id,
+        name: b.displayName,
+        slug: b.brandKey.toLowerCase(),
+        logoUrl: b.logoUrl || undefined,
+        vehicleCount: b.vehicleCount,
+        isDealer: true,
+        portalSlug: b.brandKey.toLowerCase().replace(/\s+/g, '-'),
+      }));
+  }, [apiBrands]);
+
   const dynamicBrands = useMemo(() => {
     if (!apiBrands || apiBrands.length === 0) return undefined;
     return apiBrands
@@ -192,6 +219,13 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
       {/* Hero Section - Compact with vehicles visible immediately */}
       <HeroCompact vehicles={heroVehicles} isLoading={false} />
 
+      {/* AI-Powered NLP Search Bar */}
+      <section className="relative z-20 -mt-8 pb-4">
+        <div className="mx-auto max-w-4xl px-4">
+          <HomepageNlpSearch />
+        </div>
+      </section>
+
       {/* Featured Vehicles Grid - IMMEDIATE after hero */}
       <SectionContainer
         title="Más Vehículos"
@@ -205,13 +239,21 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
         )}
       </SectionContainer>
 
-      {/* Trusted Brands Slider */}
+      {/* Trusted Brands & Dealer Sponsors Slider */}
       <section className="bg-card py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
-            Las marcas más buscadas en República Dominicana
+            {dealerSponsors && dealerSponsors.length > 0
+              ? 'Dealers Destacados & Marcas Populares'
+              : 'Las marcas más buscadas en República Dominicana'}
           </h2>
-          <BrandSlider brands={dynamicBrands} autoScroll scrollSpeed={40} />
+          <BrandSlider
+            brands={dynamicBrands}
+            dealerSponsors={dealerSponsors}
+            autoScroll
+            scrollSpeed={40}
+            showDealerSponsors
+          />
         </div>
       </section>
 

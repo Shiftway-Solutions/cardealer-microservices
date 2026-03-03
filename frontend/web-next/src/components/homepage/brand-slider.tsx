@@ -9,6 +9,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useInView } from '@/hooks/use-in-view';
 
@@ -22,13 +23,17 @@ interface Brand {
   slug: string;
   logoUrl?: string;
   vehicleCount?: number;
+  isDealer?: boolean;
+  portalSlug?: string;
 }
 
 interface BrandSliderProps {
   brands?: Brand[];
+  dealerSponsors?: Brand[];
   autoScroll?: boolean;
   scrollSpeed?: number;
   className?: string;
+  showDealerSponsors?: boolean;
 }
 
 // =============================================================================
@@ -70,9 +75,21 @@ function BrandLogoPlaceholder({ name }: { name: string }) {
 // =============================================================================
 
 function BrandCard({ brand }: { brand: Brand }) {
+  const href =
+    brand.isDealer && brand.portalSlug
+      ? `/portal/${brand.portalSlug}`
+      : `/vehiculos?make=${brand.slug}`;
+
   return (
-    <Link href={`/vehiculos?make=${brand.slug}`} className="group flex-shrink-0">
-      <div className="border-border bg-card hover:border-primary/30 relative h-24 w-32 overflow-hidden rounded-2xl border shadow-md transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-xl active:scale-[0.98] md:h-28 md:w-40">
+    <Link href={href} className="group flex-shrink-0">
+      <div
+        className={cn(
+          'relative h-24 w-32 overflow-hidden rounded-2xl border shadow-md transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-xl active:scale-[0.98] md:h-28 md:w-40',
+          brand.isDealer
+            ? 'border-emerald-200 bg-gradient-to-br from-white to-emerald-50 hover:border-emerald-400'
+            : 'border-border bg-card hover:border-primary/30'
+        )}
+      >
         {/* Logo Container */}
         <div className="absolute inset-2 flex items-center justify-center">
           {brand.logoUrl ? (
@@ -146,12 +163,29 @@ function InfiniteScroll({
 
 export function BrandSlider({
   brands = DEFAULT_BRANDS,
+  dealerSponsors,
   autoScroll = true,
   scrollSpeed = 30,
   className,
+  showDealerSponsors = true,
 }: BrandSliderProps) {
+  // Merge dealer sponsors with brands, sponsors go first
+  const allBrands = useMemo(() => {
+    if (!showDealerSponsors || !dealerSponsors || dealerSponsors.length === 0) return brands;
+    return [...dealerSponsors, ...brands];
+  }, [brands, dealerSponsors, showDealerSponsors]);
+
   return (
     <div className={cn('relative overflow-hidden py-4', className)}>
+      {/* Dealer Sponsors Label */}
+      {showDealerSponsors && dealerSponsors && dealerSponsors.length > 0 && (
+        <div className="mb-3 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Dealers Patrocinadores
+          </span>
+        </div>
+      )}
       {/* Gradient Masks */}
       <div className="from-background pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-20 bg-gradient-to-r to-transparent md:w-40" />
       <div className="from-background pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-20 bg-gradient-to-l to-transparent md:w-40" />
@@ -159,10 +193,10 @@ export function BrandSlider({
       {/* Scrolling Container */}
       <div className="flex gap-4 overflow-hidden md:gap-6">
         {autoScroll ? (
-          <InfiniteScroll brands={brands} speed={scrollSpeed} />
+          <InfiniteScroll brands={allBrands} speed={scrollSpeed} />
         ) : (
           <div className="scrollbar-hide flex gap-4 overflow-x-auto px-4 md:gap-6">
-            {brands.map(brand => (
+            {allBrands.map(brand => (
               <BrandCard key={brand.id} brand={brand} />
             ))}
           </div>

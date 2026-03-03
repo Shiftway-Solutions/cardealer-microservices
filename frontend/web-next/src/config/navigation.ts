@@ -224,6 +224,8 @@ export const ADMIN_MANAGEMENT_NAVIGATION: NavItem[] = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/contenido', label: 'Contenido', icon: FileText },
   { href: '/admin/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { href: '/admin/planes', label: 'Planes de Suscripción', icon: Package },
+  { href: '/admin/espacios-publicitarios', label: 'Espacios Publicitarios', icon: Megaphone },
 ];
 
 export const ADMIN_SYSTEM_NAVIGATION: NavItem[] = [
