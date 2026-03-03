@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/use-auth';
 import { SiteConfigProvider } from '@/providers/site-config-provider';
+import { TrackingProvider } from '@/components/providers/tracking-provider';
 
 // Lazy-load devtools — only in development, excluded from production bundle
 const ReactQueryDevtools =
@@ -68,7 +69,9 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SiteConfigProvider>
-          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+          <TrackingProvider>
+            <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+          </TrackingProvider>
         </SiteConfigProvider>
       </AuthProvider>
       <React.Suspense fallback={null}>

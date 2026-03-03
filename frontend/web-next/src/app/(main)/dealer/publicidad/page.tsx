@@ -243,10 +243,14 @@ function DealerPublicidadContent() {
         {/* Quick links */}
         <div className="mt-4 mb-2 flex gap-2">
           <Link href="/dealer/publicidad/estadisticas">
-            <Button variant="outline" size="sm">📊 Estadísticas Detalladas</Button>
+            <Button variant="outline" size="sm">
+              📊 Estadísticas Detalladas
+            </Button>
           </Link>
           <Link href="/dealer/publicidad/roi">
-            <Button variant="outline" size="sm">💰 Calculadora ROI</Button>
+            <Button variant="outline" size="sm">
+              💰 Calculadora ROI
+            </Button>
           </Link>
         </div>
 

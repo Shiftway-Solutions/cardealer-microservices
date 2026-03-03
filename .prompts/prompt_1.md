@@ -1,4 +1,6 @@
-Ahora te tengo una nueva tarea. Yo necesito guardar todos los datos necesarios de los usuarios tanto logueados como no logueados y identificarlo por equipos, para lo que no tienen cuenta y pero tambien lo que tienen cuenta necesito saber de que equipo se estan conectando. Y quiero que levantes todos los datos necesarios para que me hagas un algoritmo para predecir cuales son los leads de compradores, que tiene alta condu
+Ahora te tengo una nueva tarea. Yo necesito guardar todos los datos necesarios de los usuarios tanto logueados como no logueados y identificarlo por equipos, para lo que no tienen cuenta y pero tambien lo que tienen cuenta necesito saber de que equipo se estan conectando. Y quiero que levantes todos los datos necesarios para que me hagas un algoritmo para predecir cuales son los leads de compradores, que tiene alta probabilidad para hacer una compra y necesitas utilizar IA para esto implementala en la plataforma para que esas usuarios vean la publicidad de los dealers que estan pagando mas en publicidad.
+
+Y tambien enecesito que si una persona 
 
 Y luego haz el ci/cd y monitorealo hasta que todo el codigo llegue a produccion y luego haz las pruebas de e2e.
 

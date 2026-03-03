@@ -13,7 +13,8 @@ import type {
 // Tries backend first, falls back to demo data for development.
 // =============================================================================
 
-const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
+const API_URL =
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
 
 export async function GET(request: NextRequest) {
   const ownerId = request.nextUrl.searchParams.get('ownerId');
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
       const campaignsData = await campaignsRes.json();
 
       const owner = ownerData.data || ownerData;
-      const campaigns = campaignsData.data?.items || campaignsData.data || campaignsData.items || [];
+      const campaigns =
+        campaignsData.data?.items || campaignsData.data || campaignsData.items || [];
 
       const report = buildReport(ownerId, owner, campaigns, period);
       return NextResponse.json({ success: true, data: report });
@@ -92,7 +94,8 @@ function buildReport(
     completedCampaigns: totalCampaigns - activeCampaigns,
     totalImpressions,
     totalClicks,
-    overallCtr: owner.overallCtr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0),
+    overallCtr:
+      owner.overallCtr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0),
     totalSpent,
     totalBudget,
     budgetUtilization: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
@@ -100,15 +103,16 @@ function buildReport(
     costPerMil: totalImpressions > 0 ? (totalSpent / totalImpressions) * 1000 : 0,
     estimatedLeads: Math.round(totalClicks * 0.08),
     costPerLead: totalClicks > 0 ? totalSpent / Math.max(1, Math.round(totalClicks * 0.08)) : 0,
-    dailyTrend: owner.dailyImpressions?.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (d: any, i: number) => ({
-        date: d.date,
-        views: d.views || d.count || 0,
-        clicks: owner.dailyClicks?.[i]?.count || owner.dailyClicks?.[i]?.clicks || 0,
-        spent: 0,
-      })
-    ) || [],
+    dailyTrend:
+      owner.dailyImpressions?.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (d: any, i: number) => ({
+          date: d.date,
+          views: d.views || d.count || 0,
+          clicks: owner.dailyClicks?.[i]?.count || owner.dailyClicks?.[i]?.clicks || 0,
+          spent: 0,
+        })
+      ) || [],
     impressionsChange: 0,
     clicksChange: 0,
     ctrChange: 0,

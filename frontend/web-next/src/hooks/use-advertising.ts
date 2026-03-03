@@ -294,10 +294,7 @@ export function useOwnerReport(
  * Fetch the enhanced advertiser report (with CPC, CPM, CPL, budget utilization,
  * period comparison, and per-campaign breakdown) from the BFF route.
  */
-export function useAdvertiserReport(
-  ownerId: string,
-  period: '7d' | '30d' | '90d' = '7d'
-) {
+export function useAdvertiserReport(ownerId: string, period: '7d' | '30d' | '90d' = '7d') {
   return useQuery<AdvertiserReport>({
     queryKey: advertisingKeys.advertiserReport(ownerId, period),
     queryFn: async () => {

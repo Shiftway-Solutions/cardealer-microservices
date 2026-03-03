@@ -246,13 +246,13 @@ export interface AdvertiserReportSummary {
   overallCtr: number;
   totalSpent: number;
   totalBudget: number;
-  budgetUtilization: number;   // % of budget used
-  costPerClick: number;        // totalSpent / totalClicks
-  costPerMil: number;          // (totalSpent / totalImpressions) * 1000
+  budgetUtilization: number; // % of budget used
+  costPerClick: number; // totalSpent / totalClicks
+  costPerMil: number; // (totalSpent / totalImpressions) * 1000
   estimatedLeads: number;
   costPerLead: number;
   dailyTrend: DailyDataPoint[];
-  impressionsChange: number;   // vs previous period %
+  impressionsChange: number; // vs previous period %
   clicksChange: number;
   ctrChange: number;
   spendChange: number;
