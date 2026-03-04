@@ -18,7 +18,6 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Sparkles, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { aiSearch, aiFiltersToUrlParams } from '@/services/search-agent';
 
 // ============================================================
 // SUGGESTION CHIPS — Common Dominican searches
@@ -47,50 +46,17 @@ export function HomepageNlpSearch({ className }: HomepageNlpSearchProps) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
 
   const handleSearch = useCallback(
-    async (searchQuery?: string) => {
+    (searchQuery?: string) => {
       const q = (searchQuery || query).trim();
       if (!q) return;
 
+      // Navigate immediately — AI parsing happens in the background on the
+      // vehicles page, so the user sees the results page right away instead
+      // of waiting ~10s for the AI response before navigating.
       setIsSearching(true);
-      setError(null);
-
-      try {
-        // Call the SearchAgent AI to parse natural language → filters
-        const result = await aiSearch({ query: q });
-
-        if (result.aiFilters?.filtros_exactos) {
-          // Convert AI filters to URL-compatible search params (snake_case)
-          const params = aiFiltersToUrlParams(result.aiFilters.filtros_exactos);
-
-          // Build query string
-          const searchParams = new URLSearchParams();
-          searchParams.set('q', q); // Keep original query for display
-
-          Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-              searchParams.set(key, String(value));
-            }
-          });
-
-          // Add sort if AI suggested one
-          if (result.aiFilters.ordenar_por) {
-            searchParams.set('sortBy', result.aiFilters.ordenar_por);
-          }
-
-          router.push(`/vehiculos?${searchParams.toString()}`);
-        } else {
-          // Fallback: just send the raw query
-          router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
-        }
-      } catch {
-        // Fallback to basic search on error
-        router.push(`/vehiculos?q=${encodeURIComponent(q)}`);
-      } finally {
-        setIsSearching(false);
-      }
+      router.push(`/vehiculos?ai_query=${encodeURIComponent(q)}`);
     },
     [query, router]
   );

@@ -572,6 +572,25 @@ export default function VehiculosClient() {
     [isAiSearching, setFilters]
   );
 
+  // Auto-trigger AI search when landing from homepage NLP search.
+  // The homepage now navigates instantly with just ?ai_query=<raw> (no pre-parsed
+  // filters), so the vehicles page is responsible for running the AI in the background.
+  const hasAutoTriggeredAiRef = React.useRef(false);
+  React.useEffect(() => {
+    const aiQuery = urlSearchParams.get('ai_query');
+    if (!aiQuery || hasAutoTriggeredAiRef.current) return;
+
+    // Skip if the URL already contains structured filters (old-style redirect)
+    const hasMake = urlSearchParams.get('make');
+    const hasModel = urlSearchParams.get('model');
+    if (hasMake || hasModel) return;
+
+    hasAutoTriggeredAiRef.current = true;
+    // Run AI parsing in the background — user already sees the vehicles page
+    handleAiSearch(aiQuery);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
+
   // Sync searchInput with filters.query from URL.
   // Skip when AI search is active or AI info is shown (searchInput holds the reformulated query).
   React.useEffect(() => {
