@@ -61,8 +61,8 @@ export interface VehicleSearchFilters {
   features?: string[];
 
   // Extended DR-market filters
-  seats?: number;       // min seats
-  cylinders?: number;   // engine cylinders (3, 4, 6, 8)
+  seats?: number; // min seats
+  cylinders?: number; // engine cylinders (3, 4, 6, 8)
   interiorColor?: string;
 
   // Pagination

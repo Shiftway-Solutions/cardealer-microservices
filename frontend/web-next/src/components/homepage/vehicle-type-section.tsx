@@ -151,19 +151,58 @@ const accentClasses: Record<string, { badge: string; price: string; viewAll: str
 
 // Gradient bg + icon color for empty placeholder circles (dealer-card style)
 const accentIconClasses: Record<string, { bg: string; icon: string }> = {
-  blue: { bg: 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30', icon: 'text-blue-500 dark:text-blue-400' },
-  sky: { bg: 'bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900/30 dark:to-sky-800/30', icon: 'text-sky-500 dark:text-sky-400' },
-  emerald: { bg: 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30', icon: 'text-emerald-600 dark:text-emerald-400' },
-  violet: { bg: 'bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30', icon: 'text-violet-600 dark:text-violet-400' },
-  amber: { bg: 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30', icon: 'text-amber-600 dark:text-amber-400' },
-  orange: { bg: 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30', icon: 'text-orange-600 dark:text-orange-400' },
-  rose: { bg: 'bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30', icon: 'text-rose-600 dark:text-rose-400' },
-  pink: { bg: 'bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30', icon: 'text-pink-600 dark:text-pink-400' },
-  slate: { bg: 'bg-gradient-to-br from-slate-100 to-gray-100 dark:from-slate-800/50 dark:to-gray-800/50', icon: 'text-slate-500 dark:text-slate-400' },
-  yellow: { bg: 'bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30', icon: 'text-yellow-600 dark:text-yellow-400' },
-  teal: { bg: 'bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/30 dark:to-emerald-900/30', icon: 'text-teal-600 dark:text-teal-400' },
-  indigo: { bg: 'bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30', icon: 'text-indigo-600 dark:text-indigo-400' },
-  purple: { bg: 'bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30', icon: 'text-purple-600 dark:text-purple-400' },
+  blue: {
+    bg: 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30',
+    icon: 'text-blue-500 dark:text-blue-400',
+  },
+  sky: {
+    bg: 'bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900/30 dark:to-sky-800/30',
+    icon: 'text-sky-500 dark:text-sky-400',
+  },
+  emerald: {
+    bg: 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30',
+    icon: 'text-emerald-600 dark:text-emerald-400',
+  },
+  violet: {
+    bg: 'bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30',
+    icon: 'text-violet-600 dark:text-violet-400',
+  },
+  amber: {
+    bg: 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30',
+    icon: 'text-amber-600 dark:text-amber-400',
+  },
+  orange: {
+    bg: 'bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30',
+    icon: 'text-orange-600 dark:text-orange-400',
+  },
+  rose: {
+    bg: 'bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30',
+    icon: 'text-rose-600 dark:text-rose-400',
+  },
+  pink: {
+    bg: 'bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30',
+    icon: 'text-pink-600 dark:text-pink-400',
+  },
+  slate: {
+    bg: 'bg-gradient-to-br from-slate-100 to-gray-100 dark:from-slate-800/50 dark:to-gray-800/50',
+    icon: 'text-slate-500 dark:text-slate-400',
+  },
+  yellow: {
+    bg: 'bg-gradient-to-br from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30',
+    icon: 'text-yellow-600 dark:text-yellow-400',
+  },
+  teal: {
+    bg: 'bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/30 dark:to-emerald-900/30',
+    icon: 'text-teal-600 dark:text-teal-400',
+  },
+  indigo: {
+    bg: 'bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30',
+    icon: 'text-indigo-600 dark:text-indigo-400',
+  },
+  purple: {
+    bg: 'bg-gradient-to-br from-purple-100 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30',
+    icon: 'text-purple-600 dark:text-purple-400',
+  },
 };
 
 // ─────────────────────────────────────────────
@@ -188,7 +227,7 @@ function VehicleCard({
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
-      <Card className="flex h-full flex-col overflow-hidden border-0 shadow-md transition-shadow hover:shadow-xl">
+      <Card className="flex h-full flex-col overflow-hidden border border-border shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-[#00A870]/50 hover:shadow-xl">
         <div className="bg-muted relative aspect-[4/3]">
           <Image
             src={primaryImage}
@@ -253,7 +292,9 @@ function EmptyVehicleCard({
   return (
     <Card className="flex h-full flex-col overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
       <div className="flex aspect-[4/3] items-center justify-center bg-slate-50 dark:bg-slate-800/30">
-        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-300 ${iconClasses.bg}`}>
+        <div
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-300 ${iconClasses.bg}`}
+        >
           {/* Use section icon, forcing size via !important so it overrides the source className */}
           <span className={`[&_svg]:!h-8 [&_svg]:!w-8 ${iconClasses.icon}`}>
             {icon ?? <Car className="h-8 w-8" />}

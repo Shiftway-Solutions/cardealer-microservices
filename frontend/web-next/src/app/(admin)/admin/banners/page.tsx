@@ -112,9 +112,9 @@ function BannerFormDialog({ open, initialData, onClose, onSave, loading }: Banne
     setForm(initialData ?? EMPTY_FORM);
   }, [initialData, open]);
 
-  const field = (key: keyof Banner) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setForm(prev => ({ ...prev, [key]: e.target.value }));
+  const field =
+    (key: keyof Banner) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm(prev => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,11 +367,16 @@ export default function BannersPage() {
         <div>
           <h1 className="text-foreground text-2xl font-bold">Banners Publicitarios</h1>
           <p className="text-muted-foreground text-sm">
-            {activeCount} activo{activeCount !== 1 ? 's' : ''} · Los cambios se reflejan en el
-            sitio en &lt;60&nbsp;segundos
+            {activeCount} activo{activeCount !== 1 ? 's' : ''} · Los cambios se reflejan en el sitio
+            en &lt;60&nbsp;segundos
           </p>
         </div>
-        <Button onClick={() => { setEditTarget(null); setFormOpen(true); }}>
+        <Button
+          onClick={() => {
+            setEditTarget(null);
+            setFormOpen(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Banner
         </Button>
@@ -379,13 +384,13 @@ export default function BannersPage() {
 
       {/* Placement info callout */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
-        <strong>Ubicación &quot;/vehiculos — Leaderboard&quot;</strong>: aparece entre los resultados de
-        búsqueda. Los anuncios con estado <em>Activo</em> y fecha vigente se muestran
+        <strong>Ubicación &quot;/vehiculos — Leaderboard&quot;</strong>: aparece entre los
+        resultados de búsqueda. Los anuncios con estado <em>Activo</em> y fecha vigente se muestran
         automáticamente.
       </div>
 
       {/* Banner Grid */}
-      {(!banners || banners.length === 0) ? (
+      {!banners || banners.length === 0 ? (
         <div className="flex min-h-[300px] items-center justify-center rounded-2xl border-2 border-dashed">
           <div className="text-center">
             <ImageIcon className="text-muted-foreground mx-auto h-12 w-12" />
@@ -393,7 +398,13 @@ export default function BannersPage() {
             <p className="text-muted-foreground text-sm">
               Crea el primer banner para que aparezca en /vehiculos
             </p>
-            <Button className="mt-4" onClick={() => { setEditTarget(null); setFormOpen(true); }}>
+            <Button
+              className="mt-4"
+              onClick={() => {
+                setEditTarget(null);
+                setFormOpen(true);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Crear primer banner
             </Button>
@@ -466,7 +477,10 @@ export default function BannersPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => { setEditTarget(banner); setFormOpen(true); }}
+                    onClick={() => {
+                      setEditTarget(banner);
+                      setFormOpen(true);
+                    }}
                   >
                     <Edit className="mr-1 h-3 w-3" />
                     Editar
@@ -490,7 +504,10 @@ export default function BannersPage() {
       <BannerFormDialog
         open={formOpen}
         initialData={editTarget ?? undefined}
-        onClose={() => { setFormOpen(false); setEditTarget(null); }}
+        onClose={() => {
+          setFormOpen(false);
+          setEditTarget(null);
+        }}
         onSave={editTarget ? handleUpdate : handleCreate}
         loading={createBanner.isPending || updateBanner.isPending}
       />
@@ -507,10 +524,7 @@ export default function BannersPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -338,8 +338,8 @@ export interface VehicleSearchParams extends SearchParams {
   features?: string[];
   dealRating?: DealRating;
   // Extended DR-market filters
-  seats?: number;         // min seats
-  cylinders?: number;    // engine cylinders
+  seats?: number; // min seats
+  cylinders?: number; // engine cylinders
   interiorColor?: string;
 }
 

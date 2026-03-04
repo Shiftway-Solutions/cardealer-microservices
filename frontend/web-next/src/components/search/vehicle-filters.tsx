@@ -835,8 +835,7 @@ export function VehicleFilters({
                     title={c.label}
                     onClick={() =>
                       onChange({
-                        interiorColor:
-                          filters.interiorColor === c.value ? undefined : c.value,
+                        interiorColor: filters.interiorColor === c.value ? undefined : c.value,
                       })
                     }
                     className={cn(
