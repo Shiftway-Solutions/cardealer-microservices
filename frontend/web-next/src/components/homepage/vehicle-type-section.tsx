@@ -11,6 +11,7 @@
 
 'use client';
 
+import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -56,7 +57,7 @@ export interface VehicleTypeSectionConfig {
   filterValue: string;
   title: string;
   subtitle?: string;
-  icon?: string;
+  icon?: ReactNode;
   viewAllHref: string; // e.g. /vehiculos?bodyType=suv
   accentColor?: string; // Tailwind color token: "blue", "emerald", "amber", etc.
 }
@@ -138,8 +139,8 @@ function VehicleCard({
   const primaryImage =
     vehicle.images
       ?.filter(img => img.url && !img.url.startsWith('blob:'))
-      .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]
-      ?.url || '/placeholder-car.jpg';
+      .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url ||
+    '/placeholder-car.jpg';
 
   const location = [vehicle.city, vehicle.state].filter(Boolean).join(', ') || 'R.D.';
 
@@ -263,7 +264,7 @@ export default function VehicleTypeSection({
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-foreground text-2xl font-bold leading-tight tracking-tight">
+            <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
               {icon && <span className="mr-2">{icon}</span>}
               {title}
             </h2>

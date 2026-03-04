@@ -8,13 +8,14 @@
 'use client';
 
 import { useMemo } from 'react';
-import { HeroCompact, BrandSlider, WhyChooseUs, CTASection } from '@/components/homepage';
+import { HeroCompact, WhyChooseUs, CTASection } from '@/components/homepage';
 import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { useBrands } from '@/hooks/use-advertising';
 import type { BrandConfig } from '@/types/advertising';
+import { Car, Truck, Gauge, Leaf, Zap } from 'lucide-react';
 
 // =============================================
 // COMPONENT
@@ -48,20 +49,6 @@ export default function HomepageClient() {
       }));
   }, [apiBrands]);
 
-  const dynamicBrands = useMemo(() => {
-    if (!apiBrands || apiBrands.length === 0) return undefined;
-    return apiBrands
-      .filter((b: BrandConfig) => b.isActive)
-      .sort((a: BrandConfig, b: BrandConfig) => a.displayOrder - b.displayOrder)
-      .map((b: BrandConfig) => ({
-        id: b.id,
-        name: b.displayName,
-        slug: b.brandKey.toLowerCase(),
-        logoUrl: b.logoUrl || undefined,
-        vehicleCount: b.vehicleCount,
-      }));
-  }, [apiBrands]);
-
   // Stable impression token for the dealer banner
   const bannerImpressionToken = 'banner-dealer-cta-homepage';
 
@@ -81,21 +68,6 @@ export default function HomepageClient() {
       {/* 4. Dealers Patrocinados — espacios pagados por dealers */}
       <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
 
-      {/* 5. Marcas más buscadas en República Dominicana */}
-      <section className="bg-muted/30 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-muted-foreground mb-4 text-center text-xs font-semibold tracking-widest uppercase">
-            Las marcas más buscadas en República Dominicana
-          </h2>
-          <BrandSlider
-            brands={dynamicBrands}
-            autoScroll
-            scrollSpeed={40}
-            showDealerSponsors={false}
-          />
-        </div>
-      </section>
-
       {/* ── SECCIONES POR TIPO DE VEHÍCULO ──────────────────────────────── */}
       {/* Same card size as ⭐ Destacados — 4-column large-photo grid.      */}
       {/* Each section fetches live data from the vehicles API by type.     */}
@@ -105,7 +77,7 @@ export default function HomepageClient() {
         filterValue="SUV"
         title="SUVs"
         subtitle="Los más solicitados en República Dominicana"
-        icon="🚙"
+        icon={<Truck className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=suv"
         accentColor="blue"
       />
@@ -115,7 +87,7 @@ export default function HomepageClient() {
         filterValue="Sedan"
         title="Sedanes"
         subtitle="Comodidad y eficiencia para el día a día"
-        icon="🚗"
+        icon={<Car className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=sedan"
         accentColor="emerald"
       />
@@ -137,7 +109,7 @@ export default function HomepageClient() {
         filterValue="Pickup"
         title="Camionetas"
         subtitle="Potencia y versatilidad para trabajo y aventura"
-        icon="🛻"
+        icon={<Truck className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=pickup"
         accentColor="amber"
       />
@@ -147,7 +119,7 @@ export default function HomepageClient() {
         filterValue="Coupe"
         title="Deportivos"
         subtitle="Rendimiento y estilo en cada curva"
-        icon="🏎️"
+        icon={<Gauge className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?bodyType=coupe"
         accentColor="rose"
       />
@@ -158,7 +130,7 @@ export default function HomepageClient() {
         filterValue="Hybrid"
         title="Híbridos"
         subtitle="Mayor eficiencia, menor impacto ambiental"
-        icon="🌿"
+        icon={<Leaf className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?fuelType=hibrido"
         accentColor="teal"
       />
@@ -169,7 +141,7 @@ export default function HomepageClient() {
         filterValue="Electric"
         title="Eléctricos"
         subtitle="El futuro de la movilidad ya está aquí"
-        icon="⚡"
+        icon={<Zap className="inline-block h-6 w-6" />}
         viewAllHref="/vehiculos?fuelType=electrico"
         accentColor="indigo"
       />
