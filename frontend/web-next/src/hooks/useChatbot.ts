@@ -26,6 +26,8 @@ import {
 export interface UseChatbotOptions {
   /** Dealer ID to scope the chat session */
   dealerId?: string;
+  /** Dealer display name — stored in localStorage so the /mensajes sidebar can list it */
+  dealerName?: string;
   /** Whether to auto-start session when hook mounts */
   autoStart?: boolean;
   /** Max retries for failed messages */
@@ -78,6 +80,7 @@ const MAX_STORED_MESSAGES = 50;
 export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   const {
     dealerId,
+    dealerName,
     autoStart = false,
     maxRetries: _maxRetries = 2,
     onLeadGenerated,
@@ -88,15 +91,12 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   // ── Dealer-scoped storage keys ──────────────────────────────────────────
   // Using dealerId in the key prevents cross-dealer session contamination:
   // opening Dealer B's bot won't restore Dealer A's expired session token.
-  const SESSION_KEY = dealerId
-    ? `okla_chat_session_${dealerId}`
-    : 'okla_chat_session_default';
-  const MESSAGES_KEY = dealerId
-    ? `okla_chat_messages_${dealerId}`
-    : 'okla_chat_messages_default';
-  const BOT_NAME_KEY = dealerId
-    ? `okla_chat_botname_${dealerId}`
-    : 'okla_chat_botname_default';
+  // We use localStorage (not sessionStorage) so conversations persist across
+  // page reloads and appear in the /mensajes "Asistentes IA" history sidebar.
+  const SESSION_KEY = dealerId ? `okla_chat_session_${dealerId}` : 'okla_chat_session_default';
+  const MESSAGES_KEY = dealerId ? `okla_chat_messages_${dealerId}` : 'okla_chat_messages_default';
+  const BOT_NAME_KEY = dealerId ? `okla_chat_botname_${dealerId}` : 'okla_chat_botname_default';
+  const DEALER_NAME_KEY = dealerId ? `okla_chat_dealername_${dealerId}` : null;
 
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -125,13 +125,14 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   const saveSession = useCallback(
     (token: string, bName?: string) => {
       try {
-        sessionStorage.setItem(SESSION_KEY, token);
-        if (bName) sessionStorage.setItem(BOT_NAME_KEY, bName);
+        localStorage.setItem(SESSION_KEY, token);
+        if (bName) localStorage.setItem(BOT_NAME_KEY, bName);
+        if (DEALER_NAME_KEY && dealerName) localStorage.setItem(DEALER_NAME_KEY, dealerName);
       } catch {
-        // sessionStorage not available
+        // localStorage not available
       }
     },
-    [SESSION_KEY, BOT_NAME_KEY]
+    [SESSION_KEY, BOT_NAME_KEY, DEALER_NAME_KEY, dealerName]
   );
 
   const saveMessages = useCallback(
@@ -141,9 +142,9 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
           ...m,
           timestamp: m.timestamp.toISOString(),
         }));
-        sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(toStore));
+        localStorage.setItem(MESSAGES_KEY, JSON.stringify(toStore));
       } catch {
-        // sessionStorage not available
+        // localStorage not available
       }
     },
     [MESSAGES_KEY]
@@ -151,13 +152,14 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
 
   const clearStorage = useCallback(() => {
     try {
-      sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(MESSAGES_KEY);
-      sessionStorage.removeItem(BOT_NAME_KEY);
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(MESSAGES_KEY);
+      localStorage.removeItem(BOT_NAME_KEY);
+      if (DEALER_NAME_KEY) localStorage.removeItem(DEALER_NAME_KEY);
     } catch {
-      // sessionStorage not available
+      // localStorage not available
     }
-  }, [SESSION_KEY, MESSAGES_KEY, BOT_NAME_KEY]);
+  }, [SESSION_KEY, MESSAGES_KEY, BOT_NAME_KEY, DEALER_NAME_KEY]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Restore session on mount
@@ -169,9 +171,9 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     // SESSION_KEY / MESSAGES_KEY / BOT_NAME_KEY are stable for the lifetime of
     // this component instance (parent mounts with key={conversationId}).
     try {
-      const savedToken = sessionStorage.getItem(SESSION_KEY);
-      const savedMessages = sessionStorage.getItem(MESSAGES_KEY);
-      const savedBotName = sessionStorage.getItem(BOT_NAME_KEY);
+      const savedToken = localStorage.getItem(SESSION_KEY);
+      const savedMessages = localStorage.getItem(MESSAGES_KEY);
+      const savedBotName = localStorage.getItem(BOT_NAME_KEY);
 
       if (savedToken) {
         setSessionToken(savedToken);

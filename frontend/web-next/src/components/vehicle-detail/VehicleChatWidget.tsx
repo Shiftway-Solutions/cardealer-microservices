@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * VehicleChatWidget — ChatbotService AI assistant for vehicle detail pages.
+ * VehicleChatWidget — OKLA Support AI assistant for vehicle detail pages.
  *
- * Uses ChatbotService (Claude Sonnet 4.5) in SingleVehicle mode.
- * Opens when user clicks "Chat en vivo" or the vehicle chat bubble.
- * Provides vehicle-specific Q&A, negotiation assistance, and appointment scheduling.
+ * Uses ChatbotService (Claude Sonnet 4.5) in global OKLA support mode (no dealer scoping).
+ * Opens when user clicks the OKLA support bubble.
+ * Provides platform-level support: questions about the vehicle, help buying, contact info.
  */
 
 import { useRef, useEffect } from 'react';
@@ -27,17 +27,17 @@ export function VehicleChatWidget({
   isOpenInitial = false,
   onOpenChange,
 }: VehicleChatWidgetProps) {
+  // No dealerId — global OKLA support mode (not dealer-specific)
   const chat = useChatbot({
-    dealerId: vehicle.sellerType === 'dealer' ? vehicle.sellerId : undefined,
     maxRetries: 2,
     onLeadGenerated: leadId => {
-      console.log('[OKLA VehicleChat] Lead generated:', leadId);
+      console.log('[OKLA Support] Lead generated:', leadId);
     },
     onTransfer: agentName => {
-      console.log('[OKLA VehicleChat] Transferred to:', agentName);
+      console.log('[OKLA Support] Transferred to:', agentName);
     },
     onLimitReached: () => {
-      console.log('[OKLA VehicleChat] Limit reached');
+      console.log('[OKLA Support] Limit reached');
     },
   });
 
@@ -54,7 +54,7 @@ export function VehicleChatWidget({
     onOpenChange?.(chat.isOpen);
   }, [chat.isOpen, onOpenChange]);
 
-  // Send vehicle context as first message when session starts
+  // Send vehicle context when session starts so OKLA support knows which vehicle the user is viewing
   const sentContextRef = useRef(false);
   useEffect(() => {
     if (chat.isConnected && !sentContextRef.current && chat.messages.length <= 1) {
@@ -64,32 +64,31 @@ export function VehicleChatWidget({
         vehicle.currency === 'USD'
           ? `US$${vehicle.price.toLocaleString()}`
           : `RD$${vehicle.price.toLocaleString()}`;
-      // Auto-send vehicle context
       chat.sendMessage(
-        `Estoy viendo el ${vehicleTitle} (${price}). Quiero más información sobre este vehículo.`
+        `Hola, estoy viendo el ${vehicleTitle} (${price}) en OKLA. ¿Me pueden ayudar con información sobre este vehículo?`
       );
     }
   }, [chat.isConnected, chat.messages.length, vehicle, chat]);
 
   return (
     <>
-      {/* Floating vehicle chat bubble — blue branded */}
+      {/* OKLA Support floating bubble — green branded */}
       <button
         onClick={chat.toggle}
-        className={`fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none ${
+        className={`fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
           chat.isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
-            : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+            : 'bg-gradient-to-r from-[#00A870] to-emerald-600 hover:from-[#009060] hover:to-emerald-700'
         }`}
-        aria-label={chat.isOpen ? 'Cerrar chat del vehículo' : 'Chatear sobre este vehículo'}
+        aria-label={chat.isOpen ? 'Cerrar soporte OKLA' : 'Abrir asistente de soporte OKLA'}
       >
         {chat.isOpen ? (
           <X className="h-5 w-5 text-white" />
         ) : (
           <>
             <Bot className="h-5 w-5 text-white" />
-            <span className="text-sm font-semibold text-white max-sm:hidden">Chat IA</span>
-            <span className="absolute inset-0 animate-ping rounded-full bg-blue-500 opacity-20" />
+            <span className="text-sm font-semibold text-white max-sm:hidden">Soporte OKLA</span>
+            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
           </>
         )}
       </button>
@@ -101,7 +100,7 @@ export function VehicleChatWidget({
         isLoading={chat.isLoading}
         isConnected={chat.isConnected}
         isLimitReached={chat.isLimitReached}
-        botName={`Asesor IA · ${vehicle.make} ${vehicle.model}`}
+        botName="Soporte OKLA"
         botAvatarUrl={chat.botAvatarUrl}
         remainingInteractions={chat.remainingInteractions}
         error={chat.error}
