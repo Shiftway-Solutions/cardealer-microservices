@@ -141,10 +141,8 @@ export default function HomepageClient({ sections, fallbackVehicles = [] }: Home
       {/* 3. 💎 Vehículos Premium — espacio pagado PremiumSpot */}
       <FeaturedVehicles title="💎 Vehículos Premium" placementType="PremiumSpot" maxItems={8} />
 
-      {/* 4. Dealers Patrocinados — espacios pagados por dealers (only when at least 1 is active) */}
-      {dealerSponsors && dealerSponsors.length > 0 && (
-        <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
-      )}
+      {/* 4. Dealers Patrocinados — espacios pagados por dealers */}
+      <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
 
       {/* 5. Marcas más buscadas en República Dominicana */}
       <section className="bg-muted/30 py-8">

@@ -281,22 +281,27 @@ function VehiclesGridSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
 }
 
 // =============================================================================
-// SPONSORED ROW — Full-width row of 3 ad vehicles inserted every 2 grid rows
+// SPONSORED ROW — Green-bordered banner inserted every 2 grid rows (6 organic items)
 // =============================================================================
 
 function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
   if (!vehicles.length) return null;
   const show = vehicles.slice(0, 3);
   return (
-    <div className="col-span-full my-1">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-muted-foreground text-xs">Vehículos patrocinados</span>
-        <SponsoredBadge tier="sponsored" />
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {show.map(v => (
-          <SponsoredVehicleCard key={v.id} vehicle={v} />
-        ))}
+    <div className="col-span-full my-3">
+      {/* Green banner container — visually separates sponsored from organic */}
+      <div className="rounded-xl border-2 border-[#00A870] bg-[#00A870]/5 px-4 py-4 dark:bg-[#00A870]/10">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[11px] font-semibold tracking-wider text-[#00A870] uppercase">
+            Vehículos Patrocinados
+          </span>
+          <SponsoredBadge tier="sponsored" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {show.map(v => (
+            <SponsoredVehicleCard key={v.id} vehicle={v} />
+          ))}
+        </div>
       </div>
     </div>
   );

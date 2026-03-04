@@ -17,23 +17,6 @@ function formatPrice(price: number, currency: string = 'DOP') {
   return `US$${price.toLocaleString('en-US')}`;
 }
 
-/**
- * EmptyVehicleCard — shown when no vehicle is occupying a paid slot.
- * Signals to dealers that this spot is available / not yet published.
- */
-function EmptyVehicleCard() {
-  return (
-    <div className="overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50">
-      <div className="bg-slate-100 dark:bg-slate-800" style={{ aspectRatio: '4/3' }} />
-      <div className="space-y-2 p-4">
-        <div className="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
-        <div className="h-6 w-1/2 rounded bg-slate-200 dark:bg-slate-700" />
-        <div className="h-3 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
-      </div>
-    </div>
-  );
-}
-
 function FeaturedVehicleCard({
   vehicle,
   placementType,
@@ -77,8 +60,8 @@ function FeaturedVehicleCard({
   }, [vehicle]);
 
   return (
-    <Link href={vehicleHref} onClick={handleClick} className="group block">
-      <Card className="overflow-hidden border-0 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl">
+    <Link href={vehicleHref} onClick={handleClick} className="group block h-full">
+      <Card className="flex h-full flex-col overflow-hidden border-0 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl">
         {/* Larger aspect ratio than regular cards — "bigger than all others" */}
         <div className="bg-muted relative" style={{ aspectRatio: '4/3' }}>
           {vehicle.imageUrl ? (
@@ -171,18 +154,14 @@ export default function FeaturedVehicles({
     );
   }
 
-  const rawVehicles = rotation?.items?.slice(0, maxItems) || [];
-  // Only show cards for rotation items that actually have enriched vehicle data.
-  // If RotatedVehicleDto has no title/imageUrl/price, it's a stale CMS entry —
-  // treat it as an empty slot so the section never shows ghost "Vehículo 🚗" cards.
-  const vehicles = rawVehicles.filter(v => v.title || v.imageUrl || (v.price && v.price > 0));
-  // Fill remaining slots with null to always show maxItems cards (EmptyVehicleCard)
-  const displayItems: (RotatedVehicle | null)[] = [
-    ...vehicles,
-    ...Array(Math.max(0, maxItems - vehicles.length)).fill(null),
-  ];
+  // Only show vehicles that have been enriched (have title + image + price)
+  const vehicles = (rotation?.items || [])
+    .filter(v => v.title && v.imageUrl && v.price)
+    .slice(0, maxItems);
 
-  // Don't hide section even when empty — show placeholder cards
+  // Hide the entire section if there are no real vehicles
+  if (!vehicles.length) return null;
+
   return (
     <section className="py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -199,17 +178,13 @@ export default function FeaturedVehicles({
         </div>
         {/* 3-col grid: cards bigger than the 4-col VehicleTypeSection grids */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {displayItems.map((vehicle, i) =>
-            vehicle ? (
-              <FeaturedVehicleCard
-                key={vehicle.vehicleId}
-                vehicle={vehicle}
-                placementType={placementType}
-              />
-            ) : (
-              <EmptyVehicleCard key={`empty-${i}`} />
-            )
-          )}
+          {vehicles.map(vehicle => (
+            <FeaturedVehicleCard
+              key={vehicle.vehicleId}
+              vehicle={vehicle}
+              placementType={placementType}
+            />
+          ))}
         </div>
       </div>
     </section>

@@ -157,7 +157,7 @@ function NaturalLanguageHeroSearch() {
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder='Busca tu vehículo ideal... ej: "SUV Toyota menos de 1 millón"'
+              placeholder="Busca tu vehículo ideal"
               className="text-foreground placeholder:text-muted-foreground h-12 flex-1 bg-transparent text-sm font-medium focus:outline-none"
               disabled={isSearching}
               autoComplete="off"
@@ -185,11 +185,6 @@ function NaturalLanguageHeroSearch() {
         </div>
       </div>
 
-      {/* AI subtitle */}
-      <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-white/70">
-        <Sparkles className="h-3 w-3" />
-        <span>Búsqueda con IA — escribe lo que quieras en español</span>
-      </div>
     </div>
   );
 }
