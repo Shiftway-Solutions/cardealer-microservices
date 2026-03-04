@@ -22,6 +22,7 @@ export interface ConversationUser {
   id: string;
   name: string;
   avatarUrl: string | null;
+  phone?: string; // WhatsApp contact number (available for received inquiries)
 }
 
 export interface ConversationVehicle {
@@ -114,6 +115,7 @@ export async function getConversations(): Promise<Conversation[]> {
           id: '', // Buyer ID not directly available
           name: inquiry.buyerName,
           avatarUrl: null,
+          phone: inquiry.buyerPhone,
         },
         vehicle: {
           id: inquiry.vehicleId,

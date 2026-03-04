@@ -29,7 +29,11 @@ import {
   RefreshCw,
   AlertCircle,
   Inbox,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
+import { useChatbot, type UseChatbotReturn } from '@/hooks/useChatbot';
+import { BotMessageContent } from '@/components/chat/BotMessageContent';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -278,6 +282,226 @@ function MessageBubble({ message }: { message: Message }) {
 }
 
 // =============================================================================
+// AI BOT PANEL (inline, full-height live chat)
+// =============================================================================
+
+/** Sentinel ID used to select the AI assistant "conversation" */
+const BOT_CONVERSATION_ID = '__ai_assistant__';
+
+function AiBotPanel({
+  chat,
+  onBack,
+}: {
+  chat: UseChatbotReturn;
+  onBack: () => void;
+}) {
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [inputValue, setInputValue] = React.useState('');
+
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chat.messages]);
+
+  const handleSend = () => {
+    const text = inputValue.trim();
+    if (!text || chat.isLoading) return;
+    setInputValue('');
+    chat.sendMessage(text);
+  };
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-border bg-card p-4 shadow-sm">
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={onBack}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+
+        <div className="relative">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-md">
+            <Bot className="h-5 w-5 text-white" />
+          </div>
+          <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-400" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground truncate">
+            {chat.botName || 'Asistente OKLA'}
+          </h3>
+          <p className="text-xs text-[#00A870]">● En línea · Responde al instante</p>
+        </div>
+
+        <Badge className="shrink-0 border-0 bg-[#00A870]/10 text-[#00A870]">
+          <Sparkles className="mr-1 h-3 w-3" />
+          IA
+        </Badge>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-50/30 to-white p-4">
+        {/* Connecting state */}
+        {!chat.isConnected && chat.isLoading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#00A870]" />
+            <p className="mt-3 text-sm text-muted-foreground">Conectando con el asistente...</p>
+          </div>
+        )}
+
+        {/* Connection error */}
+        {!chat.isConnected && !chat.isLoading && chat.error && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-8 w-8 text-red-400" />
+            <p className="mt-3 text-sm text-center text-muted-foreground">{chat.error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => chat.startSession()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reintentar conexión
+            </Button>
+          </div>
+        )}
+
+        {/* Message bubbles */}
+        <div className="space-y-4">
+          {chat.messages.map(message => (
+            <div
+              key={message.id}
+              className={cn('flex gap-2.5', message.isFromBot ? 'justify-start' : 'justify-end')}
+            >
+              {message.isFromBot && (
+                <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-sm">
+                  <Bot className="h-3.5 w-3.5 text-white" />
+                </div>
+              )}
+              <div
+                className={cn(
+                  'max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm',
+                  message.isFromBot
+                    ? 'rounded-tl-sm bg-white ring-1 ring-gray-100 text-gray-800'
+                    : 'rounded-tr-sm bg-gradient-to-br from-[#00A870] to-emerald-600 text-white'
+                )}
+              >
+                {message.isLoading ? (
+                  <div className="flex gap-1.5 py-1">
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                      style={{ animationDelay: '150ms' }}
+                    />
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                      style={{ animationDelay: '300ms' }}
+                    />
+                  </div>
+                ) : message.isFromBot ? (
+                  <>
+                    <BotMessageContent content={message.content} />
+                    <p className="mt-1.5 text-xs text-gray-400">
+                      {message.timestamp.toLocaleTimeString('es-DO', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="mt-1.5 text-right text-xs text-white/70">
+                      {message.timestamp.toLocaleTimeString('es-DO', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Replies */}
+        {chat.quickReplies.length > 0 && !chat.isLoading && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {chat.quickReplies.map(reply => (
+              <button
+                key={reply.payload ?? reply.text}
+                onClick={() => chat.selectQuickReply(reply)}
+                disabled={chat.isLoading}
+                className="rounded-full border border-[#00A870]/40 bg-white px-3.5 py-1.5 text-sm font-medium text-[#00A870] shadow-sm transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5 disabled:opacity-50"
+              >
+                {reply.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input bar */}
+      <div className="border-t border-border bg-gradient-to-t from-gray-50/50 to-white p-4">
+        {chat.isLimitReached ? (
+          <div className="flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <span>Has alcanzado el límite de mensajes.</span>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-amber-700"
+              onClick={chat.resetChat}
+            >
+              Reiniciar chat
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <Input
+              type="text"
+              placeholder="Escribe tu mensaje al asistente..."
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              disabled={chat.isLoading || !chat.isConnected}
+              className="h-12 flex-1 rounded-xl border-border bg-card shadow-sm transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
+              aria-label="Mensaje al asistente"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || chat.isLoading || !chat.isConnected}
+              className="h-12 w-12 rounded-xl bg-gradient-to-r from-[#00A870] to-emerald-600 shadow-lg shadow-[#00A870]/25 transition-all hover:shadow-xl disabled:opacity-50 disabled:shadow-none"
+              aria-label="Enviar mensaje"
+            >
+              {chat.isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        )}
+        {!chat.isLimitReached &&
+          chat.remainingInteractions > 0 &&
+          chat.remainingInteractions <= 5 && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {chat.remainingInteractions} mensajes restantes
+            </p>
+          )}
+      </div>
+    </>
+  );
+}
+
+// =============================================================================
 // MAIN PAGE
 // =============================================================================
 
@@ -291,6 +515,9 @@ export default function MessagesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  // ── AI Chatbot session ──────────────────────────────────────
+  const chat = useChatbot({ autoStart: false, maxRetries: 2 });
 
   // Fetch conversations
   const {
@@ -439,6 +666,51 @@ export default function MessagesPage() {
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
+              {/* ── Pinned AI Bot Conversation ── */}
+              <button
+                onClick={() => {
+                  setSelectedConversationId(BOT_CONVERSATION_ID);
+                  if (!chat.isConnected && !chat.isLoading) {
+                    chat.startSession();
+                  }
+                }}
+                className={cn(
+                  'group w-full border-b border-gray-100 p-4 text-left transition-all duration-200',
+                  selectedConversationId === BOT_CONVERSATION_ID
+                    ? 'border-l-4 border-l-[#00A870] bg-gradient-to-r from-[#00A870]/10 to-emerald-50/50'
+                    : 'bg-gradient-to-r from-[#00A870]/3 to-transparent hover:from-[#00A870]/8 hover:to-emerald-50/30'
+                )}
+              >
+                <div className="flex gap-3">
+                  <div className="relative shrink-0">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-md ring-2 ring-[#00A870]/20">
+                      <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-green-400" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-foreground">Asistente OKLA</span>
+                        <Badge className="border-0 bg-[#00A870]/10 px-1.5 py-0 text-xs text-[#00A870]">
+                          <Sparkles className="mr-0.5 h-2.5 w-2.5" />
+                          IA
+                        </Badge>
+                      </div>
+                      <span className="text-xs font-medium text-[#00A870]">En línea</span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Inteligencia Artificial · 24/7
+                    </p>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {chat.messages.length > 0
+                        ? `${chat.messages[chat.messages.length - 1].isFromBot ? '🤖' : 'Tú'}: ${chat.messages[chat.messages.length - 1].content.slice(0, 38)}...`
+                        : 'Pregúntame sobre vehículos, precios y más'}
+                    </p>
+                  </div>
+                </div>
+              </button>
               {conversationsLoading ? (
                 <ConversationsLoading />
               ) : conversationsError ? (
@@ -466,8 +738,15 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className={cn('flex flex-1 flex-col', !selectedConversationId && 'hidden md:flex')}>
-            {selectedConversation ? (
+          <div
+            className={cn(
+              'flex flex-1 flex-col',
+              !selectedConversationId && 'hidden md:flex'
+            )}
+          >
+            {selectedConversationId === BOT_CONVERSATION_ID ? (
+              <AiBotPanel chat={chat} onBack={() => setSelectedConversationId(null)} />
+            ) : selectedConversation ? (
               <>
                 {/* Chat Header - Premium */}
                 <div className="flex items-center gap-3 border-b border-border bg-card p-4 shadow-sm">
@@ -511,6 +790,29 @@ export default function MessagesPage() {
                       </p>
                     )}
                   </div>
+
+                  {/* WhatsApp button – shown for received conversations when buyer phone is available */}
+                  {selectedConversation.type === 'received' &&
+                    selectedConversation.otherUser.phone && (
+                      <a
+                        href={`https://wa.me/${selectedConversation.otherUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                          `Hola ${selectedConversation.otherUser.name}, te contacto desde OKLA por el ${selectedConversation.vehicle.title}.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Contactar por WhatsApp"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[#25D366] transition-colors hover:bg-[#25D366]/10"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-5 w-5 fill-current"
+                          aria-hidden="true"
+                        >
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        <span className="sr-only">WhatsApp</span>
+                      </a>
+                    )}
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
