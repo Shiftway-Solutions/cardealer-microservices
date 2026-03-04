@@ -120,11 +120,12 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 1. SOLO menciona vehículos que aparezcan en los datos proporcionados. NO inventes vehículos.
 2. Si el usuario pide algo que no tienes en inventario, di claramente que no lo tienes y sugiere alternativas.
 3. Cuando el cliente pida comparar, presenta la información en formato estructurado.
-4. Si el usuario muestra interés serio, ofrece agendar una cita para ver el vehículo.
+4. Si el usuario muestra interés serio, ofrece agendar una cita para ver el vehículo. Cuando el usuario indique una fecha preferida, llama DIRECTAMENTE a schedule_appointment sin pedir nombre ni teléfono (el sistema ya tiene los datos del usuario registrado).
 5. NUNCA reveles precios mínimos del dealer, descuentos internos o márgenes.
 6. Si no tienes suficiente información para responder, sugiere contactar directamente al dealer.
 7. Responde en español dominicano, breve y amigable. Máximo 4-5 oraciones.
 8. Usa emojis moderadamente (1-2 por respuesta).
+9. NUNCA pidas nombre ni teléfono al usuario — el sistema los obtiene automáticamente de su cuenta registrada.
 
 ## 🏢 Información del Dealer
 - Nombre: {dealerName}
@@ -179,16 +180,14 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
             new()
             {
                 Name = "schedule_appointment",
-                Description = "Agenda una cita para que el cliente vea un vehículo",
+                Description = "Agenda una cita para que el cliente vea un vehículo. Los datos del cliente (nombre y teléfono) se obtienen automáticamente del sistema.",
                 Parameters = new Dictionary<string, FunctionParameter>
                 {
                     ["vehicle_id"] = new() { Type = "string", Description = "ID del vehículo que quiere ver" },
-                    ["customer_name"] = new() { Type = "string", Description = "Nombre del cliente" },
-                    ["customer_phone"] = new() { Type = "string", Description = "Teléfono del cliente" },
-                    ["preferred_date"] = new() { Type = "string", Description = "Fecha preferida (ej: 'mañana', 'este sábado', '2026-02-20')" },
-                    ["preferred_time"] = new() { Type = "string", Description = "Hora preferida (ej: 'en la mañana', '2:00 PM')" }
+                    ["preferred_date"] = new() { Type = "string", Description = "Fecha preferida (ej: 'este viernes', 'Mié 5 de Mar')" },
+                    ["preferred_time"] = new() { Type = "string", Description = "Hora preferida (ej: 'en la mañana', '2:00 PM', 'Por coordinar')" }
                 },
-                Required = new() { "vehicle_id", "customer_name", "customer_phone" }
+                Required = new() { "vehicle_id", "preferred_date" }
             },
             new()
             {
@@ -369,22 +368,19 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         ChatSession session, Dictionary<string, object> args)
     {
         var vehicleId = args.GetValueOrDefault("vehicle_id")?.ToString() ?? "N/A";
-        var customerName = args.GetValueOrDefault("customer_name")?.ToString() ?? "N/A";
-        var customerPhone = args.GetValueOrDefault("customer_phone")?.ToString() ?? "N/A";
         var preferredDate = args.GetValueOrDefault("preferred_date")?.ToString() ?? "Por coordinar";
         var preferredTime = args.GetValueOrDefault("preferred_time")?.ToString() ?? "Por coordinar";
 
-        // En una implementación real, esto crearía un lead y notificaría al dealer
+        // Los datos del cliente se obtienen del perfil registrado en la plataforma
         return new FunctionCallResult
         {
             Success = true,
-            ResultText = $"CITA AGENDADA:\n" +
-                $"- Cliente: {customerName}\n" +
-                $"- Teléfono: {customerPhone}\n" +
+            ResultText = $"SOLICITUD DE CITA REGISTRADA:\n" +
                 $"- Vehículo ID: {vehicleId}\n" +
                 $"- Fecha preferida: {preferredDate}\n" +
                 $"- Hora preferida: {preferredTime}\n" +
-                $"Un asesor del dealer confirmará la cita por teléfono."
+                $"- Datos del cliente: obtenidos automáticamente del perfil registrado.\n" +
+                $"Un asesor del dealer se pondrá en contacto para confirmar la cita."
         };
     }
 

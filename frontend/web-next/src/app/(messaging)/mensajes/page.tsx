@@ -278,9 +278,12 @@ function EmptyState() {
           <Inbox className="h-12 w-12 text-white" />
         </div>
       </div>
-      <h3 className="text-foreground mb-2 text-xl font-bold">¡Tu bandeja está lista!</h3>
-      <p className="text-muted-foreground mb-8 max-w-sm">
-        Explora vehículos y contacta vendedores para iniciar conversaciones.
+      <h3 className="text-foreground mb-2 text-xl font-bold">Sin mensajes aún</h3>
+      <p className="text-muted-foreground mb-2 max-w-sm text-sm">
+        Aquí aparecen tus conversaciones con vendedores y dealers — cuando contactas a alguien desde una publicación de vehículo.
+      </p>
+      <p className="text-muted-foreground mb-8 max-w-sm text-xs">
+        💬 Para chatear con un Asistente IA de un dealer, usa la pestaña <strong>Asistentes IA</strong>.
       </p>
       <Button
         asChild
@@ -293,7 +296,7 @@ function EmptyState() {
         </Link>
       </Button>
       <p className="text-muted-foreground mt-6 text-xs">
-        💡 Tip: Los mensajes se guardan automáticamente
+        💡 Tip: Haz clic en &quot;Contactar vendedor&quot; en cualquier vehículo para iniciar una conversación
       </p>
     </div>
   );
