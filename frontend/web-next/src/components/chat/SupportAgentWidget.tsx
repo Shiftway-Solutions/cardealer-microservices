@@ -9,7 +9,6 @@
 
 import { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useSupportAgent } from '@/hooks/useSupportAgent';
 import { useAuth } from '@/hooks/use-auth';
 import { ChatInput } from './ChatInput';
@@ -120,12 +119,8 @@ export function SupportAgentWidget() {
   const chat = useSupportAgent({ autoWelcome: true });
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-
-  // On vehicle detail and search pages, position support bubble on the left
-  // to avoid conflict with the vehicle chatbot bubble on the right
-  const isVehiclePage = pathname.startsWith('/vehiculos');
-  const bubblePosition = isVehiclePage ? 'left-4 bottom-4' : 'right-4 bottom-4';
+  // Support bubble always on the right side across all views
+  const bubblePosition = 'right-4 bottom-4';
 
   // Auto-scroll
   useEffect(() => {
@@ -163,7 +158,7 @@ export function SupportAgentWidget() {
       {/* Panel */}
       {chat.isOpen && (
         <div
-          className={`fixed ${isVehiclePage ? 'left-4' : 'right-4'} bottom-20 z-[9999] flex w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:left-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950`}
+          className={`fixed right-4 bottom-20 z-[9999] flex w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:left-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950`}
           style={{ height: 'min(600px, calc(100vh - 120px))' }}
           role="dialog"
           aria-label="Soporte OKLA"
@@ -286,7 +281,11 @@ export function SupportAgentWidget() {
             onSend={chat.sendMessage}
             disabled={chat.isLoading || (!authLoading && !isAuthenticated)}
             isLoading={chat.isLoading}
-            placeholder={!authLoading && !isAuthenticated ? 'Inicia sesión para chatear' : 'Escribe tu pregunta...'}
+            placeholder={
+              !authLoading && !isAuthenticated
+                ? 'Inicia sesión para chatear'
+                : 'Escribe tu pregunta...'
+            }
           />
         </div>
       )}

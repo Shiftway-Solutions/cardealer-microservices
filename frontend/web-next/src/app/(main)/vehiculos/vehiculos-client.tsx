@@ -587,14 +587,6 @@ export default function VehiculosClient() {
     if (viewMode === 'list') {
       return (
         <>
-          {/* Top sponsored results in list view */}
-          {topSponsored.length > 0 && currentPage === 1 && allVehicles.length > 0 && (
-            <>
-              {topSponsored.slice(0, 2).map((sv: SponsoredVehicle) => (
-                <SponsoredVehicleCard key={sv.id} vehicle={sv} variant="horizontal" />
-              ))}
-            </>
-          )}
           {allVehicles.map((vehicle: VehicleCardData, i: number) => (
             <React.Fragment key={vehicle.id}>
               <VehicleCard
@@ -612,16 +604,13 @@ export default function VehiculosClient() {
       );
     }
 
-    // Grid: top sponsored row + organic results with a sponsored row every 6 items
+    // Grid: organic results first — sponsored row appears AFTER 2 rows (6 organic items),
+    // then continues cycling every 6 items thereafter.
     const items: React.ReactNode[] = [];
 
-    // Top sponsored row (first page only)
-    if (topSponsored.length > 0 && currentPage === 1) {
-      items.push(<SponsoredRowGrid key="sp-top" vehicles={topSponsored.slice(0, 3)} />);
-    }
-
-    // Rotating pool of inline sponsored vehicles (cycles if needed)
-    const sponsoredPool = [...inlineSponsored];
+    // Combine topSponsored + inlineSponsored into a single rotating pool
+    // so the first sponsored row appears after the first 6 organic vehicles (2 rows)
+    const sponsoredPool = [...topSponsored, ...inlineSponsored];
     let sponsoredOffset = 0;
 
     allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
@@ -637,8 +626,7 @@ export default function VehiculosClient() {
       // Every 6 organic items (≈ 2 rows in 3-col grid): insert sponsored row
       if ((i + 1) % 6 === 0) {
         // Cycle through sponsored pool so rows don't repeat if pool < total rows
-        const rowVehicles = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
-        if (rowVehicles.length === 0 && sponsoredPool.length > 0) {
+        if (sponsoredOffset >= sponsoredPool.length && sponsoredPool.length > 0) {
           sponsoredOffset = 0; // reset to start of pool
         }
         const finalRow = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
