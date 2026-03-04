@@ -46,12 +46,17 @@ public class ClaudeSearchService : IClaudeSearchService
     {
         var client = _httpClientFactory.CreateClient("ClaudeApi");
 
+        var systemBlocks = new List<ClaudeSystemBlock>
+        {
+            new() { Text = systemPrompt, CacheControl = new ClaudeCacheControl() }
+        };
+
         var requestBody = new ClaudeRequest
         {
             Model = "claude-haiku-4-5-20251001",
             MaxTokens = maxTokens,
             Temperature = temperature,
-            System = systemPrompt,
+            System = systemBlocks,
             Messages =
             [
                 new ClaudeMessage { Role = "user", Content = userQuery }
@@ -120,8 +125,10 @@ public class ClaudeSearchService : IClaudeSearchService
             }
 
             _logger.LogInformation(
-                "Claude processed query successfully. Confidence={Confidence}, Level={Level}",
-                searchResponse.Confianza, searchResponse.NivelFiltrosActivo);
+                "Claude processed query successfully. Confidence={Confidence}, Level={Level}, CacheCreated={CacheCreated}, CacheRead={CacheRead}",
+                searchResponse.Confianza, searchResponse.NivelFiltrosActivo,
+                claudeResponse.Usage?.CacheCreationInputTokens ?? 0,
+                claudeResponse.Usage?.CacheReadInputTokens ?? 0);
 
             return searchResponse;
         }
@@ -169,11 +176,29 @@ internal class ClaudeRequest
     [JsonPropertyName("temperature")]
     public float Temperature { get; set; } = 0.2f;
 
+    /// <summary>Structured system blocks — required format for Anthropic prompt caching.</summary>
     [JsonPropertyName("system")]
-    public string System { get; set; } = string.Empty;
+    public List<ClaudeSystemBlock> System { get; set; } = [];
 
     [JsonPropertyName("messages")]
     public List<ClaudeMessage> Messages { get; set; } = [];
+}
+
+/// <summary>
+/// Represents a system content block with optional cache_control.
+/// Send as array even for a single block so Anthropic can honour cache_control.
+/// </summary>
+internal class ClaudeSystemBlock
+{
+    [JsonPropertyName("type")] public string Type { get; set; } = "text";
+    [JsonPropertyName("text")] public string Text { get; set; } = string.Empty;
+    [JsonPropertyName("cache_control")] public ClaudeCacheControl? CacheControl { get; set; }
+}
+
+/// <summary>Ephemeral cache control — caches the block for ~5 min on Anthropic servers.</summary>
+internal class ClaudeCacheControl
+{
+    [JsonPropertyName("type")] public string Type { get; set; } = "ephemeral";
 }
 
 internal class ClaudeMessage
@@ -225,6 +250,14 @@ internal class ClaudeUsage
 
     [JsonPropertyName("output_tokens")]
     public int OutputTokens { get; set; }
+
+    /// <summary>Tokens written to cache (first call). Non-zero = cache was CREATED.</summary>
+    [JsonPropertyName("cache_creation_input_tokens")]
+    public int CacheCreationInputTokens { get; set; }
+
+    /// <summary>Tokens read from cache (subsequent calls). Non-zero = cache HIT.</summary>
+    [JsonPropertyName("cache_read_input_tokens")]
+    public int CacheReadInputTokens { get; set; }
 }
 
 #endregion
