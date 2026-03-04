@@ -69,8 +69,6 @@ export interface UseChatbotReturn {
 // Constants
 // =============================================================================
 
-const SESSION_STORAGE_KEY = 'okla_chat_session';
-const MESSAGES_STORAGE_KEY = 'okla_chat_messages';
 const MAX_STORED_MESSAGES = 50;
 
 // =============================================================================
@@ -87,13 +85,29 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     onLimitReached,
   } = options;
 
+  // ── Dealer-scoped storage keys ──────────────────────────────────────────
+  // Using dealerId in the key prevents cross-dealer session contamination:
+  // opening Dealer B's bot won't restore Dealer A's expired session token.
+  const SESSION_KEY = dealerId
+    ? `okla_chat_session_${dealerId}`
+    : 'okla_chat_session_default';
+  const MESSAGES_KEY = dealerId
+    ? `okla_chat_messages_${dealerId}`
+    : 'okla_chat_messages_default';
+  const BOT_NAME_KEY = dealerId
+    ? `okla_chat_botname_${dealerId}`
+    : 'okla_chat_botname_default';
+
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [botName, setBotName] = useState('OKLA Bot');
+  // Initialize to '' (empty/falsy) so DealerBotPanel's displayName fallback works:
+  //   chat.botName || `Asistente de ${dealerName}`
+  // 'OKLA Bot' was truthy and always suppressed the fallback.
+  const [botName, setBotName] = useState('');
   const [botAvatarUrl, setBotAvatarUrl] = useState<string | null>(null);
   const [remainingInteractions, setRemainingInteractions] = useState(0);
   const [isLimitReached, setIsLimitReached] = useState(false);
@@ -108,47 +122,64 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   // Session persistence
   // ─────────────────────────────────────────────────────────────────────────
 
-  const saveSession = useCallback((token: string) => {
-    try {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, token);
-    } catch {
-      // sessionStorage not available
-    }
-  }, []);
+  const saveSession = useCallback(
+    (token: string, bName?: string) => {
+      try {
+        sessionStorage.setItem(SESSION_KEY, token);
+        if (bName) sessionStorage.setItem(BOT_NAME_KEY, bName);
+      } catch {
+        // sessionStorage not available
+      }
+    },
+    [SESSION_KEY, BOT_NAME_KEY]
+  );
 
-  const saveMessages = useCallback((msgs: ChatMessage[]) => {
-    try {
-      const toStore = msgs.slice(-MAX_STORED_MESSAGES).map(m => ({
-        ...m,
-        timestamp: m.timestamp.toISOString(),
-      }));
-      sessionStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(toStore));
-    } catch {
-      // sessionStorage not available
-    }
-  }, []);
+  const saveMessages = useCallback(
+    (msgs: ChatMessage[]) => {
+      try {
+        const toStore = msgs.slice(-MAX_STORED_MESSAGES).map(m => ({
+          ...m,
+          timestamp: m.timestamp.toISOString(),
+        }));
+        sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(toStore));
+      } catch {
+        // sessionStorage not available
+      }
+    },
+    [MESSAGES_KEY]
+  );
 
   const clearStorage = useCallback(() => {
     try {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      sessionStorage.removeItem(MESSAGES_STORAGE_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(MESSAGES_KEY);
+      sessionStorage.removeItem(BOT_NAME_KEY);
     } catch {
       // sessionStorage not available
     }
-  }, []);
+  }, [SESSION_KEY, MESSAGES_KEY, BOT_NAME_KEY]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Restore session on mount
   // ─────────────────────────────────────────────────────────────────────────
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    // Restore dealer-scoped session on mount.
+    // SESSION_KEY / MESSAGES_KEY / BOT_NAME_KEY are stable for the lifetime of
+    // this component instance (parent mounts with key={conversationId}).
     try {
-      const savedToken = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      const savedMessages = sessionStorage.getItem(MESSAGES_STORAGE_KEY);
+      const savedToken = sessionStorage.getItem(SESSION_KEY);
+      const savedMessages = sessionStorage.getItem(MESSAGES_KEY);
+      const savedBotName = sessionStorage.getItem(BOT_NAME_KEY);
 
       if (savedToken) {
         setSessionToken(savedToken);
         setIsConnected(true);
+      }
+
+      if (savedBotName) {
+        setBotName(savedBotName);
       }
 
       if (savedMessages) {
@@ -163,6 +194,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     } catch {
       // Failed to restore — start fresh
     }
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -186,12 +219,13 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         userAgent: navigator.userAgent,
       });
 
+      const resolvedBotName = result.botName || '';
       setSessionToken(result.sessionToken);
-      setBotName(result.botName || 'OKLA Bot');
+      setBotName(resolvedBotName);
       setBotAvatarUrl(result.botAvatarUrl || null);
       setRemainingInteractions(result.remainingInteractions);
       setIsConnected(true);
-      saveSession(result.sessionToken);
+      saveSession(result.sessionToken, resolvedBotName);
 
       // Add welcome message
       const welcomeMsg: ChatMessage = {
@@ -275,8 +309,28 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         // Remove loading message
         setMessages(prev => prev.filter(m => !m.isLoading));
 
-        // No auto-retry — LLM inference takes 2-5 min on CPU.
-        // Retrying would send duplicate requests and crash the server.
+        // Auto-reconnect: if the session expired (404), clear storage and restart.
+        // This handles the case where the user re-opens the bot after the backend
+        // session has expired, but the old token was still in sessionStorage.
+        const httpStatus = (err as { response?: { status?: number } })?.response?.status;
+        if (httpStatus === 404) {
+          clearStorage();
+          setSessionToken(null);
+          setIsConnected(false);
+          sessionStartedRef.current = false;
+          const reconnectMsg: ChatMessage = {
+            id: `reconnect-${Date.now()}`,
+            content: 'Tu sesión había expirado. Reconectando automáticamente…',
+            isFromBot: true,
+            timestamp: new Date(),
+            type: 'System',
+          };
+          setMessages(prev => [...prev, reconnectMsg]);
+          // handleStartSession will start a fresh session with a new welcome message
+          await handleStartSession();
+          return;
+        }
+
         const errorMsg: ChatMessage = {
           id: `error-${Date.now()}`,
           content:
@@ -305,6 +359,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       onLeadGenerated,
       onLimitReached,
       saveMessages,
+      clearStorage,
+      handleStartSession,
     ]
   );
 
@@ -420,7 +476,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     if (autoStart && !sessionToken && !sessionStartedRef.current) {
       handleStartSession();
     }
-  }, [autoStart, sessionToken, handleStartSession]);
+  }, [autoStart, sessionToken, handleStartSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─────────────────────────────────────────────────────────────────────────
   // Return
