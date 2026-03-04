@@ -305,9 +305,50 @@ function DealerBotPanel({
   const botEndRef = React.useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = React.useState('');
 
+  // ── Human-feel typing: delay revealing bot responses ──────────
+  // Track which bot message IDs have been revealed to the user.
+  const [revealedIds, setRevealedIds] = React.useState<Set<string>>(new Set());
+  // Timestamp when the typing indicator last started (used to compute remaining delay).
+  const typingStartRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    // Track when typing indicator starts
+    const hasTyping = chat.messages.some(m => m.isFromBot && m.isLoading);
+    if (hasTyping && typingStartRef.current === null) {
+      typingStartRef.current = Date.now();
+    }
+
+    // For each completed bot message that hasn't been revealed yet, schedule a reveal
+    chat.messages.forEach(msg => {
+      if (!msg.isFromBot || msg.isLoading || revealedIds.has(msg.id)) return;
+
+      const elapsed = typingStartRef.current ? Date.now() - typingStartRef.current : 0;
+      const wordCount = msg.content.split(/\s+/).length;
+      // Minimum typing time: ~35ms per word, clamped between 700ms and 2400ms
+      const minTypingMs = Math.min(Math.max(wordCount * 35, 700), 2400);
+      const remaining = Math.max(0, minTypingMs - elapsed);
+
+      setTimeout(() => {
+        setRevealedIds(prev => new Set([...prev, msg.id]));
+        typingStartRef.current = null;
+      }, remaining);
+    });
+  }, [chat.messages, revealedIds]);
+
+  // Messages to render: show user messages immediately; bot messages only after reveal delay
+  const messagesToShow = React.useMemo(
+    () => chat.messages.filter(m => !m.isFromBot || m.isLoading || revealedIds.has(m.id)),
+    [chat.messages, revealedIds]
+  );
+
+  // Show typing indicator whenever there's a loading message OR unrevealed completed bot messages
+  const showTypingIndicator = chat.messages.some(
+    m => m.isFromBot && (m.isLoading || (!m.isLoading && !revealedIds.has(m.id)))
+  );
+
   React.useEffect(() => {
     botEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chat.messages]);
+  }, [messagesToShow, showTypingIndicator]);
 
   const handleSend = () => {
     const text = inputValue.trim();
@@ -316,7 +357,8 @@ function DealerBotPanel({
     chat.sendMessage(text);
   };
 
-  const displayName = `${dealerName} · Asistente IA`;
+  // "Asistente [DealerName]" — use botName returned by the service if available
+  const displayName = chat.botName || `Asistente de ${dealerName}`;
 
   return (
     <>
@@ -357,7 +399,7 @@ function DealerBotPanel({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-50/30 to-white p-4">
-        {!chat.isConnected && chat.isLoading && (
+        {!chat.isConnected && chat.isLoading && messagesToShow.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-[#00A870]" />
             <p className="text-muted-foreground mt-3 text-sm">
@@ -383,10 +425,15 @@ function DealerBotPanel({
         )}
 
         <div className="space-y-4">
-          {chat.messages.map(message => (
+          {messagesToShow.map(message => (
             <div
               key={message.id}
-              className={cn('flex gap-2.5', message.isFromBot ? 'justify-start' : 'justify-end')}
+              className={cn(
+                'flex gap-2.5',
+                message.isFromBot ? 'justify-start' : 'justify-end',
+                // Smooth fade-in for newly revealed bot messages
+                message.isFromBot && !message.isLoading && 'animate-in fade-in slide-in-from-bottom-1 duration-300'
+              )}
             >
               {message.isFromBot && (
                 <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-sm">
@@ -440,6 +487,31 @@ function DealerBotPanel({
               </div>
             </div>
           ))}
+
+          {/* Typing indicator — shown while waiting for reveal */}
+          {showTypingIndicator && (
+            <div className="flex animate-in fade-in gap-2.5">
+              <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-sm">
+                <Bot className="h-3.5 w-3.5 text-white" />
+              </div>
+              <div className="max-w-[78%] rounded-2xl rounded-tl-sm bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100">
+                <div className="flex gap-1.5">
+                  <span
+                    className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <span
+                    className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <span
+                    className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                    style={{ animationDelay: '300ms' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {chat.quickReplies.length > 0 && !chat.isLoading && (
@@ -534,6 +606,29 @@ export default function MessagesPage() {
 
   // ── AI Bot panel toggle (dealer-scoped) ─────────────────────
   const [showBotPanel, setShowBotPanel] = React.useState(false);
+
+  // ── URL-triggered bot (from vehicle detail "Chat Live" button) ─
+  // Populated when the page is loaded with ?sellerId=...&vehicleTitle=...
+  const [urlBotConfig, setUrlBotConfig] = React.useState<{
+    dealerId: string;
+    dealerName: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    // Read URL params via native browser API (avoids Next.js Suspense requirement)
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const sellerId = params.get('sellerId');
+    const vehicleTitle = params.get('vehicleTitle');
+    if (sellerId) {
+      setUrlBotConfig({
+        dealerId: sellerId,
+        dealerName: vehicleTitle ? decodeURIComponent(vehicleTitle) : 'Vendedor',
+      });
+      // Clean URL so it doesn't re-trigger on refresh
+      window.history.replaceState({}, '', '/mensajes');
+    }
+  }, []); // intentionally run only on mount
 
   // Fetch conversations
   const {
@@ -714,8 +809,16 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className={cn('flex flex-1 flex-col', !selectedConversationId && 'hidden md:flex')}>
-            {!selectedConversation ? (
+          <div className={cn('flex flex-1 flex-col', !selectedConversationId && !urlBotConfig && 'hidden md:flex')}>
+            {/* Case 1: URL-param triggered bot (from vehicle detail "Chat Live") */}
+            {urlBotConfig && !selectedConversation ? (
+              <DealerBotPanel
+                key={`url-${urlBotConfig.dealerId}`}
+                dealerId={urlBotConfig.dealerId}
+                dealerName={urlBotConfig.dealerName}
+                onBack={() => setUrlBotConfig(null)}
+              />
+            ) : !selectedConversation ? (
               <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-gray-50 to-white p-8">
                 <div className="text-center">
                   <div className="relative mx-auto mb-6">

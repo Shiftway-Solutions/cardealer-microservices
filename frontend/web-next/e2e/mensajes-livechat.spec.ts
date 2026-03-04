@@ -55,7 +55,9 @@ async function selectFirstInquiryConversation(
   page: import('@playwright/test').Page
 ): Promise<boolean> {
   // Conversations listed in the sidebar — pick the first non-bot entry
-  const convItems = page.locator('[data-testid="conversation-item"], .border-b.cursor-pointer').filter({ hasNotText: /Asistente/ });
+  const convItems = page
+    .locator('[data-testid="conversation-item"], .border-b.cursor-pointer')
+    .filter({ hasNotText: /Asistente/ });
   const altItems = page.locator('button.w-full.border-b').filter({ hasNotText: /Asistente/ });
 
   const items = (await convItems.count()) > 0 ? convItems : altItems;
@@ -95,7 +97,10 @@ test.describe('Mensajes Dealer AI Chatbot Integration', () => {
     console.log('✅ No global "Asistente OKLA" pinned entry (correct)');
 
     // Page should show the messages heading
-    const heading = page.locator('h1').filter({ hasText: /Mensajes/i }).first();
+    const heading = page
+      .locator('h1')
+      .filter({ hasText: /Mensajes/i })
+      .first();
     if ((await heading.count()) > 0) {
       await expect(heading).toBeVisible();
       console.log('✅ Mensajes heading is visible');
@@ -155,7 +160,9 @@ test.describe('Mensajes Dealer AI Chatbot Integration', () => {
       return;
     }
 
-    const botIconBtn = page.locator('button[title="Preguntar al Asistente IA del vendedor"]').first();
+    const botIconBtn = page
+      .locator('button[title="Preguntar al Asistente IA del vendedor"]')
+      .first();
     if ((await botIconBtn.count()) === 0) {
       console.log('⚠️ Bot button not found (conversation may be "received" type, not inquiry)');
       return;
@@ -205,7 +212,9 @@ test.describe('Mensajes Dealer AI Chatbot Integration', () => {
       return;
     }
 
-    const botIconBtn = page.locator('button[title="Preguntar al Asistente IA del vendedor"]').first();
+    const botIconBtn = page
+      .locator('button[title="Preguntar al Asistente IA del vendedor"]')
+      .first();
     if ((await botIconBtn.count()) === 0) {
       console.log('⚠️ Bot button not found');
       return;
