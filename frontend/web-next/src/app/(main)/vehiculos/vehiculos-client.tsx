@@ -55,7 +55,6 @@ import {
   LogIn,
   ShieldCheck,
   Tag,
-  Car,
   Phone,
   Star,
 } from 'lucide-react';
