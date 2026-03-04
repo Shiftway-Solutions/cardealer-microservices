@@ -32,7 +32,7 @@ import {
   Bot,
   Sparkles,
 } from 'lucide-react';
-import { useChatbot, type UseChatbotReturn } from '@/hooks/useChatbot';
+import { useChatbot } from '@/hooks/useChatbot';
 import { BotMessageContent } from '@/components/chat/BotMessageContent';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,11 +57,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  messagingService,
-  type Conversation,
-  type Message,
-} from '@/services/messaging';
+import { messagingService, type Conversation, type Message } from '@/services/messaging';
 
 // =============================================================================
 // LOADING STATE
@@ -70,12 +66,12 @@ import {
 function ConversationsLoading() {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border p-4">
+      <div className="border-border border-b p-4">
         <Skeleton className="h-10 w-full" />
       </div>
       <div className="flex-1">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="flex gap-3 border-b border-border p-4">
+          <div key={i} className="border-border flex gap-3 border-b p-4">
             <Skeleton className="h-12 w-12 rounded-full" />
             <div className="flex-1">
               <Skeleton className="mb-2 h-4 w-32" />
@@ -92,7 +88,7 @@ function ConversationsLoading() {
 function MessagesLoading() {
   return (
     <div className="flex h-full items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
     </div>
   );
 }
@@ -106,7 +102,7 @@ function ConversationsError({ onRetry }: { onRetry: () => void }) {
     <div className="flex h-full flex-col items-center justify-center p-6 text-center">
       <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
       <h3 className="mb-2 font-semibold">Error al cargar</h3>
-      <p className="mb-4 text-sm text-muted-foreground">No se pudieron cargar las conversaciones</p>
+      <p className="text-muted-foreground mb-4 text-sm">No se pudieron cargar las conversaciones</p>
       <Button variant="outline" onClick={onRetry}>
         <RefreshCw className="mr-2 h-4 w-4" />
         Reintentar
@@ -124,18 +120,18 @@ function EmptyState() {
     <div className="flex h-full flex-col items-center justify-center p-8 text-center">
       {/* Animated gradient circle */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#00A870]/20 to-primary/20 blur-xl" />
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-primary/80 shadow-lg shadow-[#00A870]/25">
+        <div className="to-primary/20 absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-[#00A870]/20 blur-xl" />
+        <div className="to-primary/80 relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] shadow-lg shadow-[#00A870]/25">
           <Inbox className="h-12 w-12 text-white" />
         </div>
       </div>
-      <h3 className="mb-2 text-xl font-bold text-foreground">¡Tu bandeja está lista!</h3>
-      <p className="mb-8 max-w-sm text-muted-foreground">
+      <h3 className="text-foreground mb-2 text-xl font-bold">¡Tu bandeja está lista!</h3>
+      <p className="text-muted-foreground mb-8 max-w-sm">
         Explora vehículos y contacta vendedores para iniciar conversaciones.
       </p>
       <Button
         asChild
-        className="group relative overflow-hidden bg-gradient-to-r from-[#00A870] to-primary/80 px-8 py-3 text-base font-semibold shadow-lg shadow-[#00A870]/25 transition-all hover:shadow-xl hover:shadow-[#00A870]/30"
+        className="group to-primary/80 relative overflow-hidden bg-gradient-to-r from-[#00A870] px-8 py-3 text-base font-semibold shadow-lg shadow-[#00A870]/25 transition-all hover:shadow-xl hover:shadow-[#00A870]/30"
       >
         <Link href="/vehiculos" className="flex items-center gap-2">
           <Car className="h-5 w-5" />
@@ -143,7 +139,9 @@ function EmptyState() {
           <span className="transition-transform group-hover:translate-x-1">→</span>
         </Link>
       </Button>
-      <p className="mt-6 text-xs text-muted-foreground">💡 Tip: Los mensajes se guardan automáticamente</p>
+      <p className="text-muted-foreground mt-6 text-xs">
+        💡 Tip: Los mensajes se guardan automáticamente
+      </p>
     </div>
   );
 }
@@ -167,14 +165,14 @@ function ConversationItem({
       className={cn(
         'group w-full border-b border-gray-50 p-4 text-left transition-all duration-200',
         isSelected
-          ? 'border-l-4 border-l-[#00A870] bg-gradient-to-r from-[#00A870]/10 to-primary/5'
+          ? 'to-primary/5 border-l-4 border-l-[#00A870] bg-gradient-to-r from-[#00A870]/10'
           : 'hover:bg-muted/50/80',
         conversation.unreadCount > 0 && !isSelected && 'bg-blue-50/30'
       )}
     >
       <div className="flex gap-3">
         {/* Avatar */}
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+        <div className="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full">
           {conversation.otherUser.avatarUrl ? (
             <Image
               src={conversation.otherUser.avatarUrl}
@@ -184,7 +182,7 @@ function ConversationItem({
               className="h-full w-full object-cover"
             />
           ) : (
-            <User className="h-6 w-6 text-muted-foreground" />
+            <User className="text-muted-foreground h-6 w-6" />
           )}
         </div>
 
@@ -198,7 +196,7 @@ function ConversationItem({
             >
               {conversation.otherUser.name}
             </span>
-            <span className="flex-shrink-0 text-xs text-muted-foreground">
+            <span className="text-muted-foreground flex-shrink-0 text-xs">
               {conversation.lastMessage
                 ? messagingService.formatConversationTime(conversation.lastMessage.sentAt)
                 : messagingService.formatConversationTime(conversation.createdAt)}
@@ -206,7 +204,7 @@ function ConversationItem({
           </div>
 
           <div className="mt-0.5 flex items-center gap-2">
-            <p className="truncate text-sm text-muted-foreground">{conversation.vehicle.title}</p>
+            <p className="text-muted-foreground truncate text-sm">{conversation.vehicle.title}</p>
             <Badge
               variant="outline"
               className={cn(
@@ -224,13 +222,15 @@ function ConversationItem({
             <p
               className={cn(
                 'truncate text-sm',
-                conversation.unreadCount > 0 ? 'font-medium text-foreground' : 'text-muted-foreground'
+                conversation.unreadCount > 0
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground'
               )}
             >
               {conversation.lastMessage ? (
                 <>
                   {conversation.lastMessage.isFromMe && (
-                    <span className="mr-1 text-muted-foreground">Tú:</span>
+                    <span className="text-muted-foreground mr-1">Tú:</span>
                   )}
                   {conversation.lastMessage.content}
                 </>
@@ -262,7 +262,7 @@ function MessageBubble({ message }: { message: Message }) {
           'max-w-[75%] rounded-2xl px-4 py-2',
           message.isFromMe
             ? 'bg-primary rounded-br-md text-white'
-            : 'rounded-bl-md bg-muted text-foreground'
+            : 'bg-muted text-foreground rounded-bl-md'
         )}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
@@ -282,24 +282,31 @@ function MessageBubble({ message }: { message: Message }) {
 }
 
 // =============================================================================
-// AI BOT PANEL (inline, full-height live chat)
+// DEALER BOT PANEL — self-contained, one instance per conversation
 // =============================================================================
 
-/** Sentinel ID used to select the AI assistant "conversation" */
-const BOT_CONVERSATION_ID = '__ai_assistant__';
-
-function AiBotPanel({
-  chat,
+/**
+ * DealerBotPanel
+ *
+ * Initialises its own ChatbotService session scoped to the dealer's account.
+ * Mount with key={conversationId} so the session resets when the user
+ * navigates to a different conversation.
+ */
+function DealerBotPanel({
+  dealerId,
+  dealerName,
   onBack,
 }: {
-  chat: UseChatbotReturn;
+  dealerId?: string;
+  dealerName: string;
   onBack: () => void;
 }) {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const chat = useChatbot({ dealerId, autoStart: true, maxRetries: 2 });
+  const botEndRef = React.useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = React.useState('');
 
   React.useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    botEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chat.messages]);
 
   const handleSend = () => {
@@ -309,10 +316,12 @@ function AiBotPanel({
     chat.sendMessage(text);
   };
 
+  const displayName = `${dealerName} · Asistente IA`;
+
   return (
     <>
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border bg-card p-4 shadow-sm">
+      <div className="border-border bg-card flex items-center gap-3 border-b p-4 shadow-sm">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onBack}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -324,34 +333,43 @@ function AiBotPanel({
           <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-400" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">
-            {chat.botName || 'Asistente OKLA'}
-          </h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-foreground truncate font-semibold">{displayName}</h3>
           <p className="text-xs text-[#00A870]">● En línea · Responde al instante</p>
         </div>
 
-        <Badge className="shrink-0 border-0 bg-[#00A870]/10 text-[#00A870]">
-          <Sparkles className="mr-1 h-3 w-3" />
-          IA
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className="shrink-0 border-0 bg-[#00A870]/10 text-[#00A870]">
+            <Sparkles className="mr-1 h-3 w-3" />
+            IA
+          </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            title="Volver a mensajes"
+            className="hidden md:inline-flex"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-50/30 to-white p-4">
-        {/* Connecting state */}
         {!chat.isConnected && chat.isLoading && (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-[#00A870]" />
-            <p className="mt-3 text-sm text-muted-foreground">Conectando con el asistente...</p>
+            <p className="text-muted-foreground mt-3 text-sm">
+              Conectando con el asistente de {dealerName}…
+            </p>
           </div>
         )}
 
-        {/* Connection error */}
         {!chat.isConnected && !chat.isLoading && chat.error && (
           <div className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-8 w-8 text-red-400" />
-            <p className="mt-3 text-sm text-center text-muted-foreground">{chat.error}</p>
+            <p className="text-muted-foreground mt-3 text-center text-sm">{chat.error}</p>
             <Button
               variant="outline"
               size="sm"
@@ -364,7 +382,6 @@ function AiBotPanel({
           </div>
         )}
 
-        {/* Message bubbles */}
         <div className="space-y-4">
           {chat.messages.map(message => (
             <div
@@ -380,7 +397,7 @@ function AiBotPanel({
                 className={cn(
                   'max-w-[78%] rounded-2xl px-4 py-2.5 shadow-sm',
                   message.isFromBot
-                    ? 'rounded-tl-sm bg-white ring-1 ring-gray-100 text-gray-800'
+                    ? 'rounded-tl-sm bg-white text-gray-800 ring-1 ring-gray-100'
                     : 'rounded-tr-sm bg-gradient-to-br from-[#00A870] to-emerald-600 text-white'
                 )}
               >
@@ -425,7 +442,6 @@ function AiBotPanel({
           ))}
         </div>
 
-        {/* Quick Replies */}
         {chat.quickReplies.length > 0 && !chat.isLoading && (
           <div className="mt-4 flex flex-wrap gap-2">
             {chat.quickReplies.map(reply => (
@@ -441,11 +457,11 @@ function AiBotPanel({
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        <div ref={botEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="border-t border-border bg-gradient-to-t from-gray-50/50 to-white p-4">
+      {/* Input */}
+      <div className="border-border border-t bg-gradient-to-t from-gray-50/50 to-white p-4">
         {chat.isLimitReached ? (
           <div className="flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
             <span>Has alcanzado el límite de mensajes.</span>
@@ -462,7 +478,7 @@ function AiBotPanel({
           <div className="flex gap-3">
             <Input
               type="text"
-              placeholder="Escribe tu mensaje al asistente..."
+              placeholder={`Pregunta al asistente de ${dealerName}…`}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               onKeyDown={e => {
@@ -472,8 +488,8 @@ function AiBotPanel({
                 }
               }}
               disabled={chat.isLoading || !chat.isConnected}
-              className="h-12 flex-1 rounded-xl border-border bg-card shadow-sm transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
-              aria-label="Mensaje al asistente"
+              className="border-border bg-card h-12 flex-1 rounded-xl shadow-sm transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
+              aria-label="Mensaje al asistente del dealer"
             />
             <Button
               onClick={handleSend}
@@ -492,7 +508,7 @@ function AiBotPanel({
         {!chat.isLimitReached &&
           chat.remainingInteractions > 0 &&
           chat.remainingInteractions <= 5 && (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-center text-xs">
               {chat.remainingInteractions} mensajes restantes
             </p>
           )}
@@ -516,8 +532,8 @@ export default function MessagesPage() {
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
-  // ── AI Chatbot session ──────────────────────────────────────
-  const chat = useChatbot({ autoStart: false, maxRetries: 2 });
+  // ── AI Bot panel toggle (dealer-scoped) ─────────────────────
+  const [showBotPanel, setShowBotPanel] = React.useState(false);
 
   // Fetch conversations
   const {
@@ -594,6 +610,11 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversationDetail?.messages]);
 
+  // Reset bot panel when user switches conversation
+  React.useEffect(() => {
+    setShowBotPanel(false);
+  }, [selectedConversationId]);
+
   // Filter conversations
   const filteredConversations = React.useMemo(() => {
     if (!searchQuery) return conversations;
@@ -633,24 +654,24 @@ export default function MessagesPage() {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       {/* Messages Container - Full height WhatsApp style */}
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-xl border-0 bg-card shadow-xl ring-1 shadow-border/50 ring-border">
+      <Card className="bg-card shadow-border/50 ring-border flex flex-1 flex-col overflow-hidden rounded-xl border-0 shadow-xl ring-1">
         <div className="flex flex-1 overflow-hidden">
           {/* Conversations List - Left panel */}
           <div
             className={cn(
-              'flex w-full flex-col border-r border-border bg-card md:w-80 lg:w-96',
+              'border-border bg-card flex w-full flex-col border-r md:w-80 lg:w-96',
               selectedConversationId && 'hidden md:flex'
             )}
           >
             {/* Header with search */}
-            <div className="border-b border-border bg-gradient-to-b from-gray-50/80 to-white p-4">
-              <h1 className="mb-3 text-xl font-bold text-foreground">Mensajes</h1>
+            <div className="border-border border-b bg-gradient-to-b from-gray-50/80 to-white p-4">
+              <h1 className="text-foreground mb-3 text-xl font-bold">Mensajes</h1>
               <div className="relative">
                 <label htmlFor="search-conversations" className="sr-only">
                   Buscar conversaciones
                 </label>
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Search className="text-muted-foreground h-4 w-4" />
                 </div>
                 <Input
                   id="search-conversations"
@@ -658,7 +679,7 @@ export default function MessagesPage() {
                   placeholder="Buscar..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="h-12 rounded-xl border-border bg-card pl-12 shadow-sm transition-all focus:border-[#00A870] focus:bg-white focus:ring-2 focus:ring-[#00A870]/20"
+                  className="border-border bg-card h-12 rounded-xl pl-12 shadow-sm transition-all focus:border-[#00A870] focus:bg-white focus:ring-2 focus:ring-[#00A870]/20"
                   aria-label="Buscar conversaciones"
                 />
               </div>
@@ -666,51 +687,6 @@ export default function MessagesPage() {
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {/* ── Pinned AI Bot Conversation ── */}
-              <button
-                onClick={() => {
-                  setSelectedConversationId(BOT_CONVERSATION_ID);
-                  if (!chat.isConnected && !chat.isLoading) {
-                    chat.startSession();
-                  }
-                }}
-                className={cn(
-                  'group w-full border-b border-gray-100 p-4 text-left transition-all duration-200',
-                  selectedConversationId === BOT_CONVERSATION_ID
-                    ? 'border-l-4 border-l-[#00A870] bg-gradient-to-r from-[#00A870]/10 to-emerald-50/50'
-                    : 'bg-gradient-to-r from-[#00A870]/3 to-transparent hover:from-[#00A870]/8 hover:to-emerald-50/30'
-                )}
-              >
-                <div className="flex gap-3">
-                  <div className="relative shrink-0">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-emerald-600 shadow-md ring-2 ring-[#00A870]/20">
-                      <Bot className="h-6 w-6 text-white" />
-                    </div>
-                    <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-green-400" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-foreground">Asistente OKLA</span>
-                        <Badge className="border-0 bg-[#00A870]/10 px-1.5 py-0 text-xs text-[#00A870]">
-                          <Sparkles className="mr-0.5 h-2.5 w-2.5" />
-                          IA
-                        </Badge>
-                      </div>
-                      <span className="text-xs font-medium text-[#00A870]">En línea</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Inteligencia Artificial · 24/7
-                    </p>
-                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                      {chat.messages.length > 0
-                        ? `${chat.messages[chat.messages.length - 1].isFromBot ? '🤖' : 'Tú'}: ${chat.messages[chat.messages.length - 1].content.slice(0, 38)}...`
-                        : 'Pregúntame sobre vehículos, precios y más'}
-                    </p>
-                  </div>
-                </div>
-              </button>
               {conversationsLoading ? (
                 <ConversationsLoading />
               ) : conversationsError ? (
@@ -738,18 +714,39 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div
-            className={cn(
-              'flex flex-1 flex-col',
-              !selectedConversationId && 'hidden md:flex'
-            )}
-          >
-            {selectedConversationId === BOT_CONVERSATION_ID ? (
-              <AiBotPanel chat={chat} onBack={() => setSelectedConversationId(null)} />
-            ) : selectedConversation ? (
+          <div className={cn('flex flex-1 flex-col', !selectedConversationId && 'hidden md:flex')}>
+            {!selectedConversation ? (
+              <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-gray-50 to-white p-8">
+                <div className="text-center">
+                  <div className="relative mx-auto mb-6">
+                    <div className="absolute inset-0 animate-pulse rounded-full bg-[#00A870]/10 blur-2xl" />
+                    <div className="to-primary/10 relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870]/10 shadow-inner">
+                      <MessageCircle className="h-10 w-10 text-[#00A870]" />
+                    </div>
+                  </div>
+                  <h3 className="text-foreground mb-2 text-lg font-semibold">
+                    Selecciona una conversación
+                  </h3>
+                  <p className="text-muted-foreground mb-4 max-w-xs text-sm">
+                    Elige una conversación de la lista para ver los mensajes
+                  </p>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#00A870]/5 px-4 py-2 text-xs text-[#00A870]">
+                    <span>💬</span>
+                    <span>Responde rápido para mejores resultados</span>
+                  </div>
+                </div>
+              </div>
+            ) : showBotPanel ? (
+              <DealerBotPanel
+                key={selectedConversationId!}
+                dealerId={selectedConversation.otherUser.id || undefined}
+                dealerName={selectedConversation.otherUser.name}
+                onBack={() => setShowBotPanel(false)}
+              />
+            ) : (
               <>
                 {/* Chat Header - Premium */}
-                <div className="flex items-center gap-3 border-b border-border bg-card p-4 shadow-sm">
+                <div className="border-border bg-card flex items-center gap-3 border-b p-4 shadow-sm">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -759,7 +756,7 @@ export default function MessagesPage() {
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
 
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
                     {selectedConversation.otherUser.avatarUrl ? (
                       <Image
                         src={selectedConversation.otherUser.avatarUrl}
@@ -769,27 +766,40 @@ export default function MessagesPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User className="h-5 w-5 text-muted-foreground" />
+                      <User className="text-muted-foreground h-5 w-5" />
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-medium text-foreground">
+                    <h3 className="text-foreground truncate font-medium">
                       {selectedConversation.otherUser.name}
                     </h3>
                     {selectedConversation.vehicle.slug ? (
                       <Link
                         href={`/vehiculos/${selectedConversation.vehicle.slug}`}
-                        className="hover:text-primary block truncate text-sm text-muted-foreground"
+                        className="hover:text-primary text-muted-foreground block truncate text-sm"
                       >
                         {selectedConversation.vehicle.title}
                       </Link>
                     ) : (
-                      <p className="truncate text-sm text-muted-foreground">
+                      <p className="text-muted-foreground truncate text-sm">
                         {selectedConversation.vehicle.title}
                       </p>
                     )}
                   </div>
+
+                  {/* AI Bot button — buyers can query the seller's AI assistant */}
+                  {selectedConversation.type === 'inquiry' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowBotPanel(true)}
+                      title="Preguntar al Asistente IA del vendedor"
+                      className="text-[#00A870] hover:bg-[#00A870]/10 hover:text-[#00A870]"
+                    >
+                      <Bot className="h-5 w-5" />
+                    </Button>
+                  )}
 
                   {/* WhatsApp button – shown for received conversations when buyer phone is available */}
                   {selectedConversation.type === 'received' &&
@@ -846,7 +856,7 @@ export default function MessagesPage() {
                   ) : (
                     <>
                       {/* Vehicle Card - Premium */}
-                      <Card className="overflow-hidden border-0 bg-gradient-to-r from-[#00A870]/5 to-primary/5 shadow-sm ring-1 ring-[#00A870]/10">
+                      <Card className="to-primary/5 overflow-hidden border-0 bg-gradient-to-r from-[#00A870]/5 shadow-sm ring-1 ring-[#00A870]/10">
                         <CardContent className="p-4">
                           <Link
                             href={
@@ -859,7 +869,7 @@ export default function MessagesPage() {
                               selectedConversation.vehicle.slug && 'hover:opacity-90'
                             )}
                           >
-                            <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded bg-muted">
+                            <div className="bg-muted flex h-12 w-16 items-center justify-center overflow-hidden rounded">
                               {selectedConversation.vehicle.imageUrl ? (
                                 <Image
                                   src={selectedConversation.vehicle.imageUrl}
@@ -869,11 +879,11 @@ export default function MessagesPage() {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <Car className="h-6 w-6 text-muted-foreground" />
+                                <Car className="text-muted-foreground h-6 w-6" />
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-foreground">
+                              <p className="text-foreground text-sm font-medium">
                                 {selectedConversation.vehicle.title}
                               </p>
                               {selectedConversation.vehicle.price > 0 && (
@@ -896,7 +906,7 @@ export default function MessagesPage() {
                           <MessageBubble key={message.id} message={message} />
                         ))
                       ) : (
-                        <div className="py-8 text-center text-sm text-muted-foreground">
+                        <div className="text-muted-foreground py-8 text-center text-sm">
                           No hay mensajes en esta conversación
                         </div>
                       )}
@@ -906,7 +916,7 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Input - Premium style */}
-                <div className="border-t border-border bg-gradient-to-t from-gray-50/50 to-white p-4">
+                <div className="border-border border-t bg-gradient-to-t from-gray-50/50 to-white p-4">
                   <div className="flex gap-3">
                     <Input
                       type="text"
@@ -915,12 +925,12 @@ export default function MessagesPage() {
                       onChange={e => setNewMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={sendMutation.isPending}
-                      className="h-12 flex-1 rounded-xl border-border bg-card shadow-sm transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
+                      className="border-border bg-card h-12 flex-1 rounded-xl shadow-sm transition-all focus:border-[#00A870] focus:ring-2 focus:ring-[#00A870]/20"
                     />
                     <Button
                       onClick={handleSend}
                       disabled={!newMessage.trim() || sendMutation.isPending}
-                      className="h-12 w-12 rounded-xl bg-gradient-to-r from-[#00A870] to-primary/80 shadow-lg shadow-[#00A870]/25 transition-all hover:shadow-xl hover:shadow-[#00A870]/30 disabled:opacity-50 disabled:shadow-none"
+                      className="to-primary/80 h-12 w-12 rounded-xl bg-gradient-to-r from-[#00A870] shadow-lg shadow-[#00A870]/25 transition-all hover:shadow-xl hover:shadow-[#00A870]/30 disabled:opacity-50 disabled:shadow-none"
                     >
                       {sendMutation.isPending ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -931,28 +941,6 @@ export default function MessagesPage() {
                   </div>
                 </div>
               </>
-            ) : (
-              <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-gray-50 to-white p-8">
-                <div className="text-center">
-                  {/* Elegant illustration */}
-                  <div className="relative mx-auto mb-6">
-                    <div className="absolute inset-0 animate-pulse rounded-full bg-[#00A870]/10 blur-2xl" />
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870]/10 to-primary/10 shadow-inner">
-                      <MessageCircle className="h-10 w-10 text-[#00A870]" />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 text-lg font-semibold text-foreground">
-                    Selecciona una conversación
-                  </h3>
-                  <p className="mb-4 max-w-xs text-sm text-muted-foreground">
-                    Elige una conversación de la lista para ver los mensajes
-                  </p>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#00A870]/5 px-4 py-2 text-xs text-[#00A870]">
-                    <span>💬</span>
-                    <span>Responde rápido para mejores resultados</span>
-                  </div>
-                </div>
-              </div>
             )}
           </div>
         </div>
