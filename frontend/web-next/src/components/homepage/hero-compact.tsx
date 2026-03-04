@@ -74,19 +74,7 @@ const modelsByMake: Record<string, string[]> = {
   Chevrolet: ['Silverado', 'Equinox', 'Tahoe', 'Traverse', 'Malibu', 'Camaro', 'Colorado'],
 };
 
-// =============================================================================
-// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)
-// =============================================================================
-
-const NL_SUGGESTION_CHIPS = [
-  { label: '🚗 Toyota', query: 'Toyota Corolla' },
-  { label: '🏔️ SUV Familiar', query: 'SUV familiar buen precio' },
-  { label: '💰 Hasta 500K', query: 'Carro usado menos de 500 mil' },
-  { label: '⚡ Híbrido', query: 'Vehículo híbrido' },
-  { label: '🛻 Camioneta', query: 'Camioneta pickup' },
-];
-
-function NaturalLanguageHeroSearch() {
+// =============================================================================\n// NATURAL LANGUAGE HERO SEARCH BAR (replaces filter dropdowns)\n// =============================================================================\n\nfunction NaturalLanguageHeroSearch() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
@@ -142,9 +130,7 @@ function NaturalLanguageHeroSearch() {
       <div
         className={cn(
           'bg-card/95 dark:bg-card/90 mx-auto w-full max-w-5xl rounded-2xl border p-2 shadow-2xl shadow-black/20 backdrop-blur-sm transition-all duration-300',
-          isFocused
-            ? 'border-primary shadow-primary/20'
-            : 'border-white/20 dark:border-white/10'
+          isFocused ? 'border-primary shadow-primary/20' : 'border-white/20 dark:border-white/10'
         )}
       >
         <div className="flex flex-col gap-2 md:flex-row">
@@ -196,23 +182,6 @@ function NaturalLanguageHeroSearch() {
       <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-white/70">
         <Sparkles className="h-3 w-3" />
         <span>Búsqueda con IA — escribe lo que quieras en español</span>
-      </div>
-
-      {/* Suggestion chips */}
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-        {NL_SUGGESTION_CHIPS.map(chip => (
-          <button
-            key={chip.label}
-            onClick={() => {
-              setQuery(chip.query);
-              handleSearch(chip.query);
-            }}
-            disabled={isSearching}
-            className="hover:border-primary/50 hover:bg-primary rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
-          >
-            {chip.label}
-          </button>
-        ))}
       </div>
     </div>
   );

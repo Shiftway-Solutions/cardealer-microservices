@@ -285,11 +285,13 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             - Americanos: Ford, Chevrolet, Jeep, RAM, Dodge, GMC
             - Pickup/Trabajo: Toyota Hilux, Ford Ranger, Mitsubishi L200, Nissan Frontier
 
-            TIPOS VEHICULARES:
-            sedan, suv, pickup, hatchback, van, deportivo, coupe, convertible, minivan
+            TIPOS VEHICULARES (valores EXACTOS del sistema de filtros):
+            sedan, suv, pickup, hatchback, coupe, convertible, van, minivan
+            NOTA: NO uses "deportivo" ni ningún otro valor fuera de esta lista.
+            Para autos deportivos usa "coupe" o "sedan" según corresponda.
 
-            TRANSMISIONES: automatica, manual
-            COMBUSTIBLES: gasolina, diesel, hibrido, electrico, gas
+            TRANSMISIONES: automatica, manual, cvt
+            COMBUSTIBLES: gasolina, diesel, hibrido, electrico, glp
             CONDICIONES: nuevo, usado
 
             RESPONDE ÚNICAMENTE con un objeto JSON válido siguiendo este esquema exacto:

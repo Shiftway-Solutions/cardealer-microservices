@@ -341,8 +341,12 @@ export default function VehiculosClient() {
     else if (filters.yearMin) chips.push({ key: 'year', label: `Desde ${filters.yearMin}` });
     else if (filters.yearMax) chips.push({ key: 'year', label: `Hasta ${filters.yearMax}` });
     if (filters.priceMin || filters.priceMax) {
-      const min = filters.priceMin ? `RD$${(filters.priceMin / 1000).toFixed(0)}K` : '';
-      const max = filters.priceMax ? `RD$${(filters.priceMax / 1000).toFixed(0)}K` : '';
+      const fmtPrice = (v: number) =>
+        v >= 1_000_000
+          ? `RD$${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`
+          : `RD$${(v / 1_000).toFixed(0)}K`;
+      const min = filters.priceMin ? fmtPrice(filters.priceMin) : '';
+      const max = filters.priceMax ? fmtPrice(filters.priceMax) : '';
       chips.push({ key: 'price', label: min && max ? `${min}–${max}` : min || `Hasta ${max}` });
     }
     if (filters.bodyType) chips.push({ key: 'bodyType', label: filters.bodyType });
