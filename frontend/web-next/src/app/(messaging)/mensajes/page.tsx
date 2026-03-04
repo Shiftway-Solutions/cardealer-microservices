@@ -179,6 +179,7 @@ function AppointmentScheduler({
   onSchedule: (message: string) => void;
   onClose: () => void;
 }) {
+  const [step, setStep] = React.useState<'date' | 'time'>('date');
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
 
   // Next 14 days, excluding Sundays
@@ -192,6 +193,8 @@ function AppointmentScheduler({
     }
     return dates;
   }, []);
+
+  const timeSlots = ['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM'];
 
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const monthNames = [
@@ -219,7 +222,9 @@ function AppointmentScheduler({
           </div>
           <div>
             <h4 className="text-sm font-semibold text-gray-800">Agendar cita con {dealerName}</h4>
-            <p className="text-xs text-gray-400">Selecciona un día disponible</p>
+            <p className="text-xs text-gray-400">
+              {step === 'date' ? 'Paso 1/2 — Selecciona un día' : 'Paso 2/2 — Selecciona una hora'}
+            </p>
           </div>
         </div>
         <button
@@ -231,35 +236,84 @@ function AppointmentScheduler({
         </button>
       </div>
 
-      {/* Date grid */}
-      <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
-        <Calendar className="h-4 w-4" />
-        ¿Qué día te gustaría visitarnos?
-      </p>
-      <div className="grid grid-cols-4 gap-1.5">
-        {availableDates.map(d => (
-          <button
-            key={d.toISOString()}
-            onClick={() => {
-              setSelectedDate(d);
-              const dateStr = `${dayNames[d.getDay()]} ${d.getDate()} de ${monthNames[d.getMonth()]}`;
-              onSchedule(
-                `Quisiera agendar una cita para ver el vehículo el ${dateStr}. ¿Qué horarios tienen disponibles?`
-              );
-            }}
+      {/* Progress bar */}
+      <div className="mb-4 flex gap-1">
+        {(['date', 'time'] as const).map((s, i) => (
+          <div
+            key={s}
             className={cn(
-              'flex flex-col items-center rounded-xl border px-2 py-2 text-xs transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
-              selectedDate?.toDateString() === d.toDateString()
-                ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
-                : 'border-gray-100 text-gray-700'
+              'h-1 flex-1 rounded-full transition-all',
+              (step === 'date' && i === 0) || step === 'time' ? 'bg-[#00A870]' : 'bg-gray-100'
             )}
-          >
-            <span className="text-gray-400">{dayNames[d.getDay()]}</span>
-            <span className="text-base font-bold">{d.getDate()}</span>
-            <span className="text-gray-400">{monthNames[d.getMonth()]}</span>
-          </button>
+          />
         ))}
       </div>
+
+      {/* Step 1: Date */}
+      {step === 'date' && (
+        <>
+          <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
+            <Calendar className="h-4 w-4" />
+            ¿Qué día te gustaría visitarnos?
+          </p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {availableDates.map(d => (
+              <button
+                key={d.toISOString()}
+                onClick={() => {
+                  setSelectedDate(d);
+                  setStep('time');
+                }}
+                className={cn(
+                  'flex flex-col items-center rounded-xl border px-2 py-2 text-xs transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
+                  selectedDate?.toDateString() === d.toDateString()
+                    ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
+                    : 'border-gray-100 text-gray-700'
+                )}
+              >
+                <span className="text-gray-400">{dayNames[d.getDay()]}</span>
+                <span className="text-base font-bold">{d.getDate()}</span>
+                <span className="text-gray-400">{monthNames[d.getMonth()]}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Step 2: Time */}
+      {step === 'time' && selectedDate && (
+        <>
+          <button
+            onClick={() => setStep('date')}
+            className="mb-2 flex items-center gap-1 text-xs text-[#00A870] hover:underline"
+          >
+            ← Cambiar día
+          </button>
+          <p className="mb-3 text-sm text-gray-500">
+            <span className="font-medium text-gray-700">
+              {dayNames[selectedDate.getDay()]} {selectedDate.getDate()} de{' '}
+              {monthNames[selectedDate.getMonth()]}
+            </span>{' '}
+            — ¿A qué hora te viene bien?
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {timeSlots.map(t => (
+              <button
+                key={t}
+                onClick={() => {
+                  const dateStr = `${dayNames[selectedDate.getDay()]} ${selectedDate.getDate()} de ${monthNames[selectedDate.getMonth()]}`;
+                  onSchedule(
+                    `Quisiera agendar una cita para ver el vehículo el ${dateStr} a las ${t}.`
+                  );
+                }}
+                className="rounded-xl border border-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-[#00A870] hover:bg-[#00A870]/5 hover:text-[#00A870]"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -280,10 +334,12 @@ function EmptyState() {
       </div>
       <h3 className="text-foreground mb-2 text-xl font-bold">Sin mensajes aún</h3>
       <p className="text-muted-foreground mb-2 max-w-sm text-sm">
-        Aquí aparecen tus conversaciones con vendedores y dealers — cuando contactas a alguien desde una publicación de vehículo.
+        Aquí aparecen tus conversaciones con vendedores y dealers — cuando contactas a alguien desde
+        una publicación de vehículo.
       </p>
       <p className="text-muted-foreground mb-8 max-w-sm text-xs">
-        💬 Para chatear con un Asistente IA de un dealer, usa la pestaña <strong>Asistentes IA</strong>.
+        💬 Para chatear con un Asistente IA de un dealer, usa la pestaña{' '}
+        <strong>Asistentes IA</strong>.
       </p>
       <Button
         asChild
@@ -296,7 +352,8 @@ function EmptyState() {
         </Link>
       </Button>
       <p className="text-muted-foreground mt-6 text-xs">
-        💡 Tip: Haz clic en &quot;Contactar vendedor&quot; en cualquier vehículo para iniciar una conversación
+        💡 Tip: Haz clic en &quot;Contactar vendedor&quot; en cualquier vehículo para iniciar una
+        conversación
       </p>
     </div>
   );
