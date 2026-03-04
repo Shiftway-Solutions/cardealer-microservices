@@ -171,8 +171,12 @@ export default function FeaturedVehicles({
     );
   }
 
-  const vehicles = rotation?.items?.slice(0, maxItems) || [];
-  // Fill remaining slots with null to always show maxItems cards
+  const rawVehicles = rotation?.items?.slice(0, maxItems) || [];
+  // Only show cards for rotation items that actually have enriched vehicle data.
+  // If RotatedVehicleDto has no title/imageUrl/price, it's a stale CMS entry —
+  // treat it as an empty slot so the section never shows ghost "Vehículo 🚗" cards.
+  const vehicles = rawVehicles.filter(v => v.title || v.imageUrl || (v.price && v.price > 0));
+  // Fill remaining slots with null to always show maxItems cards (EmptyVehicleCard)
   const displayItems: (RotatedVehicle | null)[] = [
     ...vehicles,
     ...Array(Math.max(0, maxItems - vehicles.length)).fill(null),
