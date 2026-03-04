@@ -129,7 +129,7 @@ export function HomepageNlpSearch({ className }: HomepageNlpSearchProps) {
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Busca tu vehículo ideal"   
+            placeholder="Busca tu vehículo ideal"
             className="flex-1 bg-transparent text-base text-gray-900 placeholder-gray-400 outline-none sm:text-lg"
             disabled={isSearching}
             autoComplete="off"

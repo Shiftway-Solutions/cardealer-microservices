@@ -588,7 +588,7 @@ export default function VehiculosClient() {
     hasAutoTriggeredAiRef.current = true;
     // Run AI parsing in the background — user already sees the vehicles page
     handleAiSearch(aiQuery);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
 
   // Sync searchInput with filters.query from URL.

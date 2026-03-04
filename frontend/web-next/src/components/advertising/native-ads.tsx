@@ -2,26 +2,16 @@
 
 // ============================================================================
 // OKLA Native Ad Components
-// Sponsored vehicle cards that look like normal listings with subtle badges.
+// Sponsored vehicle cards that use the same design as regular listings.
 // "Que se vean como publicaciones normales... elegante"
 // ============================================================================
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import React, { useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import {
-  Heart,
-  MapPin,
-  Camera,
-  Fuel,
-  Gauge,
-  Settings2,
-  BadgeCheck,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { TrendingUp, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VehicleCard } from '@/components/ui/vehicle-card';
+import type { VehicleCardData } from '@/types';
 import type { SponsoredVehicle, AdSlotPosition } from '@/types/ads';
 
 // ---------------------------------------------------------------------------
@@ -114,7 +104,35 @@ function useAdImpression(
 }
 
 // ---------------------------------------------------------------------------
-// SponsoredVehicleCard — Native ad that looks like a normal vehicle card
+// Helper: map SponsoredVehicle → VehicleCardData for the shared VehicleCard
+// ---------------------------------------------------------------------------
+
+function sponsoredToCardData(vehicle: SponsoredVehicle): VehicleCardData {
+  return {
+    id: vehicle.id,
+    slug: vehicle.slug,
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    price: vehicle.price,
+    currency: vehicle.currency,
+    mileage: vehicle.mileage,
+    transmission: vehicle.transmission,
+    fuelType: vehicle.fuelType,
+    imageUrl: vehicle.imageUrl,
+    location: vehicle.location,
+    dealerName: vehicle.dealerName,
+    dealerRating: vehicle.dealerRating,
+    photoCount: vehicle.photoCount,
+    isVerified: vehicle.isVerified,
+    trim: vehicle.trim,
+    monthlyPayment: vehicle.monthlyPayment,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// SponsoredVehicleCard — Uses the same VehicleCard as organic results.
+// Ad tracking (impressions + clicks) is handled transparently by the wrapper.
 // ---------------------------------------------------------------------------
 
 interface SponsoredVehicleCardProps {
@@ -137,14 +155,12 @@ export function SponsoredVehicleCard({
   showFavoriteButton = true,
 }: SponsoredVehicleCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [imgError, setImgError] = useState(false);
 
   useAdImpression(cardRef, vehicle.impressionToken, onImpression);
 
   const handleClick = useCallback(() => {
     onClick?.(vehicle);
-    // Track click
+    // Fire-and-forget click tracking
     fetch(vehicle.clickTrackingUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -159,246 +175,15 @@ export function SponsoredVehicleCard({
     });
   }, [vehicle, onClick]);
 
-  const formatPrice = (price: number, currency: string) => {
-    if (currency === 'USD') {
-      return `US$${price.toLocaleString('en-US')}`;
-    }
-    return `RD$${price.toLocaleString('es-DO')}`;
-  };
-
-  const formatMileage = (km: number) => {
-    if (km >= 1000) return `${(km / 1000).toFixed(km >= 10000 ? 0 : 1)}k km`;
-    return `${km.toLocaleString()} km`;
-  };
-
-  const vehicleUrl = `/vehiculos/${vehicle.slug}`;
-  const fallbackImage = '/images/vehicle-placeholder.svg';
-
-  if (variant === 'compact') {
-    return (
-      <div ref={cardRef} className={cn('group', className)}>
-        <Link href={vehicleUrl} onClick={handleClick} className="block">
-          <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
-            <div className="relative aspect-[4/3]">
-              <Image
-                src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                fill
-                className="object-cover"
-                onError={() => setImgError(true)}
-                priority={priority}
-              />
-              <div className="absolute top-2 left-2">
-                <SponsoredBadge tier={vehicle.sponsorTier} />
-              </div>
-            </div>
-            <CardContent className="p-3">
-              <p className="truncate text-sm font-semibold text-slate-900">
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </p>
-              <p className="mt-1 text-base font-bold text-emerald-600">
-                {formatPrice(vehicle.price, vehicle.currency)}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-    );
-  }
-
-  if (variant === 'horizontal') {
-    return (
-      <div ref={cardRef} className={cn('group', className)}>
-        <Link href={vehicleUrl} onClick={handleClick} className="block">
-          <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
-            <div className="flex">
-              <div className="relative w-48 flex-shrink-0">
-                <Image
-                  src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
-                  alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                  fill
-                  className="object-cover"
-                  onError={() => setImgError(true)}
-                />
-                <div className="absolute top-2 left-2">
-                  <SponsoredBadge tier={vehicle.sponsorTier} />
-                </div>
-              </div>
-              <CardContent className="flex flex-1 flex-col justify-between p-4">
-                <div>
-                  <h3 className="font-semibold text-slate-900">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                    {vehicle.trim && (
-                      <span className="ml-1 font-normal text-slate-500">{vehicle.trim}</span>
-                    )}
-                  </h3>
-                  <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Gauge className="h-3 w-3" />
-                      {formatMileage(vehicle.mileage)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Settings2 className="h-3 w-3" />
-                      {vehicle.transmission}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Fuel className="h-3 w-3" />
-                      {vehicle.fuelType}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-end justify-between">
-                  <div>
-                    <p className="text-lg font-bold text-emerald-600">
-                      {formatPrice(vehicle.price, vehicle.currency)}
-                    </p>
-                  </div>
-                  <span className="flex items-center gap-1 text-xs text-slate-400">
-                    <MapPin className="h-3 w-3" />
-                    {vehicle.location}
-                  </span>
-                </div>
-              </CardContent>
-            </div>
-          </Card>
-        </Link>
-      </div>
-    );
-  }
-
-  // Default variant — matches the existing VehicleCard design exactly
   return (
-    <div ref={cardRef} className={cn('group', className)}>
-      <Link href={vehicleUrl} onClick={handleClick} className="block">
-        <Card className="overflow-hidden border-0 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 hover:shadow-lg">
-          {/* Image Container */}
-          <div className="relative aspect-[16/10] overflow-hidden">
-            <Image
-              src={imgError ? fallbackImage : vehicle.imageUrl || fallbackImage}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              onError={() => setImgError(true)}
-              priority={priority}
-            />
-
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-            {/* Top badges row */}
-            <div className="absolute top-2.5 right-2.5 left-2.5 flex items-start justify-between">
-              <div className="flex items-center gap-1.5">
-                <SponsoredBadge tier={vehicle.sponsorTier} />
-                {vehicle.isVerified && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                    <BadgeCheck className="h-2.5 w-2.5" />
-                    Verificado
-                  </span>
-                )}
-              </div>
-              {showFavoriteButton && (
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsFavorite(!isFavorite);
-                  }}
-                  className="rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
-                >
-                  <Heart
-                    className={cn(
-                      'h-4 w-4 transition-colors',
-                      isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'
-                    )}
-                  />
-                </button>
-              )}
-            </div>
-
-            {/* Photo count badge */}
-            {vehicle.photoCount && vehicle.photoCount > 0 && (
-              <div className="absolute bottom-2.5 left-2.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                  <Camera className="h-2.5 w-2.5" />
-                  {vehicle.photoCount}
-                </span>
-              </div>
-            )}
-
-            {/* Dealer badge */}
-            {vehicle.dealerName && (
-              <div className="absolute right-2.5 bottom-2.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-blue-600/90 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                  Dealer
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Card Content */}
-          <CardContent className="p-3.5">
-            {/* Title */}
-            <h3 className="truncate text-[15px] leading-tight font-semibold text-slate-900">
-              {vehicle.year} {vehicle.make} {vehicle.model}
-              {vehicle.trim && (
-                <span className="ml-1 text-sm font-normal text-slate-500">{vehicle.trim}</span>
-              )}
-            </h3>
-
-            {/* Specs row */}
-            <div className="mt-2 flex items-center gap-2.5 text-xs text-slate-500">
-              <span className="flex items-center gap-1">
-                <Gauge className="h-3.5 w-3.5 text-slate-400" />
-                {formatMileage(vehicle.mileage)}
-              </span>
-              <span className="text-slate-300">·</span>
-              <span className="flex items-center gap-1">
-                <Settings2 className="h-3.5 w-3.5 text-slate-400" />
-                {vehicle.transmission}
-              </span>
-              <span className="text-slate-300">·</span>
-              <span className="flex items-center gap-1">
-                <Fuel className="h-3.5 w-3.5 text-slate-400" />
-                {vehicle.fuelType}
-              </span>
-            </div>
-
-            {/* Location */}
-            <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
-              <MapPin className="h-3 w-3 text-slate-400" />
-              {vehicle.location}
-            </div>
-
-            {/* Price */}
-            <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-3">
-              <div>
-                <p className="text-lg leading-none font-bold text-emerald-600">
-                  {formatPrice(vehicle.price, vehicle.currency)}
-                </p>
-                {vehicle.monthlyPayment && (
-                  <p className="mt-0.5 text-[11px] text-slate-400">
-                    ~{formatPrice(vehicle.monthlyPayment, vehicle.currency)}/mes
-                  </p>
-                )}
-              </div>
-              {vehicle.dealerRating && (
-                <div className="flex items-center gap-1 text-xs">
-                  <span className="text-amber-500">★</span>
-                  <span className="font-medium text-slate-600">{vehicle.dealerRating}</span>
-                </div>
-              )}
-            </div>
-
-            {/* CTA on hover */}
-            <div className="mt-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <div className="w-full rounded-lg bg-emerald-600 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-emerald-700">
-                Contactar vendedor
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
+    <div ref={cardRef} className={cn('relative', className)} onClick={handleClick}>
+      <VehicleCard
+        vehicle={sponsoredToCardData(vehicle)}
+        variant={variant}
+        showDealRating={false}
+        showFavoriteButton={showFavoriteButton}
+        priority={priority}
+      />
     </div>
   );
 }

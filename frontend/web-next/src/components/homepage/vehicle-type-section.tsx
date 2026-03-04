@@ -227,7 +227,7 @@ function VehicleCard({
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
-      <Card className="flex h-full flex-col overflow-hidden border border-border shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-[#00A870]/50 hover:shadow-xl">
+      <Card className="border-border flex h-full flex-col overflow-hidden border shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-[#00A870]/50 hover:shadow-xl">
         <div className="bg-muted relative aspect-[4/3]">
           <Image
             src={primaryImage}
