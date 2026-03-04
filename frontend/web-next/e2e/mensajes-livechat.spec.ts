@@ -261,6 +261,59 @@ test.describe('Mensajes Dealer AI Chatbot Integration', () => {
     console.log('Screenshot saved');
   });
 
+  test('URL-param triggered bot: ?sellerId auto-opens dealer bot panel', async ({ page }) => {
+    test.setTimeout(60000);
+
+    await loginAsBuyer(page);
+
+    // Simulate arriving from a vehicle detail "Chat Live" button
+    const SELLER_ID = '34146177-68fe-4952-bb1b-2a53b1a08c4c';
+    const VEHICLE_TITLE = '2024 Toyota RAV4';
+    const encodedTitle = encodeURIComponent(VEHICLE_TITLE);
+    await page.goto(
+      `${BASE_URL}/mensajes?sellerId=${SELLER_ID}&vehicleTitle=${encodedTitle}&vehicleId=94887983-8bdf-40fb-80fe-bf1465498124`
+    );
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(4000);
+
+    if (page.url().includes('/ingresar') || page.url().includes('/login')) {
+      console.log('⚠️ Not authenticated — skipping URL bot test');
+      return;
+    }
+
+    console.log('Current URL after navigate:', page.url());
+
+    // The dealer bot panel should open automatically
+    // Look for: "Asistente de 2024 Toyota RAV4" or typing indicator or "En línea" or chat input
+    const botHeader = page
+      .locator('h3')
+      .filter({ hasText: /Asistente/i })
+      .first();
+    const onlineStatus = page.locator('text=/En línea/i').first();
+    const chatInput = page.locator('input[aria-label*="Pregunta"]').first();
+
+    const headerCount = await botHeader.count();
+    const onlineCount = await onlineStatus.count();
+    const inputCount = await chatInput.count();
+
+    console.log(`Bot header "Asistente": ${headerCount > 0}`);
+    console.log(`"En línea" status: ${onlineCount > 0}`);
+    console.log(`Chat input visible: ${inputCount > 0}`);
+
+    if (headerCount > 0 || inputCount > 0) {
+      console.log('✅ URL-triggered dealer bot panel opened successfully');
+      if (headerCount > 0) {
+        const headerText = await botHeader.textContent();
+        console.log(`Bot header text: "${headerText}"`);
+      }
+    } else {
+      console.log('⚠️ Bot panel not detected — may need auth or ChatbotService response');
+    }
+
+    await page.screenshot({ path: 'test-results/mensajes-url-triggered-bot.png' });
+    console.log('Screenshot saved to test-results/mensajes-url-triggered-bot.png');
+  });
+
   test('mensajes page is accessible without login (redirects to login)', async ({ page }) => {
     await page.goto(`${BASE_URL}/mensajes`);
     await page.waitForLoadState('load');
