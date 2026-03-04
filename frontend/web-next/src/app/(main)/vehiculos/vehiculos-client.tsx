@@ -203,44 +203,6 @@ function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
 }
 
 /**
- * OklaPromoLeaderboard — OKLA-owned "Sell your car" conversion banner.
- * Shown when no active configurable banners exist for search_leaderboard.
- */
-function OklaPromoLeaderboard() {
-  return (
-    <div
-      className="col-span-full my-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#00A870] to-[#00c882] shadow-md"
-      aria-label="Banner publicitario"
-    >
-      {/* Advertising disclosure — Ley 358-05 compliance */}
-      <div className="flex justify-end px-4 pt-2">
-        <span className="text-[10px] font-medium text-white/60">Publicidad</span>
-      </div>
-      <div className="flex flex-col items-center justify-between gap-4 px-6 pb-5 sm:flex-row">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20">
-            <Car className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white">¿Tienes un vehículo para vender?</p>
-            <p className="text-sm text-white/80">
-              Publica en minutos y llega a miles de compradores en RD
-            </p>
-          </div>
-        </div>
-        <Link
-          href="/vender"
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#00A870] shadow-sm transition-all hover:scale-105 hover:shadow-md"
-        >
-          <Tag className="h-4 w-4" />
-          Publicar ahora
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-/**
  * AdSlotLeaderboard — fetches configurable banners from admin portal.
  * Returns null when no active banners (removed seller self-promo: this page is for buyers).
  */
@@ -326,22 +288,15 @@ function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
   if (!vehicles.length) return null;
   const show = vehicles.slice(0, 3);
   return (
-    <div className="col-span-full my-2">
-      {/* Green-bordered banner container — makes sponsored row visually distinct */}
-      <div className="overflow-hidden rounded-xl border-2 border-emerald-400 bg-emerald-50/60 p-4 dark:border-emerald-700 dark:bg-emerald-900/10">
-        {/* Header row */}
-        <div className="mb-3 flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:ring-emerald-700">
-            ⭐ Vehículos Patrocinados
-          </span>
-          <SponsoredBadge tier="sponsored" />
-        </div>
-        {/* Vehicle cards */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {show.map(v => (
-            <SponsoredVehicleCard key={v.id} vehicle={v} />
-          ))}
-        </div>
+    <div className="col-span-full my-1">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-muted-foreground text-xs">Vehículos patrocinados</span>
+        <SponsoredBadge tier="sponsored" />
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {show.map(v => (
+          <SponsoredVehicleCard key={v.id} vehicle={v} />
+        ))}
       </div>
     </div>
   );
@@ -662,7 +617,7 @@ export default function VehiculosClient() {
     }
 
     // Rotating pool of inline sponsored vehicles (cycles if needed)
-    let sponsoredPool = [...inlineSponsored];
+    const sponsoredPool = [...inlineSponsored];
     let sponsoredOffset = 0;
 
     allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
