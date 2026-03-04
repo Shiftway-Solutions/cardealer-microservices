@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ChatbotService.Domain.Entities;
@@ -17,17 +18,20 @@ public class DealerInventoryStrategy : IChatModeStrategy
 {
     private readonly IVectorSearchService _vectorSearch;
     private readonly IChatbotVehicleRepository _vehicleRepository;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DealerInventoryStrategy> _logger;
-    
+
     public ChatMode Mode => ChatMode.DealerInventory;
 
     public DealerInventoryStrategy(
         IVectorSearchService vectorSearch,
         IChatbotVehicleRepository vehicleRepository,
+        IHttpClientFactory httpClientFactory,
         ILogger<DealerInventoryStrategy> logger)
     {
         _vectorSearch = vectorSearch;
         _vehicleRepository = vehicleRepository;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -37,12 +41,15 @@ public class DealerInventoryStrategy : IChatModeStrategy
         string userMessage,
         CancellationToken ct = default)
     {
-        var botName = config.BotName ?? "Ana";
+        // Use empty botName when config has no custom name so the API returns '' and the
+        // frontend shows 'Asistente de [dealerName]' as the fallback display name.
+        var botName = string.IsNullOrWhiteSpace(config.BotName) ? "Asistente" : config.BotName;
         var dealerName = config.Name ?? "OKLA";
         var dealerId = session.DealerId ?? config.DealerId ?? Guid.Empty;
 
         // Contar inventario total
         var totalVehicles = 0;
+        List<LiveVehicleDto>? liveVehicles = null;
         try
         {
             var vehicles = await _vehicleRepository.GetByConfigurationIdAsync(config.Id, ct);
@@ -53,11 +60,24 @@ public class DealerInventoryStrategy : IChatModeStrategy
             _logger.LogWarning(ex, "Failed to count inventory for config {ConfigId}", config.Id);
         }
 
+        // When no local inventory for this config (real dealer using default fallback),
+        // fetch live vehicles from VehiclesService scoped to the specific dealer/seller.
+        if (totalVehicles == 0 && dealerId != Guid.Empty)
+        {
+            liveVehicles = await FetchLiveInventoryAsync(dealerId, ct);
+            totalVehicles = liveVehicles?.Count ?? 0;
+        }
+
         // RAG: buscar vehículos relevantes al mensaje del usuario
         var ragContext = "";
         try
         {
-            if (dealerId != Guid.Empty && !string.IsNullOrWhiteSpace(userMessage))
+            if (liveVehicles != null && liveVehicles.Count > 0)
+            {
+                // Use live vehicles from VehiclesService as static context
+                ragContext = BuildLiveInventoryContext(liveVehicles, userMessage);
+            }
+            else if (dealerId != Guid.Empty && !string.IsNullOrWhiteSpace(userMessage))
             {
                 // Extraer filtros del mensaje del usuario
                 var filters = ExtractFiltersFromMessage(userMessage);
@@ -526,4 +546,112 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 
         return headers + string.Join("\n", rows);
     }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // LIVE INVENTORY — Fetch real dealer vehicles from VehiclesService API
+    // Used when chatbot_vehicles is empty (real dealer using default config)
+    // ══════════════════════════════════════════════════════════════════════
+
+    private async Task<List<LiveVehicleDto>?> FetchLiveInventoryAsync(Guid dealerId, CancellationToken ct)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient("VehiclesApi");
+            var url = $"seller/{dealerId}?pageSize=50&status=Active";
+            var response = await httpClient.GetAsync(url, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("VehiclesService returned {StatusCode} for seller {DealerId}", response.StatusCode, dealerId);
+                return null;
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<LiveVehiclesResponse>(
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }, ct);
+
+            var items = data?.Items ?? data?.Data ?? [];
+            _logger.LogInformation("Live inventory: fetched {Count} vehicles for dealer {DealerId}", items.Count, dealerId);
+            return items;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch live inventory for dealer {DealerId}", dealerId);
+            return null;
+        }
+    }
+
+    private static string BuildLiveInventoryContext(List<LiveVehicleDto> vehicles, string userMessage)
+    {
+        if (vehicles.Count == 0) return "";
+
+        var lower = userMessage.ToLowerInvariant();
+
+        // Filter to most relevant vehicles (simple keyword match + limit)
+        var relevant = vehicles
+            .Where(v => v.IsActive != false)
+            .OrderByDescending(v => v.IsFeatured)
+            .Take(25)
+            .ToList();
+
+        // If user asked about something specific, try to surface matches first
+        if (!string.IsNullOrWhiteSpace(userMessage))
+        {
+            var keywordMatches = vehicles
+                .Where(v => v.IsActive != false &&
+                            ($"{v.Make} {v.Model} {v.Year} {v.BodyType} {v.FuelType}".ToLowerInvariant()
+                             .Split(' ')
+                             .Any(word => lower.Contains(word) && word.Length > 2)))
+                .Take(10)
+                .ToList();
+
+            if (keywordMatches.Count > 0)
+            {
+                // Merge keyword matches first, then fill up to 25
+                var ids = keywordMatches.Select(v => v.Id).ToHashSet();
+                var rest = relevant.Where(v => !ids.Contains(v.Id)).Take(25 - keywordMatches.Count);
+                relevant = keywordMatches.Concat(rest).ToList();
+            }
+        }
+
+        var lines = new List<string> { "\n\n## 🚗 INVENTARIO DEL DEALER (Vehículos publicados en OKLA)" };
+        foreach (var v in relevant)
+        {
+            var price = v.Price > 0 ? $"RD${v.Price:N0}" : "Consultar";
+            var mileage = v.Mileage > 0 ? $"{v.Mileage:N0}km" : "N/A";
+            var sale = v.IsOnSale && v.OriginalPrice > 0 ? $" 🏷️OFERTA (antes RD${v.OriginalPrice:N0})" : "";
+            lines.Add($"- {v.Year} {v.Make} {v.Model} {v.Trim ?? ""} | {price}{sale} | {v.FuelType ?? "N/A"} | {v.Transmission ?? "N/A"} | {mileage} | {v.ExteriorColor ?? "N/A"} | ID:{v.Id}");
+        }
+        lines.Add($"\nTotal disponibles en OKLA: {vehicles.Count(v => v.IsActive != false)}");
+        lines.Add("IMPORTANTE: SOLO recomienda vehículos de esta lista. Estos son los vehículos REALES publicados por este dealer en la plataforma OKLA.");
+        return string.Join("\n", lines);
+    }
+}
+
+// DTO for live inventory from VehiclesService API
+internal sealed class LiveVehiclesResponse
+{
+    public List<LiveVehicleDto> Items { get; set; } = [];
+    public List<LiveVehicleDto> Data { get; set; } = [];
+    public int TotalCount { get; set; }
+}
+
+internal sealed class LiveVehicleDto
+{
+    public Guid Id { get; set; }
+    public string Make { get; set; } = "";
+    public string Model { get; set; } = "";
+    public int Year { get; set; }
+    public string? Trim { get; set; }
+    public decimal Price { get; set; }
+    public decimal? OriginalPrice { get; set; }
+    public bool IsOnSale { get; set; }
+    public int Mileage { get; set; }
+    public string? FuelType { get; set; }
+    public string? Transmission { get; set; }
+    public string? BodyType { get; set; }
+    public string? ExteriorColor { get; set; }
+    public string? Description { get; set; }
+    public bool IsFeatured { get; set; }
+    public bool? IsActive { get; set; }
+    public string? Status { get; set; }
 }

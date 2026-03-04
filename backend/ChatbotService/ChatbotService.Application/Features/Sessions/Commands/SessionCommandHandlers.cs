@@ -104,7 +104,12 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             SessionId = session.Id,
             SessionToken = session.SessionToken,
             WelcomeMessage = welcomeMessage,
-            BotName = config.BotName,
+            // When using the default/global fallback config (DealerId == null but request has a real dealerId),
+            // return an empty BotName so the frontend can show its per-dealer fallback:
+            //   displayName = chat.botName || `Asistente de ${dealerName}`
+            BotName = (request.DealerId.HasValue && config.DealerId == null)
+                ? ""
+                : (config.BotName ?? ""),
             BotAvatarUrl = config.BotAvatarUrl,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
             RemainingInteractions = config.MaxInteractionsPerSession,
