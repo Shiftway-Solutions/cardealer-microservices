@@ -8,11 +8,13 @@
  */
 
 import { useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSupportAgent } from '@/hooks/useSupportAgent';
+import { useAuth } from '@/hooks/use-auth';
 import { ChatInput } from './ChatInput';
 import { BotMessageContent } from './BotMessageContent';
-import { X, RotateCcw, Minus, Headphones, AlertCircle, WifiOff } from 'lucide-react';
+import { X, RotateCcw, Minus, Headphones, AlertCircle, WifiOff, Lock } from 'lucide-react';
 import type { SupportChatMessage } from '@/services/support-agent';
 
 // =============================================================================
@@ -116,6 +118,7 @@ function SupportMessageBubble({
 
 export function SupportAgentWidget() {
   const chat = useSupportAgent({ autoWelcome: true });
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -228,28 +231,62 @@ export function SupportAgentWidget() {
             role="log"
             aria-live="polite"
           >
-            {chat.messages.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                <WifiOff className="h-10 w-10 text-gray-300 dark:text-gray-600" />
-                <p className="text-sm text-gray-500">Conectando...</p>
+            {!authLoading && !isAuthenticated ? (
+              <div className="flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                  <Lock className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Soporte para usuarios registrados
+                  </h3>
+                  <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                    Inicia sesión o regístrate gratis para acceder al soporte IA 24/7.
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2">
+                  <Link
+                    href="/login"
+                    className="block w-full rounded-xl bg-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#009663]"
+                    onClick={chat.close}
+                  >
+                    Iniciar sesión
+                  </Link>
+                  <Link
+                    href="/registro"
+                    className="block w-full rounded-xl border border-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-[#00A870] transition-colors hover:bg-[#00A870]/5"
+                    onClick={chat.close}
+                  >
+                    Crear cuenta gratis
+                  </Link>
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                {chat.messages.length === 0 && (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                    <WifiOff className="h-10 w-10 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm text-gray-500">Conectando...</p>
+                  </div>
+                )}
 
-            {chat.messages.map(msg => (
-              <SupportMessageBubble
-                key={msg.id}
-                message={msg}
-                onSuggestion={chat.selectSuggestion}
-              />
-            ))}
+                {chat.messages.map(msg => (
+                  <SupportMessageBubble
+                    key={msg.id}
+                    message={msg}
+                    onSuggestion={chat.selectSuggestion}
+                  />
+                ))}
+              </>
+            )}
           </div>
 
           {/* Input */}
           <ChatInput
             onSend={chat.sendMessage}
-            disabled={chat.isLoading}
+            disabled={chat.isLoading || (!authLoading && !isAuthenticated)}
             isLoading={chat.isLoading}
-            placeholder="Escribe tu pregunta..."
+            placeholder={!authLoading && !isAuthenticated ? 'Inicia sesión para chatear' : 'Escribe tu pregunta...'}
           />
         </div>
       )}

@@ -24,17 +24,17 @@ export const metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <div className="min-h-screen bg-muted/50 py-12">
+    <div className="bg-muted/50 min-h-screen py-12">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Política de Privacidad</h1>
-            <p className="mt-2 text-muted-foreground">Última actualización: Enero 2026</p>
+            <h1 className="text-foreground text-3xl font-bold">Política de Privacidad</h1>
+            <p className="text-muted-foreground mt-2">Última actualización: Enero 2026</p>
           </div>
 
           {/* Content */}
-          <div className="rounded-lg bg-card p-8 shadow-sm">
+          <div className="bg-card rounded-lg p-8 shadow-sm">
             <div className="prose prose-gray max-w-none">
               <p className="lead">
                 En OKLA, respetamos su privacidad y nos comprometemos a proteger su información
@@ -157,12 +157,13 @@ export default function PrivacidadPage() {
               </ul>
               <p>
                 Para ejercer estos derechos, contáctenos en{' '}
-                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>. Si considera
-                que sus derechos no han sido atendidos, puede presentar una queja ante el{' '}
-                <strong>Instituto Nacional de Protección de los Derechos del Consumidor
-                (Pro Consumidor)</strong> o ante <strong>INDOTEL</strong> (Instituto Dominicano de
-                las Telecomunicaciones), autoridad competente en materia de protección de datos en
-                la República Dominicana.
+                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>. Si considera que
+                sus derechos no han sido atendidos, puede presentar una queja ante el{' '}
+                <strong>
+                  Instituto Nacional de Protección de los Derechos del Consumidor (Pro Consumidor)
+                </strong>{' '}
+                o ante <strong>INDOTEL</strong> (Instituto Dominicano de las Telecomunicaciones),
+                autoridad competente en materia de protección de datos en la República Dominicana.
               </p>
 
               <h2>6. Cookies y Tecnologías Similares</h2>
@@ -226,7 +227,7 @@ export default function PrivacidadPage() {
           </div>
 
           {/* Footer Links */}
-          <div className="mt-8 flex justify-center gap-6 text-sm text-muted-foreground">
+          <div className="text-muted-foreground mt-8 flex justify-center gap-6 text-sm">
             <Link href="/terminos" className="hover:text-[#00A870]">
               Términos y Condiciones
             </Link>

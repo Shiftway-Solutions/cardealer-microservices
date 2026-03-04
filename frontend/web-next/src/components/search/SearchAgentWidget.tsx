@@ -10,7 +10,9 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, X, RotateCcw, Minus, AlertCircle, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Sparkles, X, RotateCcw, Minus, AlertCircle, Loader2, Lock } from 'lucide-react';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { BotMessageContent } from '@/components/chat/BotMessageContent';
 import { aiSearch, aiFiltersToSearchParams, type SearchAgentResult } from '@/services/search-agent';
@@ -67,6 +69,7 @@ const WELCOME_MESSAGE: SearchChatMessage = {
 // =============================================================================
 
 export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<SearchChatMessage[]>([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
@@ -298,7 +301,37 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto py-3" role="log">
-            {messages.map(msg => (
+            {!authLoading && !isAuthenticated ? (
+              <div className="flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                  <Lock className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Búsqueda IA para usuarios registrados
+                  </h3>
+                  <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                    Inicia sesión o regístrate gratis para buscar con lenguaje natural.
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2">
+                  <Link
+                    href="/login"
+                    className="block w-full rounded-xl bg-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#009663]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Iniciar sesión
+                  </Link>
+                  <Link
+                    href="/registro"
+                    className="block w-full rounded-xl border border-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-[#00A870] transition-colors hover:bg-[#00A870]/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Crear cuenta gratis
+                  </Link>
+                </div>
+              </div>
+            ) : messages.map(msg => (
               <div key={msg.id}>
                 {/* Loading */}
                 {msg.isLoading && (
@@ -385,9 +418,9 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
           {/* Input */}
           <ChatInput
             onSend={handleSearch}
-            disabled={isLoading}
+            disabled={isLoading || (!authLoading && !isAuthenticated)}
             isLoading={isLoading}
-            placeholder='Ej: "SUV familiar menos de RD$1M"'
+            placeholder={!authLoading && !isAuthenticated ? 'Inicia sesión para buscar con IA' : 'Ej: "SUV familiar menos de RD$1M"'}
           />
         </div>
       )}

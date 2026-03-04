@@ -96,7 +96,10 @@ function NaturalLanguageHeroSearch() {
         if (result.aiFilters?.filtros_exactos) {
           const params = aiFiltersToUrlParams(result.aiFilters.filtros_exactos);
           const searchParams = new URLSearchParams();
-          searchParams.set('q', q);
+          // Store reformulated query for display ONLY — NOT as 'q' which would create
+          // an extra text-filter chip alongside the structured AI filters.
+          const displayQuery = result.aiFilters.query_reformulada ?? q;
+          searchParams.set('ai_query', displayQuery);
           Object.entries(params).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
               searchParams.set(key, String(value));

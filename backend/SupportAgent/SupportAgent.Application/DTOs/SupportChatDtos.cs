@@ -12,6 +12,8 @@ public class SupportChatResponse
     public string Response { get; set; } = string.Empty;
     public string DetectedModule { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    /// <summary>Contextual follow-up action chips shown in the chat UI after each bot message.</summary>
+    public List<string> SuggestedActions { get; set; } = [];
 }
 
 public class SessionHistoryResponse

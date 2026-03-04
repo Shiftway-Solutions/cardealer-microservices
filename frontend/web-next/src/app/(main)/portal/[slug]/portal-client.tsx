@@ -116,7 +116,9 @@ function DealerChatbot({ dealerName, dealerId }: { dealerName: string; dealerId:
 
     try {
       // Use apiClient for proper auth/CSRF handling
-      const { default: { post } } = await import('@/lib/api-client').then(m => ({ default: m.apiClient }));
+      const {
+        default: { post },
+      } = await import('@/lib/api-client').then(m => ({ default: m.apiClient }));
       const res = await post('/api/chatbot/message', {
         message: userMsg,
         dealerId,
@@ -124,11 +126,9 @@ function DealerChatbot({ dealerName, dealerId }: { dealerName: string; dealerId:
       });
 
       const data = res.data;
-      const responseText = data?.data?.response || data?.response || 'Lo siento, no pude procesar tu pregunta.';
-      setMessages(prev => [
-        ...prev,
-        { role: 'bot', text: responseText },
-      ]);
+      const responseText =
+        data?.data?.response || data?.response || 'Lo siento, no pude procesar tu pregunta.';
+      setMessages(prev => [...prev, { role: 'bot', text: responseText }]);
     } catch {
       setMessages(prev => [
         ...prev,

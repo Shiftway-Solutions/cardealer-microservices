@@ -36,6 +36,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Search,
   SlidersHorizontal,
@@ -227,17 +228,24 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
 
 export default function VehiculosClient() {
   const { isAuthenticated } = useAuth();
+  const urlSearchParams = useSearchParams();
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
   const [saveModalOpen, setSaveModalOpen] = React.useState(false);
-  const [searchInput, setSearchInput] = React.useState('');
+  // Initialise search bar text from ai_query param (homepage NL redirect) or empty
+  const [searchInput, setSearchInput] = React.useState(() => urlSearchParams.get('ai_query') ?? '');
   const [isAiSearching, setIsAiSearching] = React.useState(false);
   const [aiSearchInfo, setAiSearchInfo] = React.useState<{
     query: string;
     confidence: number;
     latencyMs: number;
     wasCached: boolean;
-  } | null>(null);
+  } | null>(() => {
+    const aiQuery = urlSearchParams.get('ai_query');
+    if (!aiQuery) return null;
+    // Restore AI search info banner when landing from homepage NL search
+    return { query: aiQuery, confidence: 1.0, latencyMs: 0, wasCached: false };
+  });
 
   // Core search hook — handles URL sync, debounce, React Query
   const {
@@ -416,10 +424,16 @@ export default function VehiculosClient() {
           return;
         }
 
-        // Apply AI-generated filters
+        // Apply AI-generated filters.
+        // Explicitly set query:undefined to clear any previous text filter so the
+        // raw NL text does NOT appear as a filter chip alongside structured filters.
         if (ai.filtros_exactos) {
           const mapped = aiFiltersToSearchParams(ai.filtros_exactos);
-          setFilters({ ...mapped, page: 1 } as Parameters<typeof setFilters>[0]);
+          setFilters({ query: undefined, ...mapped, page: 1 } as Parameters<typeof setFilters>[0]);
+          // Show the reformulated query in the search bar for context
+          if (ai.query_reformulada) {
+            setSearchInput(ai.query_reformulada);
+          }
         }
 
         setAiSearchInfo({
@@ -438,12 +452,13 @@ export default function VehiculosClient() {
     [isAiSearching, setFilters]
   );
 
-  // Sync searchInput with filters.query from URL
+  // Sync searchInput with filters.query from URL.
+  // Skip when AI search is active or AI info is shown (searchInput holds the reformulated query).
   React.useEffect(() => {
-    if (!isAiSearching) {
+    if (!isAiSearching && !aiSearchInfo) {
       setSearchInput(filters.query ?? '');
     }
-  }, [filters.query, isAiSearching]);
+  }, [filters.query, isAiSearching, aiSearchInfo]);
 
   // Render accumulated vehicles with ad slots every 6 items
   const renderResults = () => {

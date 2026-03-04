@@ -211,9 +211,42 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
             SessionId = sessionId,
             Response = sanitizedResponse,
             DetectedModule = detectedModule,
+            SuggestedActions = GetSuggestedActions(detectedModule),
             Timestamp = DateTime.UtcNow
         };
     }
+
+    /// <summary>
+    /// Returns 2-3 contextual follow-up chips based on the detected conversation module.
+    /// Keeps the conversation flowing without the user having to think of next questions.
+    /// </summary>
+    private static List<string> GetSuggestedActions(string detectedModule) => detectedModule switch
+    {
+        "soporte_tecnico" =>
+        [
+            "¿Cómo verifico mi KYC?",
+            "¿Cuánto cuesta publicar?",
+            "¿Cómo recupero mi contraseña?",
+        ],
+        "orientacion_comprador" =>
+        [
+            "¿Qué documentos debo pedir?",
+            "¿Cómo evito estafas?",
+            "¿Cómo verifico un vendedor?",
+        ],
+        "mixto" =>
+        [
+            "¿Qué documentos necesito?",
+            "¿Cómo me registro como vendedor?",
+        ],
+        "conversacional" =>
+        [
+            "¿Cómo me registro?",
+            "¿Cuánto cuesta publicar?",
+            "¿Es seguro comprar en OKLA?",
+        ],
+        _ => []
+    };
 
     /// <summary>
     /// Simple keyword-based module detection (pre-Claude classification).
