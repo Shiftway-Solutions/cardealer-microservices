@@ -7,7 +7,13 @@
 
 import * as React from 'react';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { VehicleGallery, VehicleHeader, SellerCard, VehicleTabs, SimilarVehicles } from '@/components/vehicle-detail';
+import {
+  VehicleGallery,
+  VehicleHeader,
+  SellerCard,
+  VehicleTabs,
+  SimilarVehicles,
+} from '@/components/vehicle-detail';
 import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { ReviewsSection } from '@/components/reviews';
 import type { Vehicle } from '@/types';
@@ -95,7 +101,6 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           />
         </div>
       </div>
-
     </div>
   );
 }

@@ -317,7 +317,12 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto py-3" role="log" aria-live="polite">
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto py-3"
+            role="log"
+            aria-live="polite"
+          >
             {messages.map(msg => (
               <div key={msg.id}>
                 {/* Loading */}

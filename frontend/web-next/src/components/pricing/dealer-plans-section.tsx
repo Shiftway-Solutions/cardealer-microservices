@@ -1,8 +1,8 @@
 /**
- * Dealer Plans Section (Client Component)
+ * Dealer Plans Section (Client Component) — OKLA v2
  *
- * Renders dealer pricing plans using dynamic pricing from ConfigurationService.
- * Used in the dealers landing page (Server Component) as a client island.
+ * Renders dealer pricing plans with full feature comparison.
+ * Shows 4-tier visibility-based plans (Libre/Visible/Pro/Elite).
  */
 
 'use client';
@@ -10,7 +10,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, X, Crown, Sparkles, Shield, Zap } from 'lucide-react';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 
 export function DealerPlansSection() {
@@ -19,56 +19,88 @@ export function DealerPlansSection() {
   const plans = [
     {
       name: 'LIBRE',
-      price: formatPrice(pricing.dealerLibre),
+      price: '$0',
       period: '/mes',
+      icon: Shield,
       description: 'Para empezar sin costo',
       features: [
-        'Vehículos ilimitados',
-        'Panel básico',
-        'Estadísticas básicas',
-        'Soporte por email',
+        { text: 'Publicaciones ilimitadas', included: true },
+        { text: 'Hasta 10 fotos por vehículo', included: true },
+        { text: 'Posición estándar en búsquedas', included: true },
+        { text: '1 valoración IA gratis (PricingAgent)', included: true },
+        { text: 'Vehículos destacados', included: false },
+        { text: 'OKLA Coins mensuales', included: false },
+        { text: 'Badge Verificado', included: false },
+        { text: 'ChatAgent IA', included: false },
+        { text: 'Dashboard Analytics', included: false },
       ],
       cta: 'Comenzar Gratis',
       highlighted: false,
+      badge: null,
     },
     {
       name: 'VISIBLE',
-      price: formatPrice(pricing.dealerVisible),
+      price: formatPrice(pricing.dealerVisible || 29),
       period: '/mes',
-      description: 'Más visibilidad',
+      icon: Zap,
+      description: 'Más visibilidad y herramientas',
       features: [
-        'Vehículos ilimitados',
-        'Badge verificado',
-        'Visibilidad mejorada',
-        'Stats avanzadas',
-        '3 destacados/mes',
+        { text: 'Publicaciones ilimitadas', included: true },
+        { text: 'Hasta 20 fotos por vehículo', included: true },
+        { text: 'Prioridad media en búsquedas', included: true },
+        { text: '3 destacados incluidos/mes', included: true },
+        { text: '$15 en OKLA Coins/mes', included: true },
+        { text: 'Badge Dealer Verificado', included: true },
+        { text: '5 valoraciones PricingAgent/mes', included: true },
+        { text: 'Dashboard básico', included: true },
+        { text: 'ChatAgent IA', included: false },
       ],
       cta: 'Elegir Plan',
       highlighted: false,
+      badge: null,
     },
     {
       name: 'PRO',
-      price: formatPrice(pricing.dealerPro),
+      price: formatPrice(pricing.dealerPro || 89),
       period: '/mes',
-      description: 'El más popular',
+      icon: Sparkles,
+      description: 'Herramientas avanzadas de venta',
       features: [
-        'Todo de VISIBLE +',
-        'ChatAgent IA',
-        'CRM de leads',
-        'Boosts incluidos',
-        'Integración WhatsApp',
+        { text: 'Publicaciones ilimitadas', included: true },
+        { text: 'Hasta 30 fotos por vehículo', included: true },
+        { text: 'Alta prioridad en búsquedas', included: true },
+        { text: '10 destacados incluidos/mes', included: true },
+        { text: '$45 en OKLA Coins/mes', included: true },
+        { text: 'Badge Verificado Dorado', included: true },
+        { text: 'ChatAgent IA: 500 conv web + WA/mes', included: true },
+        { text: 'Agendamiento automático de citas', included: true },
+        { text: 'PricingAgent ilimitado + Dashboard avanzado', included: true },
       ],
       cta: 'Elegir Plan',
       highlighted: true,
+      badge: 'MÁS POPULAR',
     },
     {
       name: 'ÉLITE',
-      price: formatPrice(pricing.dealerElite),
+      price: formatPrice(pricing.dealerElite || 199),
       period: '/mes',
-      description: 'Para grandes dealers',
-      features: ['Todo de PRO +', 'Manager dedicado', 'API access', 'White label', 'Soporte 24/7'],
-      cta: 'Contactar',
+      icon: Crown,
+      description: 'Para grandes concesionarios',
+      features: [
+        { text: 'Publicaciones ilimitadas', included: true },
+        { text: 'Hasta 40 fotos + video tour', included: true },
+        { text: 'Top prioridad en búsquedas', included: true },
+        { text: '25 destacados incluidos/mes', included: true },
+        { text: '$120 en OKLA Coins/mes', included: true },
+        { text: 'Badge Verificado Premium', included: true },
+        { text: 'ChatAgent IA ilimitado (web + WA)', included: true },
+        { text: 'Citas auto + recordatorios WhatsApp', included: true },
+        { text: 'PricingAgent ilimitado + informe PDF', included: true },
+        { text: 'Dashboard completo + exportar + API', included: true },
+      ],
+      cta: 'Contactar Ventas',
       highlighted: false,
+      badge: 'ENTERPRISE',
     },
   ];
 
@@ -93,54 +125,68 @@ export function DealerPlansSection() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-      {plans.map((plan, index) => (
-        <Card
-          key={index}
-          className={`relative ${
-            plan.highlighted ? 'border-2 border-[#00A870] shadow-lg' : 'border-border'
-          }`}
-        >
-          {plan.highlighted && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="rounded-full bg-[#00A870] px-3 py-1 text-xs font-semibold text-white">
-                MÁS POPULAR
-              </span>
-            </div>
-          )}
-          <CardContent className="p-8">
-            <div className="mb-4">
-              <h3 className="text-foreground text-xl font-bold">{plan.name}</h3>
-              <p className="text-muted-foreground text-sm">{plan.description}</p>
-            </div>
-            <div className="mb-6">
-              <span className="text-foreground text-3xl font-bold">{plan.price}</span>
-              <span className="text-muted-foreground text-sm">{plan.period}</span>
-            </div>
-            <ul className="mb-8 space-y-3">
-              {plan.features.map((feature, featureIndex) => (
-                <li
-                  key={featureIndex}
-                  className="text-muted-foreground flex items-center gap-2 text-sm"
-                >
-                  <CheckCircle className="h-4 w-4 text-[#00A870]" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <Button
-              asChild
-              className={`w-full ${
-                plan.highlighted
-                  ? 'bg-[#00A870] hover:bg-[#009663]'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              <Link href="/dealers/registro">{plan.cta}</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {plans.map((plan, index) => {
+        const Icon = plan.icon;
+        return (
+          <Card
+            key={index}
+            className={`relative flex flex-col ${
+              plan.highlighted ? 'border-2 border-[#00A870] shadow-xl scale-[1.02]' : 'border-border'
+            }`}
+          >
+            {plan.badge && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                  plan.badge === 'MÁS POPULAR' ? 'bg-[#00A870]' : 'bg-purple-600'
+                }`}>
+                  {plan.badge}
+                </span>
+              </div>
+            )}
+            <CardContent className="flex flex-1 flex-col p-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className={`h-5 w-5 ${plan.highlighted ? 'text-[#00A870]' : 'text-muted-foreground'}`} />
+                  <h3 className="text-foreground text-lg font-bold">{plan.name}</h3>
+                </div>
+                <p className="text-muted-foreground text-sm">{plan.description}</p>
+              </div>
+              <div className="mb-5">
+                <span className="text-foreground text-3xl font-bold">{plan.price}</span>
+                <span className="text-muted-foreground text-sm">{plan.period}</span>
+              </div>
+              <ul className="mb-6 flex-1 space-y-2.5">
+                {plan.features.map((feature, featureIndex) => (
+                  <li
+                    key={featureIndex}
+                    className={`flex items-start gap-2 text-sm ${
+                      feature.included ? 'text-foreground' : 'text-muted-foreground/50 line-through'
+                    }`}
+                  >
+                    {feature.included ? (
+                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-[#00A870]" />
+                    ) : (
+                      <X className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/30" />
+                    )}
+                    {feature.text}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className={`w-full ${
+                  plan.highlighted
+                    ? 'bg-[#00A870] hover:bg-[#009663] text-white'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                <Link href="/dealers/registro">{plan.cta}</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

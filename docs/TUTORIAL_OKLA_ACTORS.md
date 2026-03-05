@@ -1,6 +1,7 @@
 # 📚 OKLA Tutorial — Guía de Uso por Actor
 
 ## Índice
+
 1. [Para Compradores (Buyer)](#1-para-compradores-buyer)
 2. [Para Dealers](#2-para-dealers)
 3. [Para Administradores](#3-para-administradores)
@@ -13,6 +14,7 @@
 ## 1. Para Compradores (Buyer)
 
 ### 1.1 Buscar Vehículos
+
 ```
 1. Ir a https://okla.com.do/vehiculos
 2. Usar los filtros: marca, modelo, año, precio, tipo
@@ -21,6 +23,7 @@
 ```
 
 ### 1.2 Ver Detalle del Vehículo
+
 ```
 1. Hacer clic en cualquier vehículo del listado
 2. Ver fotos, especificaciones, precio
@@ -29,6 +32,7 @@
 ```
 
 ### 1.3 Contactar Dealer
+
 ```
 1. En la página del vehículo, usar:
    - Botón "WhatsApp" para contacto directo
@@ -39,6 +43,7 @@
 ```
 
 ### 1.4 Usar el Soporte OKLA
+
 ```
 1. Hacer clic en el ícono de chat (💬) en esquina inferior derecha
 2. El agente de soporte responde en español 24/7
@@ -55,6 +60,7 @@
 ## 2. Para Dealers
 
 ### 2.1 Registro y Verificación
+
 ```
 1. Ir a https://okla.com.do/registro-dealer
 2. Completar formulario con:
@@ -66,6 +72,7 @@
 ```
 
 ### 2.2 Publicar un Vehículo
+
 ```
 1. Ir al Dashboard del Dealer
 2. Clic en "Nuevo Vehículo"
@@ -75,6 +82,7 @@
 ```
 
 ### 2.3 Destacar un Vehículo
+
 ```
 Opción A: Incluido en el plan
   - Plan Visible: 3 destacados/mes gratis
@@ -88,6 +96,7 @@ Opción B: Comprar con OKLA Coins
 ```
 
 ### 2.4 Comprar Visibilidad
+
 ```
 1. Ir a Dashboard → "Publicidad"
 2. Seleccionar producto del catálogo:
@@ -102,6 +111,7 @@ Opción B: Comprar con OKLA Coins
 ```
 
 ### 2.5 Comprar OKLA Coins
+
 ```
 1. Ir a Dashboard → "OKLA Coins"
 2. Seleccionar paquete:
@@ -115,6 +125,7 @@ Opción B: Comprar con OKLA Coins
 ```
 
 ### 2.6 Cambiar de Plan
+
 ```
 1. Ir a Dashboard → "Plan y Facturación"
 2. Ver tabla comparativa de planes:
@@ -134,6 +145,7 @@ Opción B: Comprar con OKLA Coins
 ```
 
 ### 2.7 ChatAgent (IA 24/7)
+
 ```
 Disponible en planes Pro ($89) y Elite ($199):
 - ChatAgent Web: Atiende compradores en tu página
@@ -148,6 +160,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ## 3. Para Administradores
 
 ### 3.1 Dashboard Administrativo
+
 ```
 1. Login con cuenta admin: admin@okla.local
 2. Ir a https://okla.com.do/admin
@@ -159,6 +172,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ```
 
 ### 3.2 Moderación de Vehículos
+
 ```
 1. Admin → "Moderación"
 2. Revisar vehículos pendientes
@@ -167,6 +181,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ```
 
 ### 3.3 Gestión de Dealers
+
 ```
 1. Admin → "Dealers"
 2. Ver lista de dealers con estado
@@ -176,6 +191,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ```
 
 ### 3.4 Gestión del Homepage
+
 ```
 1. Admin → "Homepage"
 2. Editar secciones:
@@ -188,6 +204,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ```
 
 ### 3.5 Reportes de Publicidad
+
 ```
 1. Admin → "Publicidad" → "Reportes"
 2. Ver campañas activas por dealer
@@ -196,6 +213,7 @@ Disponible en planes Pro ($89) y Elite ($199):
 ```
 
 ### 3.6 Acreditar OKLA Coins Mensuales
+
 ```
 Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 - POST /api/okla-coins/admin/plan-credit
@@ -208,6 +226,7 @@ Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 ## 4. Planes de Dealer — Detalle Completo
 
 ### Plan LIBRE ($0/mes)
+
 - ✅ Publicaciones ilimitadas
 - 📸 Hasta 10 fotos por vehículo
 - 📊 Posición estándar en búsquedas
@@ -218,6 +237,7 @@ Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 - ❌ Sin analytics
 
 ### Plan VISIBLE ($29/mes)
+
 - ✅ Todo lo del plan Libre +
 - 📸 Hasta 20 fotos por vehículo
 - 📊 Prioridad media en búsquedas
@@ -228,6 +248,7 @@ Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 - 📈 Dashboard analytics básico
 
 ### Plan PRO ($89/mes)
+
 - ✅ Todo lo del plan Visible +
 - 📸 Hasta 30 fotos por vehículo
 - 📊 Alta prioridad en búsquedas
@@ -241,6 +262,7 @@ Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 - 📈 Dashboard analytics avanzado
 
 ### Plan ELITE ($199/mes)
+
 - ✅ Todo lo del plan Pro +
 - 📸 Hasta 40 fotos + video tour
 - 📊 Top prioridad en búsquedas
@@ -259,24 +281,27 @@ Para dealers con plan Visible/Pro/Elite, acreditar coins mensuales:
 ## 5. OKLA Coins — Sistema de Créditos
 
 ### ¿Qué son los OKLA Coins?
+
 Los OKLA Coins son créditos prepago que puedes usar para comprar productos publicitarios.
 **1 OKLA Coin = $0.01 USD**
 
 ### Paquetes Disponibles
 
-| Paquete | Coins Base | Bonus | Total | Precio |
-|---------|-----------|-------|-------|--------|
-| **Básico** | 2,500 | — | 2,500 | $25 |
-| **Intermedio** | 5,000 | +500 (+10%) | 5,500 | $50 |
-| **Profesional** | 10,000 | +2,000 (+20%) | 12,000 | $100 |
-| **Dealer** | 25,000 | +7,500 (+30%) | 32,500 | $250 |
+| Paquete         | Coins Base | Bonus         | Total  | Precio |
+| --------------- | ---------- | ------------- | ------ | ------ |
+| **Básico**      | 2,500      | —             | 2,500  | $25    |
+| **Intermedio**  | 5,000      | +500 (+10%)   | 5,500  | $50    |
+| **Profesional** | 10,000     | +2,000 (+20%) | 12,000 | $100   |
+| **Dealer**      | 25,000     | +7,500 (+30%) | 32,500 | $250   |
 
 ### ¿Cómo obtener OKLA Coins?
+
 1. **Compra directa**: Seleccionar un paquete y pagar
 2. **Incluidos en el plan**: Los planes Visible ($15/mes), Pro ($45/mes), y Elite ($120/mes) incluyen coins mensuales
 3. **Promociones**: Ofertas especiales y bonus por temporada
 
 ### ¿En qué gastar OKLA Coins?
+
 - Listing Destacado: 50 coins/día
 - Top 3 en búsquedas: 150 coins/día
 - Oferta del Día: 1,500 coins/día
@@ -290,24 +315,28 @@ Los OKLA Coins son créditos prepago que puedes usar para comprar productos publ
 ## 6. Catálogo Publicitario — Productos Disponibles
 
 ### 6.1 Listing Destacado
+
 - **Qué hace**: Badge dorado en tu vehículo, prioridad en resultados
 - **Precio**: $0.50/día | $2.50/semana | $6.00/mes
 - **OKLA Coins**: 50/día | 250/semana | 600/mes
 - **Ideal para**: Vender un vehículo específico más rápido
 
 ### 6.2 Posición Top 3 en Búsquedas
+
 - **Qué hace**: Tu vehículo aparece entre los 3 primeros resultados
 - **Precio**: $1.50/día | $7.00/semana | $20.00/mes
 - **OKLA Coins**: 150/día | 700/semana | 2,000/mes
 - **Ideal para**: Modelos populares con mucha competencia
 
 ### 6.3 Oferta del Día
+
 - **Qué hace**: Aparece en sección "Oferta del Día" del homepage + email blast
 - **Precio**: $15.00/día
 - **OKLA Coins**: 1,500/día
 - **Ideal para**: Liquidar inventario o promociones especiales
 
 ### 6.4 Banner Homepage
+
 - **Qué hace**: Banner 728x90 en el homepage con rotación equitativa
 - **Precio**: $120.00/mes
 - **OKLA Coins**: 12,000/mes
@@ -315,18 +344,21 @@ Los OKLA Coins son créditos prepago que puedes usar para comprar productos publ
 - **Ideal para**: Dealers que quieren máxima visibilidad de marca
 
 ### 6.5 Dealer Showcase
+
 - **Qué hace**: Tu dealer aparece primero en el directorio
 - **Precio**: $50.00/mes
 - **OKLA Coins**: 5,000/mes
 - **Ideal para**: Construir reputación y tráfico directo
 
 ### 6.6 Pack Alertas Email
+
 - **Qué hace**: Tus vehículos aparecen en alertas automáticas por modelo
 - **Precio**: $35.00/mes
 - **OKLA Coins**: 3,500/mes
 - **Ideal para**: Llegar a compradores buscando modelos específicos
 
 ### 6.7 Paquete Visibilidad Total (Bundle)
+
 - **Qué hace**: Banner + Showcase + 10 Destacados + Pack Alertas
 - **Precio**: $175.00/mes (ahorro de $82 vs. compra individual)
 - **OKLA Coins**: 17,500/mes
@@ -337,6 +369,7 @@ Los OKLA Coins son créditos prepago que puedes usar para comprar productos publ
 ## API Endpoints de Referencia
 
 ### Planes
+
 ```
 GET  /api/dealer-billing/plans              # Ver todos los planes (público)
 GET  /api/dealer-billing/subscription       # Ver mi suscripción actual
@@ -344,6 +377,7 @@ GET  /api/dealer-billing/dashboard/{id}     # Dashboard completo
 ```
 
 ### OKLA Coins
+
 ```
 GET  /api/okla-coins/packages               # Ver paquetes disponibles (público)
 GET  /api/okla-coins/wallet                  # Ver mi balance
@@ -353,6 +387,7 @@ GET  /api/okla-coins/transactions            # Ver historial
 ```
 
 ### Catálogo Publicitario
+
 ```
 GET  /api/advertising/catalog                # Ver todos los productos (público)
 GET  /api/advertising/catalog/{slug}         # Ver producto por slug
@@ -361,6 +396,7 @@ GET  /api/advertising/catalog/category/{cat} # Productos por categoría
 ```
 
 ### Homepage & Secciones
+
 ```
 GET  /api/homepagesections                   # Ver todas las secciones
 POST /api/homepagesections                   # Crear sección (admin)
