@@ -858,7 +858,7 @@
       }
     },
     {
-      "_comment": "Public: GetBySlug (AllowAnonymous) – must be before catch-all",
+      "_comment": "Public: GetBySlug (AllowAnonymous) \u2013 must be before catch-all",
       "UpstreamPathTemplate": "/api/vehicles/slug/{slug}",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -1496,6 +1496,47 @@
         "DELETE"
       ],
       "DownstreamPathTemplate": "/api/user-billing/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "billingservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-billing/plans",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/dealer-billing/plans",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "billingservice",
+          "Port": 8080
+        }
+      ],
+      "Priority": 1
+    },
+    {
+      "UpstreamPathTemplate": "/api/dealer-billing/{everything}",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "DownstreamPathTemplate": "/api/dealer-billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -2298,30 +2339,6 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/api/content/banners",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/content/banners",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "adminservice",
-          "Port": 8080
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "/api/content/banners/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
-      "DownstreamPathTemplate": "/api/content/banners/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "adminservice",
-          "Port": 8080
-        }
-      ]
-    },
-    {
       "UpstreamPathTemplate": "/api/admin/health",
       "UpstreamHttpMethod": [
         "GET"
@@ -2357,7 +2374,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "role": "Admin"
+        "role": "Compliance"
       },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -2460,30 +2477,6 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/api/contactrequests",
-      "UpstreamHttpMethod": [
-        "OPTIONS",
-        "GET",
-        "POST"
-      ],
-      "DownstreamPathTemplate": "/api/contactrequests",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "contactservice",
-          "Port": 8080
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-    {
       "UpstreamPathTemplate": "/api/contactrequests/{everything}",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -2507,6 +2500,25 @@
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/contactrequests",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "contactservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
       }
     },
     {
@@ -2627,6 +2639,25 @@
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/reviews",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/reviews",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "reviewservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
       }
     },
     {
@@ -2862,7 +2893,7 @@
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
-        "TimeoutValue": 60000
+        "TimeoutValue": 600000
       }
     },
     {
@@ -5044,6 +5075,97 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/advertising/catalog",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/advertising/catalog",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "advertisingservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/catalog/{slug}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/advertising/catalog/{slug}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "advertisingservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/catalog/{slug}/estimate",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/advertising/catalog/{slug}/estimate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "advertisingservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/catalog/category/{category}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/advertising/catalog/category/{category}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "advertisingservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/okla-coins/packages",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/okla-coins/packages",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "billingservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/okla-coins/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
+      "DownstreamPathTemplate": "/api/okla-coins/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "billingservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/staff/health",
       "UpstreamHttpMethod": [
         "GET"
@@ -5588,6 +5710,35 @@
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+    {
+      "UpstreamPathTemplate": "/api/content/banners",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/content/banners",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/content/banners/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/content/banners/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ]
     }
   ],
   "GlobalConfiguration": {
