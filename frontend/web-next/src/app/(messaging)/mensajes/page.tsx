@@ -630,6 +630,11 @@ function DealerBotPanel({
   const [isBookingAppointment, setIsBookingAppointment] = React.useState(false);
   // Track which bot message last triggered the scheduler, so we don't re-show after dismiss
   const [lastSchedulerMsgId, setLastSchedulerMsgId] = React.useState<string | null>(null);
+  // Session-level flag: once calendar has been shown (auto-triggered), don't auto-show again.
+  // User can still manually re-open it via the calendar button in the input area.
+  const [calendarAutoShown, setCalendarAutoShown] = React.useState(false);
+  // Track if the user has already booked an appointment in this session
+  const [appointmentBooked, setAppointmentBooked] = React.useState(false);
 
   // ── Human-feel typing: delay revealing bot responses ──────────
   // Track which bot message IDs have been revealed to the user.
@@ -677,7 +682,10 @@ function DealerBotPanel({
   }, [messagesToShow, showTypingIndicator]);
 
   // Auto-show appointment date picker when bot's last message mentions scheduling
+  // Only auto-triggers ONCE per session. After that, user can manually re-open via button.
   React.useEffect(() => {
+    // Don't auto-show if already shown once or appointment already booked
+    if (calendarAutoShown || appointmentBooked) return;
     const lastBotMsg = [...chat.messages]
       .reverse()
       .find(m => m.isFromBot && !m.isLoading && !m.isError);
@@ -687,6 +695,7 @@ function DealerBotPanel({
     if (keywords.some(kw => text.includes(kw))) {
       setLastSchedulerMsgId(lastBotMsg.id);
       setShowAppointmentScheduler(true);
+      setCalendarAutoShown(true); // Mark as auto-shown — won't auto-trigger again
     }
   }, [chat.messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -702,6 +711,7 @@ function DealerBotPanel({
   const handleScheduleAppointment = async (message: string, date: string, time: string) => {
     setShowAppointmentScheduler(false);
     setIsBookingAppointment(true);
+    setAppointmentBooked(true); // Prevent calendar from auto-showing again
     // Send user message to chatbot
     chat.sendMessage(message);
     // Call appointment booking API (fire-and-forget, non-blocking)
@@ -938,6 +948,19 @@ function DealerBotPanel({
           </div>
         ) : (
           <div className="flex gap-3">
+            {/* Calendar re-open button — allows user to manually show scheduler */}
+            {calendarAutoShown && !showAppointmentScheduler && !isBookingAppointment && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowAppointmentScheduler(true)}
+                title="Abrir calendario de citas"
+                className="h-12 w-12 shrink-0 rounded-xl border border-[#00A870]/30 text-[#00A870] hover:bg-[#00A870]/10"
+                aria-label="Abrir calendario de citas"
+              >
+                <CalendarCheck className="h-5 w-5" />
+              </Button>
+            )}
             <Input
               type="text"
               placeholder={`Pregunta al asistente de ${dealerName}…`}

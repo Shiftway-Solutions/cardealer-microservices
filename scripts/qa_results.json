@@ -1,0 +1,428 @@
+{
+  "total": 60,
+  "passed": 46,
+  "failed": 14,
+  "pass_rate": "76.7%",
+  "tests": [
+    {
+      "id": "A01",
+      "category": "Auth",
+      "name": "Admin login",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "A02",
+      "category": "Auth",
+      "name": "Dealer login",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "A03",
+      "category": "Auth",
+      "name": "Buyer login",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "A04",
+      "category": "Auth",
+      "name": "Invalid login rejected",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "A05",
+      "category": "Auth",
+      "name": "Auth /me endpoint",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "V01",
+      "category": "Vehicles",
+      "name": "Public vehicle listing",
+      "status": "FAIL",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "V02",
+      "category": "Vehicles",
+      "name": "Search by make (Toyota)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "V03",
+      "category": "Vehicles",
+      "name": "Featured vehicles endpoint",
+      "status": "PASS",
+      "details": "5 featured"
+    },
+    {
+      "id": "V04",
+      "category": "Vehicles",
+      "name": "Vehicle detail by ID",
+      "status": "FAIL",
+      "details": "No vehicles available"
+    },
+    {
+      "id": "V05",
+      "category": "Vehicles",
+      "name": "Admin vehicle list",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "V06",
+      "category": "Vehicles",
+      "name": "Dealer's own vehicles",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "V07",
+      "category": "Vehicles",
+      "name": "Vehicle makes list",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "V08",
+      "category": "Vehicles",
+      "name": "Admin vehicle stats",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "H01",
+      "category": "Homepage",
+      "name": "Homepage sections",
+      "status": "PASS",
+      "details": "17 sections"
+    },
+    {
+      "id": "H02",
+      "category": "Homepage",
+      "name": "Sections have vehicles",
+      "status": "PASS",
+      "details": "170 total vehicles in sections"
+    },
+    {
+      "id": "H03_sedanes",
+      "category": "Homepage",
+      "name": "Section 'sedanes' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "H03_suvs",
+      "category": "Homepage",
+      "name": "Section 'suvs' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "H03_camionetas",
+      "category": "Homepage",
+      "name": "Section 'camionetas' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "H03_deportivos",
+      "category": "Homepage",
+      "name": "Section 'deportivos' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "H03_destacados",
+      "category": "Homepage",
+      "name": "Section 'destacados' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "H03_lujo",
+      "category": "Homepage",
+      "name": "Section 'lujo' exists",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "AD01_FeaturedSpot",
+      "category": "Advertising",
+      "name": "Rotation /FeaturedSpot",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "AD01_PremiumSpot",
+      "category": "Advertising",
+      "name": "Rotation /PremiumSpot",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "AD02",
+      "category": "Advertising",
+      "name": "Homepage categories",
+      "status": "PASS",
+      "details": "6 categories"
+    },
+    {
+      "id": "AD03",
+      "category": "Advertising",
+      "name": "Homepage brands",
+      "status": "PASS",
+      "details": "12 brands"
+    },
+    {
+      "id": "AD04",
+      "category": "Advertising",
+      "name": "Product catalog",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "D01",
+      "category": "Dealers",
+      "name": "Public dealer listing",
+      "status": "FAIL",
+      "details": "HTTP 401"
+    },
+    {
+      "id": "D02",
+      "category": "Dealers",
+      "name": "Dealer profile",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "C01",
+      "category": "Contact",
+      "name": "Create inquiry",
+      "status": "FAIL",
+      "details": "No buyer token or vehicles"
+    },
+    {
+      "id": "C02",
+      "category": "Contact",
+      "name": "List inquiries",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "CB01",
+      "category": "Chatbot",
+      "name": "Start chat session",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "CB02",
+      "category": "Chatbot",
+      "name": "Send chat message",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "CB03",
+      "category": "Chatbot",
+      "name": "End chat session",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "K01",
+      "category": "KYC",
+      "name": "List KYC profiles",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "K02",
+      "category": "KYC",
+      "name": "KYC stats",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "N01",
+      "category": "Notifications",
+      "name": "List notifications",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "N02",
+      "category": "Notifications",
+      "name": "Buyer notifications",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM01",
+      "category": "Admin",
+      "name": "Users list",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM02",
+      "category": "Admin",
+      "name": "Platform stats",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "ADM03",
+      "category": "Admin",
+      "name": "Moderation queue",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM04",
+      "category": "Admin",
+      "name": "Error logs",
+      "status": "FAIL",
+      "details": "HTTP 500"
+    },
+    {
+      "id": "ADM05",
+      "category": "Admin",
+      "name": "Configuration endpoint",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "HC_Gateway",
+      "category": "Health",
+      "name": "Gateway health check",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "HC_Auth",
+      "category": "Health",
+      "name": "Auth health check",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "HC_Vehicles",
+      "category": "Health",
+      "name": "Vehicles health check",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "HC_Advertising",
+      "category": "Health",
+      "name": "Advertising health check",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "HC_Contact",
+      "category": "Health",
+      "name": "Contact health check",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "M01",
+      "category": "Media",
+      "name": "Media service health",
+      "status": "FAIL",
+      "details": "HTTP 0"
+    },
+    {
+      "id": "M02",
+      "category": "Media",
+      "name": "CDN accessible",
+      "status": "FAIL",
+      "details": "<urlopen error [Errno 8] nodename nor servname provided, or "
+    },
+    {
+      "id": "P01",
+      "category": "Plans",
+      "name": "Public plans list",
+      "status": "FAIL",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "P02",
+      "category": "Plans",
+      "name": "Coin packages",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "S01",
+      "category": "Security",
+      "name": "Admin requires auth",
+      "status": "PASS",
+      "details": "HTTP 401"
+    },
+    {
+      "id": "S02",
+      "category": "Security",
+      "name": "SQL injection blocked",
+      "status": "FAIL",
+      "details": "HTTP 0"
+    },
+    {
+      "id": "S03",
+      "category": "Security",
+      "name": "XSS in query params",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "S04",
+      "category": "Security",
+      "name": "Buyer cant access admin",
+      "status": "PASS",
+      "details": "HTTP 403"
+    },
+    {
+      "id": "FE_Homepage",
+      "category": "Frontend",
+      "name": "Homepage page loads",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "FE_Vehiculos",
+      "category": "Frontend",
+      "name": "Vehiculos page loads",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "FE_Login",
+      "category": "Frontend",
+      "name": "Login page loads",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "FE_Registro",
+      "category": "Frontend",
+      "name": "Registro page loads",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "FE_Dealers",
+      "category": "Frontend",
+      "name": "Dealers page loads",
+      "status": "PASS",
+      "details": "HTTP 200"
+    }
+  ]
+}

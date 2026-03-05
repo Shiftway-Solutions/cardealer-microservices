@@ -1,28 +1,8 @@
-Todas las cosas que me hagas, tienes que hacerlo que sean configurables por estapa, para poder implementando fucnioanalidad dependiendo en que estapa este OkLA.
+Necesito que me audite los chatbot y su UI, con respecto con el chatbot del dealer, este vive enviando el calendario y el calendario solo se envia una vez y si el usuario quiere entrar nuevamente al calendario le da click en el chat y pero el calendario solo se va a envair cuando el usuario diga si quiere un sita para ver el vehiculo.
 
-Necesito que me implementes el OKLA SCORE (docs/reportes/OKLA_SCORE_API_REPORT.md), pero tienes que implemetarle tambien lo que esta en este documento docs/reportes/OKLA_Score_Analisis_Economico_v2.md y docs/reportes/OKLA_Score_Estudio_Tecnico_v2.md.
+Y tambien vi el chatbot de searchagent no esta funcionando y el chatbot de soporte en muy tecnico, este chatbot tiene que hablar de forma mas llana porque las perosnas no conocen las terminologias internas de la plataforma. Tienes que hacerles ajuste en su RAG. Y necesito que me audites el modelo que hace recomendaciones segun la busqueda que hace los usuarios, pero recuerda que el solo recomendaciones de vehiculos que pagan por publicidad. Y necesito que de todos los modelos, generes un archivo reporte donde explique cual es la base de conocimiento de este modelo para com puedo acutalizar su conocimiento.
 
-Necesito que hagas una auditoria de "docs/reportes/OKLA_Analisis_Economico_Freemium_v4.md" y valida si en la plataforma se esta implementado todo lo que dice este documento dependiendo de la etapa de OKLA, este es uno de los documentos mas importante, porque en este esta la estrategia de negocios de OKLA. Una cosas que no lo veo en los planes es lo de la vista 360, y lo de subir videos, que esto lo va poder tener la persona dependiendo del plan que tenga, analiza el plan que deberia tener esto feature, tomando en cuenta el costo de tiene esta funcionalidad.
-
-Tabmien necesito que me implementes estos documentos, "docs/infrastructure/ECONOMIC_ANALYSIS.md
-docs/infrastructure/INFRASTRUCTURE_COST_AUDIT.md
-docs/infrastructure/SCALING_PLAN.md, ", pero tienes que auditar cada documento y hazme un plan para implementar los que tienen estos archivos en la plataforma OKLA, para optimizar los gastos en infraestrutura.
-
-Necesito que audites el protal de administradores y audites desde el punto de vista del operador que esta trabajndo desde su navegador y corrige todas las cosas que no esta funcionando.
-
-Y como un estratega del mercado dominicano automotriz audita todo lo que tiene OKLA y segun el mercado dominicando, sugiere todas las funcionalidaes qu deber tener OKLA, para dominar el mercado dominicano. Vi vision es es ofreserla a nivel de software todas las funcionalidaes necesarias que tiene un dealer, para complir contas las obligaciones fiscales, y todo lo que neceiste el dealer para automatizar sus procesos internos. hazme un reporte que contenga todo do lo que suguires para en el futuro implementar en la plataforma de OKLA.
-
-Tambien implmentame esto, "docs/reportes/SALE_CLOSED_STRATEGY_REPORT.md", por lo cual tienes que auditar este documento para ver lo que hay que implementar.
-
-Acutaliza los manuales de usuario contodas las nuevasfuncionalidades que se agregaron. los manuales se encuentran en "docs/manuales".
-
-Despues que tengas todos listo haz commit and push, y monitorea el ci/de y prueba que funcione correctamente.
-
-haz todas las pruebas en producion de todos estos features simulando todas las acciones que ha un usuario en el navegador, pero haz las pruebas en produccion.
-
-Entonces despues que audites todos los documentes que te he puesto el path, tomando eh cuenta lo que te he pedido, entonces luego hazme un plan de implementacion que incluya todo lo que le falta a la plataforma y luego implementalo. Todos esos documentos es para que se implemente lo que no tiene la plataforma.
-
-Tabien quiero que me hagas todas las preubas QA posibles para que me llenes todos los listing disponible en homepages de OKLA, las pruebas QA las tiens que hacerlas en produccion. Y en estas pruebsa se van a ver el flujo comleto de publicacion de un vehiclos donde intervienend todos los tipos de usuarios de la plataforma, y las pruebas que no pasen corrige el codigo y ejecuta la prueba nuevamente.
+Necesisto que monitores en la plataforma todas las acciones que hagas los usuarios, tanto los logueados como los no logueados, pero necesito que identifique no solamente el usuario, sino saber todos los datos necesarios para saber que PC hizo esta actividad, y tener un registro de todo en base de datos, para utilizarlo pra fines publicitarios. Pero yo quiero tu audites si actualmetne esta funcionalidad esta en la plataforma, pero sino esta implementala y audita que todo este funcioando perfectamente y si una person ve un vehiculo 
 
 OKLA Admin Account
 Username: admin@okla.local

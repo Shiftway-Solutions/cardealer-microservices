@@ -660,6 +660,7 @@ Abrir el navegador en la app y verificar en:
 El sistema de etapas controla la habilitación gradual de features sin modificar código.
 
 **Archivos clave:**
+
 - `src/lib/stage-config.ts` — Configuración central con 4 etapas y feature flags
 - `src/hooks/use-stage-config.ts` — Hook de React para consumir la configuración
 
@@ -677,11 +678,11 @@ import { useStageConfig } from '@/hooks/use-stage-config';
 
 function MyComponent() {
   const { stage, scorePhase, features, isEnabled } = useStageConfig();
-  
+
   if (!isEnabled('oklaScore', 'nhtsaRecalls')) {
     return <FeatureNotAvailable />;
   }
-  
+
   return <ScoreDisplay />;
 }
 ```
@@ -723,6 +724,7 @@ SaleTransaction
 ### 10.2 Creación Automática
 
 La transacción se crea automáticamente en `VehiclesController.MarkAsSold()`:
+
 1. Se captura el precio de lista antes de actualizar el vehículo
 2. Se crea un `SaleTransaction` con datos del vehículo e IP/UserAgent
 3. Se publica `VehicleSoldEvent` con el ID de la transacción
@@ -743,13 +745,13 @@ La transacción se crea automáticamente en `VehiclesController.MarkAsSold()`:
 
 Las rutas en `ocelot.prod.json` usan `RouteClaimsRequirement` para controlar acceso:
 
-| Patrón de Ruta | Rol Requerido |
-|----------------|--------------|
-| `/api/admin/{everything}` | `Admin` |
-| `/api/kyc/*` (review endpoints) | `Compliance` |
-| `/api/configurations/*` | `Compliance` |
-| `/api/featureflags/*` | `Compliance` |
-| `/api/ai/stats/queue` | `Admin` |
+| Patrón de Ruta                  | Rol Requerido |
+| ------------------------------- | ------------- |
+| `/api/admin/{everything}`       | `Admin`       |
+| `/api/kyc/*` (review endpoints) | `Compliance`  |
+| `/api/configurations/*`         | `Compliance`  |
+| `/api/featureflags/*`           | `Compliance`  |
+| `/api/ai/stats/queue`           | `Admin`       |
 
 ### 11.2 Puertos Internos
 

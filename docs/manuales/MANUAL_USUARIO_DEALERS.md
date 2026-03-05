@@ -272,13 +272,13 @@ Cuando vendes un vehículo de tu inventario:
 
 ### 10.2 Datos Registrados Automáticamente
 
-| Dato | Descripción |
-|------|-------------|
-| Precio de lista | El precio al que estaba publicado |
-| Fecha de publicación | Cuándo se publicó originalmente |
-| Días en el mercado | Tiempo entre publicación y venta |
-| Marca/Modelo/Año | Datos del vehículo |
-| VIN | Número de identificación del vehículo |
+| Dato                 | Descripción                           |
+| -------------------- | ------------------------------------- |
+| Precio de lista      | El precio al que estaba publicado     |
+| Fecha de publicación | Cuándo se publicó originalmente       |
+| Días en el mercado   | Tiempo entre publicación y venta      |
+| Marca/Modelo/Año     | Datos del vehículo                    |
+| VIN                  | Número de identificación del vehículo |
 
 ### 10.3 Beneficios para tu Concesionario
 

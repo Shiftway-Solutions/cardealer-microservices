@@ -259,16 +259,17 @@ OKLA utiliza un **sistema de etapas** para controlar qué funcionalidades están
 
 ### 7.1 Etapas Disponibles
 
-| Etapa | Nombre | Descripción |
-|-------|--------|-------------|
-| 1 | Desarrollo | Solo APIs gratuitas, funcionalidades básicas |
-| 2 | Beta | APIs pagadas limitadas, primeros dealers piloto |
-| 3 | Crecimiento | Todas las APIs activas, monetización completa |
-| 4 | Escala | Infraestructura empresarial, multi-región |
+| Etapa | Nombre      | Descripción                                     |
+| ----- | ----------- | ----------------------------------------------- |
+| 1     | Desarrollo  | Solo APIs gratuitas, funcionalidades básicas    |
+| 2     | Beta        | APIs pagadas limitadas, primeros dealers piloto |
+| 3     | Crecimiento | Todas las APIs activas, monetización completa   |
+| 4     | Escala      | Infraestructura empresarial, multi-región       |
 
 ### 7.2 Configuración
 
 La etapa actual se configura mediante variables de entorno:
+
 - `NEXT_PUBLIC_OKLA_STAGE`: Etapa general (1-4)
 - `NEXT_PUBLIC_OKLA_SCORE_PHASE`: Fase del OKLA Score (1-3)
 
@@ -283,6 +284,7 @@ El panel de OKLA Score en **Admin > OKLA Score** ahora guarda la configuración 
 5. Un banner amarillo indica si hay cambios sin guardar
 
 La configuración se almacena en el **ConfigurationService** con las claves:
+
 - `okla_score_phase`: Fase activa (1, 2 o 3)
 - `okla_score_toggles`: JSON con el estado de cada dimensión
 
@@ -303,6 +305,7 @@ Cuando un vendedor marca un vehículo como **"Vendido"**, el sistema ahora regis
 ### 8.1 Panel de Transacciones (Próximamente)
 
 Los administradores podrán:
+
 - Ver todas las transacciones cerradas
 - Filtrar por fecha, dealer, rango de precio
 - Detectar patrones de fraude (ventas sospechosamente rápidas, precios muy por debajo del mercado)
@@ -311,6 +314,7 @@ Los administradores podrán:
 ### 8.2 Datos de Mercado Únicos
 
 Estos datos de transacciones reales son **exclusivos de OKLA** en República Dominicana y permiten:
+
 - Calcular el **precio justo real** (no solo estimado)
 - Medir el **tiempo promedio de venta** por marca/modelo
 - Identificar **tendencias de mercado** por región

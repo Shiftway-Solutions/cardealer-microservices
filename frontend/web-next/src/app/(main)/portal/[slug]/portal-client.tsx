@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -38,6 +38,10 @@ import {
   X,
   Bot,
   Send,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +63,8 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useChatbot } from '@/hooks/useChatbot';
+import { BotMessageContent } from '@/components/chat/BotMessageContent';
 import type { DealerDto } from '@/services/dealers';
 
 // ============================================================
@@ -93,7 +99,7 @@ interface DealerPortalClientProps {
 }
 
 // ============================================================
-// CHATBOT COMPONENT
+// CHATBOT COMPONENT — Uses shared useChatbot hook for proper session management
 // ============================================================
 
 function DealerChatbot({
@@ -106,46 +112,25 @@ function DealerChatbot({
   dealerEmail?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'bot'; text: string }>>([
-    {
-      role: 'bot',
-      text: `¡Hola! 👋 Soy el asistente virtual de ${dealerName}. Puedo ayudarte con información sobre nuestro inventario, precios, financiamiento y más. ¿En qué te puedo ayudar?`,
-    },
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim()) return;
-    const userMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsTyping(true);
+  // Use the shared hook — proper session management, localStorage persistence, retry logic
+  const chat = useChatbot({ dealerId, dealerName, autoStart: isOpen, maxRetries: 2 });
 
-    try {
-      // Use apiClient for proper auth/CSRF handling
-      const {
-        default: { post },
-      } = await import('@/lib/api-client').then(m => ({ default: m.apiClient }));
-      const res = await post('/api/chatbot/message', {
-        message: userMsg,
-        dealerId,
-        context: 'dealer_portal',
-      });
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chat.messages]);
 
-      const data = res.data;
-      const responseText =
-        data?.data?.response || data?.response || 'Lo siento, no pude procesar tu pregunta.';
-      setMessages(prev => [...prev, { role: 'bot', text: responseText }]);
-    } catch {
-      setMessages(prev => [
-        ...prev,
-        { role: 'bot', text: 'Error de conexión. Verifica tu internet e intenta de nuevo.' },
-      ]);
-    } finally {
-      setIsTyping(false);
-    }
-  }, [input, dealerId]);
+  const handleSend = useCallback(() => {
+    const text = inputValue.trim();
+    if (!text || chat.isLoading) return;
+    setInputValue('');
+    chat.sendMessage(text);
+  }, [inputValue, chat]);
+
+  const displayName = chat.botName || `Asistente de ${dealerName}`;
 
   if (!isOpen) {
     return (
@@ -164,68 +149,195 @@ function DealerChatbot({
       {/* Header */}
       <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 text-white">
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5" />
+          <div className="relative">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <Bot className="h-4 w-4" />
+            </div>
+            {chat.isConnected && (
+              <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-emerald-600 bg-green-400" />
+            )}
+          </div>
           <div>
-            <p className="text-sm font-semibold">{dealerName}</p>
-            <p className="text-xs text-emerald-100">Asistente Virtual</p>
+            <p className="text-sm font-semibold">{displayName}</p>
+            <p className="text-xs text-emerald-100">
+              {chat.isConnected ? '● En línea' : chat.isLoading ? 'Conectando…' : '○ Desconectado'}
+            </p>
           </div>
         </div>
-        <button onClick={() => setIsOpen(false)} className="rounded-full p-1 hover:bg-white/20">
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <Badge className="border-0 bg-white/20 text-xs text-white">
+            <Sparkles className="mr-1 h-3 w-3" />
+            IA
+          </Badge>
+          <button onClick={() => setIsOpen(false)} className="rounded-full p-1 hover:bg-white/20">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}
-          >
-            <div
-              className={cn(
-                'max-w-[80%] rounded-2xl px-4 py-2 text-sm',
-                msg.role === 'user' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-800'
-              )}
-            >
-              {msg.text}
-            </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="flex gap-1 rounded-2xl bg-gray-100 px-4 py-3">
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                style={{ animationDelay: '0ms' }}
-              />
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                style={{ animationDelay: '150ms' }}
-              />
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                style={{ animationDelay: '300ms' }}
-              />
-            </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {/* Connection states */}
+        {!chat.isConnected && chat.isLoading && chat.messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+            <p className="mt-3 text-sm text-gray-500">
+              Conectando con el asistente de {dealerName}…
+            </p>
           </div>
         )}
+
+        {!chat.isConnected && !chat.isLoading && chat.error && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <AlertCircle className="h-8 w-8 text-red-400" />
+            <p className="mt-3 text-center text-sm text-gray-500">{chat.error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => chat.startSession()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reintentar
+            </Button>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {chat.messages
+            .filter(m => !m.isLoading)
+            .map(message => (
+              <div
+                key={message.id}
+                className={cn('flex', message.isFromBot ? 'justify-start' : 'justify-end')}
+              >
+                {message.isFromBot && (
+                  <div className="mt-1 mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
+                    <Bot className="h-3 w-3 text-white" />
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'max-w-[80%] rounded-2xl px-4 py-2 text-sm',
+                    message.isFromBot
+                      ? 'rounded-tl-sm bg-gray-100 text-gray-800'
+                      : 'rounded-tr-sm bg-emerald-600 text-white'
+                  )}
+                >
+                  {message.isFromBot ? (
+                    <BotMessageContent content={message.content} />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  )}
+                  <p
+                    className={cn(
+                      'mt-1 text-xs',
+                      message.isFromBot ? 'text-gray-400' : 'text-white/70'
+                    )}
+                  >
+                    {message.timestamp.toLocaleTimeString('es-DO', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+          {/* Typing indicator */}
+          {chat.isLoading && (
+            <div className="flex justify-start">
+              <div className="mt-1 mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
+                <Bot className="h-3 w-3 text-white" />
+              </div>
+              <div className="flex gap-1 rounded-2xl bg-gray-100 px-4 py-3">
+                <span
+                  className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                  style={{ animationDelay: '300ms' }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick replies */}
+        {chat.quickReplies.length > 0 && !chat.isLoading && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {chat.quickReplies.map(reply => (
+              <button
+                key={reply.payload ?? reply.text}
+                onClick={() => chat.selectQuickReply(reply)}
+                disabled={chat.isLoading}
+                className="rounded-full border border-emerald-400/40 bg-white px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-50"
+              >
+                {reply.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
       <div className="border-t p-3">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            placeholder="Escribe tu pregunta..."
-            className="flex-1"
-          />
-          <Button size="icon" onClick={sendMessage} className="bg-emerald-600 hover:bg-emerald-700">
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        {chat.isLimitReached ? (
+          <div className="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <span>Has alcanzado el límite de mensajes.</span>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs text-amber-700"
+              onClick={chat.resetChat}
+            >
+              Reiniciar
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Input
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              disabled={chat.isLoading || !chat.isConnected}
+              placeholder="Escribe tu pregunta..."
+              className="flex-1"
+              aria-label="Mensaje al asistente del dealer"
+            />
+            <Button
+              size="icon"
+              onClick={handleSend}
+              disabled={!inputValue.trim() || chat.isLoading || !chat.isConnected}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {chat.isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )}
+        {!chat.isLimitReached &&
+          chat.remainingInteractions > 0 &&
+          chat.remainingInteractions <= 5 && (
+            <p className="mt-1 text-center text-xs text-gray-400">
+              {chat.remainingInteractions} mensajes restantes
+            </p>
+          )}
       </div>
     </div>
   );
@@ -366,7 +478,7 @@ export function DealerPortalClient({ slug, initialDealer }: DealerPortalClientPr
   const [totalVehicles, setTotalVehicles] = useState(0);
 
   // Fetch dealer vehicles
-  useState(() => {
+  useEffect(() => {
     async function fetchVehicles() {
       try {
         const res = await fetch(
@@ -407,7 +519,7 @@ export function DealerPortalClient({ slug, initialDealer }: DealerPortalClientPr
       }
     }
     fetchVehicles();
-  });
+  }, [dealer.id]);
 
   // Filtered and sorted vehicles
   const filteredVehicles = useMemo(() => {
