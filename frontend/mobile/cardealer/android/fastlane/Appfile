@@ -1,2 +1,0 @@
-json_key_file("") # Path al archivo JSON de service account de Google Play
-package_name("com.cardealer.mobile")

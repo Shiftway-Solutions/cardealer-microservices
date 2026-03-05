@@ -1,7 +1,0 @@
-import 'app_config.dart';
-import 'main.dart' as app;
-
-void main() {
-  AppConfig.initialize(Flavor.prod);
-  app.main();
-}

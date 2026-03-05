@@ -1,6 +1,0 @@
-app_identifier("com.cardealer.mobile")
-apple_id("your-apple-id@example.com")
-itc_team_id("YOUR_ITC_TEAM_ID")
-team_id("YOUR_TEAM_ID")
-
-# Para más información: https://docs.fastlane.tools/advanced/#appfile
