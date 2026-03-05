@@ -145,9 +145,7 @@ export default function AdCatalogPage() {
   const categories = [...new Set(products.map(p => p.category))];
 
   const filteredProducts =
-    activeCategory === 'all'
-      ? products
-      : products.filter(p => p.category === activeCategory);
+    activeCategory === 'all' ? products : products.filter(p => p.category === activeCategory);
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
@@ -162,8 +160,8 @@ export default function AdCatalogPage() {
           </Link>
           <h1 className="text-3xl font-bold tracking-tight">Catálogo de Publicidad</h1>
           <p className="text-muted-foreground mt-1">
-            7 productos diseñados para maximizar la visibilidad de tus vehículos.
-            Paga con USD o OKLA Coins.
+            7 productos diseñados para maximizar la visibilidad de tus vehículos. Paga con USD o
+            OKLA Coins.
           </p>
         </div>
         <Badge variant="secondary" className="hidden text-sm sm:inline-flex">
@@ -172,11 +170,7 @@ export default function AdCatalogPage() {
       </div>
 
       {/* Category Tabs */}
-      <Tabs
-        value={activeCategory}
-        onValueChange={setActiveCategory}
-        className="mb-8"
-      >
+      <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-8">
         <TabsList>
           <TabsTrigger value="all">Todos</TabsTrigger>
           {categories.map(cat => (
@@ -252,8 +246,8 @@ export default function AdCatalogPage() {
                     <p className="text-muted-foreground mb-4 text-sm">{product.description}</p>
 
                     {/* Pricing Table */}
-                    <div className="mb-4 rounded-lg border bg-muted/30 p-4">
-                      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="bg-muted/30 mb-4 rounded-lg border p-4">
+                      <h4 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
                         Precios
                       </h4>
                       <div className="space-y-2">
@@ -314,7 +308,7 @@ export default function AdCatalogPage() {
 
                     {/* CTA */}
                     <div className="mt-auto">
-                      <Button className="w-full bg-[#00A870] hover:bg-[#009663] text-white" asChild>
+                      <Button className="w-full bg-[#00A870] text-white hover:bg-[#009663]" asChild>
                         <Link href={`/dealer/publicidad/nueva?product=${product.slug}`}>
                           Contratar
                         </Link>
@@ -332,7 +326,7 @@ export default function AdCatalogPage() {
         <div className="mt-12 rounded-xl border bg-gradient-to-r from-amber-50 to-orange-50 p-8 text-center">
           <Coins className="mx-auto mb-3 h-10 w-10 text-amber-600" />
           <h2 className="mb-2 text-xl font-bold">¿No tienes OKLA Coins?</h2>
-          <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+          <p className="text-muted-foreground mx-auto mb-4 max-w-lg">
             Compra paquetes de OKLA Coins con hasta 67% de bonificación y paga tus anuncios sin
             tarjeta de crédito.
           </p>

@@ -35,7 +35,7 @@ export interface DealerPlanFeatures {
   searchPriority: 'standard' | 'medium' | 'high' | 'top';
   monthlyOklaCoinsCredits: number;
   badgeType: 'none' | 'verified' | 'verified-gold' | 'verified-premium';
-  chatAgentWeb: number;       // conversations/month, -1 = unlimited
+  chatAgentWeb: number; // conversations/month, -1 = unlimited
   chatAgentWhatsApp: number;
   autoScheduling: boolean;
   whatsAppReminders: boolean;

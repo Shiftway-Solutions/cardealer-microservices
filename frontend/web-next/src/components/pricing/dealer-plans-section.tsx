@@ -132,22 +132,28 @@ export function DealerPlansSection() {
           <Card
             key={index}
             className={`relative flex flex-col ${
-              plan.highlighted ? 'border-2 border-[#00A870] shadow-xl scale-[1.02]' : 'border-border'
+              plan.highlighted
+                ? 'scale-[1.02] border-2 border-[#00A870] shadow-xl'
+                : 'border-border'
             }`}
           >
             {plan.badge && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
-                  plan.badge === 'MÁS POPULAR' ? 'bg-[#00A870]' : 'bg-purple-600'
-                }`}>
+              <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                    plan.badge === 'MÁS POPULAR' ? 'bg-[#00A870]' : 'bg-purple-600'
+                  }`}
+                >
                   {plan.badge}
                 </span>
               </div>
             )}
             <CardContent className="flex flex-1 flex-col p-6">
               <div className="mb-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon className={`h-5 w-5 ${plan.highlighted ? 'text-[#00A870]' : 'text-muted-foreground'}`} />
+                <div className="mb-1 flex items-center gap-2">
+                  <Icon
+                    className={`h-5 w-5 ${plan.highlighted ? 'text-[#00A870]' : 'text-muted-foreground'}`}
+                  />
                   <h3 className="text-foreground text-lg font-bold">{plan.name}</h3>
                 </div>
                 <p className="text-muted-foreground text-sm">{plan.description}</p>
@@ -165,9 +171,9 @@ export function DealerPlansSection() {
                     }`}
                   >
                     {feature.included ? (
-                      <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-[#00A870]" />
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#00A870]" />
                     ) : (
-                      <X className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/30" />
+                      <X className="text-muted-foreground/30 mt-0.5 h-4 w-4 shrink-0" />
                     )}
                     {feature.text}
                   </li>
@@ -177,7 +183,7 @@ export function DealerPlansSection() {
                 asChild
                 className={`w-full ${
                   plan.highlighted
-                    ? 'bg-[#00A870] hover:bg-[#009663] text-white'
+                    ? 'bg-[#00A870] text-white hover:bg-[#009663]'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >
