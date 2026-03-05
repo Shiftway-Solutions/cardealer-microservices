@@ -172,8 +172,8 @@ export default function FeaturedVehicles({
 
   const gridClass =
     columns === 4
-      ? 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'
-      : 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3';
+      ? 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+      : 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4';
 
   // Complies with Ley 358-05 — must disclose paid/sponsored content
   const sponsoredBadgeClass =
@@ -184,7 +184,7 @@ export default function FeaturedVehicles({
   if (isLoading) {
     return (
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">{title}</h2>
@@ -227,7 +227,7 @@ export default function FeaturedVehicles({
   if (!vehicles.length) {
     return (
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
@@ -261,7 +261,7 @@ export default function FeaturedVehicles({
 
   return (
     <section className="py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">

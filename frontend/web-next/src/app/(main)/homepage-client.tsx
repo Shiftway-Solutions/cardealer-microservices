@@ -118,7 +118,7 @@ export default function HomepageClient() {
       />
 
       {/* Dealer CTA banner between type sections */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
         <NativeBannerAd
           title="¿Eres dealer? Llega a más compradores"
           subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."

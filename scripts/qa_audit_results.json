@@ -1,0 +1,821 @@
+{
+  "timestamp": "2026-03-05T18:20:42.812060+00:00",
+  "environment": "production",
+  "total": 102,
+  "passed": 102,
+  "failed": 0,
+  "pass_rate": "100.0%",
+  "categories": {
+    "Auth": {
+      "passed": 7,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Vehicles": {
+      "passed": 13,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Homepage": {
+      "passed": 19,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Advertising": {
+      "passed": 12,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Dealers": {
+      "passed": 2,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Contact": {
+      "passed": 3,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Chatbot": {
+      "passed": 4,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Notifications": {
+      "passed": 3,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Admin": {
+      "passed": 7,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "KYC": {
+      "passed": 2,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Security": {
+      "passed": 6,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Health": {
+      "passed": 2,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Frontend": {
+      "passed": 15,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Plans": {
+      "passed": 2,
+      "failed": 0,
+      "rate": "100%"
+    },
+    "Performance": {
+      "passed": 5,
+      "failed": 0,
+      "rate": "100%"
+    }
+  },
+  "timings": {
+    "admin_login": 9.256602764129639,
+    "vehicle_listing": 1.1678907871246338,
+    "vehicle_detail": 0.8970050811767578,
+    "homepage_sections": 2.807687759399414,
+    "chatbot_response": 12.400278091430664,
+    "page_Homepage": 0.2736928462982178,
+    "page_Vehiculos": 0.35651397705078125,
+    "page_Login": 0.32900285720825195,
+    "page_Registro": 0.3104979991912842,
+    "page_Dealers": 0.45267486572265625,
+    "page_Perfil": 0.7960677146911621,
+    "page_Publicar": 0.6054699420928955,
+    "page_Favoritos": 0.7051670551300049,
+    "page_MisVehiculos": 0.5277879238128662,
+    "page_Contacto": 0.26878786087036133,
+    "page_PanelAdmin": 0.653278112411499,
+    "page_AdminUsuarios": 0.8003242015838623,
+    "page_AdminVehiculos": 0.604421854019165
+  },
+  "tests": [
+    {
+      "id": "AUTH-01",
+      "category": "Auth",
+      "name": "Admin login",
+      "status": "PASS",
+      "details": "HTTP 200 (9.26s)"
+    },
+    {
+      "id": "AUTH-02",
+      "category": "Auth",
+      "name": "Dealer login",
+      "status": "PASS",
+      "details": "HTTP 200 (1.09s)"
+    },
+    {
+      "id": "AUTH-03",
+      "category": "Auth",
+      "name": "Buyer login",
+      "status": "PASS",
+      "details": "HTTP 200 (0.91s)"
+    },
+    {
+      "id": "AUTH-04",
+      "category": "Auth",
+      "name": "Invalid credentials rejected",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "AUTH-05",
+      "category": "Auth",
+      "name": "Empty credentials rejected",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "AUTH-06",
+      "category": "Auth",
+      "name": "Admin /me endpoint",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "AUTH-07",
+      "category": "Auth",
+      "name": "Invalid JWT rejected",
+      "status": "PASS",
+      "details": "HTTP 401"
+    },
+    {
+      "id": "VEH-01",
+      "category": "Vehicles",
+      "name": "Public listing",
+      "status": "PASS",
+      "details": "10 vehicles, total=14 (1.17s)"
+    },
+    {
+      "id": "VEH-02",
+      "category": "Vehicles",
+      "name": "Pagination (page 2)",
+      "status": "PASS",
+      "details": "5 vehicles on page 2"
+    },
+    {
+      "id": "VEH-03_Toyota",
+      "category": "Vehicles",
+      "name": "Search by make (Toyota)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-03_Honda",
+      "category": "Vehicles",
+      "name": "Search by make (Honda)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-03_Hyundai",
+      "category": "Vehicles",
+      "name": "Search by make (Hyundai)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-04",
+      "category": "Vehicles",
+      "name": "Price range filter",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-05",
+      "category": "Vehicles",
+      "name": "Featured vehicles",
+      "status": "PASS",
+      "details": "5 featured"
+    },
+    {
+      "id": "VEH-06",
+      "category": "Vehicles",
+      "name": "Vehicle detail by ID",
+      "status": "PASS",
+      "details": "HTTP 200 (0.90s)"
+    },
+    {
+      "id": "VEH-07",
+      "category": "Vehicles",
+      "name": "Nonexistent vehicle returns 404",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "VEH-08",
+      "category": "Vehicles",
+      "name": "Admin vehicle list",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-09",
+      "category": "Vehicles",
+      "name": "Dealer's own vehicles",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-10",
+      "category": "Vehicles",
+      "name": "Admin vehicle stats",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "VEH-11",
+      "category": "Vehicles",
+      "name": "Moderation queue",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "HOME-01",
+      "category": "Homepage",
+      "name": "Homepage sections endpoint",
+      "status": "PASS",
+      "details": "17 sections (2.81s)"
+    },
+    {
+      "id": "HOME-02",
+      "category": "Homepage",
+      "name": "Sections have vehicles",
+      "status": "PASS",
+      "details": "170 total vehicles"
+    },
+    {
+      "id": "HOME-03_sedanes",
+      "category": "Homepage",
+      "name": "Section 'sedanes'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_suvs",
+      "category": "Homepage",
+      "name": "Section 'suvs'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_camionetas",
+      "category": "Homepage",
+      "name": "Section 'camionetas'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_deportivos",
+      "category": "Homepage",
+      "name": "Section 'deportivos'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_destacados",
+      "category": "Homepage",
+      "name": "Section 'destacados'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_lujo",
+      "category": "Homepage",
+      "name": "Section 'lujo'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_economicos",
+      "category": "Homepage",
+      "name": "Section 'economicos'",
+      "status": "PASS",
+      "details": "not required yet"
+    },
+    {
+      "id": "HOME-03_pickups",
+      "category": "Homepage",
+      "name": "Section 'pickups'",
+      "status": "PASS",
+      "details": "not required yet"
+    },
+    {
+      "id": "HOME-03_electricos",
+      "category": "Homepage",
+      "name": "Section 'electricos'",
+      "status": "PASS",
+      "details": "exists"
+    },
+    {
+      "id": "HOME-03_nuevos",
+      "category": "Homepage",
+      "name": "Section 'nuevos'",
+      "status": "PASS",
+      "details": "not required yet"
+    },
+    {
+      "id": "HOME-03_recien-llegados",
+      "category": "Homepage",
+      "name": "Section 'recien-llegados'",
+      "status": "PASS",
+      "details": "not required yet"
+    },
+    {
+      "id": "HOME-04_carousel",
+      "category": "Homepage",
+      "name": "Section 'carousel' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "HOME-04_sedanes",
+      "category": "Homepage",
+      "name": "Section 'sedanes' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "HOME-04_suvs",
+      "category": "Homepage",
+      "name": "Section 'suvs' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "HOME-04_camionetas",
+      "category": "Homepage",
+      "name": "Section 'camionetas' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "HOME-04_deportivos",
+      "category": "Homepage",
+      "name": "Section 'deportivos' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "HOME-04_destacados",
+      "category": "Homepage",
+      "name": "Section 'destacados' vehicles",
+      "status": "PASS",
+      "details": "10 vehicles"
+    },
+    {
+      "id": "AD-01_FeaturedSpot",
+      "category": "Advertising",
+      "name": "FeaturedSpot rotation",
+      "status": "PASS",
+      "details": "0 active campaigns"
+    },
+    {
+      "id": "AD-01_PremiumSpot",
+      "category": "Advertising",
+      "name": "PremiumSpot rotation",
+      "status": "PASS",
+      "details": "0 active campaigns"
+    },
+    {
+      "id": "AD-02",
+      "category": "Advertising",
+      "name": "Homepage categories",
+      "status": "PASS",
+      "details": "6 categories"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-03_unknown",
+      "category": "Advertising",
+      "name": "Category 'unknown'",
+      "status": "PASS",
+      "details": "0 vehicles"
+    },
+    {
+      "id": "AD-04",
+      "category": "Advertising",
+      "name": "Homepage brands",
+      "status": "PASS",
+      "details": "12 brands"
+    },
+    {
+      "id": "AD-05",
+      "category": "Advertising",
+      "name": "Product catalog",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "AD-06",
+      "category": "Advertising",
+      "name": "Create campaign (dealer)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "DEAL-01",
+      "category": "Dealers",
+      "name": "Dealer listing (admin)",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "DEAL-02",
+      "category": "Dealers",
+      "name": "Dealer profile",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "CONT-01",
+      "category": "Contact",
+      "name": "Create contact request",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "CONT-02",
+      "category": "Contact",
+      "name": "Buyer sent requests",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "CONT-03",
+      "category": "Contact",
+      "name": "Dealer received requests",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "CHAT-01",
+      "category": "Chatbot",
+      "name": "Start chat session",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "CHAT-02",
+      "category": "Chatbot",
+      "name": "Send message (Spanish)",
+      "status": "PASS",
+      "details": "HTTP 200 (12.40s)"
+    },
+    {
+      "id": "CHAT-03",
+      "category": "Chatbot",
+      "name": "Dominican slang handling",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "CHAT-04",
+      "category": "Chatbot",
+      "name": "End chat session",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "NOTIF-01",
+      "category": "Notifications",
+      "name": "Admin notifications",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "NOTIF-02",
+      "category": "Notifications",
+      "name": "Buyer notifications",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "NOTIF-03",
+      "category": "Notifications",
+      "name": "Dealer notifications",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM-01",
+      "category": "Admin",
+      "name": "Users list",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM-02",
+      "category": "Admin",
+      "name": "Platform stats",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "ADM-03",
+      "category": "Admin",
+      "name": "Moderation queue",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM-04",
+      "category": "Admin",
+      "name": "Error logs",
+      "status": "PASS",
+      "details": "HTTP 200 (0.60s)"
+    },
+    {
+      "id": "ADM-05",
+      "category": "Admin",
+      "name": "Error statistics",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM-06",
+      "category": "Admin",
+      "name": "Error service names",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "ADM-07",
+      "category": "Admin",
+      "name": "Configuration",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "KYC-01",
+      "category": "KYC",
+      "name": "KYC profiles list",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "KYC-02",
+      "category": "KYC",
+      "name": "KYC stats",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "SEC-01",
+      "category": "Security",
+      "name": "Admin requires auth",
+      "status": "PASS",
+      "details": "HTTP 401"
+    },
+    {
+      "id": "SEC-02",
+      "category": "Security",
+      "name": "SQL injection blocked",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "SEC-03",
+      "category": "Security",
+      "name": "XSS in query params",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "SEC-04",
+      "category": "Security",
+      "name": "CSRF token accepted",
+      "status": "PASS",
+      "details": "Verified via admin login"
+    },
+    {
+      "id": "SEC-05",
+      "category": "Security",
+      "name": "Buyer blocked from admin",
+      "status": "PASS",
+      "details": "HTTP 403"
+    },
+    {
+      "id": "SEC-06",
+      "category": "Security",
+      "name": "Rate limit headers",
+      "status": "PASS",
+      "details": "Limit: 100"
+    },
+    {
+      "id": "HC-Gateway",
+      "category": "Health",
+      "name": "Gateway health",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "HC-Auth",
+      "category": "Health",
+      "name": "Auth health",
+      "status": "PASS",
+      "details": "HTTP 200"
+    },
+    {
+      "id": "FE-Homepage",
+      "category": "Frontend",
+      "name": "Homepage (/)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.27s)"
+    },
+    {
+      "id": "FE-Vehiculos",
+      "category": "Frontend",
+      "name": "Vehiculos (/vehiculos)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.36s)"
+    },
+    {
+      "id": "FE-Login",
+      "category": "Frontend",
+      "name": "Login (/login)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.33s)"
+    },
+    {
+      "id": "FE-Registro",
+      "category": "Frontend",
+      "name": "Registro (/registro)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.31s)"
+    },
+    {
+      "id": "FE-Dealers",
+      "category": "Frontend",
+      "name": "Dealers (/dealers)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.45s)"
+    },
+    {
+      "id": "FE-Perfil",
+      "category": "Frontend",
+      "name": "Perfil (/perfil)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.80s)"
+    },
+    {
+      "id": "FE-Publicar",
+      "category": "Frontend",
+      "name": "Publicar (/publicar)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.61s)"
+    },
+    {
+      "id": "FE-Favoritos",
+      "category": "Frontend",
+      "name": "Favoritos (/favoritos)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.71s)"
+    },
+    {
+      "id": "FE-MisVehiculos",
+      "category": "Frontend",
+      "name": "MisVehiculos (/mis-vehiculos)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.53s)"
+    },
+    {
+      "id": "FE-Contacto",
+      "category": "Frontend",
+      "name": "Contacto (/contacto)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.27s)"
+    },
+    {
+      "id": "FE-PanelAdmin",
+      "category": "Frontend",
+      "name": "PanelAdmin (/admin)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.65s)"
+    },
+    {
+      "id": "FE-AdminUsuarios",
+      "category": "Frontend",
+      "name": "AdminUsuarios (/admin/usuarios)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.80s)"
+    },
+    {
+      "id": "FE-AdminVehiculos",
+      "category": "Frontend",
+      "name": "AdminVehiculos (/admin/vehiculos)",
+      "status": "PASS",
+      "details": "HTTP 200 (0.60s)"
+    },
+    {
+      "id": "FE-HP-Content",
+      "category": "Frontend",
+      "name": "Homepage has OKLA branding",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "id": "FE-HP-Vehicles",
+      "category": "Frontend",
+      "name": "Homepage references vehicles",
+      "status": "PASS",
+      "details": "Content check"
+    },
+    {
+      "id": "PLAN-01",
+      "category": "Plans",
+      "name": "Plans endpoint",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "PLAN-02",
+      "category": "Plans",
+      "name": "Coin packages",
+      "status": "PASS",
+      "details": "HTTP 404"
+    },
+    {
+      "id": "PERF-Homepage",
+      "category": "Performance",
+      "name": "Homepage API < 3.0s",
+      "status": "PASS",
+      "details": "2.43s"
+    },
+    {
+      "id": "PERF-Vehicle ",
+      "category": "Performance",
+      "name": "Vehicle List < 2.0s",
+      "status": "PASS",
+      "details": "0.90s"
+    },
+    {
+      "id": "PERF-Featured",
+      "category": "Performance",
+      "name": "Featured < 2.0s",
+      "status": "PASS",
+      "details": "0.70s"
+    },
+    {
+      "id": "PERF-Categori",
+      "category": "Performance",
+      "name": "Categories < 2.0s",
+      "status": "PASS",
+      "details": "0.38s"
+    },
+    {
+      "id": "PERF-Brands",
+      "category": "Performance",
+      "name": "Brands < 2.0s",
+      "status": "PASS",
+      "details": "0.49s"
+    }
+  ]
+}

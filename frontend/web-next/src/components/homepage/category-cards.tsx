@@ -224,7 +224,12 @@ function SingleCategoryCard({ category, index }: { category: CategoryCard; index
 
 export function CategoryCards({ categories = DEFAULT_CATEGORIES, className }: CategoryCardsProps) {
   return (
-    <div className={cn('grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3', className)}>
+    <div
+      className={cn(
+        'grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+        className
+      )}
+    >
       {categories.map((category, index) => (
         <SingleCategoryCard key={category.id} category={category} index={index} />
       ))}

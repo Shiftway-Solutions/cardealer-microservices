@@ -145,7 +145,7 @@ export function DealerPromoSection({
 
   return (
     <section className={cn('bg-card py-12 lg:py-16', className)}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
         {/* Header */}
         <div className="mb-8 text-center">
           {/* Paid badge */}
@@ -163,7 +163,7 @@ export function DealerPromoSection({
         </div>
 
         {/* Dealer Grid */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
           {realSlots.map(dealer => (
             <DealerCard key={dealer.id} dealer={dealer} />
           ))}

@@ -352,13 +352,13 @@ export default function VehicleTypeSection({
   if (isLoading) {
     return (
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold">
               {icon} {title}
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: maxItems }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -372,7 +372,7 @@ export default function VehicleTypeSection({
   if (!vehicles.length) {
     return (
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
@@ -390,7 +390,7 @@ export default function VehicleTypeSection({
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <EmptyVehicleCard key={i} icon={icon} accentColor={accentColor} />
             ))}
@@ -402,7 +402,7 @@ export default function VehicleTypeSection({
 
   return (
     <section className="py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -423,7 +423,7 @@ export default function VehicleTypeSection({
         </div>
 
         {/* Grid — same card size as FeaturedVehicles */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {vehicles.map(vehicle => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} accentColor={accentColor} />
           ))}

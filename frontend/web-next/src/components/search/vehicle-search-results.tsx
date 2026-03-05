@@ -110,13 +110,13 @@ export function VehicleSearchResults({
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Results count */}
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           {isLoading ? (
             <Skeleton className="h-5 w-32" />
           ) : (
             <>
-              <span className="font-medium text-foreground">{total.toLocaleString()}</span> vehículos
-              encontrados
+              <span className="text-foreground font-medium">{total.toLocaleString()}</span>{' '}
+              vehículos encontrados
             </>
           )}
         </div>
@@ -203,7 +203,9 @@ export function VehicleSearchResults({
           <div
             className={cn(
               'grid gap-4',
-              viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+              viewMode === 'grid'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                : 'grid-cols-1'
             )}
           >
             {Array.from({ length: 9 }).map((_, i) => (
@@ -219,7 +221,9 @@ export function VehicleSearchResults({
           <div
             className={cn(
               'grid gap-4',
-              viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+              viewMode === 'grid'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                : 'grid-cols-1'
             )}
           >
             {vehicles.map(vehicle => (
@@ -282,11 +286,11 @@ function EmptyState({
 }) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+      <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-full">
         <span className="text-4xl">🔍</span>
       </div>
-      <h3 className="mt-4 text-lg font-medium text-foreground">No se encontraron vehículos</h3>
-      <p className="mt-2 max-w-sm text-muted-foreground">
+      <h3 className="text-foreground mt-4 text-lg font-medium">No se encontraron vehículos</h3>
+      <p className="text-muted-foreground mt-2 max-w-sm">
         {hasFilters
           ? 'Intenta ajustar los filtros para encontrar más resultados.'
           : 'No hay vehículos disponibles en este momento.'}
@@ -355,7 +359,7 @@ function Pagination({
       {pages.map((pageItem, _idx) => {
         if (typeof pageItem === 'string') {
           return (
-            <span key={pageItem} className="px-2 text-muted-foreground">
+            <span key={pageItem} className="text-muted-foreground px-2">
               ...
             </span>
           );

@@ -1,8 +1,14 @@
-Necesito que me audite los chatbot y su UI, con respecto con el chatbot del dealer, este vive enviando el calendario y el calendario solo se envia una vez y si el usuario quiere entrar nuevamente al calendario le da click en el chat y pero el calendario solo se va a envair cuando el usuario diga si quiere un sita para ver el vehiculo.
+Esto de abajo es nuevo , implementalo.
 
-Y tambien vi el chatbot de searchagent no esta funcionando y el chatbot de soporte en muy tecnico, este chatbot tiene que hablar de forma mas llana porque las perosnas no conocen las terminologias internas de la plataforma. Tienes que hacerles ajuste en su RAG. Y necesito que me audites el modelo que hace recomendaciones segun la busqueda que hace los usuarios, pero recuerda que el solo recomendaciones de vehiculos que pagan por publicidad. Y necesito que de todos los modelos, generes un archivo reporte donde explique cual es la base de conocimiento de este modelo para com puedo acutalizar su conocimiento.
+neceisto que me hagas una funcion con IA para los dealers o vendeores que tiene su inventrario en Facebook Marketplace que el dealer o vendedor ponga la url de su inventario y que OKLA los importe automaticamente a su plataforma. Y que el dealer o vende dor si desea lo pueda importar de forma masiva. Haz lo mismo para las distintas plataforma de vehiculos de la republia domincana que se pueda importar el inventario del usuario a la plataforma.
 
-Necesisto que monitores en la plataforma todas las acciones que hagas los usuarios, tanto los logueados como los no logueados, pero necesito que identifique no solamente el usuario, sino saber todos los datos necesarios para saber que PC hizo esta actividad, y tener un registro de todo en base de datos, para utilizarlo pra fines publicitarios. Pero yo quiero tu audites si actualmetne esta funcionalidad esta en la plataforma, pero sino esta implementala y audita que todo este funcioando perfectamente y si una person ve un vehiculo 
+hazme un tutorial de todos esto que has hecho para que sirva para entrenar para que sepan como funciona la parte publicitaria de la plataforma.
+
+Audtiame cuales son los iconos de okla que se estan utilizando, estos son los iconos que se deben utilizar "frontend/web-next/public/icons".
+
+Audita tambien todos los componentes que se uitlizan en la plataroma web, y quiero que la pagina sea reponsive y que la cantidad de vehiculos que se ven por linea varia dependiendo del tamano de la pantalla. has tambien como el tamano de los margenes, de la pagina, para que se aprovecha lo mas posible el tamano de la pantalla.
+
+Todos los cambios que haz hecho se tiene que implementar en el servidor cuando se haga el ci/cd.
 
 OKLA Admin Account
 Username: admin@okla.local
