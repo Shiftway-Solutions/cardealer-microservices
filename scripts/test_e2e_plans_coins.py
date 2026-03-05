@@ -244,31 +244,32 @@ if admin_session:
         
         # Sections we need to create/fill
         needed_sections = [
-            {"slug": "crossovers", "title": "Crossovers", "icon": "🚙"},
-            {"slug": "hatchbacks", "title": "Hatchbacks", "icon": "🚗"},
-            {"slug": "coupes", "title": "Coupés", "icon": "🏎️"},
-            {"slug": "convertibles", "title": "Convertibles", "icon": "🏎️"},
-            {"slug": "vans", "title": "Vans", "icon": "🚐"},
-            {"slug": "minivans", "title": "Minivans", "icon": "🚐"},
-            {"slug": "hibridos", "title": "Híbridos", "icon": "🔋"},
-            {"slug": "electricos", "title": "Eléctricos", "icon": "⚡"},
-            {"slug": "oferta-del-dia", "title": "🔥 Oferta del Día", "icon": "🔥"},
-            {"slug": "premium", "title": "💎 Vehículos Premium", "icon": "💎"},
+            {"slug": "crossovers", "name": "Crossovers", "icon": "🚙"},
+            {"slug": "hatchbacks", "name": "Hatchbacks", "icon": "🚗"},
+            {"slug": "coupes", "name": "Coupés", "icon": "🏎️"},
+            {"slug": "convertibles", "name": "Convertibles", "icon": "🏎️"},
+            {"slug": "vans", "name": "Vans", "icon": "🚐"},
+            {"slug": "minivans", "name": "Minivans", "icon": "🚐"},
+            {"slug": "hibridos", "name": "Híbridos", "icon": "🔋"},
+            {"slug": "electricos", "name": "Eléctricos", "icon": "⚡"},
+            {"slug": "oferta-del-dia", "name": "🔥 Oferta del Día", "icon": "🔥"},
+            {"slug": "premium", "name": "💎 Vehículos Premium", "icon": "💎"},
         ]
         
         # Try to create missing sections
         existing_slugs = [s.get("slug", "") for s in section_list] if 'section_list' in dir() else []
         
-        for sec in needed_sections:
+        for idx, sec in enumerate(needed_sections):
             if sec["slug"] not in existing_slugs:
                 create_body = {
+                    "name": sec["name"],
                     "slug": sec["slug"],
-                    "title": sec["title"],
-                    "subtitle": f"Los mejores {sec['title']} en República Dominicana",
-                    "icon": sec["icon"],
-                    "displayOrder": 10 + needed_sections.index(sec),
+                    "description": f"Los mejores {sec['name']} en República Dominicana",
+                    "displayOrder": 20 + idx,
+                    "maxItems": 10,
                     "isActive": True,
-                    "maxVehicles": 10
+                    "accentColor": "blue",
+                    "icon": sec["icon"]
                 }
                 r = admin_session.post(f"{BASE}/homepagesections", json=create_body, timeout=15)
                 if r.status_code in [200, 201]:

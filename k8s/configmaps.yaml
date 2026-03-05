@@ -2476,6 +2476,46 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/dealer-billing/{everything}",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "DownstreamPathTemplate": "/api/dealer-billing/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/dealer-billing/plans",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/dealer-billing/plans",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ]
+        },
+        {
           "UpstreamPathTemplate": "/api/payment-methods/{everything}",
           "UpstreamHttpMethod": [
             "OPTIONS",
