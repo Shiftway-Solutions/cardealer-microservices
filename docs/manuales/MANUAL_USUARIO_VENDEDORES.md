@@ -158,3 +158,36 @@ Puedes mejorar tu Score resolviendo recalls, agregando documentación, y ajustan
 
 **¿Cómo sé si mi publicidad está funcionando?**
 Revisa las métricas de tu campaña (impresiones, clics, CTR) en `/impulsar/mis-campanas`.
+
+---
+
+## 7. Marcar como Vendido y Transacciones
+
+> **Actualizado:** Marzo 2026
+
+Cuando vendas tu vehículo, es importante marcarlo como vendido en la plataforma:
+
+### 7.1 Cómo Marcar como Vendido
+
+1. Ve a tu **Dashboard** (`/vender`)
+2. Encuentra el vehículo vendido en tu lista de publicaciones
+3. Haz clic en el botón **"Marcar como Vendido"**
+4. Confirma la acción
+
+### 7.2 ¿Qué Sucede al Marcar como Vendido?
+
+- Se registra automáticamente una **transacción de venta** con:
+  - Precio de lista original
+  - Fecha de publicación y fecha de venta
+  - Días que estuvo en el mercado
+  - Datos del vehículo (marca, modelo, año, VIN)
+- Tu vehículo se retira de los listados activos
+- Se notifica a los compradores interesados que el vehículo ya no está disponible
+- Los datos contribuyen a mejorar los **precios de mercado** para futuros vendedores
+
+### 7.3 Beneficios de Registrar la Venta
+
+- 📊 **Historial de ventas** accesible desde tu perfil
+- 🏆 **Mejora tu reputación** como vendedor verificado
+- 💰 **Datos de mercado** más precisos para toda la comunidad
+- 🔒 **Registro seguro** de la transacción

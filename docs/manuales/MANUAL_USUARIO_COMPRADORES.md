@@ -162,3 +162,32 @@ Sí, son vehículos reales de dealers verificados. El Score de OKLA no se modifi
 
 **¿Cómo guardo un vehículo en favoritos?**
 Haz clic en el ícono de corazón (❤️) en cualquier listado de vehículo.
+
+---
+
+## 6. Precio Justo y Datos de Mercado
+
+> **Actualizado:** Marzo 2026
+
+### 6.1 ¿Qué es el Precio Justo OKLA?
+
+El **Precio Justo** es una estimación de cuánto debería costar un vehículo según:
+- Ventas reales registradas en la plataforma
+- Datos de mercado de vehículos similares
+- Año, marca, modelo, condición y kilometraje
+- Ubicación geográfica en RD
+
+### 6.2 Interpretación del Precio
+
+| Indicador | Significado |
+|-----------|-------------|
+| 🟢 **Buen precio** | El precio está por debajo o al nivel del mercado |
+| 🟡 **Precio justo** | El precio es razonable comparado con similares |
+| 🔴 **Precio alto** | El precio está por encima del promedio del mercado |
+
+### 6.3 Datos Únicos de OKLA
+
+OKLA es la **única plataforma en República Dominicana** que registra transacciones de venta reales, lo que permite:
+- Ver cuántos días promedio tarda en venderse un modelo específico
+- Saber el rango de precios real (no solo lo que piden, sino a cuánto se venden)
+- Identificar tendencias de precios por zona

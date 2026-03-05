@@ -2357,7 +2357,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "role": "Compliance"
+        "role": "Admin"
       },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,

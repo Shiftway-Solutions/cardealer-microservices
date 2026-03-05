@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 import {
   ShieldCheck,
   Rocket,
@@ -21,16 +22,16 @@ import {
   Globe,
   Database,
   BarChart3,
+  Save,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 
 // =============================================================================
-// Admin: OKLA Score™ Phase Configuration
+// Admin: OKLA Score™ Phase Configuration (with persistence)
 // =============================================================================
-// Lets admins select which phase of OKLA Score implementation is active.
-// Phase 1: Tierra Fértil — VIN decode, basic scoring, free APIs
-// Phase 2: El Espejo — Full 7-dimension scoring, paid APIs
-// Phase 3: El Sello — Badge system, premium reports, mechanic verification
-// Phase 4: El Estándar — Mandatory score, API for third parties, auto-blocking
+// Configuration is persisted via ConfigurationService.
+// Phase changes and feature toggles are saved to the backend.
 // =============================================================================
 
 interface PhaseConfig {
@@ -43,7 +44,7 @@ interface PhaseConfig {
   borderColor: string;
   subtitle: string;
   description: string;
-  features: { label: string; enabled: boolean }[];
+  features: { label: string; key: string; enabled: boolean }[];
   apis: { name: string; type: 'free' | 'paid'; enabled: boolean }[];
   dimensions: string[];
   estimatedCost: string;
@@ -62,16 +63,16 @@ const PHASES: PhaseConfig[] = [
     description:
       'MVP del OKLA Score. Decodificación VIN gratuita vía NHTSA, scoring simplificado con 4 dimensiones. Objetivo: demostrar valor sin costo para el dealer.',
     features: [
-      { label: 'Decodificación VIN (NHTSA vPIC)', enabled: true },
-      { label: 'Score simplificado (0-1000)', enabled: true },
-      { label: 'Recalls activos (NHTSA)', enabled: true },
-      { label: 'Calificación seguridad NHTSA', enabled: true },
-      { label: 'Semáforo básico (verde/amarillo/rojo)', enabled: true },
-      { label: 'Quejas NHTSA por componente', enabled: true },
-      { label: 'Historial VIN completo', enabled: false },
-      { label: 'Precio vs. mercado (fórmula completa)', enabled: false },
-      { label: 'Badge OKLA en listings', enabled: false },
-      { label: 'API para terceros', enabled: false },
+      { label: 'Decodificación VIN (NHTSA vPIC)', key: 'vin_decode', enabled: true },
+      { label: 'Score simplificado (0-1000)', key: 'basic_score', enabled: true },
+      { label: 'Recalls activos (NHTSA)', key: 'recalls', enabled: true },
+      { label: 'Calificación seguridad NHTSA', key: 'safety_ratings', enabled: true },
+      { label: 'Semáforo básico (verde/amarillo/rojo)', key: 'traffic_light', enabled: true },
+      { label: 'Quejas NHTSA por componente', key: 'complaints', enabled: true },
+      { label: 'Historial VIN completo', key: 'vin_history', enabled: false },
+      { label: 'Precio vs. mercado (fórmula completa)', key: 'price_vs_market', enabled: false },
+      { label: 'Badge OKLA en listings', key: 'badge_listings', enabled: false },
+      { label: 'API para terceros', key: 'public_api', enabled: false },
     ],
     apis: [
       { name: 'NHTSA vPIC (VIN decode)', type: 'free', enabled: true },
@@ -97,16 +98,16 @@ const PHASES: PhaseConfig[] = [
     description:
       'Score completo con 7 dimensiones. Integración VinAudit para historial real, fórmula de precio vs. mercado con Factor_Ajuste_RD, tasa BCRD en vivo.',
     features: [
-      { label: 'Decodificación VIN (NHTSA vPIC)', enabled: true },
-      { label: 'Score completo 7 dimensiones', enabled: true },
-      { label: 'Historial VIN completo (VinAudit)', enabled: true },
-      { label: 'Detección fraude odómetro', enabled: true },
-      { label: 'Precio vs. mercado (fórmula RD)', enabled: true },
-      { label: 'Tasa de cambio BCRD en vivo', enabled: true },
-      { label: 'Factor_Ajuste_RD (importación)', enabled: true },
-      { label: 'Reputación del vendedor (D7)', enabled: true },
-      { label: 'Badge OKLA en listings', enabled: false },
-      { label: 'Reportes premium', enabled: false },
+      { label: 'Decodificación VIN (NHTSA vPIC)', key: 'vin_decode', enabled: true },
+      { label: 'Score completo 7 dimensiones', key: 'full_score', enabled: true },
+      { label: 'Historial VIN completo (VinAudit)', key: 'vin_history', enabled: true },
+      { label: 'Detección fraude odómetro', key: 'odometer_fraud', enabled: true },
+      { label: 'Precio vs. mercado (fórmula RD)', key: 'price_vs_market', enabled: true },
+      { label: 'Tasa de cambio BCRD en vivo', key: 'bcrd_rate', enabled: true },
+      { label: 'Factor_Ajuste_RD (importación)', key: 'factor_ajuste_rd', enabled: true },
+      { label: 'Reputación del vendedor (D7)', key: 'seller_reputation', enabled: true },
+      { label: 'Badge OKLA en listings', key: 'badge_listings', enabled: false },
+      { label: 'Reportes premium', key: 'premium_reports', enabled: false },
     ],
     apis: [
       { name: 'NHTSA vPIC (VIN decode)', type: 'free', enabled: true },
@@ -132,16 +133,16 @@ const PHASES: PhaseConfig[] = [
     description:
       'Badge OKLA Certified Excellence visible en listings. Reportes PDF premium para dealers. Verificación mecánica en asociación con talleres autorizados.',
     features: [
-      { label: 'Todo de Fase 2', enabled: true },
-      { label: 'Badge OKLA en listings', enabled: true },
-      { label: 'OKLA Certified Excellence (≥850)', enabled: true },
-      { label: 'Reportes PDF premium', enabled: true },
-      { label: 'Verificación mecánica en taller', enabled: true },
-      { label: 'Comparación con KBB/MarketCheck', enabled: true },
-      { label: 'Historial de Score por VIN', enabled: true },
-      { label: 'Dashboard analytics para dealers', enabled: true },
-      { label: 'Auto-bloqueo de VINs fraudulentos', enabled: false },
-      { label: 'API pública para terceros', enabled: false },
+      { label: 'Todo de Fase 2', key: 'phase_2_all', enabled: true },
+      { label: 'Badge OKLA en listings', key: 'badge_listings', enabled: true },
+      { label: 'OKLA Certified Excellence (≥850)', key: 'certified_excellence', enabled: true },
+      { label: 'Reportes PDF premium', key: 'pdf_reports', enabled: true },
+      { label: 'Verificación mecánica en taller', key: 'mechanic_verification', enabled: true },
+      { label: 'Comparación con KBB/MarketCheck', key: 'market_comparison', enabled: true },
+      { label: 'Historial de Score por VIN', key: 'score_history', enabled: true },
+      { label: 'Dashboard analytics para dealers', key: 'dealer_analytics', enabled: true },
+      { label: 'Auto-bloqueo de VINs fraudulentos', key: 'auto_block', enabled: false },
+      { label: 'API pública para terceros', key: 'public_api', enabled: false },
     ],
     apis: [
       { name: 'NHTSA vPIC (VIN decode)', type: 'free', enabled: true },
@@ -168,16 +169,16 @@ const PHASES: PhaseConfig[] = [
     description:
       'OKLA Score obligatorio para todas las publicaciones. Auto-bloqueo de VINs con título Salvage/Flood. API pública para financieras, aseguradoras y concesionarios.',
     features: [
-      { label: 'Todo de Fase 3', enabled: true },
-      { label: 'Score obligatorio para publicar', enabled: true },
-      { label: 'Auto-bloqueo VINs fraudulentos', enabled: true },
-      { label: 'API pública para terceros', enabled: true },
-      { label: 'Score en app móvil (scan VIN)', enabled: true },
-      { label: 'Integración con financieras', enabled: true },
-      { label: 'Integración con aseguradoras', enabled: true },
-      { label: 'Auditoría mecánica obligatoria', enabled: true },
-      { label: 'Certificación OKLA para dealers', enabled: true },
-      { label: 'Penalizaciones por datos falsos', enabled: true },
+      { label: 'Todo de Fase 3', key: 'phase_3_all', enabled: true },
+      { label: 'Score obligatorio para publicar', key: 'mandatory_score', enabled: true },
+      { label: 'Auto-bloqueo VINs fraudulentos', key: 'auto_block', enabled: true },
+      { label: 'API pública para terceros', key: 'public_api', enabled: true },
+      { label: 'Score en app móvil (scan VIN)', key: 'mobile_scan', enabled: true },
+      { label: 'Integración con financieras', key: 'finance_integration', enabled: true },
+      { label: 'Integración con aseguradoras', key: 'insurance_integration', enabled: true },
+      { label: 'Auditoría mecánica obligatoria', key: 'mandatory_audit', enabled: true },
+      { label: 'Certificación OKLA para dealers', key: 'dealer_certification', enabled: true },
+      { label: 'Penalizaciones por datos falsos', key: 'fraud_penalties', enabled: true },
     ],
     apis: [
       { name: 'NHTSA vPIC (VIN decode)', type: 'free', enabled: true },
@@ -195,15 +196,91 @@ const PHASES: PhaseConfig[] = [
   },
 ];
 
+const CONFIG_KEY_PHASE = 'okla_score_phase';
+const CONFIG_KEY_TOGGLES = 'okla_score_toggles';
+
+async function loadSavedConfig(): Promise<{
+  phase: number;
+  toggles: Record<string, boolean>;
+} | null> {
+  try {
+    const res = await fetch('/api/configurations/category/general');
+    if (!res.ok) return null;
+    const data = await res.json();
+    const configs = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+
+    let phase = 1;
+    let toggles: Record<string, boolean> = {};
+
+    for (const cfg of configs) {
+      if (cfg.key === CONFIG_KEY_PHASE) {
+        phase = parseInt(cfg.value, 10) || 1;
+      }
+      if (cfg.key === CONFIG_KEY_TOGGLES) {
+        try {
+          toggles = JSON.parse(cfg.value);
+        } catch {
+          toggles = {};
+        }
+      }
+    }
+
+    return { phase, toggles };
+  } catch {
+    return null;
+  }
+}
+
+async function saveConfig(phase: number, toggles: Record<string, boolean>): Promise<boolean> {
+  try {
+    const configs = [
+      {
+        key: CONFIG_KEY_PHASE,
+        value: String(phase),
+        environment: 'Prod',
+        description: 'OKLA Score active phase (1-4)',
+      },
+      {
+        key: CONFIG_KEY_TOGGLES,
+        value: JSON.stringify(toggles),
+        environment: 'Prod',
+        description: 'OKLA Score feature toggles per phase',
+      },
+    ];
+
+    const res = await fetch('/api/configurations/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(configs),
+    });
+
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function AdminOklaScorePage() {
   const [activePhase, setActivePhase] = useState(1);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingPhase, setPendingPhase] = useState<number | null>(null);
-
-  // Feature toggles for current phase
   const [customToggles, setCustomToggles] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
+  const { toast } = useToast();
 
   const currentPhase = PHASES.find(p => p.id === activePhase)!;
+
+  useEffect(() => {
+    loadSavedConfig().then(saved => {
+      if (saved) {
+        setActivePhase(saved.phase);
+        setCustomToggles(saved.toggles);
+      }
+      setIsLoading(false);
+    });
+  }, []);
 
   const handlePhaseSelect = (phaseId: number) => {
     if (phaseId === activePhase) return;
@@ -214,25 +291,105 @@ export default function AdminOklaScorePage() {
   const confirmPhaseChange = () => {
     if (pendingPhase !== null) {
       setActivePhase(pendingPhase);
-      setCustomToggles({}); // Reset custom toggles
+      setCustomToggles({});
+      setHasChanges(true);
     }
     setShowConfirm(false);
     setPendingPhase(null);
   };
 
+  const handleToggle = useCallback((toggleKey: string, checked: boolean) => {
+    setCustomToggles(prev => ({ ...prev, [toggleKey]: checked }));
+    setHasChanges(true);
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const success = await saveConfig(activePhase, customToggles);
+    setIsSaving(false);
+
+    if (success) {
+      setHasChanges(false);
+      toast({
+        title: 'Configuración guardada',
+        description: `OKLA Score configurado en Fase ${activePhase} — ${currentPhase.name}`,
+      });
+    } else {
+      toast({
+        title: 'Error al guardar',
+        description: 'No se pudo guardar la configuración. Verifique la conexión con el backend.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReload = async () => {
+    setIsLoading(true);
+    const saved = await loadSavedConfig();
+    if (saved) {
+      setActivePhase(saved.phase);
+      setCustomToggles(saved.toggles);
+      setHasChanges(false);
+    }
+    setIsLoading(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <span className="text-muted-foreground ml-3 text-lg">Cargando configuración...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="flex items-center gap-3 text-3xl font-bold">
-          <ShieldCheck className="h-8 w-8 text-emerald-600" />
-          OKLA Score™ — Configuración
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Selecciona la etapa de implementación del OKLA Score. Cada fase activa nuevas capacidades,
-          APIs y dimensiones de evaluación.
-        </p>
+      {/* Header with save/reload */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="flex items-center gap-3 text-3xl font-bold">
+            <ShieldCheck className="h-8 w-8 text-emerald-600" />
+            OKLA Score™ — Configuración
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Selecciona la etapa de implementación del OKLA Score. Cada fase activa nuevas
+            capacidades, APIs y dimensiones de evaluación.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleReload} disabled={isLoading}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Recargar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+            className={hasChanges ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+          >
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          </Button>
+        </div>
       </div>
+
+      {/* Unsaved changes banner */}
+      {hasChanges && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="flex items-center gap-3 p-3">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-medium text-amber-800">
+              Tienes cambios sin guardar. Haz clic en &quot;Guardar Cambios&quot; para persistir la
+              configuración.
+            </span>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Phase Timeline */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -240,18 +397,17 @@ export default function AdminOklaScorePage() {
           const Icon = phase.icon;
           const isActive = phase.id === activePhase;
           const isPast = phase.id < activePhase;
-
           return (
             <div key={phase.id} className="flex items-center">
               <button
                 onClick={() => handlePhaseSelect(phase.id)}
                 className={`flex items-center gap-3 rounded-xl border-2 px-5 py-4 transition-all ${
                   isActive
-                    ? `${phase.borderColor} ${phase.bgColor} shadow-md ring-2 ring-offset-2 ring-${phase.color.replace('text-', '')}`
+                    ? `${phase.borderColor} ${phase.bgColor} shadow-md ring-2 ring-offset-2`
                     : isPast
                       ? 'border-gray-200 bg-gray-50 opacity-60'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                } `}
+                }`}
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-full ${isActive ? phase.bgColor : 'bg-gray-100'}`}
@@ -308,7 +464,6 @@ export default function AdminOklaScorePage() {
 
       {/* Active Phase Detail */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main: Features */}
         <div className="space-y-6 lg:col-span-2">
           <Card className={`${currentPhase.borderColor} border-2`}>
             <CardHeader className={currentPhase.bgColor}>
@@ -324,19 +479,17 @@ export default function AdminOklaScorePage() {
             </CardHeader>
             <CardContent className="p-6">
               <p className="text-muted-foreground mb-6 text-sm">{currentPhase.description}</p>
-
               <h4 className="mb-3 flex items-center gap-2 font-semibold">
                 <Settings className="h-4 w-4" />
                 Funcionalidades
               </h4>
               <div className="space-y-3">
                 {currentPhase.features.map(feature => {
-                  const toggleKey = `${activePhase}-${feature.label}`;
+                  const toggleKey = `${activePhase}-${feature.key}`;
                   const isEnabled = customToggles[toggleKey] ?? feature.enabled;
-
                   return (
                     <div
-                      key={feature.label}
+                      key={feature.key}
                       className="flex items-center justify-between rounded-lg border px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
@@ -353,9 +506,7 @@ export default function AdminOklaScorePage() {
                       </div>
                       <Switch
                         checked={isEnabled}
-                        onCheckedChange={checked =>
-                          setCustomToggles(prev => ({ ...prev, [toggleKey]: checked }))
-                        }
+                        onCheckedChange={checked => handleToggle(toggleKey, checked)}
                       />
                     </div>
                   );
@@ -364,7 +515,7 @@ export default function AdminOklaScorePage() {
             </CardContent>
           </Card>
 
-          {/* Dimensions Active */}
+          {/* Dimensions */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -397,7 +548,6 @@ export default function AdminOklaScorePage() {
                     D6: '6%',
                     D7: '4%',
                   };
-
                   return (
                     <div
                       key={dim}
@@ -423,9 +573,8 @@ export default function AdminOklaScorePage() {
           </Card>
         </div>
 
-        {/* Sidebar: APIs + Cost */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          {/* APIs */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -462,7 +611,6 @@ export default function AdminOklaScorePage() {
             </CardContent>
           </Card>
 
-          {/* Cost Estimate */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -478,7 +626,6 @@ export default function AdminOklaScorePage() {
             </CardContent>
           </Card>
 
-          {/* Phase Comparison */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -499,7 +646,7 @@ export default function AdminOklaScorePage() {
                   >
                     <Icon className={`h-4 w-4 ${isActive ? phase.color : 'text-gray-400'}`} />
                     <div className="flex-1">
-                      <p className={`text-sm ${isActive ? 'font-bold' + ' ' + phase.color : ''}`}>
+                      <p className={`text-sm ${isActive ? 'font-bold ' + phase.color : ''}`}>
                         Fase {phase.id}
                       </p>
                       <p className="text-muted-foreground text-[10px]">

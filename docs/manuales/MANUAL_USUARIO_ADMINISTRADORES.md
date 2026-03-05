@@ -248,3 +248,70 @@ El dealer recibe una notificación con el motivo del rechazo y puede modificar y
 
 **¿El OKLA Score afecta la posición de los anuncios?**
 No directamente. El Score es una herramienta de confianza para compradores. La posición de anuncios se determina por el sistema de subastas (CPC × Quality Score).
+
+---
+
+## 7. Sistema de Etapas (Stage Configuration)
+
+> **Actualizado:** Marzo 2026
+
+OKLA utiliza un **sistema de etapas** para controlar qué funcionalidades están activas en la plataforma. Esto permite activar/desactivar features gradualmente sin modificar código.
+
+### 7.1 Etapas Disponibles
+
+| Etapa | Nombre | Descripción |
+|-------|--------|-------------|
+| 1 | Desarrollo | Solo APIs gratuitas, funcionalidades básicas |
+| 2 | Beta | APIs pagadas limitadas, primeros dealers piloto |
+| 3 | Crecimiento | Todas las APIs activas, monetización completa |
+| 4 | Escala | Infraestructura empresarial, multi-región |
+
+### 7.2 Configuración
+
+La etapa actual se configura mediante variables de entorno:
+- `NEXT_PUBLIC_OKLA_STAGE`: Etapa general (1-4)
+- `NEXT_PUBLIC_OKLA_SCORE_PHASE`: Fase del OKLA Score (1-3)
+
+### 7.3 OKLA Score — Panel de Administración Persistente
+
+El panel de OKLA Score en **Admin > OKLA Score** ahora guarda la configuración de forma permanente:
+
+1. Navegar a `/admin/okla-score`
+2. Seleccionar la **fase activa** (1: NHTSA Gratuito, 2: VinAudit Básico, 3: Completo)
+3. Activar/desactivar dimensiones individuales según la fase
+4. Hacer clic en **Guardar Configuración**
+5. Un banner amarillo indica si hay cambios sin guardar
+
+La configuración se almacena en el **ConfigurationService** con las claves:
+- `okla_score_phase`: Fase activa (1, 2 o 3)
+- `okla_score_toggles`: JSON con el estado de cada dimensión
+
+---
+
+## 8. Transacciones de Venta (Sale Tracking)
+
+> **Actualizado:** Marzo 2026
+
+Cuando un vendedor marca un vehículo como **"Vendido"**, el sistema ahora registra automáticamente una **SaleTransaction** con:
+
+- Precio de lista vs. precio de venta
+- Días en el mercado
+- Datos del comprador (si disponibles)
+- FraudScore automático (0-100)
+- Nivel de confianza (Rejected/Low/Medium/High)
+
+### 8.1 Panel de Transacciones (Próximamente)
+
+Los administradores podrán:
+- Ver todas las transacciones cerradas
+- Filtrar por fecha, dealer, rango de precio
+- Detectar patrones de fraude (ventas sospechosamente rápidas, precios muy por debajo del mercado)
+- Generar reportes de mercado basados en datos reales
+
+### 8.2 Datos de Mercado Únicos
+
+Estos datos de transacciones reales son **exclusivos de OKLA** en República Dominicana y permiten:
+- Calcular el **precio justo real** (no solo estimado)
+- Medir el **tiempo promedio de venta** por marca/modelo
+- Identificar **tendencias de mercado** por región
+- Generar reportes para dealers y partners financieros

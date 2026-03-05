@@ -255,3 +255,34 @@ OKLA usa un sistema de subasta de segundo precio (Vickrey/GSP). Pagas solo lo ne
 
 **¿Los leads predichos por IA (hot leads) ven más mis anuncios?**
 Sí, el algoritmo de targeting prioriza mostrar tus anuncios a leads con mayor probabilidad de compra, especialmente si tu presupuesto es alto.
+
+---
+
+## 10. Transacciones y Ventas Cerradas
+
+> **Actualizado:** Marzo 2026
+
+### 10.1 Registrar una Venta
+
+Cuando vendes un vehículo de tu inventario:
+
+1. Ve a **Inventario** → selecciona el vehículo
+2. Haz clic en **"Marcar como Vendido"**
+3. El sistema registra automáticamente la transacción con todos los datos del vehículo
+
+### 10.2 Datos Registrados Automáticamente
+
+| Dato | Descripción |
+|------|-------------|
+| Precio de lista | El precio al que estaba publicado |
+| Fecha de publicación | Cuándo se publicó originalmente |
+| Días en el mercado | Tiempo entre publicación y venta |
+| Marca/Modelo/Año | Datos del vehículo |
+| VIN | Número de identificación del vehículo |
+
+### 10.3 Beneficios para tu Concesionario
+
+- 📊 **Analytics de ventas**: Cuántos vehículos vendiste, en cuántos días promedio, margen promedio
+- 🏆 **Badge "Dealer Activo"**: Los dealers con más ventas cerradas obtienen mejor visibilidad
+- 📈 **Reportes de rendimiento**: Compara tu velocidad de venta vs. el mercado
+- 🔍 **Inteligencia de mercado**: Datos reales de qué se vende más rápido en tu zona

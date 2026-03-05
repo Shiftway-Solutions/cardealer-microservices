@@ -648,3 +648,110 @@ Abrir el navegador en la app y verificar en:
 4. **GSP Auction Fairness:** El ad engine calcula el "second price" pero actualmente no cobra en tiempo real. La integración con el sistema de billing del backend es necesaria.
 
 5. **Lead Scoring Calibration:** Los pesos del modelo de scoring están optimizados para el mercado dominicano. Monitorear y ajustar según datos reales después de 30 días de producción.
+
+---
+
+## 9. Sistema de Etapas (Stage Configuration)
+
+> **Actualizado:** Marzo 2026
+
+### 9.1 Arquitectura
+
+El sistema de etapas controla la habilitación gradual de features sin modificar código.
+
+**Archivos clave:**
+- `src/lib/stage-config.ts` — Configuración central con 4 etapas y feature flags
+- `src/hooks/use-stage-config.ts` — Hook de React para consumir la configuración
+
+### 9.2 Variables de Entorno
+
+```env
+NEXT_PUBLIC_OKLA_STAGE=1        # Etapa: 1=Desarrollo, 2=Beta, 3=Crecimiento, 4=Escala
+NEXT_PUBLIC_OKLA_SCORE_PHASE=1  # Fase Score: 1=NHTSA Free, 2=VinAudit Basic, 3=Full
+```
+
+### 9.3 Uso en Componentes
+
+```typescript
+import { useStageConfig } from '@/hooks/use-stage-config';
+
+function MyComponent() {
+  const { stage, scorePhase, features, isEnabled } = useStageConfig();
+  
+  if (!isEnabled('oklaScore', 'nhtsaRecalls')) {
+    return <FeatureNotAvailable />;
+  }
+  
+  return <ScoreDisplay />;
+}
+```
+
+### 9.4 Categorías de Features
+
+- `oklaScore` — Dimensiones del score (NHTSA, VinAudit, Carfax, etc.)
+- `media` — Vista 360°, video upload, background removal
+- `advertising` — Campañas, retargeting, analytics
+- `sales` — Transacciones, contrato digital, escrow
+- `dealerErp` — CRM, facturación NCF, contabilidad
+- `platform` — AI Search, chatbot, comparador
+- `infrastructure` — Redis cache, CDN, multi-región
+
+---
+
+## 10. SaleTransaction — Modelo de Datos
+
+> **Actualizado:** Marzo 2026
+
+### 10.1 Entidad
+
+Ubicación: `backend/VehiclesSaleService/VehiclesSaleService.Domain/Entities/SaleTransaction.cs`
+
+```
+SaleTransaction
+├── Id (Guid)
+├── VehicleId, SellerId, BuyerId, BuyerEmail
+├── ListedPrice, SalePrice → PriceDifference (computed), DiscountPercentage (computed)
+├── ListedAt, SoldAt → DaysToSell (computed)
+├── VehicleTitle, Vin, Make, Model, Year
+├── ConfidenceLevel (Rejected/Low/Medium/High)
+├── FraudScore (0-100)
+├── BuyerConfirmed, IpAddress, UserAgent
+├── Currency, TenantId, Notes
+└── CreatedAt, UpdatedAt
+```
+
+### 10.2 Creación Automática
+
+La transacción se crea automáticamente en `VehiclesController.MarkAsSold()`:
+1. Se captura el precio de lista antes de actualizar el vehículo
+2. Se crea un `SaleTransaction` con datos del vehículo e IP/UserAgent
+3. Se publica `VehicleSoldEvent` con el ID de la transacción
+
+### 10.3 Tabla de Base de Datos
+
+- Tabla: `sale_transactions`
+- Índices: VehicleId, SellerId, BuyerId, SoldAt, BuyerEmail
+- Enum `ConfidenceLevel` almacenado como string
+
+---
+
+## 11. Gateway — Configuración de Roles
+
+> **Actualizado:** Marzo 2026
+
+### 11.1 Roles en Ocelot
+
+Las rutas en `ocelot.prod.json` usan `RouteClaimsRequirement` para controlar acceso:
+
+| Patrón de Ruta | Rol Requerido |
+|----------------|--------------|
+| `/api/admin/{everything}` | `Admin` |
+| `/api/kyc/*` (review endpoints) | `Compliance` |
+| `/api/configurations/*` | `Compliance` |
+| `/api/featureflags/*` | `Compliance` |
+| `/api/ai/stats/queue` | `Admin` |
+
+### 11.2 Puertos Internos
+
+- **Producción (DOKS):** Todos los servicios usan puerto **8080**
+- **Desarrollo (Docker Compose):** Servicios usan puerto **80**

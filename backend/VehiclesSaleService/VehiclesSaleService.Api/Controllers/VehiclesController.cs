@@ -1141,6 +1141,7 @@ public class VehiclesController : ControllerBase
             });
         }
 
+        var listedPrice = vehicle.Price;
         vehicle.Status = VehicleStatus.Sold;
         vehicle.SoldAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
@@ -1151,6 +1152,31 @@ public class VehiclesController : ControllerBase
             vehicle.Price = request.SalePrice.Value;
         }
 
+        // Create SaleTransaction for analytics and tracking
+        var transaction = new SaleTransaction
+        {
+            VehicleId = vehicle.Id,
+            SellerId = vehicle.UserId,
+            SellerType = vehicle.SellerType ?? "Individual",
+            BuyerEmail = request?.BuyerEmail,
+            ListedPrice = listedPrice,
+            SalePrice = request?.SalePrice ?? vehicle.Price,
+            Currency = "DOP",
+            VehicleTitle = $"{vehicle.Make} {vehicle.Model} {vehicle.Year}",
+            Vin = vehicle.Vin,
+            Make = vehicle.Make,
+            Model = vehicle.Model,
+            Year = vehicle.Year,
+            ListedAt = vehicle.CreatedAt,
+            SoldAt = vehicle.SoldAt!.Value,
+            ConfidenceLevel = SaleConfidenceLevel.Medium,
+            FraudScore = 100,
+            Notes = request?.Notes,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString(),
+        };
+
+        _context.SaleTransactions.Add(transaction);
         await _context.SaveChangesAsync();
 
         // Publish VehicleSoldEvent for downstream services (DealerMgmt, Notifications, Reviews)
@@ -1161,20 +1187,21 @@ public class VehiclesController : ControllerBase
                 VehicleId = vehicle.Id,
                 SellerId = vehicle.UserId,
                 SalePrice = request?.SalePrice ?? vehicle.Price,
-                ListedPrice = vehicle.Price,
+                ListedPrice = listedPrice,
                 SoldAt = vehicle.SoldAt!.Value,
                 BuyerEmail = request?.BuyerEmail,
                 VehicleTitle = $"{vehicle.Make} {vehicle.Model} {vehicle.Year}"
             };
             await _eventPublisher.PublishAsync(soldEvent);
-            _logger.LogInformation("VehicleSoldEvent published for vehicle {VehicleId}", id);
+            _logger.LogInformation("VehicleSoldEvent published for vehicle {VehicleId}, transaction {TransactionId}", id, transaction.Id);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to publish VehicleSoldEvent for vehicle {VehicleId} — sale still recorded", id);
         }
 
-        _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}", id, request?.SalePrice);
+        _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}, TransactionId: {TransactionId}", 
+            id, request?.SalePrice, transaction.Id);
 
         return Ok(new MarkVehicleSoldResponse
         {

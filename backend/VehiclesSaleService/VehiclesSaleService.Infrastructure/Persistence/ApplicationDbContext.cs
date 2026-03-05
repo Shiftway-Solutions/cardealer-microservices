@@ -31,6 +31,11 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<VehicleHomepageSection> VehicleHomepageSections => Set<VehicleHomepageSection>();
 
     // ========================================
+    // SALE TRANSACTIONS
+    // ========================================
+    public DbSet<SaleTransaction> SaleTransactions => Set<SaleTransaction>();
+
+    // ========================================
     // LEADS & MESSAGING
     // ========================================
     public DbSet<Lead> Leads => Set<Lead>();
@@ -690,6 +695,45 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.HasIndex(f => f.UserId);
             entity.HasIndex(f => f.VehicleId);
             entity.HasIndex(f => new { f.UserId, f.VehicleId }).IsUnique();
+        });
+
+        // ========================================
+        // SALE TRANSACTION CONFIGURATION
+        // ========================================
+
+        modelBuilder.Entity<SaleTransaction>(entity =>
+        {
+            entity.ToTable("sale_transactions");
+            entity.HasKey(st => st.Id);
+            entity.Property(st => st.Id).ValueGeneratedNever();
+            entity.Property(st => st.VehicleId).IsRequired();
+            entity.Property(st => st.SellerId).IsRequired();
+            entity.Property(st => st.SellerType).HasMaxLength(50);
+            entity.Property(st => st.BuyerEmail).HasMaxLength(255);
+            entity.Property(st => st.ListedPrice).HasPrecision(18, 2);
+            entity.Property(st => st.SalePrice).HasPrecision(18, 2);
+            entity.Property(st => st.Currency).HasMaxLength(3).HasDefaultValue("DOP");
+            entity.Property(st => st.VehicleTitle).HasMaxLength(500);
+            entity.Property(st => st.Vin).HasMaxLength(17);
+            entity.Property(st => st.Make).HasMaxLength(100);
+            entity.Property(st => st.Model).HasMaxLength(100);
+            entity.Property(st => st.IpAddress).HasMaxLength(45);
+            entity.Property(st => st.UserAgent).HasMaxLength(500);
+            entity.Property(st => st.Notes).HasMaxLength(2000);
+            entity.Property(st => st.TenantId).HasMaxLength(100);
+            entity.Property(st => st.ConfidenceLevel)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            entity.HasIndex(st => st.VehicleId);
+            entity.HasIndex(st => st.SellerId);
+            entity.HasIndex(st => st.BuyerId);
+            entity.HasIndex(st => st.SoldAt);
+            entity.HasIndex(st => st.BuyerEmail);
+
+            entity.Ignore(st => st.PriceDifference);
+            entity.Ignore(st => st.DiscountPercentage);
+            entity.Ignore(st => st.DaysToSell);
         });
 
         // ========================================
