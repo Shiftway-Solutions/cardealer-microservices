@@ -2460,6 +2460,30 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/contactrequests",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/contactrequests",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "contactservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/contactrequests/{everything}",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -4977,6 +5001,23 @@
         "GET"
       ],
       "DownstreamPathTemplate": "/api/advertising/reports/platform",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "advertisingservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/advertising/reports/owner/{ownerId}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/advertising/reports/owner/{ownerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

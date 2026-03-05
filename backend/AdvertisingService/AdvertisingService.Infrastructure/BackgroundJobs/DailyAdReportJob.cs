@@ -67,6 +67,7 @@ public class DailyAdReportJob : BackgroundService
         var reportingService = scope.ServiceProvider.GetRequiredService<IAdReportingService>();
         var campaignRepo = scope.ServiceProvider.GetRequiredService<IAdCampaignRepository>();
         var notificationClient = scope.ServiceProvider.GetRequiredService<NotificationServiceClient>();
+        var userClient = scope.ServiceProvider.GetRequiredService<UserServiceClient>();
 
         var yesterday = DateTime.UtcNow.AddDays(-1).Date;
         var platformReport = await reportingService.GetPlatformReportAsync(yesterday, ct);
@@ -105,31 +106,90 @@ public class DailyAdReportJob : BackgroundService
                     if (ownerCampaigns.Count == 0) continue; // No campaigns found for this owner
                 }
 
+                // Get user email from UserService
+                var userInfo = await userClient.GetUserInfoAsync(ownerId, ct);
+                if (userInfo == null || string.IsNullOrEmpty(userInfo.Email))
+                {
+                    _logger.LogWarning("Could not resolve email for owner {OwnerId}, skipping daily report", ownerId);
+                    continue;
+                }
+
                 var ownerReport = await reportingService.GetOwnerReportAsync(ownerId, ownerType, yesterday, ct);
 
-                var placeholders = new Dictionary<string, string>
-                {
-                    ["period"] = yesterday.ToString("dd/MM/yyyy"),
-                    ["totalViews"] = ownerReport.TotalImpressions.ToString("N0"),
-                    ["totalClicks"] = ownerReport.TotalClicks.ToString("N0"),
-                    ["averageCtr"] = (ownerReport.OverallCtr * 100).ToString("F2"),
-                    ["activeCampaigns"] = ownerReport.ActiveCampaigns.ToString(),
-                    ["totalSpent"] = ownerReport.TotalSpent.ToString("N2"),
-                    ["portalUrl"] = "https://okla.com.do/impulsar/mis-campanas"
-                };
+                var subject = $"📈 Reporte Diario de Publicidad - {yesterday:dd/MM/yyyy} | OKLA";
+                var htmlBody = RenderDailyReportEmail(
+                    userInfo.FullName ?? userInfo.Email,
+                    yesterday.ToString("dd/MM/yyyy"),
+                    ownerReport.TotalImpressions,
+                    ownerReport.TotalClicks,
+                    ownerReport.OverallCtr,
+                    ownerReport.ActiveCampaigns,
+                    ownerReport.TotalSpent);
 
-                await notificationClient.SendNotificationAsync(
-                    ownerId,
-                    "advertising-daily-report",
-                    placeholders,
+                await notificationClient.SendEmailAsync(
+                    userInfo.Email,
+                    subject,
+                    htmlBody,
                     ct);
 
-                _logger.LogDebug("Daily report email sent to owner {OwnerId}", ownerId);
+                _logger.LogDebug("Daily report email sent to {Email} (owner {OwnerId})", userInfo.Email, ownerId);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to send daily report to owner {OwnerId}", ownerId);
             }
         }
+    }
+
+    private static string RenderDailyReportEmail(
+        string ownerName,
+        string reportDate,
+        long totalImpressions,
+        long totalClicks,
+        decimal ctr,
+        int activeCampaigns,
+        decimal totalSpent)
+    {
+        return $@"<!DOCTYPE html>
+<html lang=""es"">
+<head>
+    <meta charset=""utf-8"">
+    <title>Reporte Diario - OKLA</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: #fff; }}
+        .header {{ background: #1a56db; color: white; padding: 20px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 20px; }}
+        .content {{ padding: 20px; }}
+        .stats {{ display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }}
+        .stat {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; flex: 1; min-width: 100px; text-align: center; }}
+        .stat-val {{ font-size: 24px; font-weight: 700; color: #1a56db; }}
+        .stat-lbl {{ font-size: 11px; color: #64748b; text-transform: uppercase; }}
+        .btn {{ display: inline-block; background: #1a56db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; }}
+        .footer {{ background: #1e293b; color: #94a3b8; padding: 15px; text-align: center; font-size: 11px; }}
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>📈 Reporte Diario de Publicidad</h1>
+            <p style=""margin:4px 0 0;font-size:13px;opacity:0.9;"">{reportDate}</p>
+        </div>
+        <div class=""content"">
+            <p>Hola <strong>{System.Net.WebUtility.HtmlEncode(ownerName)}</strong>,</p>
+            <p>Aquí tienes el resumen de ayer:</p>
+            <div class=""stats"">
+                <div class=""stat""><span class=""stat-val"">{totalImpressions:N0}</span><br><span class=""stat-lbl"">Impresiones</span></div>
+                <div class=""stat""><span class=""stat-val"">{totalClicks:N0}</span><br><span class=""stat-lbl"">Clics</span></div>
+                <div class=""stat""><span class=""stat-val"">{(ctr * 100):F2}%</span><br><span class=""stat-lbl"">CTR</span></div>
+                <div class=""stat""><span class=""stat-val"">RD${totalSpent:N2}</span><br><span class=""stat-lbl"">Invertido</span></div>
+            </div>
+            <p>Campañas activas: <strong>{activeCampaigns}</strong></p>
+            <p style=""text-align:center;""><a href=""https://okla.com.do/impulsar/mis-campanas"" class=""btn"">Ver mis campañas →</a></p>
+        </div>
+        <div class=""footer"">&copy; {DateTime.UtcNow.Year} OKLA. Todos los derechos reservados.</div>
+    </div>
+</body>
+</html>";
     }
 }

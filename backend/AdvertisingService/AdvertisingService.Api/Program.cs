@@ -213,6 +213,12 @@ builder.Services.AddHttpClient<NotificationServiceClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(5);
 });
 
+builder.Services.AddHttpClient<UserServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:UserService"] ?? "http://userservice:8080");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+
 var app = builder.Build();
 
 // ========= MIDDLEWARE PIPELINE (CANONICAL ORDER) =========

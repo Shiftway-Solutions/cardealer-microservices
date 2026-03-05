@@ -38,6 +38,7 @@ public static class DependencyInjection
         // Background Jobs
         services.AddHostedService<RotationRefreshJob>();
         services.AddHostedService<DailyAdReportJob>();
+        services.AddHostedService<MonthlyAdReportJob>();
         services.AddHostedService<CampaignExpirationJob>();
         services.AddHostedService<BillingPaymentCompletedConsumer>();
 
