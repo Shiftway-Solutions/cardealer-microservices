@@ -303,6 +303,7 @@ export function VehicleInfoForm({
             value={data.make}
             onChange={handleMakeChange}
             options={makeOptions}
+            placeholder="Seleccionar marca..."
             isAutoFilled={isAuto('make')}
             isLoading={makesLoading}
             required
@@ -323,6 +324,7 @@ export function VehicleInfoForm({
             value={data.year?.toString() || ''}
             onChange={val => onChange({ year: sanitizeYear(parseInt(val)) })}
             options={yearOptions}
+            placeholder="Seleccionar año..."
             isAutoFilled={isAuto('year')}
             required
           />
@@ -338,6 +340,7 @@ export function VehicleInfoForm({
             value={data.bodyStyle}
             onChange={val => onChange({ bodyStyle: val })}
             options={bodyOptions}
+            placeholder="Seleccionar carrocería..."
             isAutoFilled={isAuto('bodyStyle')}
             isLoading={bodyLoading}
             required
@@ -363,6 +366,7 @@ export function VehicleInfoForm({
             value={data.fuelType}
             onChange={val => onChange({ fuelType: val })}
             options={fuelOptions}
+            placeholder="Seleccionar combustible..."
             isAutoFilled={isAuto('fuelType')}
             isLoading={fuelLoading}
             required
@@ -372,6 +376,7 @@ export function VehicleInfoForm({
             value={data.transmission}
             onChange={val => onChange({ transmission: val })}
             options={transOptions}
+            placeholder="Seleccionar transmisión..."
             isAutoFilled={isAuto('transmission')}
             isLoading={transLoading}
             required
@@ -424,7 +429,7 @@ export function VehicleInfoForm({
             value={data.doors?.toString() || ''}
             onChange={val => onChange({ doors: parseInt(val) || 0 })}
             options={DOORS_OPTIONS}
-            placeholder="Seleccionar..."
+            placeholder="Seleccionar puertas..."
             isAutoFilled={isAuto('doors')}
           />
         </div>
@@ -477,6 +482,7 @@ export function VehicleInfoForm({
             value={data.exteriorColor}
             onChange={val => onChange({ exteriorColor: val })}
             options={colorOptions}
+            placeholder="Seleccionar color..."
             isAutoFilled={isAuto('exteriorColor')}
             isLoading={colorsLoading}
           />
@@ -485,6 +491,7 @@ export function VehicleInfoForm({
             value={data.interiorColor}
             onChange={val => onChange({ interiorColor: val })}
             options={colorOptions}
+            placeholder="Seleccionar color..."
             isLoading={colorsLoading}
           />
         </div>

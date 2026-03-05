@@ -65,11 +65,11 @@ function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
     elite: [
       'Todo de PRO +',
       'Manager dedicado',
-      'API access',
+      'Acceso a API',
       '50 publicaciones destacadas/mes',
       'Múltiples ubicaciones',
       'Empleados ilimitados',
-      'White label',
+      'Marca blanca',
       'Soporte 24/7',
     ],
   } as Record<string, string[]>;
@@ -547,7 +547,13 @@ export default function DealerSubscriptionPage() {
                     pro: false,
                     elite: true,
                   },
-                  { feature: 'API access', libre: false, visible: false, pro: false, elite: true },
+                  {
+                    feature: 'Acceso a API',
+                    libre: false,
+                    visible: false,
+                    pro: false,
+                    elite: true,
+                  },
                   { feature: 'Empleados', libre: '1', visible: '1', pro: '5', elite: 'Ilimitado' },
                   {
                     feature: 'Soporte',

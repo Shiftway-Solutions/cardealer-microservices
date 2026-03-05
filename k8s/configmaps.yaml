@@ -3466,6 +3466,25 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/contactrequests",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/contactrequests",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "contactservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          }
+        },
+        {
           "UpstreamPathTemplate": "/api/vehiclecomparisons/health",
           "UpstreamHttpMethod": [
             "GET"
@@ -3583,6 +3602,25 @@ data:
             "ExceptionsAllowedBeforeBreaking": 3,
             "DurationOfBreak": 10,
             "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/reviews",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/reviews",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "reviewservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
           }
         },
         {

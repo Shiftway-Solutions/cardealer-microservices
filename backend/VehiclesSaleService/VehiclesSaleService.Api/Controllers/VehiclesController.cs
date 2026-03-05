@@ -1153,6 +1153,27 @@ public class VehiclesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Publish VehicleSoldEvent for downstream services (DealerMgmt, Notifications, Reviews)
+        try
+        {
+            var soldEvent = new VehicleSoldEvent
+            {
+                VehicleId = vehicle.Id,
+                SellerId = vehicle.UserId,
+                SalePrice = request?.SalePrice ?? vehicle.Price,
+                ListedPrice = vehicle.Price,
+                SoldAt = vehicle.SoldAt!.Value,
+                BuyerEmail = request?.BuyerEmail,
+                VehicleTitle = $"{vehicle.Make} {vehicle.Model} {vehicle.Year}"
+            };
+            await _eventPublisher.PublishAsync(soldEvent);
+            _logger.LogInformation("VehicleSoldEvent published for vehicle {VehicleId}", id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to publish VehicleSoldEvent for vehicle {VehicleId} — sale still recorded", id);
+        }
+
         _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}", id, request?.SalePrice);
 
         return Ok(new MarkVehicleSoldResponse
@@ -1614,6 +1635,11 @@ public record MarkVehicleSoldRequest
     /// Optional: Final sale price
     /// </summary>
     public decimal? SalePrice { get; init; }
+    
+    /// <summary>
+    /// Optional: Buyer email for sale confirmation tracking
+    /// </summary>
+    public string? BuyerEmail { get; init; }
     
     /// <summary>
     /// Optional: Buyer notes

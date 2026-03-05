@@ -258,7 +258,7 @@ export default function ContactoPage() {
                           className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
                           required
                         >
-                          <option value="">Seleccionar...</option>
+                          <option value="">Seleccionar asunto...</option>
                           <option value="general">Consulta general</option>
                           <option value="support">Soporte técnico</option>
                           <option value="sales">Información de ventas</option>
