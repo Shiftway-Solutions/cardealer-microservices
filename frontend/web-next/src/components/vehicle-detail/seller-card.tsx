@@ -186,8 +186,11 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
             if (isAuthenticated) {
               // Redirect to messaging view with seller context
               const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+              const emailParam = sellerData.email
+                ? `&sellerEmail=${encodeURIComponent(sellerData.email)}`
+                : '';
               router.push(
-                `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}`
+                `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}${emailParam}`
               );
             } else {
               setShowLoginPrompt(true);
@@ -289,8 +292,11 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
               onClick={() => {
                 if (isAuthenticated) {
                   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+                  const emailParam = sellerData.email
+                    ? `&sellerEmail=${encodeURIComponent(sellerData.email)}`
+                    : '';
                   router.push(
-                    `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}&dealerChat=true`
+                    `/mensajes?sellerId=${vehicle.sellerId}&vehicleId=${vehicle.id}&vehicleTitle=${encodeURIComponent(vehicleTitle)}&dealerChat=true${emailParam}`
                   );
                 } else {
                   setShowLoginPrompt(true);

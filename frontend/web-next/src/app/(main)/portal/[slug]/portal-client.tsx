@@ -96,7 +96,15 @@ interface DealerPortalClientProps {
 // CHATBOT COMPONENT
 // ============================================================
 
-function DealerChatbot({ dealerName, dealerId }: { dealerName: string; dealerId: string }) {
+function DealerChatbot({
+  dealerName,
+  dealerId,
+  dealerEmail: _dealerEmail,
+}: {
+  dealerName: string;
+  dealerId: string;
+  dealerEmail?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'bot'; text: string }>>([
     {
@@ -844,7 +852,11 @@ export function DealerPortalClient({ slug, initialDealer }: DealerPortalClientPr
       </section>
 
       {/* Chatbot FAB */}
-      <DealerChatbot dealerName={dealer.businessName} dealerId={dealer.id} />
+      <DealerChatbot
+        dealerName={dealer.businessName}
+        dealerId={dealer.id}
+        dealerEmail={dealer.email}
+      />
     </div>
   );
 }

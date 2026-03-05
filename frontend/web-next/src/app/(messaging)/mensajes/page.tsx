@@ -31,7 +31,6 @@ import {
   Inbox,
   Bot,
   Sparkles,
-  Calendar,
   CalendarCheck,
   X,
 } from 'lucide-react';
@@ -125,92 +124,140 @@ interface BotSession {
   lastTimestamp: Date | null;
 }
 
+function parseBotSessions(): BotSession[] {
+  try {
+    const found: BotSession[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('okla_chat_session_')) continue;
+      const suffix = key.replace('okla_chat_session_', '');
+      if (suffix === 'default') continue; // skip global OKLA support
+      const dealerId = suffix;
+      const dealerName = localStorage.getItem(`okla_chat_dealername_${dealerId}`) || 'Asistente IA';
+      let lastMessage: string | null = null;
+      let lastTimestamp: Date | null = null;
+      const msgsJson = localStorage.getItem(`okla_chat_messages_${dealerId}`);
+      if (msgsJson) {
+        const msgs = JSON.parse(msgsJson) as Array<{
+          content: string;
+          timestamp: string;
+          isLoading?: boolean;
+        }>;
+        const real = msgs.filter(m => !m.isLoading);
+        if (real.length > 0) {
+          lastMessage = real[real.length - 1].content;
+          lastTimestamp = new Date(real[real.length - 1].timestamp);
+        }
+      }
+      found.push({ dealerId, dealerName, lastMessage, lastTimestamp });
+    }
+    found.sort((a, b) => (b.lastTimestamp?.getTime() ?? 0) - (a.lastTimestamp?.getTime() ?? 0));
+    return found;
+  } catch {
+    return [];
+  }
+}
+
 function useBotSessions(): BotSession[] {
   const [sessions, setSessions] = React.useState<BotSession[]>([]);
 
   React.useEffect(() => {
-    try {
-      const found: BotSession[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key?.startsWith('okla_chat_session_')) continue;
-        const suffix = key.replace('okla_chat_session_', '');
-        if (suffix === 'default') continue; // skip global OKLA support
-        const dealerId = suffix;
-        const dealerName =
-          localStorage.getItem(`okla_chat_dealername_${dealerId}`) || 'Asistente IA';
-        let lastMessage: string | null = null;
-        let lastTimestamp: Date | null = null;
-        const msgsJson = localStorage.getItem(`okla_chat_messages_${dealerId}`);
-        if (msgsJson) {
-          const msgs = JSON.parse(msgsJson) as Array<{
-            content: string;
-            timestamp: string;
-            isLoading?: boolean;
-          }>;
-          const real = msgs.filter(m => !m.isLoading);
-          if (real.length > 0) {
-            lastMessage = real[real.length - 1].content;
-            lastTimestamp = new Date(real[real.length - 1].timestamp);
-          }
-        }
-        found.push({ dealerId, dealerName, lastMessage, lastTimestamp });
+    setSessions(parseBotSessions());
+
+    // Refresh sidebar when a new message is saved to localStorage (storage event)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key?.startsWith('okla_chat_')) {
+        setSessions(parseBotSessions());
       }
-      found.sort((a, b) => (b.lastTimestamp?.getTime() ?? 0) - (a.lastTimestamp?.getTime() ?? 0));
-      setSessions(found);
-    } catch {
-      setSessions([]);
-    }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // Also poll every 3 seconds to catch same-tab updates (storage events fire only cross-tab)
+    const interval = setInterval(() => {
+      setSessions(parseBotSessions());
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
   }, []);
 
   return sessions;
 }
 
 // =============================================================================
-// APPOINTMENT SCHEDULER
+// APPOINTMENT SCHEDULER — Real calendar with month view
 // =============================================================================
 
 function AppointmentScheduler({
   dealerName,
+  dealerId,
+  dealerEmail,
+  vehicleTitle,
   onSchedule,
   onClose,
 }: {
   dealerName: string;
-  onSchedule: (message: string) => void;
+  dealerId?: string;
+  dealerEmail?: string;
+  vehicleTitle?: string;
+  onSchedule: (message: string, date: string, time: string) => void;
   onClose: () => void;
 }) {
   const [step, setStep] = React.useState<'date' | 'time'>('date');
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
-
-  // Next 14 days, excluding Sundays
-  const availableDates = React.useMemo(() => {
-    const dates: Date[] = [];
-    const today = new Date();
-    for (let i = 1; i <= 21 && dates.length < 14; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      if (d.getDay() !== 0) dates.push(d);
-    }
-    return dates;
-  }, []);
-
-  const timeSlots = ['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM'];
+  const today = React.useMemo(() => new Date(), []);
+  const [calendarMonth, setCalendarMonth] = React.useState<Date>(
+    () => new Date(today.getFullYear(), today.getMonth(), 1)
+  );
 
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const monthNames = [
-    'Ene',
-    'Feb',
-    'Mar',
-    'Abr',
-    'May',
-    'Jun',
-    'Jul',
-    'Ago',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dic',
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
+  const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'];
+
+  // Build grid for the current calendar month (Mon-Sun layout starting Sun)
+  const calendarDays = React.useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const grid: (Date | null)[] = Array(firstDay).fill(null);
+    for (let d = 1; d <= daysInMonth; d++) grid.push(new Date(year, month, d));
+    while (grid.length % 7 !== 0) grid.push(null);
+    return grid;
+  }, [calendarMonth]);
+
+  const isAvailable = (d: Date) => {
+    if (!d) return false;
+    const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diff >= 1 && diff <= 45 && d.getDay() !== 0; // Not Sunday, within 45 days
+  };
+
+  const isPast = (d: Date) => {
+    const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diff < 1;
+  };
+
+  const canGoPrev =
+    calendarMonth.getFullYear() > today.getFullYear() ||
+    calendarMonth.getMonth() > today.getMonth();
+
+  const formatDateStr = (d: Date) =>
+    `${dayNames[d.getDay()]} ${d.getDate()} de ${monthNames[d.getMonth()]}`;
 
   return (
     <div className="mx-3 mb-3 rounded-2xl border border-[#00A870]/20 bg-white p-4 shadow-lg ring-1 ring-[#00A870]/10">
@@ -249,64 +296,122 @@ function AppointmentScheduler({
         ))}
       </div>
 
-      {/* Step 1: Date */}
+      {/* Step 1: Month calendar */}
       {step === 'date' && (
         <>
-          <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
-            <Calendar className="h-4 w-4" />
-            ¿Qué día te gustaría visitarnos?
-          </p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {availableDates.map(d => (
-              <button
-                key={d.toISOString()}
-                onClick={() => {
-                  setSelectedDate(d);
-                  setStep('time');
-                }}
-                className={cn(
-                  'flex flex-col items-center rounded-xl border px-2 py-2 text-xs transition-all hover:border-[#00A870] hover:bg-[#00A870]/5',
-                  selectedDate?.toDateString() === d.toDateString()
-                    ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
-                    : 'border-gray-100 text-gray-700'
-                )}
+          {/* Month navigation */}
+          <div className="mb-3 flex items-center justify-between">
+            <button
+              onClick={() =>
+                setCalendarMonth(
+                  new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1)
+                )
+              }
+              disabled={!canGoPrev}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+              aria-label="Mes anterior"
+            >
+              ‹
+            </button>
+            <span className="text-sm font-semibold text-gray-700">
+              {monthNames[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}
+            </span>
+            <button
+              onClick={() =>
+                setCalendarMonth(
+                  new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
+                )
+              }
+              className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Mes siguiente"
+            >
+              ›
+            </button>
+          </div>
+
+          {/* Day-of-week headers */}
+          <div className="mb-1 grid grid-cols-7 gap-0.5">
+            {dayNames.map(d => (
+              <div
+                key={d}
+                className="py-1 text-center text-[10px] font-semibold tracking-wide text-gray-400 uppercase"
               >
-                <span className="text-gray-400">{dayNames[d.getDay()]}</span>
-                <span className="text-base font-bold">{d.getDate()}</span>
-                <span className="text-gray-400">{monthNames[d.getMonth()]}</span>
-              </button>
+                {d}
+              </div>
             ))}
           </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {calendarDays.map((d, idx) => {
+              if (!d) return <div key={`empty-${idx}`} />;
+              const available = isAvailable(d);
+              const past = isPast(d);
+              const isSelected = selectedDate?.toDateString() === d.toDateString();
+              const isToday = d.toDateString() === today.toDateString();
+              return (
+                <button
+                  key={d.toISOString()}
+                  onClick={() => {
+                    if (!available) return;
+                    setSelectedDate(d);
+                    setStep('time');
+                  }}
+                  disabled={!available}
+                  className={cn(
+                    'relative flex h-8 w-full items-center justify-center rounded-lg text-sm transition-all',
+                    isSelected && 'bg-[#00A870] font-bold text-white shadow-md',
+                    !isSelected &&
+                      available &&
+                      'font-medium text-gray-700 hover:bg-[#00A870]/10 hover:text-[#00A870]',
+                    !isSelected && past && 'cursor-not-allowed text-gray-200',
+                    !isSelected &&
+                      !past &&
+                      !available &&
+                      'cursor-not-allowed text-gray-300 line-through',
+                    isToday && !isSelected && 'ring-1 ring-[#00A870]/40'
+                  )}
+                >
+                  {d.getDate()}
+                  {isToday && !isSelected && (
+                    <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#00A870]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-center text-xs text-gray-400">
+            Domingos no disponibles · Horario: lun–sáb
+          </p>
         </>
       )}
 
-      {/* Step 2: Time */}
+      {/* Step 2: Time slots */}
       {step === 'time' && selectedDate && (
         <>
           <button
             onClick={() => setStep('date')}
-            className="mb-2 flex items-center gap-1 text-xs text-[#00A870] hover:underline"
+            className="mb-3 flex items-center gap-1 text-xs text-[#00A870] hover:underline"
           >
             ← Cambiar día
           </button>
           <p className="mb-3 text-sm text-gray-500">
-            <span className="font-medium text-gray-700">
-              {dayNames[selectedDate.getDay()]} {selectedDate.getDate()} de{' '}
-              {monthNames[selectedDate.getMonth()]}
-            </span>{' '}
-            — ¿A qué hora te viene bien?
+            <span className="font-semibold text-gray-800">{formatDateStr(selectedDate)}</span> — ¿A
+            qué hora te viene bien?
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {timeSlots.map(t => (
               <button
                 key={t}
                 onClick={() => {
-                  const dateStr = `${dayNames[selectedDate.getDay()]} ${selectedDate.getDate()} de ${monthNames[selectedDate.getMonth()]}`;
+                  const dateStr = formatDateStr(selectedDate);
                   onSchedule(
-                    `Quisiera agendar una cita para ver el vehículo el ${dateStr} a las ${t}.`
+                    `Quisiera agendar una cita para ver el vehículo el ${dateStr} a las ${t}.`,
+                    dateStr,
+                    t
                   );
                 }}
-                className="rounded-xl border border-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-[#00A870] hover:bg-[#00A870]/5 hover:text-[#00A870]"
+                className="rounded-xl border border-gray-100 px-2 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-[#00A870] hover:bg-[#00A870]/5 hover:text-[#00A870] active:scale-95"
               >
                 {t}
               </button>
@@ -508,16 +613,21 @@ function MessageBubble({ message }: { message: Message }) {
 function DealerBotPanel({
   dealerId,
   dealerName,
+  dealerEmail,
+  vehicleTitle,
   onBack,
 }: {
   dealerId?: string;
   dealerName: string;
+  dealerEmail?: string;
+  vehicleTitle?: string;
   onBack: () => void;
 }) {
   const chat = useChatbot({ dealerId, dealerName, autoStart: true, maxRetries: 2 });
   const botEndRef = React.useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = React.useState('');
   const [showAppointmentScheduler, setShowAppointmentScheduler] = React.useState(false);
+  const [isBookingAppointment, setIsBookingAppointment] = React.useState(false);
   // Track which bot message last triggered the scheduler, so we don't re-show after dismiss
   const [lastSchedulerMsgId, setLastSchedulerMsgId] = React.useState<string | null>(null);
 
@@ -586,6 +696,33 @@ function DealerBotPanel({
     setInputValue('');
     setShowAppointmentScheduler(false);
     chat.sendMessage(text);
+  };
+
+  // Handle appointment scheduling: send message to bot + call booking API
+  const handleScheduleAppointment = async (message: string, date: string, time: string) => {
+    setShowAppointmentScheduler(false);
+    setIsBookingAppointment(true);
+    // Send user message to chatbot
+    chat.sendMessage(message);
+    // Call appointment booking API (fire-and-forget, non-blocking)
+    try {
+      await fetch('/api/appointments/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dealerId: dealerId || '',
+          dealerName,
+          dealerEmail: dealerEmail || '',
+          vehicleTitle: vehicleTitle || dealerName,
+          date,
+          time,
+        }),
+      });
+    } catch {
+      // Non-blocking — email failure doesn't disrupt the chat
+    } finally {
+      setIsBookingAppointment(false);
+    }
   };
 
   // "Asistente [DealerName]" — use botName returned by the service if available
@@ -769,12 +906,20 @@ function DealerBotPanel({
       {showAppointmentScheduler && (
         <AppointmentScheduler
           dealerName={dealerName}
-          onSchedule={msg => {
-            setShowAppointmentScheduler(false);
-            chat.sendMessage(msg);
-          }}
+          dealerId={dealerId}
+          dealerEmail={dealerEmail}
+          vehicleTitle={vehicleTitle}
+          onSchedule={handleScheduleAppointment}
           onClose={() => setShowAppointmentScheduler(false)}
         />
+      )}
+
+      {/* Booking progress indicator */}
+      {isBookingAppointment && (
+        <div className="mx-3 mb-2 flex items-center gap-2 rounded-xl bg-[#00A870]/5 px-4 py-2 text-sm text-[#00A870]">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Confirmando cita y enviando correos…
+        </div>
       )}
 
       {/* Input */}
@@ -861,6 +1006,8 @@ export default function MessagesPage() {
   const [urlBotConfig, setUrlBotConfig] = React.useState<{
     dealerId: string;
     dealerName: string;
+    dealerEmail?: string;
+    vehicleTitle?: string;
   } | null>(null);
 
   React.useEffect(() => {
@@ -869,10 +1016,13 @@ export default function MessagesPage() {
     const params = new URLSearchParams(window.location.search);
     const sellerId = params.get('sellerId');
     const vehicleTitle = params.get('vehicleTitle');
+    const sellerEmail = params.get('sellerEmail');
     if (sellerId) {
       setUrlBotConfig({
         dealerId: sellerId,
         dealerName: vehicleTitle ? decodeURIComponent(vehicleTitle) : 'Vendedor',
+        dealerEmail: sellerEmail ? decodeURIComponent(sellerEmail) : undefined,
+        vehicleTitle: vehicleTitle ? decodeURIComponent(vehicleTitle) : undefined,
       });
       // Clean URL so it doesn't re-trigger on refresh
       window.history.replaceState({}, '', '/mensajes');
@@ -1178,6 +1328,8 @@ export default function MessagesPage() {
                 key={`url-${urlBotConfig.dealerId}`}
                 dealerId={urlBotConfig.dealerId}
                 dealerName={urlBotConfig.dealerName}
+                dealerEmail={urlBotConfig.dealerEmail}
+                vehicleTitle={urlBotConfig.vehicleTitle}
                 onBack={() => setUrlBotConfig(null)}
               />
             ) : !selectedConversation ? (
@@ -1206,6 +1358,7 @@ export default function MessagesPage() {
                 key={selectedConversationId!}
                 dealerId={selectedConversation.otherUser.id || undefined}
                 dealerName={selectedConversation.otherUser.name}
+                vehicleTitle={selectedConversation.vehicle.title}
                 onBack={() => setShowBotPanel(false)}
               />
             ) : (
