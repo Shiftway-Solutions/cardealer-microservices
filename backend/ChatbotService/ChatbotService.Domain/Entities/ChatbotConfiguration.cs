@@ -82,6 +82,13 @@ public class ChatbotConfiguration
     public string? CrmApiKey { get; set; } // Encriptado
     public bool AutoCreateLeadsInCrm { get; set; }
     
+    // Notificaciones de citas
+    /// <summary>
+    /// Email del dealer para recibir notificaciones de citas agendadas vía chatbot.
+    /// Si es null, no se envía correo al dealer.
+    /// </summary>
+    public string? ContactEmail { get; set; }
+    
     // Automatización de mantenimiento
     public bool EnableAutoInventorySync { get; set; } = true;
     public int InventorySyncIntervalMinutes { get; set; } = 60;

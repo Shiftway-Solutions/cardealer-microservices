@@ -261,6 +261,12 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
             Log.Information("Database schema verified via EnsureCreated");
         }
 
+        // Idempotent column additions — safe for existing production databases
+        // (EnsureCreated does not alter existing tables; this handles schema evolution)
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE chatbot_configurations ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255)");
+        Log.Information("Schema evolution checks completed");
+
         // Seed default configurations (idempotent)
         await ChatbotDataSeeder.SeedAsync(dbContext);
         Log.Information("Database seed check completed");

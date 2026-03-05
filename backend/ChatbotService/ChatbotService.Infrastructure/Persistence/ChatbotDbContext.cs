@@ -155,6 +155,7 @@ public class ChatbotDbContext : DbContext
             entity.Property(e => e.WebhookUrl).HasMaxLength(500);
             entity.Property(e => e.WebhookSecret).HasMaxLength(200);
             entity.Property(e => e.CrmIntegrationType).HasMaxLength(50);
+            entity.Property(e => e.ContactEmail).HasMaxLength(255);
         });
 
         // InteractionUsage
