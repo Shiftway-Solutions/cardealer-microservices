@@ -82,6 +82,17 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
     }
   }, [messages]);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const handleSearch = useCallback(
     async (query: string) => {
       if (!query.trim() || isLoading) return;
@@ -239,7 +250,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
       {/* Floating bubble — AI search branded (OKLA green/sparkles) */}
       <button
         onClick={() => setIsOpen(o => !o)}
-        className={`fixed right-4 bottom-4 z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+        className={`fixed right-20 bottom-4 z-[9995] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
           isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
             : 'bg-gradient-to-br from-[#00A870] to-[#009663] hover:from-[#009663] hover:to-[#008555]'
@@ -251,7 +262,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
         ) : (
           <>
             <Sparkles className="h-6 w-6 text-white" />
-            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20 [animation-iteration-count:3]" />
           </>
         )}
       </button>
@@ -259,7 +270,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
       {/* Panel */}
       {isOpen && (
         <div
-          className="fixed right-4 bottom-20 z-[9999] flex w-[400px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950"
+          className="fixed right-4 bottom-20 z-[9999] flex w-[380px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 max-sm:inset-0 max-sm:right-0 max-sm:bottom-0 max-sm:w-full max-sm:rounded-none dark:border-gray-700 dark:bg-gray-950"
           style={{ height: 'min(550px, calc(100vh - 120px))' }}
           role="dialog"
           aria-label="Búsqueda con IA"
@@ -282,6 +293,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 onClick={resetChat}
                 className="rounded-lg p-1.5 transition-colors hover:bg-white/20"
                 title="Nueva búsqueda"
+                aria-label="Nueva búsqueda"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -289,6 +301,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 onClick={() => setIsOpen(false)}
                 className="rounded-lg p-1.5 transition-colors hover:bg-white/20"
                 title="Minimizar"
+                aria-label="Minimizar búsqueda"
               >
                 <Minus className="h-4 w-4" />
               </button>
@@ -296,6 +309,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
                 onClick={() => setIsOpen(false)}
                 className="rounded-lg p-1.5 transition-colors hover:bg-white/20"
                 title="Cerrar"
+                aria-label="Cerrar búsqueda"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -303,7 +317,7 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto py-3" role="log">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto py-3" role="log" aria-live="polite">
             {messages.map(msg => (
               <div key={msg.id}>
                 {/* Loading */}

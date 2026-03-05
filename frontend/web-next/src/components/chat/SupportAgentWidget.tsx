@@ -132,6 +132,18 @@ export function SupportAgentWidget() {
     }
   }, [chat.messages]);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && chat.isOpen) {
+        chat.close();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.isOpen]);
+
   return (
     <>
       {/* Floating support bubble — distinct from vehicle chatbot */}
@@ -150,7 +162,7 @@ export function SupportAgentWidget() {
           <>
             <Headphones className="h-5 w-5 text-white" />
             <span className="text-sm font-semibold text-white max-sm:hidden">Soporte</span>
-            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20 [animation-iteration-count:3]" />
           </>
         )}
       </button>

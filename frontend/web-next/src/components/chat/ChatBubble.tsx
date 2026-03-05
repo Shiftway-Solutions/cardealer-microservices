@@ -23,8 +23,8 @@ export function ChatBubble({ isOpen, onClick, unreadCount = 0, positionClass }: 
   return (
     <button
       onClick={onClick}
-      className={`fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
-        positionClass || 'right-4 bottom-4'
+      className={`fixed z-[9996] flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+        positionClass || 'right-4 bottom-20'
       } ${isAnimated ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'} ${
         isOpen
           ? 'bg-gray-600 hover:bg-gray-700'
@@ -44,7 +44,7 @@ export function ChatBubble({ isOpen, onClick, unreadCount = 0, positionClass }: 
             </span>
           )}
           {/* Pulse animation when not open */}
-          <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
+          <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20 [animation-iteration-count:3]" />
         </>
       )}
     </button>
