@@ -1025,8 +1025,8 @@ services:
       Idempotency__Enabled: "true"
       Idempotency__DefaultTtlSeconds: "86400"
       Idempotency__ProcessingTimeoutSeconds: "120"
-      Stripe__ApiKey: "${STRIPE_API_KEY:-sk_test_placeholder}"
-      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}"
+      Stripe__ApiKey: "${STRIPE_API_KEY:-}"
+      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-}"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"

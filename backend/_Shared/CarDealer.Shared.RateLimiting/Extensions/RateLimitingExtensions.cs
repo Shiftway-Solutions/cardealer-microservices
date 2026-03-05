@@ -99,7 +99,7 @@ public static class RateLimitingExtensions
     /// </summary>
     public static RateLimitOptions AddDefaultApiPolicies(this RateLimitOptions options)
     {
-        // Auth endpoints - stricter limits
+        // Auth endpoints - general limit for all auth mutations
         options.Policies["auth"] = new EndpointRateLimitPolicy
         {
             Pattern = "POST:/api/auth/*",
@@ -109,6 +109,43 @@ public static class RateLimitingExtensions
             {
                 ["anonymous"] = 5,
                 ["authenticated"] = 20
+            }
+        };
+
+        // Login endpoint - strict limit to prevent brute-force / credential stuffing (OWASP)
+        options.Policies["auth-login"] = new EndpointRateLimitPolicy
+        {
+            Pattern = "POST:/api/auth/login",
+            Limit = 5,
+            WindowSeconds = 60,
+            TierLimits = new Dictionary<string, int>
+            {
+                ["anonymous"] = 5,
+                ["authenticated"] = 5
+            }
+        };
+
+        // Register endpoint - strict limit to prevent mass account creation
+        options.Policies["auth-register"] = new EndpointRateLimitPolicy
+        {
+            Pattern = "POST:/api/auth/register",
+            Limit = 3,
+            WindowSeconds = 60,
+            TierLimits = new Dictionary<string, int>
+            {
+                ["anonymous"] = 3
+            }
+        };
+
+        // Forgot-password endpoint - strict limit to prevent email enumeration / abuse
+        options.Policies["auth-forgot-password"] = new EndpointRateLimitPolicy
+        {
+            Pattern = "POST:/api/auth/forgot-password",
+            Limit = 3,
+            WindowSeconds = 60,
+            TierLimits = new Dictionary<string, int>
+            {
+                ["anonymous"] = 3
             }
         };
 

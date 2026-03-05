@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
   const fullPath = subpath ? `${section}/${subpath}` : section;
 
   try {
+    // Security Note: Server-to-server call (Next.js BFF → Gateway).
+    // CSRF is validated at the browser → Next.js boundary, not here.
     const body = await request.json().catch(() => null);
     const res = await fetch(`${API_URL}/api/advertising/rotation/${fullPath}`, {
       method: 'POST',

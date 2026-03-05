@@ -42,6 +42,17 @@ public static class LoggingServiceExtensions
     /// <summary>
     /// Uses Serilog request logging with standard enriched configuration
     /// </summary>
+    /// <summary>
+    /// Headers that MUST NOT appear in logs (token leakage prevention — CWE-532).
+    /// </summary>
+    private static readonly HashSet<string> SensitiveHeaders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Authorization",
+        "Cookie",
+        "Set-Cookie",
+        "X-CSRF-Token"
+    };
+
     public static IApplicationBuilder UseStandardSerilogRequestLogging(this IApplicationBuilder app)
     {
         return Serilog.SerilogApplicationBuilderExtensions.UseSerilogRequestLogging(app, options =>
@@ -60,6 +71,10 @@ public static class LoggingServiceExtensions
                 {
                     diagnosticContext.Set("UserId", httpContext.User.FindFirst("sub")?.Value ?? "N/A");
                 }
+
+                // Security (CWE-532): Never log sensitive headers (Authorization, Cookie, etc.)
+                // Only log safe, non-sensitive headers for diagnostics.
+                // DO NOT add a "RequestHeaders" property — it would leak tokens.
             };
 
             options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms";

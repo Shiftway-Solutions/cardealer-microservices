@@ -421,7 +421,8 @@ builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-app.UseSerilogRequestLogging();
+// Security (CWE-532): UseRequestLogging() from shared lib masks sensitive headers
+app.UseRequestLogging();
 
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());

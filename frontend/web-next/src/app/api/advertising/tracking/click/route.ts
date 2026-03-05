@@ -12,6 +12,9 @@ const API_URL =
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    // Security Note: Server-to-server call (Next.js BFF → Gateway).
+    // CSRF is validated at the browser → Next.js boundary, not here.
+    // Tracking is fire-and-forget; non-critical.
     const res = await fetch(`${API_URL}/api/advertising/tracking/click`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

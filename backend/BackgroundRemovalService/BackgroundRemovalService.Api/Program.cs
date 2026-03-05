@@ -215,7 +215,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // === Middleware ===
-app.UseSerilogRequestLogging();
+// Security (CWE-532): UseRequestLogging() from shared lib masks sensitive headers
+app.UseRequestLogging();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -17,6 +17,39 @@ const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10)
 // Token storage keys (kept for backward cleanup only)
 const ACCESS_TOKEN_KEY = 'okla_access_token';
 const REFRESH_TOKEN_KEY = 'okla_refresh_token';
+const TOKEN_MIGRATED_KEY = 'okla_token_migrated';
+
+// =============================================================================
+// Legacy Token Migration (CWE-922)
+// =============================================================================
+// Clears old localStorage tokens that were used before HttpOnly cookie auth.
+// Runs ONCE on first load, then sets a flag to avoid re-running.
+function migrateTokensFromLocalStorage(): void {
+  if (typeof window === 'undefined') return;
+
+  // Skip if migration already completed
+  if (localStorage.getItem(TOKEN_MIGRATED_KEY) === 'true') return;
+
+  const hadAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const hadRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+  if (hadAccessToken || hadRefreshToken) {
+    console.warn(
+      '[OKLA Security] Legacy localStorage tokens detected and removed. ' +
+        'Auth now uses HttpOnly cookies. This migration runs once.'
+    );
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+
+  // Mark migration as complete so it never runs again
+  localStorage.setItem(TOKEN_MIGRATED_KEY, 'true');
+}
+
+// Run migration at module initialization (client-side only)
+if (typeof window !== 'undefined') {
+  migrateTokensFromLocalStorage();
+}
 
 // Create axios instance
 // Security (CWE-922): withCredentials=true sends HttpOnly cookies automatically
@@ -35,9 +68,15 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   config => {
     if (typeof window !== 'undefined') {
-      // Backward compatibility: if localStorage token exists (migration period), still send it
+      // @deprecated — Legacy localStorage fallback (migration period only).
+      // HttpOnly cookies are the primary auth mechanism. This path will be
+      // removed in a future release once all clients have migrated.
       const legacyToken = localStorage.getItem(ACCESS_TOKEN_KEY);
       if (legacyToken && config.headers) {
+        console.warn(
+          '[OKLA Security] Using deprecated localStorage token for auth. ' +
+            'Tokens should be HttpOnly cookies. This fallback will be removed soon.'
+        );
         config.headers.Authorization = `Bearer ${legacyToken}`;
       }
 
@@ -242,8 +281,17 @@ export const authTokens = {
   isAuthenticated: (): boolean => {
     // With HttpOnly cookies, we can't check the token directly.
     // The auth state is managed by the auth context via /api/auth/me.
-    // Legacy fallback for migration period:
+    // TODO: Eventually remove this entirely — only use auth context/cookie-based auth.
+    //
+    // If tokens have been migrated (cleared from localStorage), don't check
+    // localStorage anymore — it will always be empty post-migration.
     if (typeof window !== 'undefined') {
+      if (localStorage.getItem(TOKEN_MIGRATED_KEY) === 'true') {
+        // Migration complete — localStorage tokens were cleared.
+        // Auth state should come from the auth context (useAuth hook),
+        // not from this legacy helper.
+        return false;
+      }
       return !!localStorage.getItem(ACCESS_TOKEN_KEY);
     }
     return false;

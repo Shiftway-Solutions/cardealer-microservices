@@ -187,7 +187,16 @@ else
     app.UseCors("Production");
 }
 
-app.UseSerilogRequestLogging();
+// Security (CWE-532): Configure Serilog request logging to avoid logging sensitive headers
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown");
+        // DO NOT log Authorization, Cookie, or other sensitive headers
+    };
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

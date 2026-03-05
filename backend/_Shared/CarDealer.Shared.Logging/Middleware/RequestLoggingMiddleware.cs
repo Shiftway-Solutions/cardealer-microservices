@@ -7,11 +7,24 @@ namespace CarDealer.Shared.Logging.Middleware;
 
 /// <summary>
 /// Middleware that enriches logs with request context (TraceId, UserId, RequestPath, etc.)
+/// Security (CWE-532): Sensitive headers (Authorization, Cookie, etc.) are NEVER logged.
 /// </summary>
 public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
+
+    /// <summary>
+    /// Headers that must NEVER appear in log output to prevent token leakage.
+    /// </summary>
+    private static readonly HashSet<string> SensitiveHeaders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Authorization",
+        "Cookie",
+        "Set-Cookie",
+        "X-CSRF-Token",
+        "X-Api-Key"
+    };
 
     public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
     {

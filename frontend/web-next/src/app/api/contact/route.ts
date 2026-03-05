@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to ContactService via gateway
+    // Security Note: This is a server-to-server call (Next.js BFF → Gateway).
+    // CSRF protection is handled at the browser → Next.js boundary by the
+    // CSRF middleware. Internal gateway calls don't need CSRF tokens.
     const response = await fetch(`${INTERNAL_API_URL}/api/contactrequests`, {
       method: 'POST',
       headers: {
