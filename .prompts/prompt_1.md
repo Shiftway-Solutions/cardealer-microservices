@@ -13,28 +13,30 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado.
+**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 en progreso.
 
 ---
 
-## ✅ SPRINT 2 — Optimización de Conversión (6 marzo 2026)
+## 🚀 SPRINT 3 — Credibilidad, SEO técnico y Conversión (6 marzo 2026)
 
-### Análisis previo: Embudo de conversión vs AutoTrader/Cars.com
+### Análisis previo: Auditoría SEO/Performance + Auditoría UX/Conversión
 
-**Brechas P0:** Blog estático sin páginas individuales, "Vistos Recientemente" oculto en dropdown  
-**Brechas P1:** FAQ sin schema.org, Formulario contacto sin react-hook-form+zod
+**Hallazgos críticos:**
+
+- Estadísticas inconsistentes entre páginas (15K vs 10K vehículos, 98% vs 95% satisfacción, año fundación 2024 vs 2025)
+- TestimonialsCarousel componente existente pero NUNCA usado en ninguna página
+- Equipo en /nosotros usa emoji avatars (👨‍💼) — destruye credibilidad para marketplace financiero
+- Páginas client-component sin metadata SEO (/contacto, /buscar, /comparar, /ayuda)
+- No existe global-error.tsx — white screen en errores de root layout
 
 ---
 
-| #   | Tarea                        | Estado               | Notas                                                                                |
-| --- | ---------------------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| 18  | FAQPage Schema.org           | ✅ Ya existía        | `/faq` ya tiene JSON-LD FAQPage generado dinámicamente desde array `faqs`            |
-| 19  | Nav dropdown links           | ✅ Ya existía        | `consumerBaseItems` ya incluye Vistos Recientemente + Búsquedas Guardadas            |
-| 20  | Contact form react-hook-form | ✅ Ya existía        | `/contacto` ya usa useForm + zodResolver con validación inline                       |
-| 21  | Blog páginas individuales    | ✅ Commit `d59a3f12` | PM creó blog-data.ts (6 posts), [slug]/page.tsx (JSON-LD Article), share-buttons.tsx |
-
-**Build verificado**: `pnpm build` exitoso — blog/[slug] genera 6 páginas SSG
-**Commit**: `d59a3f12` pushed to main
+| #   | Tarea                                           | Estado       | Notas                                                                                                  |
+| --- | ----------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
+| 22  | Crear constante unificada PLATFORM_STATS        | ⏳ Pendiente | Crear `src/lib/platform-stats.ts` con stats únicas, importar en /vender, /nosotros, /prensa, /dealers  |
+| 23  | Agregar Testimonios + Stats al Homepage         | ⏳ Pendiente | Importar TestimonialsCarousel existente + nueva sección StatsCounter en homepage-client.tsx            |
+| 24  | Fix /nosotros: team avatars + año fundación     | ⏳ Pendiente | Reemplazar emoji avatars con iniciales profesionales (div circular), corregir año, usar PLATFORM_STATS |
+| 25  | Metadata SEO para páginas client + global-error | ⏳ Pendiente | Crear layout.tsx con metadata para /contacto, /buscar, /comparar, /ayuda; crear global-error.tsx       |
 
 ---
 

@@ -32,6 +32,7 @@ import {
   Shield,
   Zap,
 } from 'lucide-react';
+import { DEALER_STATS } from '@/lib/platform-stats';
 
 // =============================================================================
 // METADATA
@@ -51,12 +52,7 @@ export const metadata: Metadata = {
 // DATA
 // =============================================================================
 
-const stats = [
-  { value: '500+', label: 'Dealers activos' },
-  { value: '10K+', label: 'Ventas mensuales' },
-  { value: '95%', label: 'Satisfacción' },
-  { value: '24h', label: 'Tiempo de soporte' },
-];
+const stats = DEALER_STATS;
 
 const features = [
   {

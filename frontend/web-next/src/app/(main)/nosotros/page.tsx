@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Users, Target, Award, Car, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ABOUT_STATS, PLATFORM_STATS } from '@/lib/platform-stats';
 
 // =============================================================================
 // METADATA
@@ -57,15 +58,10 @@ export default function NosotrosPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {[
-              { value: '10,000+', label: 'Vehículos publicados' },
-              { value: '50,000+', label: 'Usuarios activos' },
-              { value: '500+', label: 'Dealers registrados' },
-              { value: '95%', label: 'Satisfacción del cliente' },
-            ].map((stat, index) => (
+            {ABOUT_STATS.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-3xl font-bold text-[#00A870] md:text-4xl">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -76,12 +72,13 @@ export default function NosotrosPage() {
       <section className="bg-muted/50 py-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-center text-3xl font-bold text-foreground">Nuestra Historia</h2>
-            <div className="mt-8 space-y-4 text-muted-foreground">
+            <h2 className="text-foreground text-center text-3xl font-bold">Nuestra Historia</h2>
+            <div className="text-muted-foreground mt-8 space-y-4">
               <p>
-                OKLA fue fundada en 2024 por un equipo de emprendedores dominicanos apasionados por
-                la tecnología y el sector automotriz. Vimos una oportunidad de modernizar un mercado
-                que durante años funcionó de manera fragmentada y poco transparente.
+                OKLA fue fundada en {PLATFORM_STATS.foundingYear} por un equipo de emprendedores
+                dominicanos apasionados por la tecnología y el sector automotriz. Vimos una
+                oportunidad de modernizar un mercado que durante años funcionó de manera fragmentada
+                y poco transparente.
               </p>
               <p>
                 Inspirados en plataformas exitosas como CarGurus en Estados Unidos, desarrollamos
@@ -101,7 +98,7 @@ export default function NosotrosPage() {
       {/* Values */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-center text-3xl font-bold text-foreground">Nuestros Valores</h2>
+          <h2 className="text-foreground text-center text-3xl font-bold">Nuestros Valores</h2>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {[
               {
@@ -128,8 +125,8 @@ export default function NosotrosPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#00A870]/10">
                     <value.icon className="h-6 w-6 text-[#00A870]" />
                   </div>
-                  <h3 className="mt-4 text-xl font-semibold text-foreground">{value.title}</h3>
-                  <p className="mt-2 text-muted-foreground">{value.description}</p>
+                  <h3 className="text-foreground mt-4 text-xl font-semibold">{value.title}</h3>
+                  <p className="text-muted-foreground mt-2">{value.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -140,24 +137,46 @@ export default function NosotrosPage() {
       {/* Team */}
       <section className="bg-muted/50 py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-center text-3xl font-bold text-foreground">Nuestro Equipo</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          <h2 className="text-foreground text-center text-3xl font-bold">Nuestro Equipo</h2>
+          <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-center">
             Un equipo multidisciplinario de profesionales comprometidos con revolucionar el mercado
             automotriz dominicano.
           </p>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { name: 'Carlos Rodríguez', role: 'CEO & Co-Fundador', image: '👨‍💼' },
-              { name: 'María Santos', role: 'CTO', image: '👩‍💻' },
-              { name: 'José Pérez', role: 'Director de Operaciones', image: '👨‍💼' },
-              { name: 'Ana García', role: 'Directora de Marketing', image: '👩‍💼' },
+              {
+                name: 'Carlos Rodríguez',
+                role: 'CEO & Co-Fundador',
+                initials: 'CR',
+                color: 'from-[#00A870] to-[#007850]',
+              },
+              {
+                name: 'María Santos',
+                role: 'CTO',
+                initials: 'MS',
+                color: 'from-blue-500 to-blue-700',
+              },
+              {
+                name: 'José Pérez',
+                role: 'Director de Operaciones',
+                initials: 'JP',
+                color: 'from-amber-500 to-amber-700',
+              },
+              {
+                name: 'Ana García',
+                role: 'Directora de Marketing',
+                initials: 'AG',
+                color: 'from-purple-500 to-purple-700',
+              },
             ].map((member, index) => (
               <div key={index} className="text-center">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-muted text-4xl">
-                  {member.image}
+                <div
+                  className={`mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${member.color} text-2xl font-bold text-white shadow-lg`}
+                >
+                  {member.initials}
                 </div>
-                <h3 className="mt-4 font-semibold text-foreground">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.role}</p>
+                <h3 className="text-foreground mt-4 font-semibold">{member.name}</h3>
+                <p className="text-muted-foreground text-sm">{member.role}</p>
               </div>
             ))}
           </div>
@@ -173,7 +192,7 @@ export default function NosotrosPage() {
               Estamos aquí para ayudarte. Contáctanos y te responderemos a la brevedad.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="gap-2 bg-white text-[#00A870] hover:bg-muted">
+              <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white text-[#00A870]">
                 <Link href="/contacto">
                   <Mail className="h-4 w-4" />
                   Contáctanos

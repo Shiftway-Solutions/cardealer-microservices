@@ -8,7 +8,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { HeroCompact, WhyChooseUs, CTASection } from '@/components/homepage';
+import { HeroCompact, WhyChooseUs, CTASection, TestimonialsCarousel } from '@/components/homepage';
 import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { NativeBannerAd } from '@/components/advertising/native-ads';
@@ -18,6 +18,7 @@ import { useBrands } from '@/hooks/use-advertising';
 import { useQuery } from '@tanstack/react-query';
 import type { BrandConfig } from '@/types/advertising';
 import { Bus, Car, Gauge, Leaf, Truck, Wind, Zap } from 'lucide-react';
+import { HOMEPAGE_STATS } from '@/lib/platform-stats';
 
 // =============================================
 // COMPONENT
@@ -74,6 +75,20 @@ export default function HomepageClient() {
     <>
       {/* ── 1. HERO — NL search + vehicle photos ─────────────────────────── */}
       <HeroCompact />
+
+      {/* ── 📊 SOCIAL PROOF — Platform stats ────────────────────────────── */}
+      <section className="border-border bg-card border-b py-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            {HOMEPAGE_STATS.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl font-bold text-[#00A870] md:text-4xl">{stat.value}</div>
+                <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── 🏆 VEHÍCULO DEL DÍA ─────────────────────────────────────────── */}
       {vodVehicles && vodVehicles.length > 0 && <VehicleOfTheDay vehicles={vodVehicles} />}
@@ -245,6 +260,9 @@ export default function HomepageClient() {
           Dominicana.
         </p>
       </div>
+
+      {/* ── ⭐ TESTIMONIOS — Social proof from real users ─────────────────── */}
+      <TestimonialsCarousel autoPlay autoPlayInterval={6000} />
 
       {/* Why Choose OKLA */}
       <WhyChooseUs variant="grid" />

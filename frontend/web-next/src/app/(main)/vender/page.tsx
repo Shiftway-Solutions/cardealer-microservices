@@ -27,6 +27,7 @@ import {
   VenderPricing,
   VenderSellerRedirect,
 } from './vender-cta';
+import { SELLER_STATS } from '@/lib/platform-stats';
 
 // =============================================================================
 // METADATA (SEO)
@@ -100,16 +101,8 @@ const benefits = [
   },
 ];
 
-// =============================================================================
-// STATS DATA
-// =============================================================================
-
-const stats = [
-  { value: '15K+', label: 'Vehículos vendidos' },
-  { value: '7 días', label: 'Tiempo promedio de venta' },
-  { value: '98%', label: 'Clientes satisfechos' },
-  { value: 'RD$500M+', label: 'Valor transado' },
-];
+// Stats imported from @/lib/platform-stats (single source of truth)
+const stats = SELLER_STATS;
 
 // =============================================================================
 // MAIN COMPONENT

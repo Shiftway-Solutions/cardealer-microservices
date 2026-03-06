@@ -8,6 +8,7 @@ import { Newspaper, Download, Mail, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PRESS_STATS } from '@/lib/platform-stats';
 
 export const metadata = {
   title: 'Prensa | OKLA - Sala de Prensa',
@@ -38,12 +39,7 @@ const pressReleases = [
   },
 ];
 
-const stats = [
-  { value: '10,000+', label: 'Vehículos en plataforma' },
-  { value: '50,000+', label: 'Usuarios activos' },
-  { value: '500+', label: 'Dealers registrados' },
-  { value: '2025', label: 'Año de fundación' },
-];
+const stats = PRESS_STATS;
 
 export default function PrensaPage() {
   return (
