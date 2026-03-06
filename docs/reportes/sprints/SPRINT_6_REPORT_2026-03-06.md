@@ -60,6 +60,7 @@ Auditoría WCAG 2.1 + Mobile UX de ~10 componentes core identificó:
 **Archivo**: `src/components/homepage/hero-compact.tsx`
 
 Removidos (~150 líneas):
+
 - `POPULAR_MAKES` constant (8 marcas, nunca referenciado)
 - `modelsByMake` constant (8×7 = 56 modelos, nunca referenciado)
 - `export function QuickFilters()` — Exportado pero nunca importado (hero usa `QuickFiltersHero` privado)
@@ -67,6 +68,7 @@ Removidos (~150 líneas):
 - `export function VehicleCardCompact()` + `VehicleCardCompactProps` — 90+ líneas con state, useMemo, Image, Heart, tier badges — todo sin usar
 
 Imports limpiados:
+
 - Removidos: `useMemo`, `Heart`, `Gauge`, `MapPin`, `formatCurrency`, `formatMileage`, `Vehicle` type
 
 **Resultado**: Archivo reducido de 460 → ~285 líneas (-38%)
@@ -75,15 +77,15 @@ Imports limpiados:
 
 ## 📈 Métricas del Sprint
 
-| Métrica                        | Antes | Después  |
-| ------------------------------ | ----- | -------- |
-| WCAG Level A violations (hero) | 1     | 0        |
-| Touch target ≥44px (fav btns)  | 0/2   | 2/2      |
-| Footer link touch target       | ~22px | 44px+    |
-| hero-compact.tsx lines          | 460   | ~285     |
-| Unused exports removed         | 3     | 0        |
-| Unused constants removed       | 2     | 0        |
-| Build time                      | ~26s  | ~20s     |
+| Métrica                        | Antes | Después |
+| ------------------------------ | ----- | ------- |
+| WCAG Level A violations (hero) | 1     | 0       |
+| Touch target ≥44px (fav btns)  | 0/2   | 2/2     |
+| Footer link touch target       | ~22px | 44px+   |
+| hero-compact.tsx lines         | 460   | ~285    |
+| Unused exports removed         | 3     | 0       |
+| Unused constants removed       | 2     | 0       |
+| Build time                     | ~26s  | ~20s    |
 
 ---
 
@@ -107,4 +109,4 @@ Imports limpiados:
 
 ---
 
-*Reporte generado automáticamente por PM Agent — Sprint 6*
+_Reporte generado automáticamente por PM Agent — Sprint 6_

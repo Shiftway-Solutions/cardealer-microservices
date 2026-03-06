@@ -13,6 +13,9 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import VehiculosClient from './vehiculos-client';
+import { JsonLd, generateBreadcrumbJsonLd, generateItemListJsonLd } from '@/lib/seo';
+import { searchVehicles } from '@/services/vehicles';
+import type { VehicleCardData } from '@/types';
 
 // ISR: Revalidate every 2 minutes for fresh listings
 export const revalidate = 120;
@@ -75,10 +78,41 @@ function VehiculosLoadingFallback() {
   );
 }
 
-export default function VehiculosPage() {
+export default async function VehiculosPage() {
+  // SSR fetch first page for JSON-LD structured data (graceful degradation)
+  let vehicles: VehicleCardData[] = [];
+  try {
+    const result = await searchVehicles({ page: 1, pageSize: 10 });
+    vehicles = result.items;
+  } catch {
+    // API unavailable at build time — JSON-LD omitted, page still renders
+  }
+
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Inicio', url: '/' },
+    { name: 'Vehículos en Venta', url: '/vehiculos' },
+  ]);
+
+  const itemListJsonLd =
+    vehicles.length > 0
+      ? generateItemListJsonLd(
+          vehicles.map(v => ({
+            name: `${v.year} ${v.make} ${v.model}`,
+            url: `/vehiculos/${v.slug}`,
+            image: v.imageUrl,
+            price: v.price,
+            currency: v.currency || 'DOP',
+          }))
+        )
+      : null;
+
   return (
-    <Suspense fallback={<VehiculosLoadingFallback />}>
-      <VehiculosClient />
-    </Suspense>
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      {itemListJsonLd && <JsonLd data={itemListJsonLd} />}
+      <Suspense fallback={<VehiculosLoadingFallback />}>
+        <VehiculosClient />
+      </Suspense>
+    </>
   );
 }

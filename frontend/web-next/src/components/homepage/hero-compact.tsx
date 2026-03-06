@@ -14,15 +14,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import {
-  Search,
-  ChevronDown,
-  Shield,
-  CheckCircle2,
-  Star,
-  Sparkles,
-  Loader2,
-} from 'lucide-react';
+import { Search, ChevronDown, Shield, CheckCircle2, Star, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -175,7 +167,7 @@ function QuickFiltersHero() {
         <Link
           key={filter}
           href={`/vehiculos?body_type=${encodeURIComponent(filter)}`}
-          className="hover:border-primary hover:bg-primary rounded-full border border-white/50 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
+          className="hover:border-primary hover:bg-primary min-h-[44px] rounded-full border border-white/50 bg-white/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-200 hover:text-white"
         >
           {filter}
         </Link>

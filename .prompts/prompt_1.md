@@ -1,3 +1,5 @@
+Tu eres un desarrollador senior de alto nivel, y con conocimiento profunndo en arquitectura de software, backend, frontend, ci/cd y infraestructura y tambien en Full QA.
+
 Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. Por lo cual tu plan te tareas realizads tienes que escribirlo aqui, para saber que has hecho y que no haz hecho.
 
 ---
@@ -13,7 +15,29 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-5 completados. Sprint 6 completado.
+**Estado**: Sprint 1-6 completados. Sprint 7 en progreso.
+
+---
+
+## 🔄 SPRINT 7 — SEO Structured Data + UX Micro-fixes (6 marzo 2026)
+
+### Análisis previo: JSON-LD faltante, alert() crudo, touch targets insuficientes
+
+**Hallazgos:**
+
+- /vehiculos no tiene ItemList ni BreadcrumbList JSON-LD — Google no puede indexar listado como carousel
+- /comparar usa alert() nativo en vez de toast — UX inconsistente con el resto de la app
+- Hero quick filter pills < 44px height — no cumple WCAG 2.5.8 touch target
+- /vehiculos no tiene BreadcrumbList — Google no muestra breadcrumbs en SERP
+
+---
+
+| #   | Tarea                                                 | Estado     | Notas |
+| --- | ----------------------------------------------------- | ---------- | ----- |
+| 38  | ItemList JSON-LD en /vehiculos (SSR fetch + graceful) | 🔄 Pending | —     |
+| 39  | Replace alert()→toast.success() en /comparar          | 🔄 Pending | —     |
+| 40  | Hero quick filter pills min-h-[44px] touch targets    | 🔄 Pending | —     |
+| 41  | BreadcrumbList JSON-LD en /vehiculos                  | 🔄 Pending | —     |
 
 ---
 
@@ -30,12 +54,12 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                                   | Estado               | Notas                                                                  |
-| --- | ------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------- |
-| 34  | Hero search input: aria-label + form wrapper            | ✅ Ya existía        | role="search" + aria-label ya presentes en hero-compact.tsx            |
-| 35  | Vehicle card favorite buttons: 44px + mobile visibility | ✅ Ya existía        | VehicleCard ya tiene min-h-[44px], hero-compact fav button removido    |
-| 36  | Footer links: py-2 mobile touch targets                 | ✅ Commit `960416ed` | Social icons h-9→h-11 (44px), footer links min-h-[44px] en mobile     |
-| 37  | Dead code cleanup: hero-compact.tsx                     | ✅ PM ya limpió      | Archivo reducido de 419→285 líneas, dead exports/constants removidos   |
+| #   | Tarea                                                   | Estado               | Notas                                                                |
+| --- | ------------------------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| 34  | Hero search input: aria-label + form wrapper            | ✅ Ya existía        | role="search" + aria-label ya presentes en hero-compact.tsx          |
+| 35  | Vehicle card favorite buttons: 44px + mobile visibility | ✅ Ya existía        | VehicleCard ya tiene min-h-[44px], hero-compact fav button removido  |
+| 36  | Footer links: py-2 mobile touch targets                 | ✅ Commit `960416ed` | Social icons h-9→h-11 (44px), footer links min-h-[44px] en mobile    |
+| 37  | Dead code cleanup: hero-compact.tsx                     | ✅ PM ya limpió      | Archivo reducido de 419→285 líneas, dead exports/constants removidos |
 
 **Commit**: `960416ed` pushed to main
 

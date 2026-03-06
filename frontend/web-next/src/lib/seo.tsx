@@ -416,6 +416,32 @@ export function generateBreadcrumbJsonLd(items: Array<{ name: string; url: strin
 }
 
 /**
+ * Generate JSON-LD for ItemList (vehicle listings, search results)
+ */
+export function generateItemListJsonLd(
+  items: Array<{
+    name: string;
+    url: string;
+    image?: string;
+    price?: number;
+    currency?: string;
+  }>
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`,
+      ...(item.image && { image: item.image }),
+    })),
+  };
+}
+
+/**
  * Generate JSON-LD for FAQ page
  */
 export function generateFAQJsonLd(faqs: Array<{ question: string; answer: string }>) {

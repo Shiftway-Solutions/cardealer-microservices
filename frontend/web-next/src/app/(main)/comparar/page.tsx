@@ -13,6 +13,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { X, Plus, ArrowLeft, Check, Minus, Car, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -127,8 +128,7 @@ function CompareContent() {
     const ids = vehicles.map(v => v.id).join(',');
     const url = `${window.location.origin}/comparar?ids=${ids}`;
     navigator.clipboard.writeText(url);
-    // TODO: Show toast notification
-    alert('Enlace copiado al portapapeles');
+    toast.success('Enlace copiado al portapapeles');
   };
 
   // Get unique features across all vehicles

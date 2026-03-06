@@ -144,13 +144,22 @@ export function Footer() {
             © {currentYear} {config.siteName}. Todos los derechos reservados.
           </p>
           <div className="flex gap-2 sm:gap-6">
-            <Link href="/terminos" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
+            <Link
+              href="/terminos"
+              className="text-muted-foreground hover:text-primary px-2 py-2 text-sm"
+            >
               Términos
             </Link>
-            <Link href="/privacidad" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
+            <Link
+              href="/privacidad"
+              className="text-muted-foreground hover:text-primary px-2 py-2 text-sm"
+            >
               Privacidad
             </Link>
-            <Link href="/cookies" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
+            <Link
+              href="/cookies"
+              className="text-muted-foreground hover:text-primary px-2 py-2 text-sm"
+            >
               Cookies
             </Link>
           </div>

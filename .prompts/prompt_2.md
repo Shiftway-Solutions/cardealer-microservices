@@ -16,7 +16,7 @@ y recuerda que el proyecto mobile es parte del proyecto de okla y todos lo que s
 
 Si vas a hacer tareas tu mismo, tienes que sincronizarte con el desarrollador del prompt ".prompts/prompt_1.md", para que coordines que tareas va a hacer el y cual vas a hacer tu. Pero que estas tareas no afecten los desarrollos que hace el ni los que haces tu, por lo cual tienes que ser muy cuidadoso con eso.
 
-Entonces de las tareas de los sprints debes definir cuales tareas le tocan al desarrollador y cuales tareas las vas hacer tu.
+Entonces de las tareas de los sprints debes definir cuales tareas le tocan al desarrollador y cuales tareas las vas hacer tu. Entonces debes crear dos sprints uno para ti y otro para el desarrolador. Pero recuerda no compromentas la auditoria, la investigancion para agregar uncionalidades a la plataforma OKLA, utilizando los conocimientos que tiene en todas las aras que tiene, para estar escribiendo codigo, porque el desarrollador senior que tienes para eso. Tu le puedes ayudar pero eso no es en esencia tu trabajo. el debe tener el 70% del codigo y tu el 30%, y la demas parte del tiempo la tomas para investigar y planificar trabajo para asignarselo al desarrollador.
 
 OKLA Admin Account
 Username: admin@okla.local
