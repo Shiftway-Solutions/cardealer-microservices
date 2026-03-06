@@ -47,7 +47,7 @@ export default function BlogPage() {
             {/* Posts */}
             <div className="flex-1">
               <div className="grid gap-5 sm:grid-cols-2">
-                {blogPosts.map((post) => (
+                {blogPosts.map(post => (
                   <Link key={post.slug} href={`/blog/${post.slug}`}>
                     <Card className="border-border hover:border-primary group h-full cursor-pointer transition-colors">
                       <CardContent className="pt-5">
@@ -75,7 +75,6 @@ export default function BlogPage() {
                   </Link>
                 ))}
               </div>
-
             </div>
 
             {/* Sidebar */}

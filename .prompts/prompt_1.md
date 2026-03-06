@@ -4,20 +4,20 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ## ✅ Tareas Completadas (Desarrollador)
 
-| # | Tarea | Commit |
-|---|-------|--------|
+| #    | Tarea                                                              | Commit                             |
+| ---- | ------------------------------------------------------------------ | ---------------------------------- |
 | 1-12 | Sprint anterior (publicidad, fotos, QA, rotación, market analysis) | `02112f40`, `aa7b8047`, `b6a7784b` |
-| 13 | Calculadora Financiamiento | PM creó archivos |
-| 14 | Calculadora Importación | PM creó archivos |
-| 15 | Landing pages SEO /marcas/[marca] | `511a8086` |
-| 16 | Vehículo del Día homepage | PM creó archivos |
-| 17 | Hub de Herramientas | PM creó archivos |
+| 13   | Calculadora Financiamiento                                         | PM creó archivos                   |
+| 14   | Calculadora Importación                                            | PM creó archivos                   |
+| 15   | Landing pages SEO /marcas/[marca]                                  | `511a8086`                         |
+| 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
+| 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 asignado.
+**Estado**: Sprint 1 completado. Sprint 2 completado.
 
 ---
 
-## 🆕 SPRINT 2 — Optimización de Conversión (6 marzo 2026)
+## ✅ SPRINT 2 — Optimización de Conversión (6 marzo 2026)
 
 ### Análisis previo: Embudo de conversión vs AutoTrader/Cars.com
 
@@ -26,22 +26,15 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-### TAREA 18: FAQPage Schema.org Structured Data ⬜
-- Agregar JSON-LD `FAQPage` a `/faq` con las 16 preguntas existentes
-- Generar dinámicamente desde el array `faqs`
+| #   | Tarea                        | Estado               | Notas                                                                                |
+| --- | ---------------------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| 18  | FAQPage Schema.org           | ✅ Ya existía        | `/faq` ya tiene JSON-LD FAQPage generado dinámicamente desde array `faqs`            |
+| 19  | Nav dropdown links           | ✅ Ya existía        | `consumerBaseItems` ya incluye Vistos Recientemente + Búsquedas Guardadas            |
+| 20  | Contact form react-hook-form | ✅ Ya existía        | `/contacto` ya usa useForm + zodResolver con validación inline                       |
+| 21  | Blog páginas individuales    | ✅ Commit `d59a3f12` | PM creó blog-data.ts (6 posts), [slug]/page.tsx (JSON-LD Article), share-buttons.tsx |
 
-### TAREA 19: Agregar "Vistos Recientemente" y "Búsquedas Guardadas" al Dropdown ⬜
-- Modificar navbar.tsx → `consumerBaseItems` con 2 links nuevos
-- `/cuenta/historial` y `/cuenta/busquedas` ya existen
-
-### TAREA 20: Migrar Formulario Contacto a react-hook-form + zod ⬜
-- Reemplazar useState por useForm + zodResolver
-- Validación inline en tiempo real
-
-### TAREA 21: Blog con Páginas Individuales por Post ⬜
-- Crear `blog/[slug]/page.tsx` + extraer data a `blog-data.ts`
-- Agregar contenido, slugs, JSON-LD Article, compartir WhatsApp
-- Hacer cards clickeables con Link
+**Build verificado**: `pnpm build` exitoso — blog/[slug] genera 6 páginas SSG
+**Commit**: `d59a3f12` pushed to main
 
 ---
 

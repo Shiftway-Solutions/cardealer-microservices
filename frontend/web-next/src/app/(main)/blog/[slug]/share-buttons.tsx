@@ -41,7 +41,11 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
         Compartir:
       </span>
       <Button variant="outline" size="sm" onClick={handleCopyLink} className="gap-1.5">
-        {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Link2 className="h-3.5 w-3.5" />}
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-green-600" />
+        ) : (
+          <Link2 className="h-3.5 w-3.5" />
+        )}
         {copied ? 'Copiado' : 'Copiar Link'}
       </Button>
       <Button

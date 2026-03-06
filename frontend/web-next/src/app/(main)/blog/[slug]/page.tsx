@@ -59,11 +59,7 @@ export async function generateMetadata({
 // PAGE COMPONENT
 // =============================================================================
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) notFound();
@@ -135,7 +131,7 @@ export default async function BlogPostPage({
       </nav>
 
       {/* Hero Image */}
-      <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 md:h-96">
+      <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 md:h-96 dark:from-slate-800 dark:to-slate-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.imageUrl}
@@ -144,7 +140,7 @@ export default async function BlogPostPage({
           loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+        <div className="absolute right-0 bottom-0 left-0 p-6 md:p-10">
           <div className="container mx-auto">
             <Badge className="mb-3 bg-[#00A870] text-white hover:bg-[#009663]">
               {post.category}
@@ -182,10 +178,7 @@ export default async function BlogPostPage({
                   // H2 headings
                   if (section.startsWith('## ')) {
                     return (
-                      <h2
-                        key={index}
-                        className="text-foreground mt-8 mb-4 text-2xl font-bold"
-                      >
+                      <h2 key={index} className="text-foreground mt-8 mb-4 text-2xl font-bold">
                         {section.replace('## ', '')}
                       </h2>
                     );
@@ -193,10 +186,7 @@ export default async function BlogPostPage({
                   // H3 headings
                   if (section.startsWith('### ')) {
                     return (
-                      <h3
-                        key={index}
-                        className="text-foreground mt-6 mb-3 text-xl font-semibold"
-                      >
+                      <h3 key={index} className="text-foreground mt-6 mb-3 text-xl font-semibold">
                         {section.replace('### ', '')}
                       </h3>
                     );
@@ -253,10 +243,7 @@ export default async function BlogPostPage({
                     const isOrdered = section.match(/^\d+\./);
                     const ListTag = isOrdered ? 'ol' : 'ul';
                     return (
-                      <ListTag
-                        key={index}
-                        className="text-muted-foreground my-4 space-y-2 pl-6"
-                      >
+                      <ListTag key={index} className="text-muted-foreground my-4 space-y-2 pl-6">
                         {items.map((item, i) => (
                           <li key={i} className="list-disc">
                             {item.replace(/^[-\d]+[.)]\s*/, '')}
@@ -272,7 +259,10 @@ export default async function BlogPostPage({
                       className="text-muted-foreground my-4 leading-relaxed"
                       dangerouslySetInnerHTML={{
                         __html: section
-                          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                          .replace(
+                            /\*\*(.*?)\*\*/g,
+                            '<strong class="text-foreground font-semibold">$1</strong>'
+                          )
                           .replace(/\n/g, '<br />'),
                       }}
                     />
@@ -324,11 +314,7 @@ export default async function BlogPostPage({
                 <h3 className="text-foreground mb-4 font-semibold">Artículos Relacionados</h3>
                 <div className="space-y-4">
                   {relatedPosts.map(related => (
-                    <Link
-                      key={related.slug}
-                      href={`/blog/${related.slug}`}
-                      className="group block"
-                    >
+                    <Link key={related.slug} href={`/blog/${related.slug}`} className="group block">
                       <div className="flex gap-3">
                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
