@@ -2,6 +2,8 @@ Tu eres un desarrollador senior de alto nivel, y con conocimiento profunndo en a
 
 Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. Por lo cual tu plan te tareas realizads tienes que escribirlo aqui, para saber que has hecho y que no haz hecho.
 
+Tambien tienes como responsabilidad, monitorear el ci/cd, y probar los nuevos feature en producccion haciendo pruebas QA y corriendo los errores encontrados y probar nuevamente en produccion.
+
 ---
 
 ---
@@ -29,9 +31,46 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ---
 
-## 📋 Sprints Completados
+## � QA Production Report (2026-03-06)
+
+### Bug Found & Fixed
+
+- **`/marcas/[marca]` and `/herramientas/*` redirecting to login** — These SEO-critical public pages were missing from `publicRoutes` in middleware.ts. Also added `/blog/[slug]` and `/guias/[slug]`.
+- **Commit:** `5b521504` — Pushed to main, awaiting CI/CD deploy.
+
+### Pages Tested ✅
+
+| Page                                       | Status   | Notes                                               |
+| ------------------------------------------ | -------- | --------------------------------------------------- |
+| `/` (homepage)                             | ✅ OK    | Hero, search, vehicles, dealers, categories, footer |
+| `/vehiculos`                               | ✅ OK    | 14 vehicles, filters, sponsored section             |
+| `/vehiculos/[slug]`                        | ✅ OK    | Images, price, financing estimate, similar vehicles |
+| `/blog`                                    | ✅ OK    | 6 articles, categories, subscribe                   |
+| `/guias`                                   | ✅ OK    | 6 guides, 5 tips, FAQ                               |
+| `/faq`                                     | ✅ OK    | 4 categories, help links                            |
+| `/dealers`                                 | ✅ OK    | Plans, testimonials, features                       |
+| `/comparar`                                | ✅ OK    | Empty state with CTA                                |
+| `/nosotros`                                | ✅ OK    | History, values, team                               |
+| `/precios`                                 | ✅ OK    | Price ranges, factors                               |
+| `/contacto`                                | ✅ OK    | Contact info, form                                  |
+| `/vender`                                  | ✅ OK    | Steps, plans, CTA                                   |
+| `/terminos`                                | ✅ OK    | 15 sections, Ley 358-05                             |
+| `/login`                                   | ✅ OK    | Google/Apple SSO, email form                        |
+| `/registro`                                | ✅ OK    | Buyer/seller toggle, social auth                    |
+| `/reclamaciones`                           | ✅ OK    | Correctly requires auth                             |
+| `/marcas/toyota`                           | 🔧 Fixed | Was redirecting to login                            |
+| `/herramientas/calculadora-financiamiento` | 🔧 Fixed | Was redirecting to login                            |
+
+### Observation
+
+- E2E test vehicles visible in production listings ("E2E mm8mioxc", "E2E Test - DO NOT BUY", "Test Seller 20260223") — consider cleanup.
+
+---
+
+## �📋 Sprints Completados
 
 ### Sprint 12 — Security, Accessibility & Design Token Cleanup (2026-03-06) ✅
+
 **Commit:** `6b00b544` | **Build:** 213 páginas, 12.5s
 
 - [x] **Task 58**: csrfFetch en admin/okla-score (POST configs), view360-step (POST upload), push-notifications (POST subscribe/unsubscribe) — 4 endpoints
