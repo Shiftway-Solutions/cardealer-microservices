@@ -11,17 +11,19 @@
 ## 1. Contexto: SMS en OKLA
 
 ### Uso Actual de SMS en OKLA
+
 OKLA utiliza SMS para:
+
 1. **Verificación de identidad (2FA/OTP)** — Código de un solo uso al registrarse o iniciar sesión
 2. **Notificaciones transaccionales** — Confirmación de acciones (listado publicado, pago recibido)
 3. **Potencialmente en el futuro:** Notificaciones de marketing (nuevos vehículos, promociones)
 
 ### Clasificación de SMS
 
-| Tipo | Descripción | ¿Necesita autorización? |
-|------|-------------|------------------------|
-| **Transaccional** | 2FA, OTP, confirmaciones de pago | ✅ No requiere autorización especial (es parte del servicio) |
-| **De servicio** | Alertas de actividad, recordatorios | ⚠️ Zona gris — consentimiento recomendado |
+| Tipo                    | Descripción                           | ¿Necesita autorización?                                                  |
+| ----------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| **Transaccional**       | 2FA, OTP, confirmaciones de pago      | ✅ No requiere autorización especial (es parte del servicio)             |
+| **De servicio**         | Alertas de actividad, recordatorios   | ⚠️ Zona gris — consentimiento recomendado                                |
 | **Marketing/Comercial** | Promociones, ofertas, nuevos listados | 🔴 Requiere consentimiento explícito y cumplimiento de Resolución 086-09 |
 
 ---
@@ -53,12 +55,14 @@ La Resolución 086-09 establece las reglas para las **comunicaciones comerciales
 Los SMS de verificación de identidad y OTP son parte del servicio contratado por el usuario. Se consideran comunicaciones necesarias para la prestación del servicio.
 
 **Requisitos mínimos:**
+
 - El usuario acepta recibirlos al registrarse (Términos de Servicio)
 - Incluir identificación del remitente (ej: "OKLA")
 - No incluir contenido comercial en estos mensajes
 - Mantener registro de los SMS enviados
 
 **Texto sugerido en Términos de Servicio:**
+
 ```
 Al registrarse, usted acepta recibir mensajes SMS de verificación
 (códigos OTP) necesarios para la seguridad de su cuenta. Estos
@@ -71,17 +75,19 @@ desactivados mientras la cuenta esté activa.
 Notificaciones como "Su listado ha sido publicado" o "Ha recibido un mensaje de un comprador":
 
 **Requisitos:**
+
 - Obtener consentimiento del usuario (puede ser por defecto con opción de desactivar)
 - Permitir que el usuario desactive estas notificaciones desde su perfil
 - Incluir identificación del remitente
 - No incluir contenido comercial
 
 **Implementación:**
+
 ```
 Preferencias de Notificaciones:
 ☑️ Recibir notificaciones SMS de actividad en mi cuenta
    (nuevos mensajes, estado de publicaciones, alertas de seguridad)
-   
+
    [Puede desactivar esta opción en cualquier momento desde
    su perfil → Notificaciones]
 ```
@@ -99,6 +105,7 @@ Si OKLA planea enviar SMS promocionales (ofertas, nuevos vehículos, promociones
 ### Paso 1: Implementar Mecanismo de Opt-In (Semana 1)
 
 El consentimiento debe ser:
+
 - **Explícito:** El usuario debe activamente aceptar (no casillas premarcadas)
 - **Específico:** Separado del consentimiento general de uso
 - **Informado:** El usuario debe saber qué tipo de mensajes recibirá
@@ -126,6 +133,7 @@ INDOTEL 086-09.
 Cada SMS de marketing debe incluir instrucciones de baja:
 
 **Formato del SMS:**
+
 ```
 OKLA: ¡Nuevos Toyota Corolla desde RD$850,000 en tu zona!
 Ver en okla.do/s/abc123
@@ -133,6 +141,7 @@ Responde BAJA para no recibir más ofertas.
 ```
 
 **Requisitos del Opt-Out:**
+
 - El usuario puede responder "BAJA", "STOP", "NO", "CANCELAR"
 - La baja debe procesarse **inmediatamente** (dentro de 24 horas máximo)
 - No se puede cobrar por la baja
@@ -205,18 +214,19 @@ POLÍTICA DE COMUNICACIONES SMS — OKLA
 
 Para cada usuario que acepte SMS de marketing, registrar:
 
-| Campo | Descripción |
-|-------|-------------|
-| UserId | Identificador del usuario |
-| PhoneNumber | Número de teléfono |
-| ConsentDate | Fecha y hora del consentimiento |
+| Campo         | Descripción                                |
+| ------------- | ------------------------------------------ |
+| UserId        | Identificador del usuario                  |
+| PhoneNumber   | Número de teléfono                         |
+| ConsentDate   | Fecha y hora del consentimiento            |
 | ConsentMethod | Cómo se obtuvo (registro, perfil, campaña) |
-| ConsentText | Texto exacto aceptado |
-| IPAddress | IP al momento del consentimiento |
-| OptOutDate | Fecha de baja (null si activo) |
-| OptOutMethod | Cómo solicitó la baja (SMS, web, llamada) |
+| ConsentText   | Texto exacto aceptado                      |
+| IPAddress     | IP al momento del consentimiento           |
+| OptOutDate    | Fecha de baja (null si activo)             |
+| OptOutMethod  | Cómo solicitó la baja (SMS, web, llamada)  |
 
 ### Auditoría
+
 - Generar reportes mensuales de opt-in vs opt-out
 - Monitorear tasa de quejas
 - Si la tasa de quejas supera 1%, revisar prácticas
@@ -225,25 +235,25 @@ Para cada usuario que acepte SMS de marketing, registrar:
 
 ## 6. Sanciones por Incumplimiento
 
-| Infracción | Posible Sanción |
-|------------|-----------------|
-| Envío sin consentimiento | Multa + prohibición de envío |
-| No incluir mecanismo de baja | Multa |
-| No procesar baja a tiempo | Multa + orden de cumplimiento |
+| Infracción                    | Posible Sanción                     |
+| ----------------------------- | ----------------------------------- |
+| Envío sin consentimiento      | Multa + prohibición de envío        |
+| No incluir mecanismo de baja  | Multa                               |
+| No procesar baja a tiempo     | Multa + orden de cumplimiento       |
 | Envío en horario no permitido | Advertencia + multa en reincidencia |
-| No identificar al remitente | Multa |
+| No identificar al remitente   | Multa                               |
 
 ---
 
 ## 7. Información de Contacto
 
-| Concepto | Detalle |
-|----------|---------|
-| **INDOTEL** | 809-732-5555 |
-| **Website** | indotel.gob.do |
-| **Email** | info@indotel.gob.do |
-| **Dirección** | Av. Abraham Lincoln #962, Santo Domingo |
-| **Departamento** | Dirección de Telecomunicaciones |
+| Concepto         | Detalle                                 |
+| ---------------- | --------------------------------------- |
+| **INDOTEL**      | 809-732-5555                            |
+| **Website**      | indotel.gob.do                          |
+| **Email**        | info@indotel.gob.do                     |
+| **Dirección**    | Av. Abraham Lincoln #962, Santo Domingo |
+| **Departamento** | Dirección de Telecomunicaciones         |
 
 ---
 

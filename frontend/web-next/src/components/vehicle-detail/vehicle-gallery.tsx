@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Expand, X, Play, View } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getVehicleFallbackImages } from '@/lib/vehicle-image-fallbacks';
 import type { VehicleImage } from '@/types';
 
 interface VehicleGalleryProps {
@@ -18,6 +19,12 @@ interface VehicleGalleryProps {
   has360View?: boolean;
   hasVideo?: boolean;
   className?: string;
+  /** Vehicle make for fallback image selection */
+  vehicleMake?: string;
+  /** Vehicle body style for fallback image selection */
+  vehicleBodyStyle?: string;
+  /** Vehicle ID for deterministic fallback */
+  vehicleId?: string;
 }
 
 export function VehicleGallery({
@@ -26,9 +33,13 @@ export function VehicleGallery({
   has360View,
   hasVideo,
   className,
+  vehicleMake,
+  vehicleBodyStyle,
+  vehicleId,
 }: VehicleGalleryProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
+  const [failedUrls, setFailedUrls] = React.useState<Set<string>>(new Set());
   const lightboxRef = React.useRef<HTMLDivElement>(null);
   const previousFocusRef = React.useRef<HTMLElement | null>(null);
 
@@ -39,12 +50,40 @@ export function VehicleGallery({
 
   // Sort images by order, primary first
   const sortedImages = React.useMemo(() => {
-    return [...images].sort((a, b) => {
+    const sorted = [...images].sort((a, b) => {
       if (a.isPrimary) return -1;
       if (b.isPrimary) return 1;
       return a.order - b.order;
     });
-  }, [images]);
+
+    // If no real images or all failed, use fallback Unsplash images
+    if (sorted.length === 0) {
+      const fallbacks = getVehicleFallbackImages(vehicleId || '', vehicleMake, vehicleBodyStyle);
+      return fallbacks.map((url, i) => ({
+        id: `fallback-${i}`,
+        url,
+        alt: title,
+        order: i,
+        isPrimary: i === 0,
+      }));
+    }
+
+    return sorted;
+  }, [images, vehicleId, vehicleMake, vehicleBodyStyle, title]);
+
+  // Get effective URL with fallback support
+  const getEffectiveUrl = React.useCallback(
+    (image: (typeof sortedImages)[0], index: number) => {
+      if (image.url && !failedUrls.has(image.url)) return image.url;
+      const fallbacks = getVehicleFallbackImages(vehicleId || '', vehicleMake, vehicleBodyStyle);
+      return fallbacks[index % fallbacks.length] || '/placeholder-car.jpg';
+    },
+    [failedUrls, vehicleId, vehicleMake, vehicleBodyStyle]
+  );
+
+  const handleImageError = React.useCallback((url: string) => {
+    setFailedUrls(prev => new Set([...prev, url]));
+  }, []);
 
   const currentImage = sortedImages[currentIndex];
   const totalImages = sortedImages.length;
@@ -170,7 +209,7 @@ export function VehicleGallery({
           onTouchEnd={handleTouchEnd}
         >
           <Image
-            src={currentImage?.url || '/placeholder-car.jpg'}
+            src={getEffectiveUrl(currentImage, currentIndex)}
             alt={currentImage?.alt || title}
             fill
             priority
@@ -178,6 +217,7 @@ export function VehicleGallery({
             quality={75}
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+            onError={() => currentImage?.url && handleImageError(currentImage.url)}
             className="object-cover"
           />
 
@@ -249,7 +289,11 @@ export function VehicleGallery({
                   aria-label={`Ver imagen ${index + 1}`}
                 >
                   <Image
-                    src={image.thumbnailUrl || image.url}
+                    src={
+                      'thumbnailUrl' in image && image.thumbnailUrl
+                        ? image.thumbnailUrl
+                        : getEffectiveUrl(image, index)
+                    }
                     alt={image.alt || `${title} - Imagen ${index + 1}`}
                     fill
                     sizes="80px"
@@ -321,7 +365,7 @@ export function VehicleGallery({
             onClick={e => e.stopPropagation()}
           >
             <Image
-              src={currentImage?.url || '/placeholder-car.jpg'}
+              src={getEffectiveUrl(currentImage, currentIndex)}
               alt={currentImage?.alt || title}
               fill
               sizes="100vw"

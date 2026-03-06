@@ -383,10 +383,11 @@ export class UploadQueueManager {
 // NAVIGATOR TYPE EXTENSION
 // ============================================================
 
-interface NavigatorWithConnection extends Navigator {
+interface NavigatorWithConnection {
   connection?: {
     effectiveType: 'slow-2g' | '2g' | '3g' | '4g';
     downlink?: number;
     rtt?: number;
+    saveData?: boolean;
   };
 }

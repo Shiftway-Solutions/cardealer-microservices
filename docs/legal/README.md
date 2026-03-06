@@ -11,6 +11,7 @@
 Este directorio contiene las guías detalladas para completar todos los procesos legales, regulatorios y administrativos identificados en la auditoría de cumplimiento legal de OKLA. Estos ítems **no pueden resolverse con código** — requieren gestiones presenciales, registros ante entidades gubernamentales, contratación de profesionales y/o trámites administrativos.
 
 Cada documento incluye:
+
 - Pasos detallados del proceso
 - Documentación requerida
 - Información de contacto de las entidades
@@ -23,28 +24,28 @@ Cada documento incluye:
 
 ### 🔴 Prioridad ALTA — Completar en los próximos 30-60 días
 
-| # | Documento | Tema | Tiempo Estimado |
-|---|-----------|------|-----------------|
-| 1 | [01-REGISTRO-DGII-eCF.md](01-REGISTRO-DGII-eCF.md) | Facturación Electrónica (e-CF) con DGII | 4-8 semanas |
-| 2 | [02-REGISTRO-INDOTEL-DATOS.md](02-REGISTRO-INDOTEL-DATOS.md) | Registro de Bases de Datos Personales ante INDOTEL | 2-4 semanas |
-| 3 | [03-DESIGNACION-DPO.md](03-DESIGNACION-DPO.md) | Designación de Oficial de Protección de Datos | 1-2 semanas |
-| 4 | [04-EVALUACION-UAF-AML.md](04-EVALUACION-UAF-AML.md) | Evaluación Anti-Lavado de Activos (UAF) | 2-8 semanas |
+| #   | Documento                                                    | Tema                                               | Tiempo Estimado |
+| --- | ------------------------------------------------------------ | -------------------------------------------------- | --------------- |
+| 1   | [01-REGISTRO-DGII-eCF.md](01-REGISTRO-DGII-eCF.md)           | Facturación Electrónica (e-CF) con DGII            | 4-8 semanas     |
+| 2   | [02-REGISTRO-INDOTEL-DATOS.md](02-REGISTRO-INDOTEL-DATOS.md) | Registro de Bases de Datos Personales ante INDOTEL | 2-4 semanas     |
+| 3   | [03-DESIGNACION-DPO.md](03-DESIGNACION-DPO.md)               | Designación de Oficial de Protección de Datos      | 1-2 semanas     |
+| 4   | [04-EVALUACION-UAF-AML.md](04-EVALUACION-UAF-AML.md)         | Evaluación Anti-Lavado de Activos (UAF)            | 2-8 semanas     |
 
 ### 🟡 Prioridad MEDIA — Completar en los próximos 60-120 días
 
-| # | Documento | Tema | Tiempo Estimado |
-|---|-----------|------|-----------------|
-| 5 | [05-CONSENTIMIENTO-TRANSFERENCIA-INTERNACIONAL.md](05-CONSENTIMIENTO-TRANSFERENCIA-INTERNACIONAL.md) | Transferencia Internacional de Datos | 2-4 semanas |
-| 6 | [06-REGISTRO-PROCONSUMIDOR.md](06-REGISTRO-PROCONSUMIDOR.md) | Registro ante ProConsumidor | 2-4 semanas |
-| 7 | [07-REGISTRO-MARCA-ONAPI.md](07-REGISTRO-MARCA-ONAPI.md) | Registro de Marca "OKLA" ante ONAPI | 6-12 meses |
-| 8 | [08-AUTORIZACION-SMS-INDOTEL.md](08-AUTORIZACION-SMS-INDOTEL.md) | Autorización para Comunicaciones SMS | 2-4 semanas |
+| #   | Documento                                                                                            | Tema                                 | Tiempo Estimado |
+| --- | ---------------------------------------------------------------------------------------------------- | ------------------------------------ | --------------- |
+| 5   | [05-CONSENTIMIENTO-TRANSFERENCIA-INTERNACIONAL.md](05-CONSENTIMIENTO-TRANSFERENCIA-INTERNACIONAL.md) | Transferencia Internacional de Datos | 2-4 semanas     |
+| 6   | [06-REGISTRO-PROCONSUMIDOR.md](06-REGISTRO-PROCONSUMIDOR.md)                                         | Registro ante ProConsumidor          | 2-4 semanas     |
+| 7   | [07-REGISTRO-MARCA-ONAPI.md](07-REGISTRO-MARCA-ONAPI.md)                                             | Registro de Marca "OKLA" ante ONAPI  | 6-12 meses      |
+| 8   | [08-AUTORIZACION-SMS-INDOTEL.md](08-AUTORIZACION-SMS-INDOTEL.md)                                     | Autorización para Comunicaciones SMS | 2-4 semanas     |
 
 ### 🟢 Prioridad BAJA — Completar en los próximos 120-180 días
 
-| # | Documento | Tema | Tiempo Estimado |
-|---|-----------|------|-----------------|
-| 9 | [09-PROCEDIMIENTO-JUDICIAL.md](09-PROCEDIMIENTO-JUDICIAL.md) | Respuesta a Requerimientos Judiciales | 1-2 semanas |
-| 10 | [10-PLAN-CONTINGENCIA-DATOS.md](10-PLAN-CONTINGENCIA-DATOS.md) | Plan de Contingencia de Datos | 2-4 semanas |
+| #   | Documento                                                      | Tema                                  | Tiempo Estimado |
+| --- | -------------------------------------------------------------- | ------------------------------------- | --------------- |
+| 9   | [09-PROCEDIMIENTO-JUDICIAL.md](09-PROCEDIMIENTO-JUDICIAL.md)   | Respuesta a Requerimientos Judiciales | 1-2 semanas     |
+| 10  | [10-PLAN-CONTINGENCIA-DATOS.md](10-PLAN-CONTINGENCIA-DATOS.md) | Plan de Contingencia de Datos         | 2-4 semanas     |
 
 ---
 
@@ -63,17 +64,17 @@ Mes 3-12:      Seguimiento registro marca ONAPI (proceso largo)
 
 ## 💰 Presupuesto Estimado Total
 
-| Concepto | Costo Estimado (RD$) |
-|----------|---------------------|
-| Abogado especialista (retainer mensual) | $30,000 - $60,000/mes |
-| Registro e-CF (DGII) | Gratuito |
-| Software certificado e-CF (si aplica) | $15,000 - $50,000 |
-| Registro INDOTEL | Gratuito |
-| Consulta UAF | $10,000 - $25,000 (abogado) |
-| Registro ProConsumidor | Gratuito |
-| Registro marca ONAPI (3 clases) | $15,000 - $30,000 |
-| DPO externo (consultor) | $20,000 - $40,000/mes |
-| **Total estimado primer año** | **$300,000 - $700,000** |
+| Concepto                                | Costo Estimado (RD$)        |
+| --------------------------------------- | --------------------------- |
+| Abogado especialista (retainer mensual) | $30,000 - $60,000/mes       |
+| Registro e-CF (DGII)                    | Gratuito                    |
+| Software certificado e-CF (si aplica)   | $15,000 - $50,000           |
+| Registro INDOTEL                        | Gratuito                    |
+| Consulta UAF                            | $10,000 - $25,000 (abogado) |
+| Registro ProConsumidor                  | Gratuito                    |
+| Registro marca ONAPI (3 clases)         | $15,000 - $30,000           |
+| DPO externo (consultor)                 | $20,000 - $40,000/mes       |
+| **Total estimado primer año**           | **$300,000 - $700,000**     |
 
 > **Nota:** Los costos son estimados y pueden variar. El costo del abogado puede cubrir múltiples gestiones simultáneamente.
 
@@ -94,13 +95,13 @@ Mes 3-12:      Seguimiento registro marca ONAPI (proceso largo)
 
 ## 📞 Contactos Clave de Entidades
 
-| Entidad | Teléfono | Website | Dirección |
-|---------|----------|---------|-----------|
-| DGII | 809-689-3444 | dgii.gov.do | Av. México esq. Santo Domingo, DN |
-| INDOTEL | 809-732-5555 | indotel.gob.do | Av. Abraham Lincoln #962, DN |
-| UAF | 809-686-0888 | uaf.gob.do | Av. México #17, DN |
-| ProConsumidor | 809-567-7755 | proconsumidor.gob.do | Av. 27 de Febrero #354, DN |
-| ONAPI | 809-567-7474 | onapi.gov.do | Av. Los Próceres, Santo Domingo |
+| Entidad       | Teléfono     | Website              | Dirección                         |
+| ------------- | ------------ | -------------------- | --------------------------------- |
+| DGII          | 809-689-3444 | dgii.gov.do          | Av. México esq. Santo Domingo, DN |
+| INDOTEL       | 809-732-5555 | indotel.gob.do       | Av. Abraham Lincoln #962, DN      |
+| UAF           | 809-686-0888 | uaf.gob.do           | Av. México #17, DN                |
+| ProConsumidor | 809-567-7755 | proconsumidor.gob.do | Av. 27 de Febrero #354, DN        |
+| ONAPI         | 809-567-7474 | onapi.gov.do         | Av. Los Próceres, Santo Domingo   |
 
 ---
 

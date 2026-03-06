@@ -19,9 +19,9 @@
     <ProjectReference Include="../AdminService.Application/AdminService.Application.csproj" />
     <ProjectReference Include="../AdminService.Infrastructure/AdminService.Infrastructure.csproj" />
     <ProjectReference Include="../AdminService.Shared/AdminService.Shared.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />

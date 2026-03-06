@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   ShieldCheck,
   Rocket,
@@ -268,8 +268,6 @@ export default function AdminOklaScorePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
-  const { toast } = useToast();
-
   const currentPhase = PHASES.find(p => p.id === activePhase)!;
 
   useEffect(() => {
@@ -310,15 +308,12 @@ export default function AdminOklaScorePage() {
 
     if (success) {
       setHasChanges(false);
-      toast({
-        title: 'Configuración guardada',
+      toast.success('Configuración guardada', {
         description: `OKLA Score configurado en Fase ${activePhase} — ${currentPhase.name}`,
       });
     } else {
-      toast({
-        title: 'Error al guardar',
+      toast.error('Error al guardar', {
         description: 'No se pudo guardar la configuración. Verifique la conexión con el backend.',
-        variant: 'destructive',
       });
     }
   };

@@ -13,6 +13,7 @@
 OKLA cobra por sus servicios (listados de vehículos $29/listing, planes de dealer $49-$299/mes). Toda empresa que venda bienes o servicios en República Dominicana **debe emitir comprobantes fiscales**. Desde 2019, la DGII ha implementado la facturación electrónica (e-CF) como el estándar obligatorio para contribuyentes.
 
 ### Consecuencias del incumplimiento:
+
 - Multa de **RD$10,000 a RD$50,000** por cada comprobante no emitido
 - Clausura temporal del establecimiento (hasta 10 días)
 - Imposibilidad de deducir gastos sin comprobantes válidos
@@ -39,11 +40,13 @@ Antes de iniciar el proceso de e-CF, verificar que OKLA cuenta con:
 ### Paso 1: Verificar el RNC (Semana 1)
 
 Si OKLA ya tiene RNC:
+
 1. Ir a **dgii.gov.do** → "Consultas" → "Consulta de RNC"
 2. Verificar que el estado sea **ACTIVO**
 3. Verificar que la actividad económica incluya servicios tecnológicos / marketplace
 
 Si OKLA **no tiene RNC**:
+
 1. Ir a la Oficina de la DGII más cercana con:
    - Acta constitutiva notarizada
    - Registro Mercantil
@@ -90,6 +93,7 @@ El certificado digital es necesario para firmar los e-CF:
 Opciones para OKLA:
 
 **Opción A: Desarrollo propio (recomendado para tech companies)**
+
 - Integrar con la API de e-CF de la DGII
 - Endpoint de pruebas: `ecf.dgii.gov.do/TesteCF`
 - Endpoint de producción: `ecf.dgii.gov.do/CerteCF`
@@ -97,6 +101,7 @@ Opciones para OKLA:
 - Documentación técnica: disponible en dgii.gov.do/ecf
 
 **Opción B: Software certificado de terceros**
+
 - Buscar en la lista de software certificado en dgii.gov.do
 - Algunos proveedores: Softland, CG One, FacturaDigital.do
 - Costo: RD$15,000-50,000/año dependiendo del volumen
@@ -118,13 +123,13 @@ Opciones para OKLA:
 
 ## 4. Tipos de Comprobantes Fiscales para OKLA
 
-| Tipo | Código | Uso en OKLA |
-|------|--------|-------------|
-| Factura de Crédito Fiscal (e-CF) | 31 | Ventas a empresas (dealers con RNC) |
-| Factura de Consumo (e-CF) | 32 | Ventas a personas físicas (sellers individuales) |
-| Nota de Crédito (e-CF) | 33 | Devoluciones, cancelaciones, ajustes |
-| Nota de Débito (e-CF) | 34 | Cargos adicionales, ajustes positivos |
-| Comprobante para Regímenes Especiales | 44 | Si aplica (zonas francas, etc.) |
+| Tipo                                  | Código | Uso en OKLA                                      |
+| ------------------------------------- | ------ | ------------------------------------------------ |
+| Factura de Crédito Fiscal (e-CF)      | 31     | Ventas a empresas (dealers con RNC)              |
+| Factura de Consumo (e-CF)             | 32     | Ventas a personas físicas (sellers individuales) |
+| Nota de Crédito (e-CF)                | 33     | Devoluciones, cancelaciones, ajustes             |
+| Nota de Débito (e-CF)                 | 34     | Cargos adicionales, ajustes positivos            |
+| Comprobante para Regímenes Especiales | 44     | Si aplica (zonas francas, etc.)                  |
 
 ---
 
@@ -141,6 +146,7 @@ Total a pagar:       RD$ 1,950.54
 ```
 
 ### Consideraciones:
+
 - Los servicios digitales en RD están gravados con ITBIS al **18%**
 - Si OKLA cobra en USD, debe convertir a RD$ usando la tasa de la DGII del día
 - Los comprobantes fiscales **siempre** deben estar en RD$
@@ -165,6 +171,7 @@ Cada mes, antes del **día 20**, se debe:
    - Pago en línea vía la Oficina Virtual
 
 ### Penalidades por declaración tardía:
+
 - **Recargo:** 10% el primer mes, 4% cada mes adicional
 - **Interés indemnizatorio:** 1.73% mensual (tasa vigente)
 - **Multa por mora:** RD$5,000 - RD$25,000
@@ -196,6 +203,7 @@ Cada mes, antes del **día 20**, se debe:
 ```
 
 ### Campos obligatorios del e-CF:
+
 - RNC del emisor (OKLA)
 - RNC/Cédula del receptor (si aplica)
 - Número de comprobante fiscal (NCF) asignado por DGII
@@ -209,15 +217,15 @@ Cada mes, antes del **día 20**, se debe:
 
 ## 8. Información de Contacto DGII
 
-| Concepto | Detalle |
-|----------|---------|
-| **Teléfono** | 809-689-3444 |
-| **Website** | dgii.gov.do |
-| **Oficina Virtual** | ofv.dgii.gov.do |
-| **Portal e-CF** | dgii.gov.do/ecf |
-| **Email** | informacion@dgii.gov.do |
-| **Dirección** | Av. México esq. Leopoldo Navarro, Santo Domingo |
-| **Horario** | Lunes a Viernes, 8:00 AM - 4:00 PM |
+| Concepto            | Detalle                                         |
+| ------------------- | ----------------------------------------------- |
+| **Teléfono**        | 809-689-3444                                    |
+| **Website**         | dgii.gov.do                                     |
+| **Oficina Virtual** | ofv.dgii.gov.do                                 |
+| **Portal e-CF**     | dgii.gov.do/ecf                                 |
+| **Email**           | informacion@dgii.gov.do                         |
+| **Dirección**       | Av. México esq. Leopoldo Navarro, Santo Domingo |
+| **Horario**         | Lunes a Viernes, 8:00 AM - 4:00 PM              |
 
 ---
 

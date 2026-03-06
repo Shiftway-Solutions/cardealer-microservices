@@ -1,7 +1,0 @@
-{
-  "baseUrl": "https://okla-images-2026.s3.us-east-2.amazonaws.com/frontend/assets",
-  "cdnUrl": "",
-  "assets": {
-    "images/placeholder-image.svg": "https://okla-images-2026.s3.us-east-2.amazonaws.com/frontend/assets/images/placeholder-image.svg"
-  }
-}

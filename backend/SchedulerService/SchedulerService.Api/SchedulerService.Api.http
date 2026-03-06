@@ -1,6 +1,0 @@
-@SchedulerService.Api_HostAddress = http://localhost:5043
-
-GET {{SchedulerService.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

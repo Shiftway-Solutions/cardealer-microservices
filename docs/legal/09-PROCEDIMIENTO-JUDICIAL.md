@@ -13,6 +13,7 @@
 La **Ley 53-07** sobre Crímenes y Delitos de Alta Tecnología establece que los proveedores de servicios de Internet y plataformas digitales tienen obligaciones específicas cuando reciben requerimientos judiciales de datos de usuarios.
 
 ### Escenarios posibles:
+
 - Un vehículo publicado en OKLA está involucrado en un delito (robo, lavado)
 - Un usuario es investigado por fraude
 - Se necesita identificar a un usuario por una estafa en la plataforma
@@ -30,7 +31,9 @@ La **Ley 53-07** sobre Crímenes y Delitos de Alta Tecnología establece que los
 ## 2. Datos que OKLA Puede Ser Requerida a Entregar
 
 ### Datos de Tráfico (Artículo 55)
+
 Datos generados por el uso de la plataforma:
+
 - Direcciones IP de conexión
 - Fechas y horas de acceso
 - URLs visitadas
@@ -38,6 +41,7 @@ Datos generados por el uso de la plataforma:
 - Acciones realizadas (publicar, buscar, contactar)
 
 ### Datos de Identificación
+
 - Nombre del usuario
 - Correo electrónico
 - Número de teléfono
@@ -45,12 +49,14 @@ Datos generados por el uso de la plataforma:
 - Datos KYC (cédula, fotos)
 
 ### Datos de Contenido
+
 - Publicaciones de vehículos
 - Mensajes entre usuarios
 - Fotos subidas
 - Historial de búsquedas
 
 ### Datos Financieros
+
 - Historial de pagos
 - Métodos de pago utilizados (tokenizados)
 - Facturas emitidas
@@ -96,7 +102,7 @@ PASO 1: RECEPCIÓN DEL REQUERIMIENTO
 │   └── Rechazar y solicitar orden judicial apropiada
 │
 └── Si SÍ es válido: → PASO 2
-     
+
 PASO 2: REGISTRO Y EVALUACIÓN (24 horas)
 │
 ├── Registrar en el Log de Requerimientos Judiciales:
@@ -246,15 +252,16 @@ RNC: [número]
 
 ### Períodos de Retención
 
-| Tipo de Dato | Retención Mínima | Base Legal |
-|-------------|-----------------|------------|
-| Datos de tráfico (IPs, logs) | **90 días** (extensible a 2 años) | Ley 53-07, Art. 55 |
-| Datos de usuario (cuenta) | Mientras la cuenta esté activa + 12 meses | Ley 172-13 |
-| Datos KYC | 5 años (si sujeto obligado AML) | Ley 155-17 |
-| Datos financieros | 10 años | Código Tributario |
-| Requerimientos judiciales | 5 años mínimo | Buenas prácticas |
+| Tipo de Dato                 | Retención Mínima                          | Base Legal         |
+| ---------------------------- | ----------------------------------------- | ------------------ |
+| Datos de tráfico (IPs, logs) | **90 días** (extensible a 2 años)         | Ley 53-07, Art. 55 |
+| Datos de usuario (cuenta)    | Mientras la cuenta esté activa + 12 meses | Ley 172-13         |
+| Datos KYC                    | 5 años (si sujeto obligado AML)           | Ley 155-17         |
+| Datos financieros            | 10 años                                   | Código Tributario  |
+| Requerimientos judiciales    | 5 años mínimo                             | Buenas prácticas   |
 
 ### Configuración Técnica Actual
+
 - Verificar que los logs de auditoría (ErrorService) retengan datos por al menos 90 días
 - Verificar que las copias de seguridad de base de datos permitan recuperar datos históricos
 - Implementar política de retención diferenciada si no existe
@@ -275,14 +282,14 @@ Si se recibe una orden de preservación de datos (antes del requerimiento formal
 
 ## 7. Entidades que Pueden Requerir Datos
 
-| Entidad | Tipo de Solicitud | Responder a |
-|---------|-------------------|-------------|
-| Tribunales (jueces) | Orden judicial | Obligatorio |
-| Ministerio Público (Procuraduría) | Solicitud fiscal | Obligatorio (con orden) |
-| DICAT (Policía Nacional) | Solicitud investigativa | Solo con orden judicial |
-| INDOTEL | Solicitud regulatoria | Obligatorio (dentro de su competencia) |
-| UAF | Solicitud AML | Obligatorio (si aplica) |
-| Particulares/Abogados | Solicitud privada | NO — debe ser vía orden judicial |
+| Entidad                           | Tipo de Solicitud       | Responder a                            |
+| --------------------------------- | ----------------------- | -------------------------------------- |
+| Tribunales (jueces)               | Orden judicial          | Obligatorio                            |
+| Ministerio Público (Procuraduría) | Solicitud fiscal        | Obligatorio (con orden)                |
+| DICAT (Policía Nacional)          | Solicitud investigativa | Solo con orden judicial                |
+| INDOTEL                           | Solicitud regulatoria   | Obligatorio (dentro de su competencia) |
+| UAF                               | Solicitud AML           | Obligatorio (si aplica)                |
+| Particulares/Abogados             | Solicitud privada       | NO — debe ser vía orden judicial       |
 
 > **⚠️ IMPORTANTE:** OKLA **no debe** entregar datos de usuarios a solicitudes de particulares, abogados privados o empresas sin una orden judicial válida.
 
@@ -290,11 +297,11 @@ Si se recibe una orden de preservación de datos (antes del requerimiento formal
 
 ## 8. Información de Contacto Relevante
 
-| Entidad | Teléfono | Ubicación |
-|---------|----------|-----------|
-| **DICAT** | 809-682-2151 ext. 2449 | Palacio de la Policía Nacional |
-| **Procuraduría General** | 809-533-3522 | Av. Jiménez Moya, Centro de los Héroes |
-| **INDOTEL** | 809-732-5555 | Av. Abraham Lincoln #962 |
+| Entidad                  | Teléfono               | Ubicación                              |
+| ------------------------ | ---------------------- | -------------------------------------- |
+| **DICAT**                | 809-682-2151 ext. 2449 | Palacio de la Policía Nacional         |
+| **Procuraduría General** | 809-533-3522           | Av. Jiménez Moya, Centro de los Héroes |
+| **INDOTEL**              | 809-732-5555           | Av. Abraham Lincoln #962               |
 
 ---
 

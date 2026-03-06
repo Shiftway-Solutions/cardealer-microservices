@@ -12,14 +12,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Car } from 'lucide-react';
+import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
+import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 
 // ─────────────────────────────────────────────
 // Types
@@ -217,11 +219,17 @@ function VehicleCard({
   accentColor?: string;
 }) {
   const colors = accentClasses[accentColor] || accentClasses.blue;
-  const primaryImage =
+  const [imageError, setImageError] = useState(false);
+
+  const s3Image =
     vehicle.images
       ?.filter(img => img.url && !img.url.startsWith('blob:'))
       .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url ||
-    '/placeholder-car.jpg';
+    '';
+
+  // Use fallback Unsplash image when S3 image is invalid or fails to load
+  const fallbackImage = getVehicleFallbackImage(vehicle.id, vehicle.make, vehicle.bodyStyle);
+  const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
   const location = [vehicle.city, vehicle.state].filter(Boolean).join(', ') || 'R.D.';
 
@@ -239,6 +247,7 @@ function VehicleCard({
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+            onError={() => setImageError(true)}
           />
           {vehicle.isFeatured && (
             <Badge className="absolute top-2 left-2 border-0 bg-amber-500 text-white">
@@ -250,6 +259,13 @@ function VehicleCard({
               💎 Premium
             </Badge>
           )}
+          {/* Ley 358-05 Art. 88 — Identificación de publicidad */}
+          <span
+            className="absolute right-2 bottom-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm"
+            aria-label="Contenido publicitario pagado por anunciantes"
+          >
+            Publicidad
+          </span>
         </div>
         <CardContent className="p-4">
           <h3 className="group-hover:text-primary line-clamp-1 text-sm font-semibold transition-colors">
@@ -388,6 +404,15 @@ export default function VehicleTypeSection({
                   {subtitle}
                 </p>
               )}
+              {/* Ley 358-05 Art. 88 — Identificación de espacio publicitario */}
+              <span
+                title="Contenido publicitario pagado por anunciantes. Ley 358-05."
+                aria-label="Espacio publicitario patrocinado"
+                className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200/60 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/20 dark:text-slate-400"
+              >
+                <Megaphone className="h-2.5 w-2.5" />
+                Espacio Patrocinado
+              </span>
             </div>
             <Link href={viewAllHref}>
               <Button
@@ -426,6 +451,15 @@ export default function VehicleTypeSection({
                 {subtitle}
               </p>
             )}
+            {/* Ley 358-05 Art. 88 — Identificación de espacio publicitario */}
+            <span
+              title="Contenido publicitario pagado por anunciantes. Ley 358-05."
+              aria-label="Espacio publicitario patrocinado"
+              className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200/60 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/20 dark:text-slate-400"
+            >
+              <Megaphone className="h-2.5 w-2.5" />
+              Espacio Patrocinado
+            </span>
           </div>
           <Link href={viewAllHref}>
             <Button
@@ -439,7 +473,6 @@ export default function VehicleTypeSection({
             </Button>
           </Link>
         </div>
-
         {/* Grid — same card size as FeaturedVehicles */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {vehicles.map(vehicle => (
@@ -450,6 +483,11 @@ export default function VehicleTypeSection({
               <EmptyVehicleCard key={`fill-${i}`} icon={icon} accentColor={accentColor} />
             ))}
         </div>
+        {/* Ley 358-05 Art. 84 — Transparencia en precios */}
+        <p className="text-muted-foreground mt-3 text-center text-[10px] leading-relaxed">
+          *Precios de referencia publicados por anunciantes. No incluyen ITBIS, traspaso ni otros
+          cargos. Sujetos a verificación. Ley 358-05.
+        </p>{' '}
       </div>
     </section>
   );

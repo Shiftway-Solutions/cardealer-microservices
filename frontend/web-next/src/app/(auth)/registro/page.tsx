@@ -468,8 +468,8 @@ export default function RegisterPage() {
             className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
           />
           <span className="text-muted-foreground text-sm">
-            Acepto que mis datos personales sean transferidos y procesados en servidores ubicados
-            en Estados Unidos, conforme al Art. 27 de la Ley 172-13.{' '}
+            Acepto que mis datos personales sean transferidos y procesados en servidores ubicados en
+            Estados Unidos, conforme al Art. 27 de la Ley 172-13.{' '}
             <Link href="/privacidad" className="text-primary hover:underline">
               Ver Política de Privacidad
             </Link>
@@ -477,7 +477,16 @@ export default function RegisterPage() {
         </label>
 
         {/* Submit button */}
-        <Button type="submit" className="w-full" disabled={isLoading || !formData.acceptTerms || !formData.ageVerification || !formData.acceptDataTransfer}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={
+            isLoading ||
+            !formData.acceptTerms ||
+            !formData.ageVerification ||
+            !formData.acceptDataTransfer
+          }
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -10,12 +10,14 @@
 
 ## 1. ¿Qué es un DPO y Por Qué OKLA Necesita Uno?
 
-El **Oficial de Protección de Datos** (DPO, por sus siglas en inglés — *Data Protection Officer*) es la persona encargada de supervisar el cumplimiento de la legislación de protección de datos dentro de una organización.
+El **Oficial de Protección de Datos** (DPO, por sus siglas en inglés — _Data Protection Officer_) es la persona encargada de supervisar el cumplimiento de la legislación de protección de datos dentro de una organización.
 
 ### Base Legal
+
 La **Ley 172-13** sobre Protección Integral de los Datos Personales establece que las entidades que traten datos personales deben designar a un responsable que garantice el cumplimiento de la ley. Aunque la ley dominicana no usa el término "DPO" explícitamente como el GDPR europeo, el **Artículo 23** y las buenas prácticas internacionales exigen esta figura.
 
 ### ¿Por qué OKLA necesita un DPO?
+
 - OKLA procesa datos personales de **miles de usuarios**
 - Se manejan **datos sensibles** (cédulas, fotos de identidad vía KYC)
 - Hay **transferencia internacional** de datos (servidores en EE.UU.)
@@ -74,6 +76,7 @@ La **Ley 172-13** sobre Protección Integral de los Datos Personales establece q
 ### Quién Puede Ser DPO
 
 **Opción A: Consultor Externo (Recomendado para inicio)**
+
 - ✅ Menor costo inicial
 - ✅ Experiencia especializada
 - ✅ Independencia objetiva
@@ -83,6 +86,7 @@ La **Ley 172-13** sobre Protección Integral de los Datos Personales establece q
 - **Costo estimado:** RD$20,000-40,000/mes
 
 **Opción B: Empleado Interno**
+
 - ✅ Disponibilidad completa
 - ✅ Conocimiento profundo del negocio
 - ✅ Integración con el equipo
@@ -92,11 +96,13 @@ La **Ley 172-13** sobre Protección Integral de los Datos Personales establece q
 - **Costo estimado:** RD$60,000-120,000/mes (salario completo)
 
 **Opción C: Modelo Híbrido (Recomendado a mediano plazo)**
+
 - Designar un empleado interno con apoyo de consultor externo
 - El consultor capacita y asesora al empleado
 - Transición gradual a DPO interno
 
 ### Recomendación para OKLA
+
 > **Fase 1 (0-6 meses):** Contratar un consultor externo como DPO.  
 > **Fase 2 (6-12 meses):** Capacitar a un miembro del equipo interno.  
 > **Fase 3 (12+ meses):** Transicionar a DPO interno con apoyo externo puntual.
@@ -167,6 +173,7 @@ _________________________          _________________________
 ```
 
 #### b) Contrato o Adenda Contractual
+
 - Si es externo: Contrato de servicios profesionales
 - Si es interno: Adenda al contrato laboral especificando funciones de DPO
 
@@ -182,6 +189,7 @@ _________________________          _________________________
 ### Paso 4: Publicación y Comunicación (Semana 2)
 
 #### En la Política de Privacidad:
+
 Agregar una sección con los datos de contacto del DPO:
 
 ```
@@ -204,6 +212,7 @@ El DPO atenderá sus solicitudes de:
 ```
 
 #### En la Plataforma:
+
 - Agregar enlace a "Protección de Datos" en el footer
 - Incluir datos del DPO en la página de Contacto
 - Crear un formulario dedicado para solicitudes de datos personales
@@ -213,19 +222,20 @@ El DPO atenderá sus solicitudes de:
 ## 5. Herramientas y Procesos para el DPO
 
 ### Registro de Actividades de Tratamiento
+
 El DPO debe mantener un registro actualizado (puede ser una hoja de cálculo o sistema dedicado):
 
-| Campo | Descripción |
-|-------|-------------|
-| Base de datos | Nombre del sistema/servicio |
-| Finalidad | Por qué se tratan los datos |
-| Tipos de datos | Qué datos se recopilan |
-| Base legal | Consentimiento, contrato, obligación legal |
-| Titulares | Categorías de personas |
-| Destinatarios | Quién accede a los datos |
-| Transferencias | Si hay transferencia internacional |
-| Plazo de retención | Cuánto tiempo se guardan |
-| Medidas de seguridad | Controles implementados |
+| Campo                | Descripción                                |
+| -------------------- | ------------------------------------------ |
+| Base de datos        | Nombre del sistema/servicio                |
+| Finalidad            | Por qué se tratan los datos                |
+| Tipos de datos       | Qué datos se recopilan                     |
+| Base legal           | Consentimiento, contrato, obligación legal |
+| Titulares            | Categorías de personas                     |
+| Destinatarios        | Quién accede a los datos                   |
+| Transferencias       | Si hay transferencia internacional         |
+| Plazo de retención   | Cuánto tiempo se guardan                   |
+| Medidas de seguridad | Controles implementados                    |
 
 ### Proceso de Solicitudes de Titulares
 
@@ -253,12 +263,12 @@ El DPO debe mantener un registro actualizado (puede ser una hoja de cálculo o s
 
 ## 6. Información de Contacto para Búsqueda de DPO
 
-| Recurso | Detalle |
-|---------|---------|
-| **Colegio de Abogados de RD** | 809-535-3522, colegiodeabogados.org.do |
-| **INDOTEL** | 809-732-5555, indotel.gob.do |
-| **IAPP (International Association of Privacy Professionals)** | iapp.org |
-| **LinkedIn** | Buscar "Data Protection Officer Dominican Republic" |
+| Recurso                                                       | Detalle                                             |
+| ------------------------------------------------------------- | --------------------------------------------------- |
+| **Colegio de Abogados de RD**                                 | 809-535-3522, colegiodeabogados.org.do              |
+| **INDOTEL**                                                   | 809-732-5555, indotel.gob.do                        |
+| **IAPP (International Association of Privacy Professionals)** | iapp.org                                            |
+| **LinkedIn**                                                  | Buscar "Data Protection Officer Dominican Republic" |
 
 ---
 

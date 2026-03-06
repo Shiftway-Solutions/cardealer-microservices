@@ -11,9 +11,11 @@
 ## 1. Situación Actual de OKLA
 
 ### ¿Qué datos se transfieren internacionalmente?
+
 Todos los datos personales de los usuarios de OKLA se almacenan en servidores de **DigitalOcean** ubicados en **Estados Unidos**. Esto constituye una **transferencia internacional de datos** desde República Dominicana hacia Estados Unidos.
 
 ### Datos que se transfieren:
+
 - Datos de autenticación (nombre, email, teléfono)
 - Datos de identidad/KYC (cédula, fotos, dirección)
 - Datos de vehículos y publicaciones
@@ -23,11 +25,13 @@ Todos los datos personales de los usuarios de OKLA se almacenan en servidores de
 - Archivos multimedia (fotos de vehículos, documentos)
 
 ### Lo que ya se implementó en código:
+
 - ✅ Checkbox de consentimiento en el formulario de registro
 - ✅ Texto informando que los datos se almacenan en servidores en EE.UU.
 - ✅ Cifrado en tránsito (TLS 1.3) y en reposo (AES-256)
 
 ### Lo que falta (procesos administrativos):
+
 - ❌ Cláusulas Contractuales Estándar (SCC) con DigitalOcean
 - ❌ Documentación formal de las salvaguardas
 - ❌ Evaluación de impacto de la transferencia (TIA)
@@ -46,6 +50,7 @@ La transferencia de datos personales a países que no cuenten con un **nivel ade
 3. Se establezcan **garantías suficientes** de protección de datos
 
 ### ¿Tiene EE.UU. un "nivel adecuado de protección"?
+
 No existe un acuerdo formal de adecuación entre RD y EE.UU. similar al EU-US Privacy Shield. Por lo tanto, OKLA debe implementar **salvaguardas adicionales**.
 
 ---
@@ -210,18 +215,21 @@ Para más información, contacte a nuestro DPO: dpo@okla.do
 ## 4. Opciones Alternativas de Infraestructura
 
 ### Opción A: Migrar a DigitalOcean Miami (Recomendado)
+
 - DigitalOcean no tiene datacenter en RD, pero **Miami** es la región más cercana
 - Menor latencia para usuarios dominicanos
 - Sigue siendo transferencia internacional, pero con menor distancia
 - **Acción:** Evaluar migración de la región actual a NYC3 → Miami (si disponible)
 
 ### Opción B: Proveedor de Cloud Local
+
 - Verificar si existen proveedores de cloud en RD con certificaciones adecuadas
 - Generalmente más caros y con menor nivel de servicio
 - Eliminaría la necesidad de transferencia internacional
 - **No recomendado** actualmente por limitaciones de infraestructura local
 
 ### Opción C: Modelo Híbrido
+
 - Datos sensibles (KYC, cédulas) en servidor local o región cercana
 - Datos operativos (vehículos, publicaciones) en DigitalOcean
 - Mayor complejidad técnica
@@ -231,12 +239,12 @@ Para más información, contacte a nuestro DPO: dpo@okla.do
 
 ## 5. Información de Contacto
 
-| Concepto | Detalle |
-|----------|---------|
-| **INDOTEL** (regulador datos RD) | 809-732-5555, indotel.gob.do |
-| **DigitalOcean Legal** | digitalocean.com/legal |
-| **DigitalOcean DPA** | digitalocean.com/legal/data-processing-agreement |
-| **DigitalOcean Support** | Panel de control → Support Ticket |
+| Concepto                         | Detalle                                          |
+| -------------------------------- | ------------------------------------------------ |
+| **INDOTEL** (regulador datos RD) | 809-732-5555, indotel.gob.do                     |
+| **DigitalOcean Legal**           | digitalocean.com/legal                           |
+| **DigitalOcean DPA**             | digitalocean.com/legal/data-processing-agreement |
+| **DigitalOcean Support**         | Panel de control → Support Ticket                |
 
 ---
 

@@ -1,6 +1,0 @@
-@MessageBusService.Api_HostAddress = http://localhost:5117
-
-GET {{MessageBusService.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

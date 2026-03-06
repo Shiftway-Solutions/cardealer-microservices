@@ -213,6 +213,18 @@ export default function HomepageClient() {
 
       {/* ── FINAL ──────────────────────────────────────────────────────────── */}
 
+      {/* Ley 358-05 / Pro-Consumidor — Aviso de publicidad general del homepage */}
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
+        <p className="text-muted-foreground border-t pt-4 text-center text-[11px] leading-relaxed">
+          Todos los espacios de vehículos en esta página constituyen contenido publicitario pagado
+          por sus respectivos anunciantes. Los precios son de referencia y no incluyen ITBIS (18%),
+          gastos de traspaso ni otros cargos aplicables. La información publicada es responsabilidad
+          de cada anunciante. Conforme a la Ley 358-05 de Protección al Consumidor y las
+          disposiciones de Pro-Consumidor e INDOTEL sobre publicidad digital en República
+          Dominicana.
+        </p>
+      </div>
+
       {/* Why Choose OKLA */}
       <WhyChooseUs variant="grid" />
 

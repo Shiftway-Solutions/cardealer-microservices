@@ -11,6 +11,7 @@
 ## 1. ¿Por Qué Registrar la Marca?
 
 El registro de marca otorga a OKLA:
+
 - **Derecho exclusivo** de uso del nombre "OKLA" en las clases registradas
 - **Protección legal** contra imitadores y competidores
 - **Base para acciones legales** contra uso no autorizado
@@ -19,6 +20,7 @@ El registro de marca otorga a OKLA:
 - **Protección en línea** para dominar disputas de dominios
 
 ### Riesgos de NO registrar:
+
 - Un tercero podría registrar "OKLA" antes que la empresa
 - No se podría impedir el uso del nombre por competidores
 - Pérdida de inversión en branding y marketing
@@ -38,6 +40,7 @@ El registro de marca otorga a OKLA:
 4. Verificar marcas similares que puedan generar confusión
 
 **Búsqueda profesional (recomendada):**
+
 - Solicitar una **búsqueda formal de anterioridades** en ONAPI
 - Costo: aproximadamente RD$1,000-3,000
 - Esto incluye marcas en trámite que no aparecen en búsquedas públicas
@@ -46,6 +49,7 @@ El registro de marca otorga a OKLA:
 ### Paso 2: Verificar Conflictos Potenciales
 
 Revisar si "OKLA" podría confundirse con:
+
 - Marcas existentes en las mismas clases
 - Marcas notorias o famosas (protección ampliada)
 - Denominaciones de origen
@@ -57,13 +61,13 @@ Revisar si "OKLA" podría confundirse con:
 
 OKLA debe registrarse en las siguientes clases:
 
-| Clase | Descripción | Justificación | Prioridad |
-|-------|-------------|---------------|-----------|
-| **35** | Publicidad, gestión de negocios comerciales, administración comercial | Servicios de marketplace, publicidad de vehículos | 🔴 ALTA |
-| **42** | Servicios científicos y tecnológicos, diseño y desarrollo de software | Plataforma tecnológica, SaaS | 🔴 ALTA |
-| **12** | Vehículos, aparatos de locomoción por tierra | Sector automotriz (aunque OKLA no vende vehículos directamente) | 🟡 MEDIA |
-| **36** | Servicios financieros, servicios de seguros | Si en el futuro OKLA ofrece financiamiento o seguros | 🟢 BAJA |
-| **38** | Telecomunicaciones | Servicios de comunicación entre usuarios | 🟢 BAJA |
+| Clase  | Descripción                                                           | Justificación                                                   | Prioridad |
+| ------ | --------------------------------------------------------------------- | --------------------------------------------------------------- | --------- |
+| **35** | Publicidad, gestión de negocios comerciales, administración comercial | Servicios de marketplace, publicidad de vehículos               | 🔴 ALTA   |
+| **42** | Servicios científicos y tecnológicos, diseño y desarrollo de software | Plataforma tecnológica, SaaS                                    | 🔴 ALTA   |
+| **12** | Vehículos, aparatos de locomoción por tierra                          | Sector automotriz (aunque OKLA no vende vehículos directamente) | 🟡 MEDIA  |
+| **36** | Servicios financieros, servicios de seguros                           | Si en el futuro OKLA ofrece financiamiento o seguros            | 🟢 BAJA   |
+| **38** | Telecomunicaciones                                                    | Servicios de comunicación entre usuarios                        | 🟢 BAJA   |
 
 **Recomendación mínima:** Registrar en **clases 35 y 42** inmediatamente, y clase 12 como complemento.
 
@@ -74,6 +78,7 @@ OKLA debe registrarse en las siguientes clases:
 ### Paso 1: Preparar la Solicitud (Semana 1-2)
 
 **Documentos necesarios:**
+
 - Formulario de solicitud de registro de marca (ONAPI)
 - Copia del RNC de la empresa
 - Cédula del representante legal
@@ -84,11 +89,11 @@ OKLA debe registrarse en las siguientes clases:
 
 **Tipos de marca a considerar:**
 
-| Tipo | Descripción | Recomendación |
-|------|-------------|---------------|
-| **Nominativa** | Solo el nombre "OKLA" | ✅ Registrar primero |
-| **Mixta** | Nombre + logotipo | ✅ Registrar también |
-| **Figurativa** | Solo el logotipo/ícono | 🟡 Opcional |
+| Tipo           | Descripción            | Recomendación        |
+| -------------- | ---------------------- | -------------------- |
+| **Nominativa** | Solo el nombre "OKLA"  | ✅ Registrar primero |
+| **Mixta**      | Nombre + logotipo      | ✅ Registrar también |
+| **Figurativa** | Solo el logotipo/ícono | 🟡 Opcional          |
 
 **Recomendación:** Registrar primero como marca **nominativa** ("OKLA") para proteger el nombre, y luego como **mixta** con el logotipo.
 
@@ -104,12 +109,15 @@ OKLA debe registrarse en las siguientes clases:
 **Descripción sugerida por clase:**
 
 **Clase 35:**
+
 > "Servicios de publicidad en línea; gestión de un mercado en línea (marketplace) para la compraventa de vehículos; servicios de intermediación comercial; publicación de listados comerciales; administración de negocios comerciales; servicios de marketing digital en el sector automotriz."
 
 **Clase 42:**
+
 > "Diseño y desarrollo de software informático; servicios de plataforma como servicio (PaaS); servicios de software como servicio (SaaS); alojamiento de plataformas de comercio electrónico; desarrollo de aplicaciones móviles; servicios de tecnología de la información."
 
 **Clase 12:**
+
 > "Vehículos; automóviles; motocicletas; piezas y accesorios para vehículos; servicios relacionados con el sector automotriz."
 
 3. Pagar las tasas correspondientes
@@ -117,6 +125,7 @@ OKLA debe registrarse en las siguientes clases:
 ### Paso 3: Examen de Forma (Mes 1-2)
 
 ONAPI realiza un examen de forma para verificar:
+
 - Que la solicitud esté completa
 - Que los documentos estén en orden
 - Que las tasas estén pagadas
@@ -127,6 +136,7 @@ Si hay observaciones, ONAPI notificará para corrección (plazo: 60 días).
 ### Paso 4: Publicación (Mes 2-3)
 
 Si la solicitud pasa el examen de forma:
+
 1. Se publica en el **Boletín de la Propiedad Industrial**
 2. Se abre un período de **oposición de 45 días hábiles**
 3. Cualquier tercero que considere afectado puede presentar oposición
@@ -135,6 +145,7 @@ Si la solicitud pasa el examen de forma:
 ### Paso 5: Examen de Fondo (Mes 3-6)
 
 ONAPI realiza el examen de fondo:
+
 - Verificación de que no haya marcas idénticas o similares
 - Verificación de que la marca no sea descriptiva o genérica
 - Análisis de posibles conflictos
@@ -142,11 +153,13 @@ ONAPI realiza el examen de fondo:
 ### Paso 6: Resolución (Mes 6-12)
 
 **Si se aprueba:**
+
 - ONAPI emite el **certificado de registro de marca**
 - La marca queda protegida por **10 años** (renovable indefinidamente)
 - Se publica la concesión en el Boletín
 
 **Si se rechaza:**
+
 - Se puede apelar ante el Tribunal Superior Administrativo
 - Se puede modificar la solicitud si el rechazo es parcial
 
@@ -154,14 +167,14 @@ ONAPI realiza el examen de fondo:
 
 ## 5. Costos Estimados
 
-| Concepto | Costo Estimado (RD$) |
-|----------|---------------------|
-| Búsqueda de anterioridades | $1,000 - $3,000 |
-| Tasa de solicitud por clase | $5,000 - $7,000 |
-| Tasa de registro (al aprobarse) | $3,000 - $5,000 |
-| Honorarios de abogado (por solicitud) | $10,000 - $25,000 |
-| **Total por clase** | **$19,000 - $40,000** |
-| **Total 3 clases (35, 42, 12)** | **$57,000 - $120,000** |
+| Concepto                              | Costo Estimado (RD$)   |
+| ------------------------------------- | ---------------------- |
+| Búsqueda de anterioridades            | $1,000 - $3,000        |
+| Tasa de solicitud por clase           | $5,000 - $7,000        |
+| Tasa de registro (al aprobarse)       | $3,000 - $5,000        |
+| Honorarios de abogado (por solicitud) | $10,000 - $25,000      |
+| **Total por clase**                   | **$19,000 - $40,000**  |
+| **Total 3 clases (35, 42, 12)**       | **$57,000 - $120,000** |
 
 > **Nota:** Los costos son aproximados. Consultar tarifario vigente en onapi.gov.do.
 
@@ -170,23 +183,28 @@ ONAPI realiza el examen de fondo:
 ## 6. Post-Registro: Mantenimiento de la Marca
 
 ### Renovación
+
 - La marca se registra por **10 años**
 - Se debe renovar antes del vencimiento
 - Costo de renovación: similar al registro inicial
 - Si no se renueva, la marca queda disponible para terceros
 
 ### Uso Obligatorio
+
 - La marca debe usarse comercialmente de manera continua
 - Si no se usa por **3 años consecutivos**, puede ser cancelada por falta de uso
 - Mantener evidencia de uso: facturas, publicidad, capturas del sitio web
 
 ### Vigilancia
+
 - Monitorear nuevas solicitudes de marcas similares
 - Presentar oposición si se detecta una marca que infrinja
 - Considerar un servicio de vigilancia de marcas
 
 ### Protección Internacional (Futuro)
+
 Si OKLA planea expandirse:
+
 - **Protocolo de Madrid:** Registro internacional desde RD
 - **Registro individual** en cada país de expansión
 
@@ -194,14 +212,14 @@ Si OKLA planea expandirse:
 
 ## 7. Información de Contacto ONAPI
 
-| Concepto | Detalle |
-|----------|---------|
-| **Teléfono** | 809-567-7474 |
-| **Website** | onapi.gov.do |
-| **Email** | info@onapi.gov.do |
-| **Dirección** | Av. Los Próceres, Santo Domingo |
-| **Horario** | Lunes a Viernes, 8:00 AM - 4:00 PM |
-| **Servicios en línea** | onapi.gov.do/servicios |
+| Concepto               | Detalle                            |
+| ---------------------- | ---------------------------------- |
+| **Teléfono**           | 809-567-7474                       |
+| **Website**            | onapi.gov.do                       |
+| **Email**              | info@onapi.gov.do                  |
+| **Dirección**          | Av. Los Próceres, Santo Domingo    |
+| **Horario**            | Lunes a Viernes, 8:00 AM - 4:00 PM |
+| **Servicios en línea** | onapi.gov.do/servicios             |
 
 ---
 

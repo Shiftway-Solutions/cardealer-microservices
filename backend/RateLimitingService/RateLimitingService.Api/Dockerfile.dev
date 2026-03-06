@@ -1,8 +1,0 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
-WORKDIR /src
-COPY . .
-RUN dotnet restore "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj"
-RUN dotnet build "RateLimitingService/RateLimitingService.Api/RateLimitingService.Api.csproj" -c Release -o /app/build --no-restore
-WORKDIR /app/build
-EXPOSE 80
-ENTRYPOINT ["dotnet", "RateLimitingService.Api.dll"]

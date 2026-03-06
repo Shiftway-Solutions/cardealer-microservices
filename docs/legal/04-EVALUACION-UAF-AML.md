@@ -13,12 +13,14 @@
 La **Ley 155-17** contra el Lavado de Activos y el Financiamiento del Terrorismo establece una lista de "sujetos obligados" que deben implementar medidas de prevención de lavado de activos. Aunque OKLA es un marketplace de vehículos y no una institución financiera, la compraventa de vehículos puede ser utilizada como mecanismo de lavado de dinero.
 
 ### Riesgos Específicos del Sector Automotriz:
+
 - Los vehículos son bienes de alto valor fácilmente transferibles
 - Pueden ser comprados con efectivo sin trazabilidad
 - Los precios pueden ser manipulados para mover dinero
 - Es un sector históricamente asociado con lavado de activos en RD
 
 ### Lo que OKLA debe determinar:
+
 **¿Es OKLA un "sujeto obligado" bajo la Ley 155-17?**
 
 Si la respuesta es **SÍ** → Se requiere registro ante la UAF, oficial de cumplimiento, reportes, etc.  
@@ -32,24 +34,26 @@ Si la respuesta es **NO** → Se documentan las medidas voluntarias de prevenci�
 
 La Ley 155-17, **Artículo 39**, enumera los sujetos obligados. Los más relevantes para OKLA:
 
-| Categoría | ¿Aplica a OKLA? | Análisis |
-|-----------|-----------------|----------|
-| Bancos e instituciones financieras | ❌ No | OKLA no es una entidad financiera |
-| Casas de cambio | ❌ No | OKLA no cambia divisas |
-| Empresas de remesas | ❌ No | OKLA no envía dinero |
-| Agentes inmobiliarios | ❌ No directamente | OKLA es marketplace, no agente directo |
-| Concesionarios de vehículos | ⚠️ **POSIBLE** | OKLA facilita la venta de vehículos |
-| Comerciantes de bienes de alto valor | ⚠️ **POSIBLE** | Los vehículos son bienes de alto valor |
-| Entidades que realicen transferencias de valores | ❌ No | OKLA procesa pagos de servicio, no transferencias |
-| Plataformas de comercio electrónico | ⚠️ **POSIBLE** | Categoría en expansión |
+| Categoría                                        | ¿Aplica a OKLA?    | Análisis                                          |
+| ------------------------------------------------ | ------------------ | ------------------------------------------------- |
+| Bancos e instituciones financieras               | ❌ No              | OKLA no es una entidad financiera                 |
+| Casas de cambio                                  | ❌ No              | OKLA no cambia divisas                            |
+| Empresas de remesas                              | ❌ No              | OKLA no envía dinero                              |
+| Agentes inmobiliarios                            | ❌ No directamente | OKLA es marketplace, no agente directo            |
+| Concesionarios de vehículos                      | ⚠️ **POSIBLE**     | OKLA facilita la venta de vehículos               |
+| Comerciantes de bienes de alto valor             | ⚠️ **POSIBLE**     | Los vehículos son bienes de alto valor            |
+| Entidades que realicen transferencias de valores | ❌ No              | OKLA procesa pagos de servicio, no transferencias |
+| Plataformas de comercio electrónico              | ⚠️ **POSIBLE**     | Categoría en expansión                            |
 
 ### Argumento a favor de que OKLA NO es sujeto obligado:
+
 - OKLA **no compra ni vende vehículos** directamente
 - OKLA es un **intermediario/marketplace** que conecta compradores y vendedores
 - Los pagos que OKLA procesa son por **servicios de publicación**, no por vehículos
 - La transacción de compraventa del vehículo ocurre **fuera de la plataforma**
 
 ### Argumento a favor de que OKLA SÍ podría ser sujeto obligado:
+
 - OKLA facilita transacciones de bienes de alto valor
 - El KYC que OKLA ya implementa es una medida AML
 - La tendencia regulatoria es ampliar los sujetos obligados
@@ -148,12 +152,14 @@ Tel: [teléfono]
 Una vez recibida la respuesta de la UAF:
 
 **Si la respuesta es "NO es sujeto obligado":**
+
 - ✅ Documentar la respuesta y archivarla
 - ✅ Mantener las medidas voluntarias de KYC
 - ✅ Revisar anualmente si hay cambios regulatorios
 - ✅ Considerar implementar medidas voluntarias adicionales como buena práctica
 
 **Si la respuesta es "SÍ es sujeto obligado":**
+
 - Proceder con el registro (ver sección 4)
 
 ---
@@ -174,6 +180,7 @@ Una vez recibida la respuesta de la UAF:
 ### 4.2 Manual de Prevención de Lavado de Activos
 
 Contenido obligatorio:
+
 - Política de "Conozca a su Cliente" (KYC) — ✅ ya implementado
 - Procedimiento de identificación de clientes
 - Procedimiento de monitoreo de operaciones
@@ -185,6 +192,7 @@ Contenido obligatorio:
 ### 4.3 Oficial de Cumplimiento
 
 Se debe designar un **Oficial de Cumplimiento** con las siguientes responsabilidades:
+
 - Supervisar el cumplimiento del programa AML
 - Recibir y analizar alertas de operaciones sospechosas
 - Preparar y enviar Reportes de Operaciones Sospechosas (ROS) a la UAF
@@ -196,11 +204,11 @@ Se debe designar un **Oficial de Cumplimiento** con las siguientes responsabilid
 
 ### 4.4 Reportes Obligatorios
 
-| Reporte | Frecuencia | Descripción |
-|---------|------------|-------------|
-| **ROS** | Cuando se detecte | Reporte de Operación Sospechosa — dentro de las 24 horas |
-| **RTE** | Cuando aplique | Reporte de Transacción en Efectivo (>US$10,000 o equivalente) |
-| **Declaración anual** | Anual | Resumen de actividades de cumplimiento |
+| Reporte               | Frecuencia        | Descripción                                                   |
+| --------------------- | ----------------- | ------------------------------------------------------------- |
+| **ROS**               | Cuando se detecte | Reporte de Operación Sospechosa — dentro de las 24 horas      |
+| **RTE**               | Cuando aplique    | Reporte de Transacción en Efectivo (>US$10,000 o equivalente) |
+| **Declaración anual** | Anual             | Resumen de actividades de cumplimiento                        |
 
 ### 4.5 Medidas Adicionales de KYC (si aplica)
 
@@ -246,14 +254,14 @@ Aunque OKLA no sea sujeto obligado, se recomienda:
 
 ## 6. Información de Contacto UAF
 
-| Concepto | Detalle |
-|----------|---------|
-| **Teléfono** | 809-686-0888 |
-| **Website** | uaf.gob.do |
-| **Email** | info@uaf.gob.do |
-| **Dirección** | Av. México #17, Edif. Juan Pablo Duarte, Piso 2, Santo Domingo |
-| **Horario** | Lunes a Viernes, 8:00 AM - 4:00 PM |
-| **Director General** | Consultar en uaf.gob.do |
+| Concepto             | Detalle                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| **Teléfono**         | 809-686-0888                                                   |
+| **Website**          | uaf.gob.do                                                     |
+| **Email**            | info@uaf.gob.do                                                |
+| **Dirección**        | Av. México #17, Edif. Juan Pablo Duarte, Piso 2, Santo Domingo |
+| **Horario**          | Lunes a Viernes, 8:00 AM - 4:00 PM                             |
+| **Director General** | Consultar en uaf.gob.do                                        |
 
 ---
 

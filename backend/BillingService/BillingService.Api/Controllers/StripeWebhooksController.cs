@@ -433,6 +433,35 @@ public class StripeWebhooksController : ControllerBase
 
         await _invoiceRepository.AddAsync(newInvoice);
         _logger.LogInformation("Created invoice {InvoiceId} for dealer {DealerId}", newInvoice.Id, customer.DealerId);
+
+        // Publicar evento de factura generada para que NotificationService envíe el email
+        try
+        {
+            await _eventPublisher.PublishAsync(new InvoiceGeneratedEvent
+            {
+                InvoiceId = newInvoice.Id,
+                InvoiceNumber = newInvoice.InvoiceNumber,
+                PaymentTransactionId = Guid.Empty, // Se asociará cuando se pague
+                UserId = customer.DealerId,
+                DealerId = customer.DealerId,
+                BuyerName = customer.Name ?? "Cliente",
+                BuyerEmail = customer.Email ?? string.Empty,
+                TotalAmount = newInvoice.TotalAmount,
+                Currency = newInvoice.Currency,
+                Description = $"Factura {newInvoice.InvoiceNumber}",
+                PdfUrl = invoice.InvoicePdf,
+                IssuedAt = DateTime.UtcNow
+            });
+
+            _logger.LogInformation(
+                "InvoiceGeneratedEvent published for InvoiceId: {InvoiceId}, DealerId: {DealerId}",
+                newInvoice.Id, customer.DealerId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish InvoiceGeneratedEvent for InvoiceId: {InvoiceId}", newInvoice.Id);
+            // No fallar el webhook si la publicación del evento falla
+        }
     }
 
     private async Task HandleInvoicePaid(Event stripeEvent)
@@ -445,6 +474,39 @@ public class StripeWebhooksController : ControllerBase
         {
             existingInvoice.RecordPayment((invoice.AmountPaid) / 100m);
             await _invoiceRepository.UpdateAsync(existingInvoice);
+
+            // Si la factura se creó directamente como pagada (sin pasar por invoice.created),
+            // publicar el evento de factura para que el usuario reciba el email
+            var customer = await _customerRepository.GetByStripeCustomerIdAsync(invoice.CustomerId);
+            if (customer != null)
+            {
+                try
+                {
+                    await _eventPublisher.PublishAsync(new InvoiceGeneratedEvent
+                    {
+                        InvoiceId = existingInvoice.Id,
+                        InvoiceNumber = existingInvoice.InvoiceNumber,
+                        PaymentTransactionId = Guid.Empty,
+                        UserId = customer.DealerId,
+                        DealerId = customer.DealerId,
+                        BuyerName = customer.Name ?? "Cliente",
+                        BuyerEmail = customer.Email ?? string.Empty,
+                        TotalAmount = existingInvoice.TotalAmount,
+                        Currency = existingInvoice.Currency,
+                        Description = $"Factura {existingInvoice.InvoiceNumber} - Pagada",
+                        PdfUrl = invoice.InvoicePdf,
+                        IssuedAt = existingInvoice.IssueDate
+                    });
+
+                    _logger.LogInformation(
+                        "InvoiceGeneratedEvent (paid) published for InvoiceId: {InvoiceId}",
+                        existingInvoice.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to publish InvoiceGeneratedEvent for paid invoice: {InvoiceId}", existingInvoice.Id);
+                }
+            }
         }
 
         // Activar/renovar suscripción si aplica

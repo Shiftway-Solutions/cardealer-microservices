@@ -14,15 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  ExternalLink,
-  Flag,
-  Mail,
-  Scale,
-  Shield,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ExternalLink, Flag, Mail, Scale, Shield } from 'lucide-react';
 
 export default function ReportarContenidoPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -40,7 +32,7 @@ export default function ReportarContenidoPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setSubmitted(true);
     setIsLoading(false);
   };
@@ -53,13 +45,14 @@ export default function ReportarContenidoPage() {
             <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/30">
               <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">Reporte Recibido</h2>
-            <p className="text-sm text-muted-foreground">
-              Hemos recibido tu reporte de contenido. Nuestro equipo legal lo revisará y tomará
-              las acciones correspondientes conforme a la <strong>Ley 65-00</strong>.
+            <h2 className="text-foreground text-xl font-bold">Reporte Recibido</h2>
+            <p className="text-muted-foreground text-sm">
+              Hemos recibido tu reporte de contenido. Nuestro equipo legal lo revisará y tomará las
+              acciones correspondientes conforme a la <strong>Ley 65-00</strong>.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Recibirás una respuesta en tu correo electrónico dentro de <strong>5 días hábiles</strong>.
+            <p className="text-muted-foreground text-sm">
+              Recibirás una respuesta en tu correo electrónico dentro de{' '}
+              <strong>5 días hábiles</strong>.
             </p>
             <Button
               onClick={() => {
@@ -88,7 +81,7 @@ export default function ReportarContenidoPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">
+        <h1 className="text-foreground text-3xl font-bold">
           Reporte de Contenido / Solicitud de Retiro
         </h1>
         <p className="text-muted-foreground">
@@ -104,7 +97,7 @@ export default function ReportarContenidoPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Flag className="h-5 w-5 text-primary" />
+                <Flag className="text-primary h-5 w-5" />
                 Formulario de Reporte
               </CardTitle>
               <CardDescription>
@@ -122,12 +115,10 @@ export default function ReportarContenidoPage() {
                     type="url"
                     placeholder="https://okla.com.do/vehiculos/..."
                     value={formData.urlContenido}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, urlContenido: e.target.value }))
-                    }
+                    onChange={e => setFormData(prev => ({ ...prev, urlContenido: e.target.value }))}
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Pega la URL completa del listado o contenido que deseas reportar.
                   </p>
                 </div>
@@ -137,8 +128,8 @@ export default function ReportarContenidoPage() {
                   <Label htmlFor="tipoInfraccion">Tipo de infracción *</Label>
                   <Select
                     value={formData.tipoInfraccion}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, tipoInfraccion: value }))
+                    onValueChange={value =>
+                      setFormData(prev => ({ ...prev, tipoInfraccion: value }))
                     }
                     required
                   >
@@ -152,15 +143,9 @@ export default function ReportarContenidoPage() {
                       <SelectItem value="marca-registrada">
                         Uso no autorizado de marca registrada
                       </SelectItem>
-                      <SelectItem value="derechos-autor">
-                        Violación de derechos de autor
-                      </SelectItem>
-                      <SelectItem value="contenido-falso">
-                        Contenido falso o engañoso
-                      </SelectItem>
-                      <SelectItem value="suplantacion">
-                        Suplantación de identidad
-                      </SelectItem>
+                      <SelectItem value="derechos-autor">Violación de derechos de autor</SelectItem>
+                      <SelectItem value="contenido-falso">Contenido falso o engañoso</SelectItem>
+                      <SelectItem value="suplantacion">Suplantación de identidad</SelectItem>
                       <SelectItem value="datos-personales">
                         Publicación de datos personales sin consentimiento
                       </SelectItem>
@@ -176,9 +161,7 @@ export default function ReportarContenidoPage() {
                     id="descripcion"
                     placeholder="Describa detalladamente la infracción, incluyendo qué derechos se están violando y cómo puede verificarse la titularidad de los mismos..."
                     value={formData.descripcion}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, descripcion: e.target.value }))
-                    }
+                    onChange={e => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
                     required
                     rows={5}
                     className="resize-y"
@@ -186,8 +169,8 @@ export default function ReportarContenidoPage() {
                 </div>
 
                 {/* Datos del reclamante */}
-                <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-                  <h3 className="text-sm font-semibold text-foreground">Datos del reclamante</h3>
+                <div className="border-border bg-muted/30 space-y-4 rounded-lg border p-4">
+                  <h3 className="text-foreground text-sm font-semibold">Datos del reclamante</h3>
 
                   <div className="space-y-2">
                     <Label htmlFor="nombreReclamante">Nombre completo o razón social *</Label>
@@ -195,8 +178,8 @@ export default function ReportarContenidoPage() {
                       id="nombreReclamante"
                       placeholder="Nombre del titular de los derechos"
                       value={formData.nombreReclamante}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, nombreReclamante: e.target.value }))
+                      onChange={e =>
+                        setFormData(prev => ({ ...prev, nombreReclamante: e.target.value }))
                       }
                       required
                     />
@@ -210,8 +193,8 @@ export default function ReportarContenidoPage() {
                         type="email"
                         placeholder="tu@email.com"
                         value={formData.emailReclamante}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, emailReclamante: e.target.value }))
+                        onChange={e =>
+                          setFormData(prev => ({ ...prev, emailReclamante: e.target.value }))
                         }
                         required
                       />
@@ -223,8 +206,8 @@ export default function ReportarContenidoPage() {
                         type="tel"
                         placeholder="809-555-0123"
                         value={formData.telefonoReclamante}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
+                        onChange={e =>
+                          setFormData(prev => ({
                             ...prev,
                             telefonoReclamante: e.target.value,
                           }))
@@ -237,15 +220,15 @@ export default function ReportarContenidoPage() {
                     <input
                       type="checkbox"
                       checked={formData.esPropietario}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, esPropietario: e.target.checked }))
+                      onChange={e =>
+                        setFormData(prev => ({ ...prev, esPropietario: e.target.checked }))
                       }
                       className="text-primary focus:ring-primary border-border mt-0.5 h-4 w-4 rounded"
                       required
                     />
-                    <span className="text-xs text-muted-foreground">
-                      Declaro bajo juramento que soy el titular de los derechos infringidos o
-                      estoy autorizado para actuar en nombre del titular, y que la información
+                    <span className="text-muted-foreground text-xs">
+                      Declaro bajo juramento que soy el titular de los derechos infringidos o estoy
+                      autorizado para actuar en nombre del titular, y que la información
                       proporcionada es veraz y exacta. *
                     </span>
                   </label>
@@ -279,8 +262,8 @@ export default function ReportarContenidoPage() {
               <div className="flex items-start gap-3">
                 <Scale className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Ley 65-00</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <h3 className="text-foreground text-sm font-semibold">Ley 65-00</h3>
+                  <p className="text-muted-foreground mt-1 text-xs">
                     La <strong>Ley 65-00</strong> sobre Derecho de Autor en República Dominicana
                     protege las obras del intelecto humano. OKLA respeta los derechos de propiedad
                     intelectual y actuará conforme a esta ley ante reportes válidos.
@@ -294,10 +277,10 @@ export default function ReportarContenidoPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Shield className="mt-0.5 h-5 w-5 text-primary" />
+                <Shield className="text-primary mt-0.5 h-5 w-5" />
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground">ONDA</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <h3 className="text-foreground text-sm font-semibold">ONDA</h3>
+                  <p className="text-muted-foreground text-xs">
                     Oficina Nacional de Derecho de Autor – entidad encargada de la protección del
                     derecho de autor en República Dominicana.
                   </p>
@@ -305,7 +288,7 @@ export default function ReportarContenidoPage() {
                     href="https://www.onda.gob.do"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                    className="text-primary flex items-center gap-1.5 text-xs hover:underline"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     www.onda.gob.do
@@ -319,18 +302,18 @@ export default function ReportarContenidoPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-5 w-5 text-primary" />
+                <Mail className="text-primary mt-0.5 h-5 w-5" />
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
+                  <h3 className="text-foreground text-sm font-semibold">
                     Agente Designado para Takedowns
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Para solicitudes formales de retiro de contenido por infracción de propiedad
                     intelectual, contacte a:
                   </p>
                   <a
                     href="mailto:legal@okla.com.do"
-                    className="mt-1 block text-sm text-primary hover:underline"
+                    className="text-primary mt-1 block text-sm hover:underline"
                   >
                     legal@okla.com.do
                   </a>
@@ -345,8 +328,8 @@ export default function ReportarContenidoPage() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-400" />
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Importante</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <h3 className="text-foreground text-sm font-semibold">Importante</h3>
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Presentar reclamaciones falsas o de mala fe puede acarrear responsabilidad
                     legal. Solo envíe reportes cuando tenga motivos legítimos para creer que existe
                     una infracción.

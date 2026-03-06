@@ -13,7 +13,9 @@
 **ProConsumidor** es la entidad gubernamental dominicana encargada de proteger los derechos de los consumidores, creada por la **Ley 358-05** (Ley General de Protección de los Derechos del Consumidor o Usuario).
 
 ### ¿Aplica a OKLA?
+
 **Sí.** OKLA es un proveedor de servicios digitales que:
+
 - Cobra por servicios de publicación y suscripción
 - Facilita transacciones de compraventa de vehículos
 - Tiene usuarios consumidores (compradores y vendedores individuales)
@@ -31,6 +33,7 @@ Bajo la Ley 358-05, cualquier entidad que ofrezca **bienes o servicios** a consu
 - ✅ Información clara sobre precios
 
 ### Lo que falta:
+
 - ❌ Verificar si se requiere registro formal ante ProConsumidor
 - ❌ Mostrar badge/sello de ProConsumidor en el sitio web
 - ❌ Procedimiento formal de atención a reclamaciones alineado con la ley
@@ -96,6 +99,7 @@ Atentamente,
 Si ProConsumidor determina que se requiere registro:
 
 **Documentación generalmente requerida:**
+
 - Formulario de registro (proporcionado por ProConsumidor)
 - Copia del RNC
 - Copia del Registro Mercantil
@@ -107,6 +111,7 @@ Si ProConsumidor determina que se requiere registro:
 - Copia de la Política de Privacidad
 
 **Proceso:**
+
 1. Completar el formulario de registro
 2. Adjuntar documentación
 3. Presentar en oficinas de ProConsumidor o vía plataforma digital
@@ -177,34 +182,41 @@ NÚMERO DE REGISTRO PROCONSUMIDOR: [número, si aplica]
 #### c) Badge/Sello de ProConsumidor
 
 Si ProConsumidor otorga un sello o badge:
+
 1. Colocar en el **footer** de todas las páginas
 2. Incluir enlace al registro de ProConsumidor
-3. Si no hay sello oficial, incluir texto: *"Empresa sujeta a las disposiciones de la Ley 358-05 y supervisada por ProConsumidor"*
+3. Si no hay sello oficial, incluir texto: _"Empresa sujeta a las disposiciones de la Ley 358-05 y supervisada por ProConsumidor"_
 
 ---
 
 ## 4. Obligaciones Continuas
 
 ### Precios y Transparencia
+
 - Todos los precios deben ser claros y visibles **antes** de la compra
 - El ITBIS debe ser desglosado
 - No se permiten cargos ocultos
 - Los cambios de precio deben ser notificados con anticipación
 
 ### Política de Reembolso
+
 Documentar y publicar la política:
+
 - Condiciones bajo las cuales se otorga reembolso
 - Proceso para solicitar reembolso
 - Plazo de procesamiento (máximo 30 días)
 - Medio de reembolso (mismo medio de pago original)
 
 ### Publicidad
+
 - Toda publicidad debe ser veraz y no engañosa
 - No se pueden hacer promesas que no se puedan cumplir
 - Las condiciones de promociones deben ser claras
 
 ### Atención a Mediaciones de ProConsumidor
+
 Si un consumidor presenta queja ante ProConsumidor:
+
 1. ProConsumidor notificará a OKLA
 2. OKLA tiene plazo para responder (generalmente 10-15 días)
 3. Se puede convocar a mediación
@@ -214,13 +226,13 @@ Si un consumidor presenta queja ante ProConsumidor:
 
 ## 5. Sanciones por Incumplimiento
 
-| Infracción | Sanción |
-|------------|---------|
-| No atender reclamación | 1-10 salarios mínimos |
-| Publicidad engañosa | 3-50 salarios mínimos |
-| Cobros indebidos | Reembolso + indemnización |
-| Reincidencia | Duplicación de la multa |
-| Infracciones graves | Cierre temporal del establecimiento |
+| Infracción             | Sanción                             |
+| ---------------------- | ----------------------------------- |
+| No atender reclamación | 1-10 salarios mínimos               |
+| Publicidad engañosa    | 3-50 salarios mínimos               |
+| Cobros indebidos       | Reembolso + indemnización           |
+| Reincidencia           | Duplicación de la multa             |
+| Infracciones graves    | Cierre temporal del establecimiento |
 
 > **Nota:** Un salario mínimo del sector no sectorizado es aproximadamente RD$21,000 (2026).
 
@@ -228,15 +240,15 @@ Si un consumidor presenta queja ante ProConsumidor:
 
 ## 6. Información de Contacto ProConsumidor
 
-| Concepto | Detalle |
-|----------|---------|
-| **Teléfono** | 809-567-7755 |
-| **Línea gratuita** | 809-200-7755 |
-| **Website** | proconsumidor.gob.do |
-| **Email** | info@proconsumidor.gob.do |
-| **Dirección** | Av. 27 de Febrero #354, Plaza Merengue, Local 208, Santo Domingo |
-| **Horario** | Lunes a Viernes, 8:00 AM - 4:00 PM |
-| **Redes sociales** | @ProConsumidorRD |
+| Concepto           | Detalle                                                          |
+| ------------------ | ---------------------------------------------------------------- |
+| **Teléfono**       | 809-567-7755                                                     |
+| **Línea gratuita** | 809-200-7755                                                     |
+| **Website**        | proconsumidor.gob.do                                             |
+| **Email**          | info@proconsumidor.gob.do                                        |
+| **Dirección**      | Av. 27 de Febrero #354, Plaza Merengue, Local 208, Santo Domingo |
+| **Horario**        | Lunes a Viernes, 8:00 AM - 4:00 PM                               |
+| **Redes sociales** | @ProConsumidorRD                                                 |
 
 ---
 

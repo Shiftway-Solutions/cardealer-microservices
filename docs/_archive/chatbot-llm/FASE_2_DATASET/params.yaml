@@ -1,6 +1,0 @@
-# R19 (MLOps): DVC pipeline parameters for reproducible dataset generation.
-seed: 42
-num_conversations: 3000
-train_ratio: 0.8
-val_ratio: 0.1
-# test_ratio is implicit: 1 - train_ratio - val_ratio = 0.1

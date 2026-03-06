@@ -22,9 +22,9 @@
     <ProjectReference Include="../ContactService.Application/ContactService.Application.csproj" />
     <ProjectReference Include="../ContactService.Domain/ContactService.Domain.csproj" />
     <ProjectReference Include="../ContactService.Infrastructure/ContactService.Infrastructure.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
-    <ProjectReference Include="../../ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />

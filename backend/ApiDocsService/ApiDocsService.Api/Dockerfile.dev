@@ -1,8 +1,0 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
-WORKDIR /src
-COPY . .
-RUN dotnet restore "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj"
-RUN dotnet build "ApiDocsService/ApiDocsService.Api/ApiDocsService.Api.csproj" -c Release -o /app/build --no-restore
-WORKDIR /app/build
-EXPOSE 80
-ENTRYPOINT ["dotnet", "ApiDocsService.Api.dll"]

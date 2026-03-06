@@ -15,6 +15,7 @@ La **Ley 172-13** sobre Protección Integral de los Datos Personales establece e
 OKLA recopila, almacena y procesa datos personales de usuarios (compradores, vendedores y dealers), por lo que está **obligada** a registrar sus bases de datos.
 
 ### Consecuencias del incumplimiento:
+
 - Multas de **3 a 100 salarios mínimos** (Artículo 29, Ley 172-13)
 - Inhabilitación para operar bases de datos
 - Responsabilidad civil por daños a los titulares de datos
@@ -28,18 +29,19 @@ Se debe hacer un inventario completo de todas las bases de datos que contengan d
 
 ### Bases de Datos Principales
 
-| # | Base de Datos | Servicio | Datos que Contiene | Clasificación |
-|---|---------------|----------|-------------------|---------------|
-| 1 | **Usuarios/Autenticación** | AuthService | Nombre, email, teléfono, contraseña (hash), dirección IP | Datos personales |
-| 2 | **KYC/Identidad** | KYCService | Cédula, nombre legal, dirección, foto cédula, selfie | Datos sensibles |
-| 3 | **Contactos/Mensajes** | ContactService | Mensajes entre usuarios, historial de comunicación | Datos personales |
-| 4 | **Vehículos/Publicaciones** | VehiclesSaleService | Datos del vendedor, fotos, ubicación | Datos personales |
-| 5 | **Pagos/Facturación** | PaymentService | Datos de tarjeta (tokenizados), historial de pagos | Datos financieros |
-| 6 | **Notificaciones** | NotificationService | Preferencias, tokens de dispositivo, historial | Datos personales |
-| 7 | **Auditoría/Logs** | ErrorService | IPs, user agents, acciones del usuario | Datos de tráfico |
-| 8 | **Media/Archivos** | MediaService | Fotos de vehículos, documentos de identidad | Datos personales |
+| #   | Base de Datos               | Servicio            | Datos que Contiene                                       | Clasificación     |
+| --- | --------------------------- | ------------------- | -------------------------------------------------------- | ----------------- |
+| 1   | **Usuarios/Autenticación**  | AuthService         | Nombre, email, teléfono, contraseña (hash), dirección IP | Datos personales  |
+| 2   | **KYC/Identidad**           | KYCService          | Cédula, nombre legal, dirección, foto cédula, selfie     | Datos sensibles   |
+| 3   | **Contactos/Mensajes**      | ContactService      | Mensajes entre usuarios, historial de comunicación       | Datos personales  |
+| 4   | **Vehículos/Publicaciones** | VehiclesSaleService | Datos del vendedor, fotos, ubicación                     | Datos personales  |
+| 5   | **Pagos/Facturación**       | PaymentService      | Datos de tarjeta (tokenizados), historial de pagos       | Datos financieros |
+| 6   | **Notificaciones**          | NotificationService | Preferencias, tokens de dispositivo, historial           | Datos personales  |
+| 7   | **Auditoría/Logs**          | ErrorService        | IPs, user agents, acciones del usuario                   | Datos de tráfico  |
+| 8   | **Media/Archivos**          | MediaService        | Fotos de vehículos, documentos de identidad              | Datos personales  |
 
 ### Para cada base de datos se debe registrar:
+
 - Nombre de la base de datos
 - Finalidad del tratamiento
 - Tipos de datos almacenados
@@ -56,6 +58,7 @@ Se debe hacer un inventario completo de todas las bases de datos que contengan d
 ### Paso 1: Designar al Responsable (Semana 1)
 
 Antes de iniciar el registro, OKLA debe tener:
+
 - Un **Oficial de Protección de Datos (DPO)** designado (ver documento [03-DESIGNACION-DPO.md](03-DESIGNACION-DPO.md))
 - O un representante legal autorizado para el trámite
 
@@ -120,6 +123,7 @@ Procedimiento de eliminación: Solicitud del titular vía email/plataforma,
 ### Paso 4: Presentar ante INDOTEL (Semana 2-3)
 
 Opciones de presentación:
+
 1. **Presencial:** Llevar documentación a la sede de INDOTEL
    - Dirección: Av. Abraham Lincoln #962, Edificio INDOTEL, Santo Domingo
    - Horario: Lunes a Viernes, 8:30 AM - 4:30 PM
@@ -141,6 +145,7 @@ Opciones de presentación:
 ## 4. Obligaciones Post-Registro
 
 ### Actualización del Registro
+
 - **Obligación:** Notificar a INDOTEL cualquier cambio significativo en las bases de datos
 - **Plazo:** Dentro de los 30 días siguientes al cambio
 - **Cambios que requieren notificación:**
@@ -152,13 +157,16 @@ Opciones de presentación:
   - Eliminación de una base de datos
 
 ### Derechos de los Titulares
+
 INDOTEL puede canalizar solicitudes de titulares. OKLA debe garantizar:
+
 - **Acceso:** El titular puede solicitar ver sus datos (respuesta en 10 días hábiles)
 - **Rectificación:** Corrección de datos inexactos (5 días hábiles)
 - **Cancelación:** Eliminación de datos (15 días hábiles)
 - **Oposición:** Detener el tratamiento para fines específicos
 
 ### Auditorías de INDOTEL
+
 - INDOTEL puede realizar auditorías para verificar cumplimiento
 - Mantener documentación actualizada y accesible
 - Registros de acceso a datos personales (logs de auditoría)
@@ -168,6 +176,7 @@ INDOTEL puede canalizar solicitudes de titulares. OKLA debe garantizar:
 ## 5. Recomendaciones Técnicas para el Equipo
 
 ### Documentación de Medidas de Seguridad
+
 Preparar un documento técnico que incluya:
 
 ```
@@ -213,14 +222,14 @@ MEDIDAS DE SEGURIDAD — OKLA
 
 ## 6. Información de Contacto INDOTEL
 
-| Concepto | Detalle |
-|----------|---------|
-| **Teléfono** | 809-732-5555 |
-| **Website** | indotel.gob.do |
-| **Email** | info@indotel.gob.do |
-| **Dirección** | Av. Abraham Lincoln #962, Ensanche Serrallés, Santo Domingo |
-| **Horario** | Lunes a Viernes, 8:30 AM - 4:30 PM |
-| **Departamento** | Dirección de Protección al Usuario y Datos Personales |
+| Concepto         | Detalle                                                     |
+| ---------------- | ----------------------------------------------------------- |
+| **Teléfono**     | 809-732-5555                                                |
+| **Website**      | indotel.gob.do                                              |
+| **Email**        | info@indotel.gob.do                                         |
+| **Dirección**    | Av. Abraham Lincoln #962, Ensanche Serrallés, Santo Domingo |
+| **Horario**      | Lunes a Viernes, 8:30 AM - 4:30 PM                          |
+| **Departamento** | Dirección de Protección al Usuario y Datos Personales       |
 
 ---
 

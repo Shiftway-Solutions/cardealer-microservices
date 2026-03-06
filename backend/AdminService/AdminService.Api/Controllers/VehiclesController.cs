@@ -211,8 +211,11 @@ namespace AdminService.Api.Controllers
         {
             try
             {
-                // Publish the vehicle in VehiclesSaleService
-                var published = await _vehicleServiceClient.PublishVehicleAsync(vehicleId);
+                // Approve the vehicle in VehiclesSaleService (PendingReview → Active)
+                var approved = await _vehicleServiceClient.ApproveVehicleAsync(
+                    vehicleId,
+                    request?.ApprovedBy ?? "admin",
+                    request?.Reason);
 
                 var command = new ApproveVehicleCommand(
                     vehicleId,
@@ -224,7 +227,7 @@ namespace AdminService.Api.Controllers
 
                 var result = await _mediator.Send(command);
 
-                return Ok(new { Success = result && published, Message = "Vehicle approved successfully" });
+                return Ok(new { Success = result && approved, Message = "Vehicle approved successfully" });
             }
             catch (Exception ex)
             {

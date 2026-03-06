@@ -100,6 +100,7 @@ builder.Services.AddHostedService<ErrorCriticalEventConsumer>();
 builder.Services.AddHostedService<UserRegisteredNotificationConsumer>();
 builder.Services.AddHostedService<VehicleCreatedNotificationConsumer>();
 builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
+builder.Services.AddHostedService<InvoiceNotificationConsumer>(); // Factura electrónica e-CF por email
 builder.Services.AddHostedService<KYCStatusChangedNotificationConsumer>();
 builder.Services.AddHostedService<PriceAlertTriggeredConsumer>();
 builder.Services.AddHostedService<SavedSearchActivatedConsumer>();

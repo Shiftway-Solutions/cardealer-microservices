@@ -16,6 +16,8 @@ import {
 } from '@/components/vehicle-detail';
 import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { ReviewsSection } from '@/components/reviews';
+import FeaturedVehicles from '@/components/advertising/featured-vehicles';
+import { NativeBannerAd } from '@/components/advertising/native-ads';
 import type { Vehicle } from '@/types';
 
 interface VehicleDetailClientProps {
@@ -45,6 +47,9 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
               title={title}
               has360View={vehicle.has360View}
               hasVideo={vehicle.hasVideo}
+              vehicleMake={vehicle.make}
+              vehicleBodyStyle={vehicle.bodyType}
+              vehicleId={vehicle.id}
             />
 
             {/* Mobile: Header (hidden on desktop) */}
@@ -89,6 +94,46 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           >
             <SimilarVehicles vehicleId={vehicle.id} limit={4} />
           </React.Suspense>
+        </div>
+
+        {/* ── Advertising: Dealer CTA Banner ──────────────────────────────── */}
+        <div className="mt-8">
+          <NativeBannerAd
+            title="¿Buscas más opciones? Explora vehículos destacados"
+            subtitle="Descubre ofertas exclusivas de dealers verificados en todo el país."
+            ctaText="Ver Destacados"
+            ctaUrl="/vehiculos?sortBy=featured"
+            backgroundGradient="from-blue-600 to-indigo-700"
+            impressionToken={`detail-banner-${vehicle.id}`}
+          />
+        </div>
+
+        {/* ── Advertising: Vehículos Destacados (paid spots) ──────────────── */}
+        <div className="mt-8">
+          <FeaturedVehicles
+            title="⭐ Vehículos Destacados"
+            placementType="FeaturedSpot"
+            maxItems={4}
+            columns={4}
+          />
+        </div>
+
+        {/* ── Advertising: Vehículos Premium (paid spots) ─────────────────── */}
+        <div className="mt-8">
+          <FeaturedVehicles
+            title="💎 Vehículos Premium"
+            placementType="PremiumSpot"
+            maxItems={4}
+            columns={4}
+          />
+        </div>
+
+        {/* Ley 358-05 — Advertising disclosure */}
+        <div className="mt-4">
+          <p className="text-muted-foreground border-t pt-3 text-center text-[11px] leading-relaxed">
+            Los espacios de vehículos destacados y premium constituyen contenido publicitario
+            pagado. Precios de referencia, no incluyen ITBIS ni gastos de traspaso. Ley 358-05.
+          </p>
         </div>
 
         {/* Reviews — secondary section, below the fold */}

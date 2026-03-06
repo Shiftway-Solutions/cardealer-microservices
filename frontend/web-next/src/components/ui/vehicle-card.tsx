@@ -21,6 +21,7 @@ import { Badge } from './badge';
 import { DealRatingBadge, type DealRating } from './deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
+import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import type { VehicleCardData } from '@/types';
 
 export interface VehicleCardProps {
@@ -46,6 +47,14 @@ export function VehicleCard({
 }: VehicleCardProps) {
   const [imageError, setImageError] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+
+  // Compute fallback image based on vehicle properties
+  const fallbackImage = React.useMemo(
+    () => getVehicleFallbackImage(vehicle.id, vehicle.make),
+    [vehicle.id, vehicle.make]
+  );
+  // Use fallback when the original image fails or is not provided
+  const effectiveImageUrl = imageError || !vehicle.imageUrl ? fallbackImage : vehicle.imageUrl;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,25 +82,19 @@ export function VehicleCard({
       >
         {/* Image — optimized for slow internet (DR 3G/4G) */}
         <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 sm:h-32 sm:w-48 dark:from-slate-800 dark:to-slate-700">
-          {!imageError && vehicle.imageUrl ? (
-            <Image
-              src={vehicle.imageUrl}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              fill
-              sizes="(max-width: 640px) 100vw, 192px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              quality={75}
-              loading={priority ? 'eager' : 'lazy'}
-              priority={priority}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <Car className="h-12 w-12 text-slate-300 dark:text-slate-600" />
-            </div>
-          )}
+          <Image
+            src={effectiveImageUrl}
+            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+            fill
+            sizes="(max-width: 640px) 100vw, 192px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            quality={75}
+            loading={priority ? 'eager' : 'lazy'}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+            onError={() => setImageError(true)}
+          />
           {showDealRating && vehicle.dealRating && (
             <div className="absolute top-2 left-2">
               <DealRatingBadge rating={vehicle.dealRating as DealRating} size="sm" />
@@ -157,25 +160,19 @@ export function VehicleCard({
       >
         {/* Image — optimized for slow internet (DR 3G/4G) */}
         <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
-          {!imageError && vehicle.imageUrl ? (
-            <Image
-              src={vehicle.imageUrl}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              quality={75}
-              loading={priority ? 'eager' : 'lazy'}
-              priority={priority}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <Car className="h-14 w-14 text-slate-300 dark:text-slate-600" />
-            </div>
-          )}
+          <Image
+            src={effectiveImageUrl}
+            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            quality={75}
+            loading={priority ? 'eager' : 'lazy'}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+            onError={() => setImageError(true)}
+          />
         </div>
 
         {/* Content */}
@@ -202,28 +199,19 @@ export function VehicleCard({
     >
       {/* Image Section */}
       <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-700">
-        {!imageError && vehicle.imageUrl ? (
-          <Image
-            src={vehicle.imageUrl}
-            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            quality={75}
-            loading={priority ? 'eager' : 'lazy'}
-            priority={priority}
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2">
-            <Car className="h-16 w-16 text-slate-300 dark:text-slate-600" />
-            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-              {vehicle.make} {vehicle.model}
-            </span>
-          </div>
-        )}
+        <Image
+          src={effectiveImageUrl}
+          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          quality={75}
+          loading={priority ? 'eager' : 'lazy'}
+          priority={priority}
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+          onError={() => setImageError(true)}
+        />
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />

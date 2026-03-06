@@ -95,18 +95,16 @@ export function CookieConsentBanner() {
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="mx-auto max-w-4xl rounded-xl border border-border bg-card shadow-2xl">
+      <div className="border-border bg-card mx-auto max-w-4xl rounded-xl border shadow-2xl">
         {/* Main banner */}
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Cookie className="h-5 w-5 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <Cookie className="text-primary h-5 w-5" />
             </div>
             <div className="flex-1 space-y-2">
-              <h2 className="text-base font-semibold text-foreground">
-                Configuración de Cookies
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h2 className="text-foreground text-base font-semibold">Configuración de Cookies</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 Utilizamos cookies para mejorar tu experiencia en OKLA. De acuerdo con la{' '}
                 <strong>Ley 172-13</strong> de Protección de Datos Personales de República
                 Dominicana, necesitamos tu consentimiento para usar cookies no esenciales. Puedes
@@ -117,18 +115,18 @@ export function CookieConsentBanner() {
 
           {/* Cookie categories (expandable) */}
           {showConfig && (
-            <div className="mt-5 space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="border-border bg-muted/30 mt-5 space-y-3 rounded-lg border p-4">
               {/* Essential */}
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-foreground">Esenciales</span>
-                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    <Shield className="text-primary h-4 w-4" />
+                    <span className="text-foreground text-sm font-medium">Esenciales</span>
+                    <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
                       Siempre activas
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Necesarias para el funcionamiento del sitio. Incluyen autenticación, seguridad y
                     preferencias básicas.
                   </p>
@@ -137,19 +135,19 @@ export function CookieConsentBanner() {
               </div>
 
               {/* Preferences */}
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Preferencias</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground text-sm font-medium">Preferencias</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Permiten recordar tus configuraciones como idioma, región y personalización de
                       la interfaz.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.preferences}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, preferences: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, preferences: !!checked }))
                     }
                     aria-label="Cookies de preferencias"
                   />
@@ -157,19 +155,19 @@ export function CookieConsentBanner() {
               </div>
 
               {/* Analytics */}
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Analíticas</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Nos ayudan a entender cómo usas OKLA para mejorar el servicio. Incluyen
-                      Google Analytics y herramientas similares.
+                    <span className="text-foreground text-sm font-medium">Analíticas</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Nos ayudan a entender cómo usas OKLA para mejorar el servicio. Incluyen Google
+                      Analytics y herramientas similares.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.analytics}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, analytics: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, analytics: !!checked }))
                     }
                     aria-label="Cookies analíticas"
                   />
@@ -177,19 +175,19 @@ export function CookieConsentBanner() {
               </div>
 
               {/* Marketing */}
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Marketing</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground text-sm font-medium">Marketing</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Utilizadas para mostrarte publicidad relevante y medir la efectividad de
                       campañas publicitarias.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.marketing}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, marketing: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, marketing: !!checked }))
                     }
                     aria-label="Cookies de marketing"
                   />
@@ -274,7 +272,14 @@ export function CookieSettingsButton() {
   };
 
   if (showBanner) {
-    return <ReopenedBanner onClose={() => { setShowBanner(false); setHasConsent(true); }} />;
+    return (
+      <ReopenedBanner
+        onClose={() => {
+          setShowBanner(false);
+          setHasConsent(true);
+        }}
+      />
+    );
   }
 
   if (!hasConsent) return null;
@@ -282,7 +287,7 @@ export function CookieSettingsButton() {
   return (
     <button
       onClick={handleReopen}
-      className="fixed bottom-4 left-4 z-[9997] flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-lg transition-colors hover:bg-muted hover:text-foreground"
+      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed bottom-4 left-4 z-[9997] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
       aria-label="Configurar cookies"
     >
       <Cookie className="h-3.5 w-3.5" />
@@ -335,88 +340,86 @@ function ReopenedBanner({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="mx-auto max-w-4xl rounded-xl border border-border bg-card shadow-2xl">
+      <div className="border-border bg-card mx-auto max-w-4xl rounded-xl border shadow-2xl">
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Cookie className="h-5 w-5 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <Cookie className="text-primary h-5 w-5" />
             </div>
             <div className="flex-1 space-y-2">
-              <h2 className="text-base font-semibold text-foreground">
-                Configuración de Cookies
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h2 className="text-foreground text-base font-semibold">Configuración de Cookies</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 Modifica tus preferencias de cookies. Conforme a la <strong>Ley 172-13</strong>.
               </p>
             </div>
           </div>
 
           {showConfig && (
-            <div className="mt-5 space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="border-border bg-muted/30 mt-5 space-y-3 rounded-lg border p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-foreground">Esenciales</span>
-                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    <Shield className="text-primary h-4 w-4" />
+                    <span className="text-foreground text-sm font-medium">Esenciales</span>
+                    <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
                       Siempre activas
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Necesarias para el funcionamiento del sitio.
                   </p>
                 </div>
                 <Switch checked={true} disabled aria-label="Cookies esenciales siempre activas" />
               </div>
 
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Preferencias</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground text-sm font-medium">Preferencias</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Recordar configuraciones personales.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.preferences}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, preferences: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, preferences: !!checked }))
                     }
                     aria-label="Cookies de preferencias"
                   />
                 </div>
               </div>
 
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Analíticas</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground text-sm font-medium">Analíticas</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Ayudan a mejorar el servicio.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.analytics}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, analytics: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, analytics: !!checked }))
                     }
                     aria-label="Cookies analíticas"
                   />
                 </div>
               </div>
 
-              <div className="border-t border-border pt-3">
+              <div className="border-border border-t pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground">Marketing</span>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground text-sm font-medium">Marketing</span>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Publicidad y campañas relevantes.
                     </p>
                   </div>
                   <Switch
                     checked={preferences.marketing}
-                    onCheckedChange={(checked) =>
-                      setPreferences((prev) => ({ ...prev, marketing: !!checked }))
+                    onCheckedChange={checked =>
+                      setPreferences(prev => ({ ...prev, marketing: !!checked }))
                     }
                     aria-label="Cookies de marketing"
                   />

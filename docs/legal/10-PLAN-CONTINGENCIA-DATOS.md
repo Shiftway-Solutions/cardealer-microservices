@@ -13,6 +13,7 @@
 Es un documento que establece qué sucede con los datos personales de los usuarios si OKLA **cesa operaciones** de forma permanente. La Ley 172-13 establece que los responsables de bases de datos deben garantizar los derechos de los titulares en todo momento, incluyendo situaciones de cierre.
 
 ### ¿Por qué es necesario?
+
 - Los usuarios tienen derecho a saber qué pasará con sus datos
 - Es una obligación legal bajo la Ley 172-13
 - Genera confianza en la plataforma
@@ -20,6 +21,7 @@ Es un documento que establece qué sucede con los datos personales de los usuari
 - INDOTEL puede requerirlo como parte del registro de bases de datos
 
 ### Escenarios de cese:
+
 1. **Cierre voluntario:** Los fundadores deciden cerrar la empresa
 2. **Quiebra o insolvencia:** La empresa no puede continuar financieramente
 3. **Adquisición/Fusión:** Otra empresa adquiere OKLA
@@ -271,20 +273,21 @@ En caso de adquisición o fusión:
 
 ## 4. Responsabilidades por Rol
 
-| Rol | Responsabilidad |
-|-----|-----------------|
-| **Gerencia General** | Tomar la decisión, aprobar el plan, comunicación pública |
-| **DPO** | Supervisar cumplimiento de protección de datos, notificar a INDOTEL |
-| **CTO** | Ejecutar exportación, eliminación técnica, certificar destrucción |
-| **Abogado** | Verificar cumplimiento legal, gestionar obligaciones fiscales y judiciales |
-| **Contador** | Emitir últimas facturas, procesar reembolsos, retener datos fiscales |
-| **Soporte** | Atender consultas de usuarios durante el período de transición |
+| Rol                  | Responsabilidad                                                            |
+| -------------------- | -------------------------------------------------------------------------- |
+| **Gerencia General** | Tomar la decisión, aprobar el plan, comunicación pública                   |
+| **DPO**              | Supervisar cumplimiento de protección de datos, notificar a INDOTEL        |
+| **CTO**              | Ejecutar exportación, eliminación técnica, certificar destrucción          |
+| **Abogado**          | Verificar cumplimiento legal, gestionar obligaciones fiscales y judiciales |
+| **Contador**         | Emitir últimas facturas, procesar reembolsos, retener datos fiscales       |
+| **Soporte**          | Atender consultas de usuarios durante el período de transición             |
 
 ---
 
 ## 5. Pruebas del Plan
 
 Se recomienda realizar una **prueba anual** del plan:
+
 - Verificar que la herramienta de exportación funcione
 - Verificar que se puede eliminar datos de forma segura
 - Actualizar los contactos y responsables

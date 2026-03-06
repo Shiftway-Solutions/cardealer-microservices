@@ -32,7 +32,7 @@ interface OptimizedImageProps extends Omit<ImageProps, 'src'> {
 // CONSTANTS
 // =============================================================================
 
-const FALLBACK_IMAGE = '/images/placeholder-vehicle.jpg';
+const FALLBACK_IMAGE = '/placeholder-car.jpg';
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || '';
 
 // Blur data URL - a tiny blurred placeholder
