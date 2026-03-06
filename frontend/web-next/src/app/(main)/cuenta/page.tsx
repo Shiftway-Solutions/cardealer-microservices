@@ -666,7 +666,7 @@ function BuyerDashboard() {
       </div>
 
       {/* ── Activity Summary ───────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Link
           href="/cuenta/favoritos"
           className="border-border bg-card group rounded-xl border p-4 text-center transition-all hover:border-rose-300 hover:bg-rose-50"
@@ -755,7 +755,7 @@ function BuyerDashboard() {
           <CardTitle className="text-base">Acciones Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
             <BuyerQuickAction href="/vehiculos" icon={Search} label="Buscar" color="blue" />
             <BuyerQuickAction
               href="/cuenta/favoritos"

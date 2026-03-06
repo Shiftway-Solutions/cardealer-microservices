@@ -652,7 +652,8 @@ export default function AdminMaintenancePage() {
                         {getTypeBadge(window.type)}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {formatDateTime(window.scheduledStart)} — {formatDateTime(window.scheduledEnd)}
+                        {formatDateTime(window.scheduledStart)} —{' '}
+                        {formatDateTime(window.scheduledEnd)}
                         <span className="ml-2 text-xs">
                           ({formatDuration(window.scheduledStart, window.scheduledEnd)})
                         </span>

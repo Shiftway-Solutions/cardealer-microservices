@@ -1,9 +1,55 @@
+/**
+ * @module design-tokens
+ * @description OKLA Design System — Centralized design tokens
+ *
+ * This module is the single source of truth for all design values used across
+ * the OKLA vehicle marketplace frontend. It maps directly to the CSS custom
+ * properties defined in `globals.css` and the Tailwind theme.
+ *
+ * ## Usage
+ *
+ * ```tsx
+ * import { colors, typography, spacing } from '@/lib/design-tokens';
+ *
+ * // Use in inline styles (rare — prefer Tailwind classes)
+ * <div style={{ color: colors.primary[500] }} />
+ *
+ * // Use in JS logic (e.g., chart colors, canvas rendering)
+ * const chartColor = colors.deal.great;
+ *
+ * // Prefer Tailwind equivalents:
+ * // colors.primary[500] → className="text-primary"
+ * // colors.background.secondary → className="bg-secondary"
+ * ```
+ *
+ * ## CSS Variable Mapping
+ *
+ * | Token                  | CSS Variable        | Tailwind Class     |
+ * |------------------------|---------------------|--------------------|
+ * | `colors.primary[500]`  | `--primary`         | `text-primary`     |
+ * | `colors.text.primary`  | `--foreground`      | `text-foreground`  |
+ * | `colors.text.secondary`| `--muted-foreground`| `text-muted-foreground` |
+ * | `colors.border.default`| `--border`          | `border-border`    |
+ * | `colors.background.*`  | `--background`      | `bg-background`    |
+ *
+ * @see {@link file://./../../app/globals.css} for CSS custom property definitions
+ */
+
 // =============================================================================
 // OKLA Design System - Design Tokens
 // =============================================================================
 // Sistema de diseño centralizado para toda la aplicación
 // Colores, tipografía, espaciado, sombras, animaciones
 
+/**
+ * Color palette for the OKLA brand and UI.
+ *
+ * - **primary**: Emerald green `#00A870` — brand color used for CTAs, links, active states
+ * - **secondary**: Navy blue — used for secondary actions and informational elements
+ * - **neutral**: Gray scale for text, borders, backgrounds
+ * - **semantic**: success/warning/error/info for feedback states
+ * - **deal**: Price rating system colors (great → high)
+ */
 export const colors = {
   // Brand Colors - Verde Esmeralda OKLA
   primary: {
@@ -103,6 +149,7 @@ export const colors = {
   },
 } as const;
 
+/** Typography scale — font families, sizes, weights, and line heights. */
 export const typography = {
   fontFamily: {
     sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -128,6 +175,7 @@ export const typography = {
   },
 } as const;
 
+/** Spacing scale (rem-based) for consistent padding, margins, and gaps. */
 export const spacing = {
   0: '0',
   0.5: '0.125rem', // 2px
@@ -154,6 +202,7 @@ export const spacing = {
   32: '8rem', // 128px
 } as const;
 
+/** Border radius values for consistent rounded corners across the UI. */
 export const borderRadius = {
   none: '0',
   sm: '0.125rem', // 2px
@@ -166,6 +215,7 @@ export const borderRadius = {
   full: '9999px',
 } as const;
 
+/** Shadow tokens for elevation — from subtle card shadows to prominent modals. */
 export const shadows = {
   none: 'none',
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
@@ -181,6 +231,7 @@ export const shadows = {
   cardActive: '0 4px 12px rgba(0, 168, 112, 0.15)',
 } as const;
 
+/** Transition presets for consistent animation timing and easing. */
 export const transitions = {
   duration: {
     fast: '150ms',
@@ -198,6 +249,7 @@ export const transitions = {
   },
 } as const;
 
+/** Responsive breakpoints — matches Tailwind's default breakpoint system. */
 export const breakpoints = {
   sm: '640px',
   md: '768px',
@@ -206,6 +258,7 @@ export const breakpoints = {
   '2xl': '1536px',
 } as const;
 
+/** Z-index scale for layering — dropdown < sticky < modal < toast. */
 export const zIndex = {
   base: 0,
   dropdown: 1000,
@@ -218,7 +271,8 @@ export const zIndex = {
   toast: 1080,
 } as const;
 
-// Export all tokens as a single object
+// Export all tokens as a single object for convenience
+/** Combined design token object — import individual tokens for tree-shaking. */
 export const designTokens = {
   colors,
   typography,

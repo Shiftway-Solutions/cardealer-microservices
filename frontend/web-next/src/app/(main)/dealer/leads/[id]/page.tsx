@@ -400,7 +400,9 @@ function LeadDetailContent() {
               {lead.convertedAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Convertido</span>
-                  <span className="text-primary font-medium">{formatDateTime(lead.convertedAt)}</span>
+                  <span className="text-primary font-medium">
+                    {formatDateTime(lead.convertedAt)}
+                  </span>
                 </div>
               )}
             </CardContent>

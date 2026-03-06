@@ -228,8 +228,8 @@ export default function AdminUsersPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <UserCheck className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <UserCheck className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats?.active.toLocaleString() || 0}</p>
@@ -401,7 +401,7 @@ export default function AdminUsersPage() {
                             {verifyMutation.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <UserCheck className="h-4 w-4 text-primary" />
+                              <UserCheck className="text-primary h-4 w-4" />
                             )}
                           </Button>
                         )}
@@ -422,7 +422,7 @@ export default function AdminUsersPage() {
                             onClick={() => handleStatusChange(user.id, 'active')}
                             disabled={updateStatusMutation.isPending}
                           >
-                            <UserCheck className="h-4 w-4 text-primary" />
+                            <UserCheck className="text-primary h-4 w-4" />
                           </Button>
                         )}
                         <AlertDialog>

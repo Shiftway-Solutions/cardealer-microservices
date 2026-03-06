@@ -258,8 +258,8 @@ export default function BillingHistoryPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-primary/10 p-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
+                <div className="bg-primary/10 rounded-lg p-2">
+                  <DollarSign className="text-primary h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm">Total Pagado</p>
