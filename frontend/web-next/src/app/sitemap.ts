@@ -213,6 +213,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Brand landing pages (SEO-optimized dedicated pages)
+  const brandLandingPages: MetadataRoute.Sitemap = popularMakes.map(make => ({
+    url: `${SITE_URL}/marcas/${make}`,
+    lastModified: now,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
+
   // Body type pages
   const bodyTypes = ['sedan', 'suv', 'camioneta', 'pickup', 'coupe', 'hatchback', 'van'];
 
@@ -264,6 +272,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticPages,
     ...makePages,
+    ...brandLandingPages,
     ...bodyTypePages,
     ...provincePages,
     ...vehiclePages,
