@@ -58,7 +58,13 @@ const publicRoutes = [
   '/prensa',
   '/precios',
   '/guias',
+  '/guias/[^/]+$', // /guias/[slug]
   '/blog',
+  '/blog/[^/]+$', // /blog/[slug]
+  '/marcas',
+  '/marcas/[^/]+$', // /marcas/[marca]
+  '/herramientas',
+  '/herramientas/[^/]+$', // /herramientas/calculadora-financiamiento, etc.
   '/faq',
   '/vender', // Landing page is public
   '/auth/callback', // OAuth callback routes (must be public)
@@ -619,4 +625,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|images|fonts|.*\\..*).*)',
   ],
 };
-
