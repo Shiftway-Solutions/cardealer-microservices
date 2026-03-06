@@ -40,6 +40,7 @@ import {
   Sparkles,
   UserPlus,
   AlertTriangle,
+  Search,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -208,6 +209,8 @@ function getDropdownItems(
   const consumerBaseItems = [
     { href: '/cuenta', label: 'Mi Cuenta', icon: User },
     { href: '/cuenta/favoritos', label: 'Favoritos', icon: Heart },
+    { href: '/cuenta/historial', label: 'Vistos Recientemente', icon: Eye },
+    { href: '/cuenta/busquedas', label: 'Búsquedas Guardadas', icon: Search },
   ];
 
   // ADMIN / PLATFORM_EMPLOYEE - Solo opciones de administración (NO consume la plataforma)

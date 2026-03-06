@@ -12,6 +12,13 @@ export const metadata = {
   title: 'Preguntas Frecuentes | OKLA',
   description:
     'Respuestas a las preguntas más comunes sobre OKLA: cómo comprar, vender, publicar anuncios, pagos y seguridad en el marketplace de vehículos de RD.',
+  keywords: [
+    'preguntas frecuentes OKLA',
+    'FAQ vehículos RD',
+    'ayuda marketplace autos',
+    'comprar vehículo dominicana',
+    'vender carro OKLA',
+  ],
 };
 
 const faqs = [
@@ -94,8 +101,30 @@ const faqs = [
 ];
 
 export default function FaqPage() {
+  // Generate FAQPage JSON-LD schema dynamically from the faqs array
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.flatMap(section =>
+      section.questions.map(item => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      }))
+    ),
+  };
+
   return (
     <div className="bg-muted/50 min-h-screen">
+      {/* FAQPage Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-14 text-white">
         <div className="container mx-auto px-4">

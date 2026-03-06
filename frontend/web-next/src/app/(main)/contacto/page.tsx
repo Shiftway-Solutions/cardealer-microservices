@@ -11,6 +11,9 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,16 +24,29 @@ import { sanitizeText, sanitizeEmail, sanitizePhone } from '@/lib/security/sanit
 import { csrfFetch } from '@/lib/security/csrf';
 
 // =============================================================================
-// TYPES
+// VALIDATION SCHEMA
 // =============================================================================
 
-interface ContactFormData {
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-}
+const contactSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  email: z.string().email('Correo electrónico inválido'),
+  phone: z
+    .string()
+    .optional()
+    .refine(val => !val || /^[\d\s()\-+]{7,20}$/.test(val), {
+      message: 'Formato de teléfono inválido',
+    }),
+  subject: z.string().min(1, 'Selecciona un asunto'),
+  message: z
+    .string()
+    .min(10, 'El mensaje debe tener al menos 10 caracteres')
+    .max(5000, 'El mensaje no puede exceder 5000 caracteres'),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 // =============================================================================
 // MAIN COMPONENT
@@ -38,27 +54,31 @@ interface ContactFormData {
 
 export default function ContactoPage() {
   const config = useSiteConfig();
-  const [formData, setFormData] = React.useState<ContactFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: '',
+    },
+  });
 
+  const onSubmit = async (data: ContactFormData) => {
     // Sanitize all inputs before sending
     const sanitizedData = {
-      name: sanitizeText(formData.name.trim(), { maxLength: 100 }),
-      email: sanitizeEmail(formData.email),
-      phone: formData.phone ? sanitizePhone(formData.phone) : '',
-      subject: sanitizeText(formData.subject.trim(), { maxLength: 200 }),
-      message: sanitizeText(formData.message.trim(), { maxLength: 5000 }),
+      name: sanitizeText(data.name.trim(), { maxLength: 100 }),
+      email: sanitizeEmail(data.email),
+      phone: data.phone ? sanitizePhone(data.phone) : '',
+      subject: sanitizeText(data.subject.trim(), { maxLength: 200 }),
+      message: sanitizeText(data.message.trim(), { maxLength: 5000 }),
     };
 
     try {
@@ -77,15 +97,7 @@ export default function ContactoPage() {
     } catch (err) {
       const error = err as { message?: string };
       toast.error(error?.message || 'Error al enviar el mensaje. Inténtalo de nuevo.');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   if (isSubmitted) {
@@ -225,30 +237,32 @@ export default function ContactoPage() {
                     Completa el formulario y te responderemos en menos de 24 horas.
                   </p>
 
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                  <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
                     <div className="grid gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="name">Nombre completo *</Label>
                         <Input
                           id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
+                          {...register('name')}
                           placeholder="Tu nombre"
-                          required
+                          aria-invalid={!!errors.name}
                         />
+                        {errors.name && (
+                          <p className="text-sm text-red-500">{errors.name.message}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Correo electrónico *</Label>
                         <Input
                           id="email"
-                          name="email"
                           type="email"
-                          value={formData.email}
-                          onChange={handleChange}
+                          {...register('email')}
                           placeholder="tu@email.com"
-                          required
+                          aria-invalid={!!errors.email}
                         />
+                        {errors.email && (
+                          <p className="text-sm text-red-500">{errors.email.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -257,22 +271,21 @@ export default function ContactoPage() {
                         <Label htmlFor="phone">Teléfono</Label>
                         <Input
                           id="phone"
-                          name="phone"
                           type="tel"
-                          value={formData.phone}
-                          onChange={handleChange}
+                          {...register('phone')}
                           placeholder="(809) 555-1234"
                         />
+                        {errors.phone && (
+                          <p className="text-sm text-red-500">{errors.phone.message}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="subject">Asunto *</Label>
                         <select
                           id="subject"
-                          name="subject"
-                          value={formData.subject}
-                          onChange={handleChange}
+                          {...register('subject')}
                           className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
-                          required
+                          aria-invalid={!!errors.subject}
                         >
                           <option value="">Seleccionar asunto...</option>
                           <option value="general">Consulta general</option>
@@ -282,6 +295,9 @@ export default function ContactoPage() {
                           <option value="complaint">Queja o reclamo</option>
                           <option value="suggestion">Sugerencia</option>
                         </select>
+                        {errors.subject && (
+                          <p className="text-sm text-red-500">{errors.subject.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -289,14 +305,15 @@ export default function ContactoPage() {
                       <Label htmlFor="message">Mensaje *</Label>
                       <textarea
                         id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
+                        {...register('message')}
                         placeholder="Escribe tu mensaje aquí..."
                         rows={5}
                         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
-                        required
+                        aria-invalid={!!errors.message}
                       />
+                      {errors.message && (
+                        <p className="text-sm text-red-500">{errors.message.message}</p>
+                      )}
                     </div>
 
                     <Button

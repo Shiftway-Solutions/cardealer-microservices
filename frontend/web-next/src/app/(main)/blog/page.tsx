@@ -5,82 +5,17 @@
  */
 
 import Link from 'next/link';
-import { BookOpen, Car, TrendingUp, Shield, ArrowRight, Rss } from 'lucide-react';
+import { ArrowRight, Rss } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { blogPosts, blogCategories } from './blog-data';
 
 export const metadata = {
   title: 'Blog | OKLA - Noticias del Mercado Automotriz RD',
   description:
     'Noticias, consejos y tendencias del mercado automotriz de República Dominicana. El blog oficial de OKLA.',
 };
-
-const featuredPosts = [
-  {
-    category: 'Mercado',
-    title: 'Los 10 vehículos más vendidos en República Dominicana en 2025',
-    excerpt:
-      'Descubre qué modelos dominaron las ventas en el mercado automotriz dominicano el año pasado y qué esperar para 2026.',
-    date: 'Feb 15, 2026',
-    readTime: '6 min',
-    icon: TrendingUp,
-  },
-  {
-    category: 'Consejos',
-    title: 'Cómo negociar el precio de un vehículo usado en RD',
-    excerpt:
-      'Guía práctica para sacar el mejor precio al comprar tu próximo vehículo. Técnicas de negociación que realmente funcionan.',
-    date: 'Feb 10, 2026',
-    readTime: '8 min',
-    icon: Car,
-  },
-  {
-    category: 'Seguridad',
-    title: 'Estafas más comunes al comprar vehículos online y cómo evitarlas',
-    excerpt:
-      'Aprende a identificar las señales de alerta más frecuentes y protégete de fraudes en el mercado de vehículos usados.',
-    date: 'Feb 5, 2026',
-    readTime: '5 min',
-    icon: Shield,
-  },
-  {
-    category: 'Tecnología',
-    title: 'Vehículos eléctricos en RD: ¿Es el momento de hacer el cambio?',
-    excerpt:
-      'Analizamos el estado actual de la infraestructura de carga en República Dominicana y si vale la pena invertir en un EV.',
-    date: 'Ene 28, 2026',
-    readTime: '10 min',
-    icon: Car,
-  },
-  {
-    category: 'Finanzas',
-    title: 'Financiamiento vehicular en RD: guía de tasas y bancos 2026',
-    excerpt:
-      'Comparativa de las mejores opciones de financiamiento para comprar tu vehículo. Banco Popular, BHD León, Banreservas y más.',
-    date: 'Ene 20, 2026',
-    readTime: '7 min',
-    icon: TrendingUp,
-  },
-  {
-    category: 'Dealers',
-    title: 'Cómo los dealers están transformando su negocio con tecnología',
-    excerpt:
-      'El uso de plataformas digitales está cambiando la forma en que los dealers en RD venden sus inventarios. Casos de éxito.',
-    date: 'Ene 15, 2026',
-    readTime: '6 min',
-    icon: BookOpen,
-  },
-];
-
-const categories = [
-  { name: 'Todos', count: 24 },
-  { name: 'Mercado', count: 8 },
-  { name: 'Consejos', count: 6 },
-  { name: 'Seguridad', count: 4 },
-  { name: 'Tecnología', count: 4 },
-  { name: 'Finanzas', count: 2 },
-];
 
 export default function BlogPage() {
   return (
@@ -112,41 +47,35 @@ export default function BlogPage() {
             {/* Posts */}
             <div className="flex-1">
               <div className="grid gap-5 sm:grid-cols-2">
-                {featuredPosts.map((post, index) => (
-                  <Card
-                    key={index}
-                    className="border-border hover:border-primary group cursor-pointer transition-colors"
-                  >
-                    <CardContent className="pt-5">
-                      <div className="mb-3 flex items-center justify-between">
-                        <Badge variant="secondary">{post.category}</Badge>
-                        <span className="text-muted-foreground text-xs">
-                          {post.readTime} lectura
-                        </span>
-                      </div>
-                      <h2 className="text-foreground group-hover:text-primary line-clamp-2 font-semibold transition-colors">
-                        {post.title}
-                      </h2>
-                      <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
-                        {post.excerpt}
-                      </p>
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="text-muted-foreground text-xs">{post.date}</span>
-                        <span className="text-primary flex items-center gap-1 text-xs font-medium">
-                          Leer más
-                          <ArrowRight className="h-3 w-3" />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {blogPosts.map((post) => (
+                  <Link key={post.slug} href={`/blog/${post.slug}`}>
+                    <Card className="border-border hover:border-primary group h-full cursor-pointer transition-colors">
+                      <CardContent className="pt-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <Badge variant="secondary">{post.category}</Badge>
+                          <span className="text-muted-foreground text-xs">
+                            {post.readTime} lectura
+                          </span>
+                        </div>
+                        <h2 className="text-foreground group-hover:text-primary line-clamp-2 font-semibold transition-colors">
+                          {post.title}
+                        </h2>
+                        <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                          {post.excerpt}
+                        </p>
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className="text-muted-foreground text-xs">{post.date}</span>
+                          <span className="text-primary flex items-center gap-1 text-xs font-medium">
+                            Leer más
+                            <ArrowRight className="h-3 w-3" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
 
-              <div className="mt-8 text-center">
-                <Button variant="outline" size="lg">
-                  Cargar Más Artículos
-                </Button>
-              </div>
             </div>
 
             {/* Sidebar */}
@@ -155,7 +84,7 @@ export default function BlogPage() {
               <div className="border-border bg-card rounded-lg border p-5 shadow-sm">
                 <h3 className="text-foreground mb-4 font-semibold">Categorías</h3>
                 <div className="space-y-1">
-                  {categories.map((cat, index) => (
+                  {blogCategories.map((cat, index) => (
                     <button
                       key={index}
                       className="hover:bg-muted flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors"
