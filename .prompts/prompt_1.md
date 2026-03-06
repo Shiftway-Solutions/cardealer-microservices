@@ -31,6 +31,13 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ## 📋 Sprints Completados
 
+### Sprint 12 — Security, Accessibility & Design Token Cleanup (2026-03-06) ✅
+**Commit:** `6b00b544` | **Build:** 213 páginas, 12.5s
+
+- [x] **Task 58**: csrfFetch en admin/okla-score (POST configs), view360-step (POST upload), push-notifications (POST subscribe/unsubscribe) — 4 endpoints
+- [x] **Task 59**: aria-label en 19 icon-only buttons: mensajes (7), leads (4), preview (4), calendario (4)
+- [x] **Task 60-61**: Limpieza masiva de ~200+ hex colors → design tokens en 70+ archivos
+
 ### Sprint 11 — Security, Forms & Design Tokens (2026-03-06) ✅
 
 **Commit:** `a541e0cb` | **Build:** 213 páginas, 17.3s
