@@ -4,7 +4,7 @@ export default function VehicleDetailLoading() {
   return (
     <div className="min-h-screen">
       {/* Breadcrumb skeleton */}
-      <div className="border-b border-border bg-muted/30 py-3">
+      <div className="border-border bg-muted/30 border-b py-3">
         <div className="container mx-auto flex items-center gap-2 px-4">
           <Skeleton className="h-4 w-12" />
           <Skeleton className="h-4 w-20" />
@@ -37,7 +37,7 @@ export default function VehicleDetailLoading() {
             {/* Specs grid */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-border p-3">
+                <div key={i} className="border-border rounded-lg border p-3">
                   <Skeleton className="mb-2 h-4 w-16" />
                   <Skeleton className="h-5 w-24" />
                 </div>
@@ -55,7 +55,7 @@ export default function VehicleDetailLoading() {
 
           {/* Sidebar — Seller card */}
           <div className="space-y-4">
-            <div className="rounded-xl border border-border p-6">
+            <div className="border-border rounded-xl border p-6">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-12 w-12 rounded-full" />
                 <div className="space-y-2">
@@ -71,7 +71,7 @@ export default function VehicleDetailLoading() {
             </div>
 
             {/* Monthly payment skeleton */}
-            <div className="rounded-xl border border-border p-4">
+            <div className="border-border rounded-xl border p-4">
               <Skeleton className="mb-2 h-5 w-40" />
               <Skeleton className="h-8 w-32" />
               <Skeleton className="mt-2 h-4 w-full" />

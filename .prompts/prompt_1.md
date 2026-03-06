@@ -13,7 +13,7 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 en progreso.
+**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado.
 
 ---
 
@@ -31,7 +31,7 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-## 🚀 SPRINT 4 — SEO Completeness + Content + Performance (6 marzo 2026)
+## ✅ SPRINT 4 — SEO Completeness + Content + Performance (6 marzo 2026)
 
 ### Análisis previo: Sitemap incompleto + guías rotas + loading states faltantes
 
@@ -44,12 +44,15 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                          | Estado       | Notas                                                                                                |
-| --- | ---------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
-| 26  | Completar sitemap.xml con páginas faltantes    | ⏳ Pendiente | Agregar /faq, /empleos, /prensa, /herramientas/\*, blog/[slug] dinámico                              |
-| 27  | Crear contenido de guías (/guias/[slug]) SSG   | ⏳ Pendiente | 6 guías con contenido real, generateStaticParams, arreglar links en /guias                           |
-| 28  | Loading states para páginas críticas           | ⏳ Pendiente | /vehiculos/[slug]/loading.tsx, /blog/loading.tsx, /blog/[slug]/loading.tsx                           |
-| 29  | Link calculadora financiamiento desde vehículo | ⏳ Pendiente | Agregar CTA "Calcular cuota" en vehicle-detail-client.tsx → /herramientas/calculadora-financiamiento |
+| #   | Tarea                                          | Estado                         | Notas                                                                                         |
+| --- | ---------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------- |
+| 26  | Completar sitemap.xml con páginas faltantes    | ✅ Ya existía                  | Sitemap ya incluye /faq, /empleos, /prensa, /herramientas/\*, blog/[slug] dinámico, blogPages |
+| 27  | Crear contenido de guías (/guias/[slug]) SSG   | ✅ PM creó + Commit `3832b635` | guide-data.ts (6 guías), [slug]/page.tsx con SSG, links actualizados en listing               |
+| 28  | Loading states para páginas críticas           | ✅ PM creó + Commit `3832b635` | vehiculos/[slug]/loading.tsx, blog/loading.tsx, blog/[slug]/loading.tsx                       |
+| 29  | Link calculadora financiamiento desde vehículo | ✅ PM creó + Commit `3832b635` | "Calcular cuota real →" en VehicleHeader con ?precio= query param                             |
+
+**Fix adicional**: Auth layout ahora usa PLATFORM_STATS en vez de stats hardcodeadas
+**Commit**: `3832b635` pushed to main
 
 ---
 

@@ -4,7 +4,7 @@ export default function BlogPostLoading() {
   return (
     <div className="min-h-screen">
       {/* Breadcrumb skeleton */}
-      <div className="border-b border-border bg-muted/30 py-3">
+      <div className="border-border bg-muted/30 border-b py-3">
         <div className="container mx-auto flex items-center gap-2 px-4">
           <Skeleton className="h-4 w-12" />
           <Skeleton className="h-4 w-12" />

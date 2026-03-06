@@ -15,7 +15,7 @@ export default function BlogLoading() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="overflow-hidden rounded-xl border border-border">
+            <div key={i} className="border-border overflow-hidden rounded-xl border">
               <Skeleton className="aspect-[16/9] w-full" />
               <div className="space-y-3 p-5">
                 <Skeleton className="h-4 w-20" />
