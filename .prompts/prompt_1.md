@@ -15,7 +15,29 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-9 completados.
+**Estado**: Sprint 1-10 completados.
+
+---
+
+## ✅ SPRINT 10 — Error Boundaries + Blog SEO + Security Cleanup + A11y (6 marzo 2026)
+
+### Análisis previo: Auditoría de error recovery, metadata SEO, seguridad, accesibilidad
+
+**Hallazgos:**
+
+- /blog/[slug] y /guias/[slug] sin error.tsx — últimas rutas dinámicas sin recuperación de error
+- /blog/[slug] metadata falta canonical URL, OG locale, siteName — SEO incompleto
+- console.log leaking sanitized user data en reclamaciones y reportar-contenido — riesgo privacidad
+- 11 icon-only buttons en admin/contenido sin aria-label — WCAG 4.1.2 violación
+
+---
+
+| #   | Tarea                                              | Estado               | Notas                                                           |
+| --- | -------------------------------------------------- | -------------------- | --------------------------------------------------------------- |
+| 50  | blog/[slug]/error.tsx + guias/[slug]/error.tsx      | ✅ Commit pendiente  | Branded error boundaries con retry + back-to-listing CTA        |
+| 51  | Blog metadata: canonical, OG locale/siteName        | ✅ Commit pendiente  | alternates.canonical, openGraph.url/locale/siteName              |
+| 52  | Remove console.log in reclamaciones + reportar      | ✅ Commit pendiente  | Eliminados console.log de datos sanitizados (privacy leak)      |
+| 53  | Admin contenido: aria-label en icon buttons         | ✅ Commit pendiente  | 11 buttons con aria-label descriptivo (WCAG 4.1.2 fix)          |
 
 ---
 
@@ -31,12 +53,12 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                            | Estado               | Notas                                                             |
-| --- | ------------------------------------------------ | -------------------- | ----------------------------------------------------------------- |
-| 46  | dealers/[slug]/loading.tsx — skeleton de perfil  | ✅ Commit `341e66ed` | Cover + logo + tabs + sidebar, 115 líneas                         |
-| 47  | marcas/[marca]/loading.tsx — skeleton de marca   | ✅ Commit `341e66ed` | Hero gradient + grid + SEO section, 68 líneas                     |
-| 48  | Image sizes prop en cuenta/page + dealer-profile | ✅ Commit `341e66ed` | cuenta "96px", dealer cover "100vw"                               |
-| 49  | marcas/[marca]/error.tsx — error boundary        | ✅ Commit `341e66ed` | AlertTriangle, retry, /marcas CTA, error digest, 62 líneas        |
+| #   | Tarea                                            | Estado               | Notas                                                      |
+| --- | ------------------------------------------------ | -------------------- | ---------------------------------------------------------- |
+| 46  | dealers/[slug]/loading.tsx — skeleton de perfil  | ✅ Commit `341e66ed` | Cover + logo + tabs + sidebar, 115 líneas                  |
+| 47  | marcas/[marca]/loading.tsx — skeleton de marca   | ✅ Commit `341e66ed` | Hero gradient + grid + SEO section, 68 líneas              |
+| 48  | Image sizes prop en cuenta/page + dealer-profile | ✅ Commit `341e66ed` | cuenta "96px", dealer cover "100vw"                        |
+| 49  | marcas/[marca]/error.tsx — error boundary        | ✅ Commit `341e66ed` | AlertTriangle, retry, /marcas CTA, error digest, 62 líneas |
 
 **Build verificado**: `pnpm build` exitoso — 213 páginas, 29.0s compilación
 **Commit**: `341e66ed` pushed to main

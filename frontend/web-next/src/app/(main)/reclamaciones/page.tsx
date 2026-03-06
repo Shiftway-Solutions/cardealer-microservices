@@ -97,7 +97,6 @@ export default function ReclamacionesPage() {
     try {
       // TODO: Replace with csrfFetch when API endpoint is ready
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Sanitized reclamación data:', sanitizedData);
       const ticket = `OKLA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       setTicketNumber(ticket);
       setSubmitted(true);

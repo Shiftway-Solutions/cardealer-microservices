@@ -128,16 +128,17 @@ export default function AdminContentPage() {
                       {getStatusBadge(banner.status)}
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Ver banner">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Editar banner">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="text-red-500"
+                        aria-label="Eliminar banner"
                         onClick={() => deleteBanner.mutate(banner.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -188,10 +189,10 @@ export default function AdminContentPage() {
                       {getStatusBadge(page.status)}
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Ver página">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Editar página">
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -239,13 +240,13 @@ export default function AdminContentPage() {
                   <div className="flex items-center gap-4">
                     {getStatusBadge(post.status)}
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Ver artículo">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Editar artículo">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-red-500">
+                      <Button variant="ghost" size="icon" className="text-red-500" aria-label="Eliminar artículo">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

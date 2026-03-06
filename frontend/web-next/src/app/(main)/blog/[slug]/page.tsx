@@ -34,6 +34,8 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return { title: 'Artículo no encontrado | OKLA' };
 
+  const url = `https://okla.com.do/blog/${slug}`;
+
   return {
     title: `${post.title} | Blog OKLA`,
     description: post.excerpt,
@@ -41,10 +43,13 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.excerpt,
+      url,
       images: [{ url: post.imageUrl, width: 1200, height: 600, alt: post.title }],
       type: 'article',
       publishedTime: post.date,
       authors: [post.author],
+      locale: 'es_DO',
+      siteName: 'OKLA',
     },
     twitter: {
       card: 'summary_large_image',
@@ -52,6 +57,7 @@ export async function generateMetadata({
       description: post.excerpt,
       images: [post.imageUrl],
     },
+    alternates: { canonical: url },
   };
 }
 

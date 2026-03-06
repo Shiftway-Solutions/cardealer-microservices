@@ -51,10 +51,10 @@ Skeleton que replica el layout de la brand page:
 
 **Archivos**: 2 modificados
 
-| Archivo | Línea | `sizes` valor | Razón |
-| ------- | ----- | ------------- | ----- |
-| `cuenta/page.tsx` | L1098 | `"96px"` | Container fijo `w-24` (96px), nunca cambia |
-| `dealer-profile-client.tsx` | L287 | `"100vw"` | Cover banner full-viewport-width |
+| Archivo                     | Línea | `sizes` valor | Razón                                      |
+| --------------------------- | ----- | ------------- | ------------------------------------------ |
+| `cuenta/page.tsx`           | L1098 | `"96px"`      | Container fijo `w-24` (96px), nunca cambia |
+| `dealer-profile-client.tsx` | L287  | `"100vw"`     | Cover banner full-viewport-width           |
 
 **Impacto**: Next.js ahora genera srcset optimizado para estos tamaños, reduciendo bytes descargados y mejorando LCP.
 
@@ -75,42 +75,42 @@ Error boundary con el mismo patrón branded de `dealers/[slug]/error.tsx`:
 
 ## Cambios Incluidos de Sesión Anterior (no comiteados)
 
-| Archivo | Cambio |
-| ------- | ------ |
-| `admin/vehiculos/page.tsx` | Image sizes `"(max-width: 1024px) 100vw, 50vw"` |
+| Archivo                     | Cambio                                          |
+| --------------------------- | ----------------------------------------------- |
+| `admin/vehiculos/page.tsx`  | Image sizes `"(max-width: 1024px) 100vw, 50vw"` |
 | `cuenta/favoritos/page.tsx` | Image sizes `"(max-width: 640px) 100vw, 224px"` |
-| `cuenta/historial/page.tsx` | Image sizes `"128px"` |
-| `guias/loading.tsx` | NUEVO — guías listing skeleton |
-| `guias/[slug]/loading.tsx` | NUEVO — guía detail skeleton (72 líneas) |
-| `guias/[slug]/page.tsx` | BreadcrumbList JSON-LD agregado |
-| `marcas/[marca]/page.tsx` | BreadcrumbList JSON-LD format fix |
-| Sprint 8 report | Markdown table formatting fixes |
+| `cuenta/historial/page.tsx` | Image sizes `"128px"`                           |
+| `guias/loading.tsx`         | NUEVO — guías listing skeleton                  |
+| `guias/[slug]/loading.tsx`  | NUEVO — guía detail skeleton (72 líneas)        |
+| `guias/[slug]/page.tsx`     | BreadcrumbList JSON-LD agregado                 |
+| `marcas/[marca]/page.tsx`   | BreadcrumbList JSON-LD format fix               |
+| Sprint 8 report             | Markdown table formatting fixes                 |
 
 ---
 
 ## Métricas
 
-| Métrica | Antes | Después |
-| ------- | ----- | ------- |
-| Routes con loading.tsx | 12 | 16 (+4) |
-| Routes con error.tsx | 4 | 5 (+1) |
-| Image fill sin sizes | 7 | 0 |
-| Build pages | 213 | 213 |
-| Build time | 19.7s | 29.0s (includes more static work) |
+| Métrica                | Antes | Después                           |
+| ---------------------- | ----- | --------------------------------- |
+| Routes con loading.tsx | 12    | 16 (+4)                           |
+| Routes con error.tsx   | 4     | 5 (+1)                            |
+| Image fill sin sizes   | 7     | 0                                 |
+| Build pages            | 213   | 213                               |
+| Build time             | 19.7s | 29.0s (includes more static work) |
 
 ---
 
 ## Cobertura Loading/Error por Ruta Dinámica
 
-| Ruta | loading.tsx | error.tsx |
-| ---- | ----------- | -------- |
-| `/vehiculos/[slug]` | ✅ | ✅ |
-| `/dealers/[slug]` | ✅ (Sprint 9) | ✅ (Sprint 8) |
-| `/marcas/[marca]` | ✅ (Sprint 9) | ✅ (Sprint 9) |
-| `/blog/[slug]` | ✅ | ❌ pendiente |
-| `/guias/[slug]` | ✅ (prev session) | ❌ pendiente |
-| `/vender/registro` | ✅ | ✅ |
-| `/checkout` | ✅ | ✅ |
+| Ruta                | loading.tsx       | error.tsx     |
+| ------------------- | ----------------- | ------------- |
+| `/vehiculos/[slug]` | ✅                | ✅            |
+| `/dealers/[slug]`   | ✅ (Sprint 9)     | ✅ (Sprint 8) |
+| `/marcas/[marca]`   | ✅ (Sprint 9)     | ✅ (Sprint 9) |
+| `/blog/[slug]`      | ✅                | ❌ pendiente  |
+| `/guias/[slug]`     | ✅ (prev session) | ❌ pendiente  |
+| `/vender/registro`  | ✅                | ✅            |
+| `/checkout`         | ✅                | ✅            |
 
 ---
 

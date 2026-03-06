@@ -92,7 +92,6 @@ export default function ReportarContenidoPage() {
     try {
       // TODO: Replace with csrfFetch when API endpoint is ready
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Sanitized reporte data:', sanitizedData);
       setSubmitted(true);
       toast.success('Reporte enviado exitosamente');
     } catch {
