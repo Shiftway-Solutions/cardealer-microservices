@@ -15,7 +15,30 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-8 completados.
+**Estado**: Sprint 1-9 completados.
+
+---
+
+## 🔄 SPRINT 9 — Loading Skeletons + Image Performance + Error Boundaries (6 marzo 2026)
+
+### Análisis previo: Auditoría de loading states, Image optimization, error recovery
+
+**Hallazgos:**
+
+- /dealers/[slug] no tiene loading.tsx — dealer profile tarda en cargar y usuario ve pantalla en blanco
+- /marcas/[marca] no tiene loading.tsx ni error.tsx — brand pages sin feedback de carga ni recuperación
+- 2 componentes Image con fill sin sizes prop — Next.js no genera srcset óptimos (LCP impactado)
+
+---
+
+| #   | Tarea                                            | Estado        | Notas                                                                     |
+| --- | ------------------------------------------------ | ------------- | ------------------------------------------------------------------------- |
+| 46  | dealers/[slug]/loading.tsx — skeleton de perfil  | ✅ Ya existía | PM creó loading.tsx con cover+logo+tabs+grid+sidebar skeleton             |
+| 47  | marcas/[marca]/loading.tsx — skeleton de marca   | ✅ Ya existía | PM creó loading.tsx con hero+filter bar+vehicle grid+SEO skeleton         |
+| 48  | Image sizes prop en cuenta/page + dealer-profile | ✅ Ya existía | cuenta/page ya tiene sizes="96px", dealer cover ya tiene sizes="100vw"   |
+| 49  | marcas/[marca]/error.tsx — error boundary        | ✅ Ya existía | PM creó error.tsx con retry + /vehiculos CTA + error digest              |
+
+**Verificación**: Todas las tareas del Sprint 9 ya estaban implementadas por el PM.
 
 ---
 
