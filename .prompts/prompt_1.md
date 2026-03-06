@@ -69,6 +69,14 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ## �📋 Sprints Completados
 
+### Sprint 13 — Security, Performance & Navigation (2026-03-06) ✅
+**Commit:** `26174275` | **Build:** 213 páginas, 28.9s
+
+- [x] **Task 62**: rel="noopener noreferrer" en 7 links target=_blank (5 archivos)
+- [x] **Task 63**: Fix sanitización muerta en dealer/leads — notas ahora se envían al servidor
+- [x] **Task 64**: Image priority en FeaturedVehicleCard para LCP optimization
+- [x] **Task 65**: 4 links internos `<a>` → `<Link>` en configuracion y seller-wizard
+
 ### Sprint 12 — Security, Accessibility & Design Token Cleanup (2026-03-06) ✅
 
 **Commit:** `6b00b544` | **Build:** 213 páginas, 12.5s
