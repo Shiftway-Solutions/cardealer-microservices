@@ -17,7 +17,7 @@ namespace ErrorService.Application.UseCases.GetError
 
         public async Task<GetErrorResponse?> Handle(GetErrorQuery query, CancellationToken cancellationToken)
         {
-            var errorLog = await _errorLogRepository.GetByIdAsync(query.Request.Id);
+            var errorLog = await _errorLogRepository.GetByIdAsync(query.Request.Id, cancellationToken);
             if (errorLog == null)
                 return null; // Esto está bien con el tipo nullable
 

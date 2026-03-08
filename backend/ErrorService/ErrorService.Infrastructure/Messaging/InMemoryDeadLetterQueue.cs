@@ -59,9 +59,8 @@ public class InMemoryDeadLetterQueue : IDeadLetterQueue
 
             if (failedEvent.RetryCount >= _maxRetries)
             {
-                // Max retries alcanzado, marcar como definitivamente fallido
-                // En producción, podrías mover esto a persistent storage o dead-letter exchange
-                failedEvent.NextRetryAt = null;
+                // RELIABILITY: Remove exhausted events to prevent unbounded memory growth.
+                _events.TryRemove(eventId, out _);
             }
             else
             {

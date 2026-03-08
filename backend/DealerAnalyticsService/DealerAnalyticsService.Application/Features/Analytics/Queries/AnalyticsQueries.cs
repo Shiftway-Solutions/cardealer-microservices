@@ -1,6 +1,7 @@
 using DealerAnalyticsService.Application.DTOs;
 using DealerAnalyticsService.Domain.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace DealerAnalyticsService.Application.Features.Analytics.Queries;
 
@@ -156,10 +157,12 @@ public record TrackProfileViewCommand(
 public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, ProfileViewDto>
 {
     private readonly IAnalyticsRepository _repository;
+    private readonly ILogger<TrackProfileViewHandler> _logger;
 
-    public TrackProfileViewHandler(IAnalyticsRepository repository)
+    public TrackProfileViewHandler(IAnalyticsRepository repository, ILogger<TrackProfileViewHandler> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
     public async Task<ProfileViewDto> Handle(TrackProfileViewCommand request, CancellationToken ct)
@@ -205,7 +208,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
             catch (Exception ex)
             {
                 // Log error but don't fail the request
-                Console.WriteLine($"Error updating daily summary: {ex.Message}");
+                _logger.LogWarning(ex, "Error updating daily summary for dealer {DealerId}", req.DealerId);
             }
         }, ct);
 
@@ -267,10 +270,12 @@ public record TrackContactEventCommand(
 public class TrackContactEventHandler : IRequestHandler<TrackContactEventCommand, ContactEventDto>
 {
     private readonly IAnalyticsRepository _repository;
+    private readonly ILogger<TrackContactEventHandler> _logger;
 
-    public TrackContactEventHandler(IAnalyticsRepository repository)
+    public TrackContactEventHandler(IAnalyticsRepository repository, ILogger<TrackContactEventHandler> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
     public async Task<ContactEventDto> Handle(TrackContactEventCommand request, CancellationToken ct)
@@ -322,7 +327,7 @@ public class TrackContactEventHandler : IRequestHandler<TrackContactEventCommand
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating daily summary: {ex.Message}");
+                _logger.LogWarning(ex, "Error updating daily summary for dealer {DealerId}", req.DealerId);
             }
         }, ct);
 

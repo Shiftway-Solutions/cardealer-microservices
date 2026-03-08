@@ -4,12 +4,13 @@ using MediatR;
 using DealerAnalyticsService.Application.Features.Insights.Commands;
 using DealerAnalyticsService.Application.DTOs;
 using DealerAnalyticsService.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize] // Temporarily disabled for development testing
+[Authorize]
 public class InsightsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -37,6 +38,9 @@ public class InsightsController : ControllerBase
         Guid dealerId,
         [FromQuery] bool onlyUnread = false)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var insights = await _insightRepository.GetDealerInsightsAsync(dealerId, onlyUnread);
@@ -77,6 +81,9 @@ public class InsightsController : ControllerBase
     [HttpPost("{dealerId:guid}/generate")]
     public async Task<ActionResult<List<DealerInsightDto>>> GenerateInsights(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var command = new GenerateInsightsCommand(dealerId);
@@ -102,6 +109,9 @@ public class InsightsController : ControllerBase
         Guid dealerId,
         [FromBody] List<Guid> insightIds)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             await _insightRepository.MarkInsightsAsReadAsync(dealerId, insightIds);
@@ -142,6 +152,9 @@ public class InsightsController : ControllerBase
     [HttpGet("{dealerId:guid}/summary")]
     public async Task<ActionResult<object>> GetInsightsSummary(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var insights = await _insightRepository.GetDealerInsightsAsync(dealerId);
@@ -177,5 +190,15 @@ public class InsightsController : ControllerBase
             _logger.LogError(ex, "Error getting insights summary for dealer {DealerId}", dealerId);
             return StatusCode(500, new { Message = "Error retrieving insights summary" });
         }
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }

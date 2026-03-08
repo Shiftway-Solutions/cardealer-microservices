@@ -1,11 +1,13 @@
 using FluentValidation;
 using ErrorService.Application.DTOs;
+using ErrorService.Application.Validators;
 using System.Text.RegularExpressions;
 
 namespace ErrorService.Application.UseCases.LogError
 {
     /// <summary>
-    /// Validador robusto para LogErrorRequest con reglas de seguridad y sanitización
+    /// Validador robusto para LogErrorRequest con reglas de seguridad y sanitización.
+    /// Uses shared SecurityValidators (NoSqlInjection/NoXss) instead of inline patterns.
     /// </summary>
     public class LogErrorCommandValidator : AbstractValidator<LogErrorRequest>
     {
@@ -21,29 +23,36 @@ namespace ErrorService.Application.UseCases.LogError
                 .NotEmpty().WithMessage("ServiceName es requerido")
                 .MaximumLength(100).WithMessage("ServiceName no puede exceder 100 caracteres")
                 .Matches(ServiceNameRegex).WithMessage("ServiceName solo puede contener letras, números, guiones, puntos y guiones bajos")
-                .Must(NotContainSqlInjection).WithMessage("ServiceName contiene caracteres potencialmente peligrosos");
+                .NoSqlInjection()
+                .NoXss();
 
-            // ExceptionType - REQUERIDO
+            // ExceptionType - REQUERIDO + security validation
             RuleFor(x => x.ExceptionType)
                 .NotEmpty().WithMessage("ExceptionType es requerido")
                 .MaximumLength(200).WithMessage("ExceptionType no puede exceder 200 caracteres")
-                .Must(NotContainSqlInjection).WithMessage("ExceptionType contiene caracteres potencialmente peligrosos");
+                .NoSqlInjection()
+                .NoXss();
 
-            // Message - REQUERIDO con límite de tamaño
+            // Message - REQUERIDO con límite de tamaño + security validation
             RuleFor(x => x.Message)
                 .NotEmpty().WithMessage("Message es requerido")
                 .MaximumLength(5000).WithMessage("Message no puede exceder 5000 caracteres (demasiado largo)")
-                .Must(NotContainXssPatterns).WithMessage("Message contiene patrones potencialmente peligrosos");
+                .NoSqlInjection()
+                .NoXss();
 
-            // StackTrace - OPCIONAL pero con límite
+            // StackTrace - OPCIONAL pero con límite + security validation
             RuleFor(x => x.StackTrace)
                 .MaximumLength(50000).WithMessage("StackTrace no puede exceder 50000 caracteres")
+                .NoXss()
+                .NoSqlInjection()
                 .When(x => !string.IsNullOrWhiteSpace(x.StackTrace));
 
-            // Endpoint - OPCIONAL con formato validado
+            // Endpoint - OPCIONAL con formato validado + security validation
             RuleFor(x => x.Endpoint)
                 .MaximumLength(500).WithMessage("Endpoint no puede exceder 500 caracteres")
                 .Matches(EndpointRegex).WithMessage("Endpoint contiene caracteres inválidos")
+                .NoSqlInjection()
+                .NoXss()
                 .When(x => !string.IsNullOrWhiteSpace(x.Endpoint));
 
             // HttpMethod - OPCIONAL pero con valores permitidos
@@ -55,7 +64,8 @@ namespace ErrorService.Application.UseCases.LogError
             // UserId - OPCIONAL con límite
             RuleFor(x => x.UserId)
                 .MaximumLength(100).WithMessage("UserId no puede exceder 100 caracteres")
-                .Must(NotContainSqlInjection).WithMessage("UserId contiene caracteres potencialmente peligrosos")
+                .NoSqlInjection()
+                .NoXss()
                 .When(x => !string.IsNullOrWhiteSpace(x.UserId));
 
             // StatusCode - OPCIONAL pero con rango válido
@@ -74,57 +84,46 @@ namespace ErrorService.Application.UseCases.LogError
                 .Must(BeValidMetadataSize)
                 .WithMessage("El tamaño total de Metadata no puede exceder 10KB")
                 .When(x => x.Metadata != null && x.Metadata.Any());
+
+            // Metadata keys/values — security validation against XSS/SQLi
+            RuleFor(x => x.Metadata)
+                .Must(BeSecureMetadata)
+                .WithMessage("Metadata keys or values contain potential security threats (XSS/SQLi patterns)")
+                .When(x => x.Metadata != null && x.Metadata.Any());
         }
 
         /// <summary>
-        /// Detecta patrones comunes de SQL Injection
+        /// XSS/SQLi patterns to check in Metadata keys and values.
         /// </summary>
-        private bool NotContainSqlInjection(string? value)
+        private static readonly string[] s_dangerousPatterns = new[]
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return true;
-
-            var dangerousPatterns = new[]
-            {
-                "';--",
-                "' OR '1'='1",
-                "' OR 1=1--",
-                "EXEC(",
-                "EXECUTE(",
-                "DROP TABLE",
-                "DROP DATABASE",
-                "INSERT INTO",
-                "DELETE FROM",
-                "UPDATE ",
-                "UNION SELECT"
-            };
-
-            return !dangerousPatterns.Any(pattern =>
-                value.Contains(pattern, StringComparison.OrdinalIgnoreCase));
-        }
+            "<script", "</script>", "javascript:", "onerror=", "onload=", "onclick=",
+            "<iframe", "<object", "<embed", "eval(", "expression(", "vbscript:",
+            "SELECT ", "INSERT ", "UPDATE ", "DELETE ", "DROP ", "UNION ", "--", "/*", "*/",
+            "xp_", "sp_", "EXEC ", "EXECUTE "
+        };
 
         /// <summary>
-        /// Detecta patrones comunes de XSS
+        /// Validates that Metadata keys and values do not contain XSS/SQLi patterns.
         /// </summary>
-        private bool NotContainXssPatterns(string? value)
+        private bool BeSecureMetadata(Dictionary<string, object>? metadata)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            if (metadata == null || !metadata.Any())
                 return true;
 
-            var xssPatterns = new[]
+            foreach (var kvp in metadata)
             {
-                "<script",
-                "javascript:",
-                "onerror=",
-                "onload=",
-                "onclick=",
-                "eval(",
-                "alert(",
-                "<iframe"
-            };
+                var key = kvp.Key?.ToUpperInvariant() ?? string.Empty;
+                var value = kvp.Value?.ToString()?.ToUpperInvariant() ?? string.Empty;
 
-            return !xssPatterns.Any(pattern =>
-                value.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+                if (s_dangerousPatterns.Any(p => key.Contains(p, StringComparison.OrdinalIgnoreCase)
+                    || value.Contains(p, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

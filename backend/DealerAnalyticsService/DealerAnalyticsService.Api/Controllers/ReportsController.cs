@@ -3,6 +3,7 @@ using DealerAnalyticsService.Application.Features.Reports.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
@@ -11,7 +12,7 @@ namespace DealerAnalyticsService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dealer-analytics/reports")]
-// [Authorize] // Temporalmente deshabilitado para desarrollo
+[Authorize]
 public class ReportsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -32,6 +33,9 @@ public class ReportsController : ControllerBase
         Guid dealerId,
         [FromQuery] DateTime? date = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var reportDate = date ?? DateTime.UtcNow.Date.AddDays(-1);
@@ -55,6 +59,9 @@ public class ReportsController : ControllerBase
         Guid dealerId,
         [FromQuery] DateTime? weekStartDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var startDate = weekStartDate ?? GetStartOfWeek(DateTime.UtcNow.AddDays(-7));
@@ -79,6 +86,9 @@ public class ReportsController : ControllerBase
         [FromQuery] int? year = null,
         [FromQuery] int? month = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var now = DateTime.UtcNow;
@@ -108,6 +118,9 @@ public class ReportsController : ControllerBase
         Guid dealerId,
         [FromBody] CustomReportRequest request)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetCustomReportQuery(
@@ -136,6 +149,9 @@ public class ReportsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var validFormats = new[] { "pdf", "excel", "csv" };
@@ -163,6 +179,16 @@ public class ReportsController : ControllerBase
     {
         var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
         return date.AddDays(-diff).Date;
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }
 

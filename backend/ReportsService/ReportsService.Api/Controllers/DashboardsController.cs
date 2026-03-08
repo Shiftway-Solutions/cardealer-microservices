@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsService.Application.DTOs;
 using ReportsService.Domain.Entities;
@@ -7,6 +8,7 @@ namespace ReportsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DashboardsController : ControllerBase
 {
     private readonly IDashboardRepository _dashboardRepository;
@@ -174,6 +176,7 @@ public class DashboardsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _dashboardRepository.ExistsAsync(id, cancellationToken);

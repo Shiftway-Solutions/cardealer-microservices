@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,6 +26,10 @@
     <ProjectReference Include="..\ReviewService.Application\ReviewService.Application.csproj" />
     <ProjectReference Include="..\ReviewService.Infrastructure\ReviewService.Infrastructure.csproj" />
     <ProjectReference Include="..\..\\_Shared\CarDealer.Shared\CarDealer.Shared.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared.Logging\CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared.Observability\CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared.ErrorHandling\CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="..\..\\_Shared\CarDealer.Shared.Audit\CarDealer.Shared.Audit.csproj" />
   </ItemGroup>
 
 </Project>

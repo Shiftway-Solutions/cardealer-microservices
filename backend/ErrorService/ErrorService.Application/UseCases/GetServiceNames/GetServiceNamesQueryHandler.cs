@@ -18,7 +18,7 @@ namespace ErrorService.Application.UseCases.GetServiceNames
 
         public async Task<GetServiceNamesResponse> Handle(GetServiceNamesQuery query, CancellationToken cancellationToken)
         {
-            var serviceNames = await _errorLogRepository.GetServiceNamesAsync();
+            var serviceNames = await _errorLogRepository.GetServiceNamesAsync(cancellationToken);
             return new GetServiceNamesResponse(serviceNames.ToList());
         }
     }

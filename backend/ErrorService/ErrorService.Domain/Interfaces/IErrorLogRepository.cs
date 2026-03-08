@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ErrorService.Domain.Entities;
 
@@ -7,12 +8,12 @@ namespace ErrorService.Domain.Interfaces
 {
     public interface IErrorLogRepository
     {
-        Task<ErrorLog?> GetByIdAsync(Guid id);
-        Task<IEnumerable<ErrorLog>> GetAsync(ErrorQuery query);
-        Task AddAsync(ErrorLog errorLog);
-        Task DeleteAsync(Guid id);
-        Task<IEnumerable<string>> GetServiceNamesAsync();
-        Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null);
+        Task<ErrorLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<IEnumerable<ErrorLog>> GetAsync(ErrorQuery query, CancellationToken cancellationToken = default);
+        Task AddAsync(ErrorLog errorLog, CancellationToken cancellationToken = default);
+        Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<IEnumerable<string>> GetServiceNamesAsync(CancellationToken cancellationToken = default);
+        Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null, CancellationToken cancellationToken = default);
     }
 
     public class ErrorQuery

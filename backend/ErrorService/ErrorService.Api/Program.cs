@@ -1,4 +1,5 @@
 using ErrorService.Domain.Interfaces;
+using Microsoft.AspNetCore.HttpOverrides;
 using ErrorService.Infrastructure.Messaging;
 using ErrorService.Infrastructure.Persistence;
 using ErrorService.Infrastructure.Services;
@@ -18,6 +19,7 @@ using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Messaging;
+using CarDealer.Shared.Observability.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -26,27 +28,26 @@ using Microsoft.OpenApi.Models;
 using FluentValidation;
 using ErrorService.Application.Behaviors;
 using MediatR;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using System.Diagnostics;
+
 using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using ErrorService.Api.Middleware;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
+const string ServiceName = "ErrorService";
+const string ServiceVersion = "1.0.0";
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 // Secret Provider for externalized configuration
 builder.Services.AddSecretProvider();
 
-// Configurar Serilog con enriquecimiento de TraceId
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan() // Agregar TraceId, SpanId de OpenTelemetry
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
-    .CreateLogger();
-builder.Host.UseSerilog();
+// ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+builder.UseStandardSerilog(ServiceName);
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -124,10 +125,10 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = jwtSettings.GetValue<bool>("ValidateIssuer", true),
-        ValidateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true),
-        ValidateLifetime = jwtSettings.GetValue<bool>("ValidateLifetime", true),
-        ValidateIssuerSigningKey = jwtSettings.GetValue<bool>("ValidateIssuerSigningKey", true),
+        ValidateIssuer = true,              // SECURITY: never config-driven
+        ValidateAudience = true,            // SECURITY: never config-driven
+        ValidateLifetime = true,            // SECURITY: never config-driven
+        ValidateIssuerSigningKey = true,    // SECURITY: never config-driven
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
@@ -180,17 +181,27 @@ builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration
 
 // ========== SERVICE DISCOVERY ==========
 
-// Consul Client
-builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+// Service Discovery Configuration - with fallback to NoOp when Consul is disabled
+var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
 {
-    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
-}));
+    builder.Services.AddSingleton<IConsulClient>(sp =>
+    {
+        var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+        return new ConsulClient(config => config.Address = new Uri(consulAddress));
+    });
 
-// Service Discovery Services
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddHttpClient("HealthCheck");
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+    builder.Services.AddHttpClient("HealthCheck");
+    builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+}
+else
+{
+    // Use NoOp implementations when Consul is disabled
+    builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
+}
 
 // ========================================
 
@@ -240,51 +251,8 @@ builder.Services.AddValidatorsFromAssembly(
 // Agregar behavior de validación para MediatR
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-// Configurar OpenTelemetry
-var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "ErrorService";
-var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
-var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
-
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource
-        .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
-        .AddAttributes(new Dictionary<string, object>
-        {
-            ["deployment.environment"] = builder.Environment.EnvironmentName,
-            ["service.namespace"] = "cardealer"
-        }))
-    .WithTracing(tracing => tracing
-        .SetSampler(new ParentBasedSampler(
-            // Estrategia de muestreo basada en ratio
-            // En producción: captura 10% de traces normales, 100% de errores
-            new TraceIdRatioBasedSampler(
-                builder.Environment.IsProduction() ? 0.1 : 1.0))) // Dev: 100%, Prod: 10%
-        .AddAspNetCoreInstrumentation(options =>
-        {
-            options.RecordException = true;
-            options.Filter = context =>
-            {
-                // Filtrar health checks para reducir ruido
-                return !context.Request.Path.StartsWithSegments("/health");
-            };
-        })
-        .AddHttpClientInstrumentation(options =>
-        {
-            options.RecordException = true;
-        })
-        .AddSource("ErrorService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }))
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddMeter("ErrorService.*")
-        .AddOtlpExporter(options =>
-        {
-            options.Endpoint = new Uri(otlpEndpoint);
-        }));
+// Configurar OpenTelemetry (standardized via shared library)
+builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
 
 // Configurar el manejo de errores
 builder.Services.AddErrorHandling("ErrorService");
@@ -321,6 +289,22 @@ else
     Log.Information("🚫 RabbitMQErrorConsumer NOT registered - RabbitMQ is disabled");
 }
 
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
 var app = builder.Build();
 
 // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
@@ -333,9 +317,8 @@ app.UseRequestLogging();
 // 3. Security Headers (OWASP) — early in pipeline
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-// 4. Rate Limiting bypass + enforcement
-app.UseMiddleware<RateLimitBypassMiddleware>();
-app.UseCustomRateLimiting(rateLimitingConfig);
+// 4. Response Compression — early, after error handling
+app.UseResponseCompression();
 
 // 5. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
 if (!app.Environment.IsProduction())
@@ -350,8 +333,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 7. CORS — before auth
+// 6.5. Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// 7. CORS — BEFORE rate limiting (so OPTIONS preflight isn't blocked)
 app.UseCors();
+
+// 7.5. Rate Limiting — after CORS, before auth
+app.UseMiddleware<RateLimitBypassMiddleware>();
+app.UseCustomRateLimiting(rateLimitingConfig);
 
 // 8. Authentication & Authorization
 app.UseAuthentication();
@@ -402,6 +395,15 @@ else
 
 Log.Information("ErrorService starting up...");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "💀 {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make Program class accessible for integration testing
 public partial class Program { }

@@ -28,7 +28,7 @@ namespace ErrorService.Application.UseCases.GetErrors
                 PageSize = query.Request.PageSize
             };
 
-            var errors = await _errorLogRepository.GetAsync(domainQuery);
+            var errors = await _errorLogRepository.GetAsync(domainQuery, cancellationToken);
 
             var errorItems = errors.Select(error => new ErrorItemDto(
                 error.Id,

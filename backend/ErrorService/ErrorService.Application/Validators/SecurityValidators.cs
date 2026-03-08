@@ -5,6 +5,7 @@ namespace ErrorService.Application.Validators;
 
 /// <summary>
 /// Custom validator to detect SQL Injection patterns in string inputs.
+/// Aligned with AuthService reference implementation (string? nullable support).
 /// </summary>
 public static class SqlInjectionValidator
 {
@@ -17,7 +18,10 @@ public static class SqlInjectionValidator
         "WAITFOR DELAY", "BENCHMARK", "SLEEP("
     };
 
-    public static IRuleBuilderOptions<T, string> NoSqlInjection<T>(this IRuleBuilder<T, string> ruleBuilder)
+    /// <summary>
+    /// Validates that the input does not contain SQL injection patterns.
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> NoSqlInjection<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -33,6 +37,7 @@ public static class SqlInjectionValidator
 
 /// <summary>
 /// Custom validator to detect XSS (Cross-Site Scripting) patterns in string inputs.
+/// Aligned with AuthService reference implementation (string? nullable, pre-compiled regex).
 /// </summary>
 public static class XssValidator
 {
@@ -45,7 +50,10 @@ public static class XssValidator
         "ontransitionend=", "<img", "src=", "alert(", "confirm(", "prompt("
     };
 
-    public static IRuleBuilderOptions<T, string> NoXss<T>(this IRuleBuilder<T, string> ruleBuilder)
+    /// <summary>
+    /// Validates that the input does not contain XSS attack patterns.
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> NoXss<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder.Must(input =>
         {
@@ -58,29 +66,32 @@ public static class XssValidator
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
 
-    public static IRuleBuilderOptions<T, string> NoXssAdvanced<T>(this IRuleBuilder<T, string> ruleBuilder)
+    // Performance: Pre-compile regex patterns once at class load, not per-invocation
+    private static readonly Regex[] s_xssRegexPatterns = new[]
     {
-        var xssRegexPatterns = new[]
-        {
-            @"<script[\s\S]*?>[\s\S]*?</script>",
-            @"javascript\s*:",
-            @"on\w+\s*=",
-            @"<iframe[\s\S]*?>",
-            @"<object[\s\S]*?>",
-            @"<embed[\s\S]*?>",
-            @"<img[\s\S]*?onerror\s*=",
-            @"data:text/html",
-            @"eval\s*\(",
-            @"expression\s*\("
-        };
+        new Regex(@"<script[\s\S]*?>[\s\S]*?</script>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"javascript\s*:", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"on\w+\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<iframe[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<object[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<embed[\s\S]*?>", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"<img[\s\S]*?onerror\s*=", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"data:text/html", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"eval\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"expression\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+    };
 
+    /// <summary>
+    /// Advanced XSS validation using pre-compiled regex patterns.
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> NoXssAdvanced<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
         return ruleBuilder.Must(input =>
         {
             if (string.IsNullOrWhiteSpace(input))
                 return true;
 
-            return !xssRegexPatterns.Any(pattern =>
-                Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+            return !s_xssRegexPatterns.Any(regex => regex.IsMatch(input));
         })
         .WithMessage("Input contains potential XSS attack patterns and is not allowed.");
     }
@@ -91,7 +102,10 @@ public static class XssValidator
 /// </summary>
 public static class SecurityValidator
 {
-    public static IRuleBuilderOptions<T, string> NoSecurityThreats<T>(this IRuleBuilder<T, string> ruleBuilder)
+    /// <summary>
+    /// Validates input against both SQL Injection and XSS patterns.
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> NoSecurityThreats<T>(this IRuleBuilder<T, string?> ruleBuilder)
     {
         return ruleBuilder
             .NoSqlInjection()

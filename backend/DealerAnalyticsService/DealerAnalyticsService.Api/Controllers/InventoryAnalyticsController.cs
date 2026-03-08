@@ -3,6 +3,7 @@ using DealerAnalyticsService.Application.Features.Inventory.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
@@ -11,7 +12,7 @@ namespace DealerAnalyticsService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dealer-analytics/inventory")]
-// [Authorize] // Temporalmente deshabilitado para desarrollo
+[Authorize]
 public class InventoryAnalyticsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -32,6 +33,9 @@ public class InventoryAnalyticsController : ControllerBase
         Guid dealerId,
         [FromQuery] DateTime? asOfDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetInventoryStatsQuery(dealerId, asOfDate);
@@ -52,6 +56,9 @@ public class InventoryAnalyticsController : ControllerBase
     [ProducesResponseType(typeof(InventoryAgingDto), 200)]
     public async Task<ActionResult<InventoryAgingDto>> GetInventoryAging(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetInventoryAgingQuery(dealerId);
@@ -75,6 +82,9 @@ public class InventoryAnalyticsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var end = toDate ?? DateTime.UtcNow;
@@ -102,6 +112,9 @@ public class InventoryAnalyticsController : ControllerBase
         [FromQuery] string sortBy = "engagement",
         [FromQuery] bool ascending = false)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetVehiclePerformanceQuery(dealerId, limit, sortBy, ascending);
@@ -124,6 +137,9 @@ public class InventoryAnalyticsController : ControllerBase
         Guid dealerId,
         [FromQuery] int limit = 5)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetLowPerformersQuery(dealerId, limit);
@@ -135,5 +151,15 @@ public class InventoryAnalyticsController : ControllerBase
             _logger.LogError(ex, "Error getting low performers for dealer {DealerId}", dealerId);
             return StatusCode(500, new { Message = "Error retrieving low performers" });
         }
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }

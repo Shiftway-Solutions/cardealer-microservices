@@ -8,7 +8,7 @@ namespace DealerAnalyticsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize] // Temporarily disabled for development testing
+[Authorize]
 public class BenchmarkController : ControllerBase
 {
     private readonly IMediator _mediator;

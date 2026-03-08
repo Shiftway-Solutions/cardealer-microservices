@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsService.Application.DTOs;
 using ReportsService.Domain.Entities;
@@ -7,6 +8,7 @@ namespace ReportsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ReportSchedulesController : ControllerBase
 {
     private readonly IReportScheduleRepository _scheduleRepository;
@@ -160,6 +162,7 @@ public class ReportSchedulesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _scheduleRepository.ExistsAsync(id, cancellationToken);

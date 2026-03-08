@@ -3,6 +3,7 @@ using DealerAnalyticsService.Application.Features.Analytics.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
@@ -11,7 +12,7 @@ namespace DealerAnalyticsService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dealer-analytics")]
-// [Authorize] // Temporalmente deshabilitado para desarrollo
+[Authorize]
 public class OverviewController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -34,6 +35,9 @@ public class OverviewController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var end = toDate ?? DateTime.UtcNow;
@@ -60,6 +64,9 @@ public class OverviewController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var end = toDate ?? DateTime.UtcNow;
@@ -85,6 +92,9 @@ public class OverviewController : ControllerBase
         Guid dealerId,
         [FromQuery] DateTime? date = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var snapshotDate = date ?? DateTime.UtcNow.Date;
@@ -108,6 +118,9 @@ public class OverviewController : ControllerBase
         Guid dealerId,
         [FromQuery] int compareDays = 30)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetSnapshotComparisonQuery(dealerId, DateTime.UtcNow.Date, compareDays);
@@ -132,6 +145,9 @@ public class OverviewController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var validMetrics = new[] { "views", "contacts", "sales", "revenue", "conversion", "leads" };
@@ -164,6 +180,9 @@ public class OverviewController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var end = toDate ?? DateTime.UtcNow;
@@ -194,6 +213,16 @@ public class OverviewController : ControllerBase
             _logger.LogError(ex, "Error getting engagement for dealer {DealerId}", dealerId);
             return StatusCode(500, new { Message = "Error retrieving engagement metrics" });
         }
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }
 

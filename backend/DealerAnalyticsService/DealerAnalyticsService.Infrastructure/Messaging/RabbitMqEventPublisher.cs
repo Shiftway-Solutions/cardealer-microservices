@@ -19,6 +19,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private readonly IModel? _channel;
     private readonly string _exchangeName;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly object _publishLock = new();
 
     public RabbitMqEventPublisher(
         IConfiguration configuration,
@@ -78,23 +79,26 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
             var messageBody = JsonSerializer.Serialize(@event, _jsonOptions);
             var body = Encoding.UTF8.GetBytes(messageBody);
 
-            var properties = _channel.CreateBasicProperties();
-            properties.Persistent = true;
-            properties.ContentType = "application/json";
-            properties.MessageId = @event.EventId.ToString();
-            properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            properties.Type = @event.EventType;
-            properties.Headers = new Dictionary<string, object>
+            lock (_publishLock)
             {
-                { "x-event-type", @event.EventType },
-                { "x-occurred-at", @event.OccurredAt.ToString("O") }
-            };
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true;
+                properties.ContentType = "application/json";
+                properties.MessageId = @event.EventId.ToString();
+                properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                properties.Type = @event.EventType;
+                properties.Headers = new Dictionary<string, object>
+                {
+                    { "x-event-type", @event.EventType },
+                    { "x-occurred-at", @event.OccurredAt.ToString("O") }
+                };
 
-            _channel.BasicPublish(
-                exchange: _exchangeName,
-                routingKey: routingKey,
-                basicProperties: properties,
-                body: body);
+                _channel.BasicPublish(
+                    exchange: _exchangeName,
+                    routingKey: routingKey,
+                    basicProperties: properties,
+                    body: body);
+            }
 
             _logger.LogDebug(
                 "Published event {EventType} with ID {EventId} to exchange {Exchange}",

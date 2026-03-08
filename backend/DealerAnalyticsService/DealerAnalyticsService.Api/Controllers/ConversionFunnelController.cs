@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using DealerAnalyticsService.Application.Features.Funnel.Queries;
 using DealerAnalyticsService.Application.DTOs;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize] // Temporarily disabled for development testing
+[Authorize]
 public class ConversionFunnelController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -33,6 +34,9 @@ public class ConversionFunnelController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var endDate = toDate ?? DateTime.UtcNow;
@@ -63,6 +67,9 @@ public class ConversionFunnelController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var endDate = toDate ?? DateTime.UtcNow;
@@ -115,5 +122,15 @@ public class ConversionFunnelController : ControllerBase
             _logger.LogError(ex, "Error getting funnel visualization for dealer {DealerId}", dealerId);
             return StatusCode(500, new { Message = "Error retrieving funnel visualization" });
         }
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }

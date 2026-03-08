@@ -70,8 +70,8 @@ public class SendReviewRequestCommandHandler : IRequestHandler<SendReviewRequest
             await _requestRepository.AddAsync(reviewRequest);
 
             _logger.LogInformation(
-                "Review request sent to {BuyerEmail} for order {OrderId}. Token: {Token}", 
-                request.BuyerEmail, request.OrderId, token);
+                "Review request sent for order {OrderId}. RequestId: {RequestId}", 
+                request.OrderId, reviewRequest.Id);
 
             // TODO: Enviar email al comprador via NotificationService
             // await _notificationService.SendReviewRequestEmail(reviewRequest);

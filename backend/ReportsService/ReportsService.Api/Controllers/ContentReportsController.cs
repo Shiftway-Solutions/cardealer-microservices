@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsService.Application.DTOs;
 using ReportsService.Domain.Entities;
@@ -11,6 +12,7 @@ namespace ReportsService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ContentReportsController : ControllerBase
 {
     private readonly IContentReportRepository _repository;
@@ -151,6 +153,7 @@ public class ContentReportsController : ControllerBase
     /// Update content report status (admin action).
     /// </summary>
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ContentReportDto>> UpdateStatus(
         Guid id,
         [FromBody] UpdateContentReportStatusRequest request,
@@ -177,6 +180,7 @@ public class ContentReportsController : ControllerBase
     /// Delete a content report.
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _repository.ExistsAsync(id, cancellationToken);

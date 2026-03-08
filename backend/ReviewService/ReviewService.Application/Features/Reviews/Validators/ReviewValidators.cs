@@ -1,5 +1,6 @@
 using FluentValidation;
 using ReviewService.Application.Features.Reviews.Commands;
+using ReviewService.Application.Validators;
 
 namespace ReviewService.Application.Features.Reviews.Validators;
 
@@ -30,7 +31,9 @@ public class CreateReviewCommandValidator : AbstractValidator<CreateReviewComman
             .NotEmpty()
             .WithMessage("El título es requerido")
             .MaximumLength(200)
-            .WithMessage("El título no puede exceder 200 caracteres");
+            .WithMessage("El título no puede exceder 200 caracteres")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Content)
             .NotEmpty()
@@ -38,13 +41,17 @@ public class CreateReviewCommandValidator : AbstractValidator<CreateReviewComman
             .MinimumLength(10)
             .WithMessage("El contenido debe tener al menos 10 caracteres")
             .MaximumLength(2000)
-            .WithMessage("El contenido no puede exceder 2000 caracteres");
+            .WithMessage("El contenido no puede exceder 2000 caracteres")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.BuyerName)
             .NotEmpty()
             .WithMessage("El nombre del comprador es requerido")
             .MaximumLength(100)
-            .WithMessage("El nombre no puede exceder 100 caracteres");
+            .WithMessage("El nombre no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -71,7 +78,9 @@ public class UpdateReviewCommandValidator : AbstractValidator<UpdateReviewComman
             .NotEmpty()
             .WithMessage("El título es requerido")
             .MaximumLength(200)
-            .WithMessage("El título no puede exceder 200 caracteres");
+            .WithMessage("El título no puede exceder 200 caracteres")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Content)
             .NotEmpty()
@@ -79,7 +88,9 @@ public class UpdateReviewCommandValidator : AbstractValidator<UpdateReviewComman
             .MinimumLength(10)
             .WithMessage("El contenido debe tener al menos 10 caracteres")
             .MaximumLength(2000)
-            .WithMessage("El contenido no puede exceder 2000 caracteres");
+            .WithMessage("El contenido no puede exceder 2000 caracteres")
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 
@@ -103,6 +114,8 @@ public class ModerateReviewCommandValidator : AbstractValidator<ModerateReviewCo
             .When(x => !x.IsApproved)
             .WithMessage("La razón de rechazo es requerida cuando se rechaza una review")
             .MaximumLength(500)
-            .WithMessage("La razón de rechazo no puede exceder 500 caracteres");
+            .WithMessage("La razón de rechazo no puede exceder 500 caracteres")
+            .NoSqlInjection()
+            .NoXss();
     }
 }

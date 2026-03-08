@@ -3,6 +3,7 @@ using DealerAnalyticsService.Application.Features.Analytics.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
@@ -21,13 +22,16 @@ public class AnalyticsController : ControllerBase
     /// Get dashboard analytics for a dealer
     /// </summary>
     [HttpGet("dashboard/{dealerId}")]
-    // [Authorize] // Temporarily disabled for development testing
+    [Authorize]
     [ProducesResponseType(typeof(AnalyticsDashboardDto), 200)]
     public async Task<ActionResult<AnalyticsDashboardDto>> GetDashboard(
         Guid dealerId,
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         var start = startDate ?? DateTime.UtcNow.AddDays(-30);
         var end = endDate ?? DateTime.UtcNow;
 
@@ -75,5 +79,15 @@ public class AnalyticsController : ControllerBase
     public IActionResult Health()
     {
         return Ok(new { status = "healthy", service = "DealerAnalyticsService", timestamp = DateTime.UtcNow });
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }

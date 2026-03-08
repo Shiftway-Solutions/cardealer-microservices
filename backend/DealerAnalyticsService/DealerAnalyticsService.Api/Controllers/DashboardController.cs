@@ -4,12 +4,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using DealerAnalyticsService.Application.Features.Dashboard.Queries;
 using DealerAnalyticsService.Application.DTOs;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize] // Temporarily disabled for development testing
+[Authorize]
 public class DashboardController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -34,6 +35,9 @@ public class DashboardController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var endDate = toDate ?? DateTime.UtcNow;
@@ -59,6 +63,9 @@ public class DashboardController : ControllerBase
     [HttpGet("{dealerId:guid}/quick-stats")]
     public async Task<ActionResult<object>> GetQuickStats(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var today = DateTime.UtcNow;
@@ -98,6 +105,9 @@ public class DashboardController : ControllerBase
     [HttpGet("{dealerId:guid}/performance")]
     public async Task<ActionResult<object>> GetPerformanceComparison(Guid dealerId, [FromQuery] int periodDays = 30)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var today = DateTime.UtcNow;
@@ -142,6 +152,9 @@ public class DashboardController : ControllerBase
     [HttpGet("{dealerId:guid}/trends")]
     public async Task<ActionResult<object>> GetDailyTrends(Guid dealerId, [FromQuery] int days = 30)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var today = DateTime.UtcNow.Date;
@@ -189,5 +202,15 @@ public class DashboardController : ControllerBase
             .ToListAsync<object>();
             
         return data;
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }

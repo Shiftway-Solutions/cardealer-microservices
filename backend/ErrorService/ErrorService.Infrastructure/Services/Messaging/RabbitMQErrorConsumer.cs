@@ -32,12 +32,13 @@ public class ErrorServiceRabbitMQSettings
 public class RabbitMQErrorConsumer : BackgroundService
 {
     private const int MaxRetryCount = 5;
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RabbitMQErrorConsumer> _logger;
     private readonly ErrorServiceRabbitMQSettings _settings;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly RabbitMQSettings _rabbitMqSettings;
 
     public RabbitMQErrorConsumer(
         IOptions<RabbitMQSettings> rabbitMqSettings,
@@ -48,21 +49,25 @@ public class RabbitMQErrorConsumer : BackgroundService
         _serviceProvider = serviceProvider;
         _logger = logger;
         _settings = errorServiceSettings.Value;
+        _rabbitMqSettings = rabbitMqSettings.Value;
 
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
+    }
 
+    private void InitializeRabbitMQ()
+    {
         try
         {
             var factory = new ConnectionFactory
             {
-                HostName = rabbitMqSettings.Value.HostName,
-                Port = rabbitMqSettings.Value.Port,
-                UserName = rabbitMqSettings.Value.UserName,
-                Password = rabbitMqSettings.Value.Password,
-                VirtualHost = rabbitMqSettings.Value.VirtualHost,
+                HostName = _rabbitMqSettings.HostName,
+                Port = _rabbitMqSettings.Port,
+                UserName = _rabbitMqSettings.UserName,
+                Password = _rabbitMqSettings.Password,
+                VirtualHost = _rabbitMqSettings.VirtualHost,
                 DispatchConsumersAsync = true,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
@@ -111,12 +116,37 @@ public class RabbitMQErrorConsumer : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize RabbitMQ Error Consumer");
-            throw;
+            _channel = null;
+            _connection = null;
         }
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Wait for RabbitMQ to be ready, then retry with backoff
+        await Task.Delay(5000, stoppingToken);
+
+        const int maxRetries = 10;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            if (stoppingToken.IsCancellationRequested) return;
+
+            InitializeRabbitMQ();
+            if (_channel != null) break;
+
+            var delay = TimeSpan.FromSeconds(Math.Min(attempt * 5, 60));
+            _logger.LogWarning(
+                "RabbitMQErrorConsumer: RabbitMQ not available, retry {Attempt}/{MaxRetries} in {Delay}s",
+                attempt, maxRetries, delay.TotalSeconds);
+            await Task.Delay(delay, stoppingToken);
+        }
+
+        if (_channel == null)
+        {
+            _logger.LogError("RabbitMQ channel not available after {MaxRetries} retries, RabbitMQErrorConsumer will not start", maxRetries);
+            return;
+        }
+
         stoppingToken.ThrowIfCancellationRequested();
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -150,7 +180,13 @@ public class RabbitMQErrorConsumer : BackgroundService
             autoAck: false,
             consumer: consumer);
 
-        return Task.CompletedTask;
+        _logger.LogInformation("RabbitMQErrorConsumer started, listening on queue: {Queue}", _settings.QueueName);
+
+        // Keep running until cancellation
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
     }
 
     private async Task ProcessMessageAsync(string message, ulong deliveryTag)

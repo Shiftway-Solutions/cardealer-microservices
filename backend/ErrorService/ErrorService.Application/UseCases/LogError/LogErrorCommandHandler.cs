@@ -45,7 +45,7 @@ namespace ErrorService.Application.UseCases.LogError
                     Metadata = command.Request.Metadata ?? new System.Collections.Generic.Dictionary<string, object>()
                 };
 
-                await _errorLogRepository.AddAsync(errorLog);
+                await _errorLogRepository.AddAsync(errorLog, cancellationToken);
 
                 // Registrar métricas
                 _metrics.RecordErrorLogged(

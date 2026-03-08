@@ -4,6 +4,7 @@ using DealerAnalyticsService.Application.Features.Alerts.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DealerAnalyticsService.Api.Controllers;
 
@@ -12,7 +13,7 @@ namespace DealerAnalyticsService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dealer-analytics/alerts")]
-// [Authorize] // Temporalmente deshabilitado para desarrollo
+[Authorize]
 public class AlertsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -34,6 +35,9 @@ public class AlertsController : ControllerBase
         [FromQuery] bool includeRead = false,
         [FromQuery] bool includeDismissed = false)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetActiveAlertsQuery(dealerId, includeRead, includeDismissed);
@@ -54,6 +58,9 @@ public class AlertsController : ControllerBase
     [ProducesResponseType(typeof(int), 200)]
     public async Task<ActionResult<int>> GetUnreadCount(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetUnreadAlertCountQuery(dealerId);
@@ -76,6 +83,9 @@ public class AlertsController : ControllerBase
         Guid dealerId,
         string type)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var query = new GetAlertsByTypeQuery(dealerId, type);
@@ -118,6 +128,9 @@ public class AlertsController : ControllerBase
     [ProducesResponseType(typeof(int), 200)]
     public async Task<ActionResult<int>> MarkAllAsRead(Guid dealerId)
     {
+        if (!IsAuthorizedForDealer(dealerId))
+            return Forbid();
+
         try
         {
             var command = new MarkAllAlertsAsReadCommand(dealerId);
@@ -203,6 +216,16 @@ public class AlertsController : ControllerBase
             _logger.LogError(ex, "Error creating alert for dealer {DealerId}", request.DealerId);
             return StatusCode(500, new { Message = "Error creating alert" });
         }
+    }
+
+    private bool IsAuthorizedForDealer(Guid dealerId)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+        if (role is "Admin" or "SuperAdmin")
+            return true;
+
+        var claimDealerId = User.FindFirst("dealerId")?.Value;
+        return Guid.TryParse(claimDealerId, out var id) && id == dealerId;
     }
 }
 

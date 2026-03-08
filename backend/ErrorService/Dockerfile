@@ -39,6 +39,9 @@ EXPOSE 8080
 # Create directories for secrets
 RUN mkdir -p /run/secrets
 
+# Install wget for health checks (not included in alpine by default)
+RUN apk add --no-cache wget
+
 # Create non-root user (Alpine syntax)
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \

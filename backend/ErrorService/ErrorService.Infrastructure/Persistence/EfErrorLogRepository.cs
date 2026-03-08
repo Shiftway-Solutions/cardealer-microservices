@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ErrorService.Infrastructure.Persistence
@@ -17,12 +18,12 @@ namespace ErrorService.Infrastructure.Persistence
             _context = context;
         }
 
-        public async Task<ErrorLog?> GetByIdAsync(Guid id)
+        public async Task<ErrorLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return await _context.ErrorLogs.FindAsync(id);
+            return await _context.ErrorLogs.FindAsync(new object[] { id }, cancellationToken);
         }
 
-        public async Task<IEnumerable<ErrorLog>> GetAsync(ErrorQuery query)
+        public async Task<IEnumerable<ErrorLog>> GetAsync(ErrorQuery query, CancellationToken cancellationToken = default)
         {
             var dbQuery = _context.ErrorLogs.AsNoTracking().AsQueryable();
 
@@ -47,36 +48,36 @@ namespace ErrorService.Infrastructure.Persistence
                             .Skip((query.Page - 1) * query.PageSize)
                             .Take(query.PageSize);
 
-            return await dbQuery.ToListAsync();
+            return await dbQuery.ToListAsync(cancellationToken);
         }
 
-        public async Task AddAsync(ErrorLog errorLog)
+        public async Task AddAsync(ErrorLog errorLog, CancellationToken cancellationToken = default)
         {
             _context.ErrorLogs.Add(errorLog);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var errorLog = await _context.ErrorLogs.FindAsync(id);
+            var errorLog = await _context.ErrorLogs.FindAsync(new object[] { id }, cancellationToken);
             if (errorLog != null)
             {
                 _context.ErrorLogs.Remove(errorLog);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<IEnumerable<string>> GetServiceNamesAsync()
+        public async Task<IEnumerable<string>> GetServiceNamesAsync(CancellationToken cancellationToken = default)
         {
             return await _context.ErrorLogs
                 .AsNoTracking()
                 .Select(e => e.ServiceName)
                 .Distinct()
                 .OrderBy(name => name)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null)
+        public async Task<ErrorStats> GetStatsAsync(DateTime? from = null, DateTime? to = null, CancellationToken cancellationToken = default)
         {
             var baseQuery = _context.ErrorLogs.AsNoTracking().AsQueryable();
 
@@ -100,18 +101,18 @@ namespace ErrorService.Infrastructure.Persistence
                     ErrorsLast24Hours = g.Count(e => e.OccurredAt >= now.AddHours(-24)),
                     ErrorsLast7Days = g.Count(e => e.OccurredAt >= now.AddDays(-7))
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             var errorsByService = await baseQuery
                 .GroupBy(e => e.ServiceName)
                 .Select(g => new { ServiceName = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ServiceName, x => x.Count);
+                .ToDictionaryAsync(x => x.ServiceName, x => x.Count, cancellationToken);
 
             var errorsByStatusCode = await baseQuery
                 .Where(e => e.StatusCode.HasValue)
                 .GroupBy(e => e.StatusCode!.Value)
                 .Select(g => new { StatusCode = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.StatusCode, x => x.Count);
+                .ToDictionaryAsync(x => x.StatusCode, x => x.Count, cancellationToken);
 
             return new ErrorStats
             {

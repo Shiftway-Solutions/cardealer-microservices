@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReportsService.Application.DTOs;
 using ReportsService.Domain.Entities;
@@ -7,6 +8,7 @@ namespace ReportsService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ReportsController : ControllerBase
 {
     private readonly IReportRepository _reportRepository;
@@ -123,6 +125,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/generate")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ReportDto>> Generate(Guid id, [FromBody] GenerateReportRequest? request, CancellationToken cancellationToken)
     {
         var report = await _reportRepository.GetByIdAsync(id, cancellationToken);
@@ -140,6 +143,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/complete")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ReportDto>> Complete(Guid id, [FromBody] ReportGeneratedRequest request, CancellationToken cancellationToken)
     {
         var report = await _reportRepository.GetByIdAsync(id, cancellationToken);
@@ -154,6 +158,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/fail")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ReportDto>> Fail(Guid id, [FromBody] string errorMessage, CancellationToken cancellationToken)
     {
         var report = await _reportRepository.GetByIdAsync(id, cancellationToken);
@@ -168,6 +173,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _reportRepository.ExistsAsync(id, cancellationToken);

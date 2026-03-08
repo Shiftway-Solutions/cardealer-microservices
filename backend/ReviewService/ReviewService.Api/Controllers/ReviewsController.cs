@@ -232,15 +232,16 @@ public class ReviewsController : ControllerBase
             // Si el error contiene "forbidden" o "unauthorized", retornar 403
             if (result.Error.Contains("no autorizado") || result.Error.Contains("forbidden"))
             {
-                return Forbid(result.Error);
+                // NOTE: Forbid(string) sets auth scheme, not error body — use StatusCode instead
+                return StatusCode(403, new { error = result.Error });
             }
 
-            return BadRequest(result.Error);
+            return BadRequest(new { error = result.Error });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating review {ReviewId}", reviewId);
-            return StatusCode(500, "Error interno del servidor");
+            _logger.LogError(ex, "Error deleting review {ReviewId}", reviewId);
+            return StatusCode(500, new { error = "Error interno del servidor" });
         }
     }
 
@@ -281,15 +282,15 @@ public class ReviewsController : ControllerBase
 
             if (result.Error.Contains("no autorizado") || result.Error.Contains("forbidden"))
             {
-                return Forbid(result.Error);
+                return StatusCode(403, new { error = result.Error });
             }
 
-            return BadRequest(result.Error);
+            return BadRequest(new { error = result.Error });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting review {ReviewId}", reviewId);
-            return StatusCode(500, "Error interno del servidor");
+            return StatusCode(500, new { error = "Error interno del servidor" });
         }
     }
 
@@ -381,9 +382,10 @@ public class ReviewsController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Forbid(ex.Message);
+            // NOTE: Forbid(string) sets auth scheme, not error body — use StatusCode instead
+            return StatusCode(403, new { error = "No autorizado para realizar esta acción" });
         }
         catch (Exception ex)
         {
@@ -580,7 +582,7 @@ public class ReviewsController : ControllerBase
             {
                 if (userId != buyerId && !User.IsInRole("Admin"))
                 {
-                    return Forbid("No tiene permiso para ver estas reviews");
+                    return StatusCode(403, new { error = "No tiene permiso para ver estas reviews" });
                 }
             }
 
@@ -707,7 +709,7 @@ public class ReviewsController : ControllerBase
             {
                 if (userId != buyerId && !User.IsInRole("Admin"))
                 {
-                    return Forbid("No tiene permiso para ver estas solicitudes");
+                    return StatusCode(403, new { error = "No tiene permiso para ver estas solicitudes" });
                 }
             }
 
