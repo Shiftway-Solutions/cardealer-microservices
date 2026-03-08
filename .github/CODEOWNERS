@@ -1,0 +1,67 @@
+# =============================================================================
+
+# CODEOWNERS — Enforce code review for critical paths
+
+# =============================================================================
+
+# Syntax: <pattern> <owner1> <owner2> ...
+
+# Owners are GitHub usernames or team names (@org/team-name)
+
+# =============================================================================
+
+# ============================================
+
+# CI/CD & Infrastructure — require infra team review
+
+# ============================================
+
+.github/ @gregorymorenoiem
+k8s/ @gregorymorenoiem
+compose\*.yaml @gregorymorenoiem
+Dockerfile @gregorymorenoiem
+
+# ============================================
+
+# Security-critical services
+
+# ============================================
+
+backend/AuthService/ @gregorymorenoiem
+backend/KYCService/ @gregorymorenoiem
+backend/BillingService/ @gregorymorenoiem
+backend/Gateway/ @gregorymorenoiem
+
+# ============================================
+
+# Shared libraries — affects ALL services
+
+# ============================================
+
+backend/\_Shared/ @gregorymorenoiem
+
+# ============================================
+
+# Security validators & middleware
+
+# ============================================
+
+**/SecurityValidators.cs @gregorymorenoiem
+**/SecurityMiddleware.cs @gregorymorenoiem
+
+# ============================================
+
+# Frontend — require frontend lead review
+
+# ============================================
+
+frontend/ @gregorymorenoiem
+
+# ============================================
+
+# Documentation
+
+# ============================================
+
+docs/ @gregorymorenoiem
+\*.md @gregorymorenoiem

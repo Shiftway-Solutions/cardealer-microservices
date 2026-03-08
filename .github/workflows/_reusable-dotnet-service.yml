@@ -314,6 +314,7 @@ jobs:
           sbom: false
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:sha-${{ github.sha }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.service-name }}
           cache-to: type=local,dest=/tmp/.buildx-cache-new-${{ inputs.service-name }},mode=max

@@ -1045,10 +1045,44 @@ jobs:
           # Deploy ChatbotService + LLM Server (separate manifest)
           kubectl apply -f k8s/chatbotservice.yaml
 
-          # Force rollout restart for all deployments so pods pull the new :latest images
-          # (kubectl apply alone won't trigger re-pull when image name/tag hasn't changed)
-          echo "🔄 Restarting deployments to pick up new images..."
-          kubectl rollout restart deployment -n okla || true
+          # ⚠️ TARGETED restarts — only restart services that were actually rebuilt.
+          # Blanket "kubectl rollout restart deployment -n okla" causes unnecessary pod
+          # churn in 40+ services, drops in-flight requests, and resets connection pools.
+          echo "🔄 Restarting only CHANGED deployments to pick up new images..."
+
+          # Build list of changed services from job outcomes (success = was built)
+          CHANGED_SERVICES=""
+          ${{ needs.authservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES authservice"' || '' }}
+          ${{ needs.userservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES userservice"' || '' }}
+          ${{ needs.roleservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES roleservice"' || '' }}
+          ${{ needs.errorservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES errorservice"' || '' }}
+          ${{ needs.notificationservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES notificationservice"' || '' }}
+          ${{ needs.vehiclessaleservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES vehiclessaleservice"' || '' }}
+          ${{ needs.mediaservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES mediaservice"' || '' }}
+          ${{ needs.billingservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES billingservice"' || '' }}
+          ${{ needs.kycservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES kycservice"' || '' }}
+          ${{ needs.auditservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES auditservice"' || '' }}
+          ${{ needs.idempotencyservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES idempotencyservice"' || '' }}
+          ${{ needs.adminservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES adminservice"' || '' }}
+          ${{ needs.contactservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES contactservice"' || '' }}
+          ${{ needs.reviewservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES reviewservice"' || '' }}
+          ${{ needs.dealermanagementservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES dealermanagementservice"' || '' }}
+          ${{ needs.chatbotservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES chatbotservice"' || '' }}
+          ${{ needs.gateway.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES gateway"' || '' }}
+          ${{ needs.frontend-web.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES frontend-web"' || '' }}
+          ${{ needs.searchagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES searchagent"' || '' }}
+          ${{ needs.supportagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES supportagent"' || '' }}
+          ${{ needs.recoagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES recoagent"' || '' }}
+
+          if [ -z "$CHANGED_SERVICES" ]; then
+            echo "ℹ️ No services changed — skipping restarts"
+          else
+            for SVC in $CHANGED_SERVICES; do
+              echo "  🔄 Restarting $SVC..."
+              kubectl rollout restart deployment/$SVC -n okla || true
+            done
+            echo "✅ Restarted $(echo $CHANGED_SERVICES | wc -w | tr -d ' ') services"
+          fi
 
       - name: ✅ Verify deployment
         run: |
@@ -1131,6 +1165,25 @@ jobs:
     steps:
       - name: 📊 Generate summary
         run: |
+          # Detect if any service failed
+          FAILED_SERVICES=""
+          ${{ contains(needs.authservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES AuthService"' || '' }}
+          ${{ contains(needs.userservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES UserService"' || '' }}
+          ${{ contains(needs.vehiclessaleservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES VehiclesSaleService"' || '' }}
+          ${{ contains(needs.gateway.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES Gateway"' || '' }}
+          ${{ contains(needs.frontend-web.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES Frontend"' || '' }}
+          ${{ contains(needs.kycservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES KYCService"' || '' }}
+          ${{ contains(needs.billingservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES BillingService"' || '' }}
+          ${{ contains(needs.chatbotservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES ChatbotService"' || '' }}
+
+          if [ -n "$FAILED_SERVICES" ]; then
+            echo "::error::❌ CI/CD FAILURES detected:$FAILED_SERVICES"
+            echo "PIPELINE_STATUS=failure" >> $GITHUB_ENV
+            echo "FAILED_LIST=$FAILED_SERVICES" >> $GITHUB_ENV
+          else
+            echo "PIPELINE_STATUS=success" >> $GITHUB_ENV
+          fi
+
           echo "## 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Results" >> $GITHUB_STEP_SUMMARY
@@ -1185,3 +1238,35 @@ jobs:
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔔 Notify on failure (Slack)
+        if: env.PIPELINE_STATUS == 'failure' && env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,message,commit,author,action,ref,workflow
+          text: |
+            ❌ CI/CD Pipeline FAILED
+            Failed services: ${{ env.FAILED_LIST }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: 🚨 Create GitHub Issue on critical failure
+        if: env.PIPELINE_STATUS == 'failure' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedServices = process.env.FAILED_LIST || 'unknown';
+            const title = `🚨 CI/CD Pipeline Failure on main — ${new Date().toISOString().slice(0,10)}`;
+            const body = `## Pipeline Failure\n\n**Branch:** main\n**Commit:** ${context.sha}\n**Failed Services:** ${failedServices}\n**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n> Auto-generated by CI/CD pipeline.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['ci-failure', 'priority-high']
+            });
+        continue-on-error: true

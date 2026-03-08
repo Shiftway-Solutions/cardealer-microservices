@@ -10,7 +10,7 @@ This file provides concise context for GitHub Copilot (Claude) when assisting wi
 
 **OKLA** is a vehicle marketplace in Dominican Republic, built with microservices (.NET 8) and a Next.js 16 frontend, deployed on Digital Ocean Kubernetes (DOKS).
 
-- **Business model**: Free buyers, paid sellers ($29/listing) and dealers ($49–$299/mo).
+- **Business model**: Freemium v3 — Free buyers, dealers on 4 tiers: Libre ($0), Visible ($29/mo), Pro ($89/mo), Elite ($199/mo).
 - **Architecture**: Clean Architecture per service, CQRS with MediatR, Domain Events, RabbitMQ, PostgreSQL, Redis.
 - **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind, shadcn/ui, Zustand, TanStack Query, pnpm (⚠️ **NO npm/yarn**).
 - **Backend**: .NET 8, Ocelot Gateway, shared libraries (`CarDealer.Shared`, `CarDealer.Contracts`).

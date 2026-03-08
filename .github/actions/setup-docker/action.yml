@@ -1,0 +1,137 @@
+# =============================================================================
+# COMPOSITE ACTION: Setup Docker (Colima + Buildx + GHCR Auth)
+# =============================================================================
+# Eliminates ~60 lines of boilerplate duplicated across 5+ workflows.
+# Handles: Colima startup, buildx symlink fix, keychain bypass, GHCR login.
+#
+# Usage:
+#   - uses: ./.github/actions/setup-docker
+#     with:
+#       push-to-registry: true  # set false for build-only
+# =============================================================================
+
+name: "Setup Docker (Colima + Buildx)"
+description: "Setup Docker daemon via Colima, configure buildx, and optionally login to GHCR"
+
+inputs:
+  push-to-registry:
+    description: "Whether to login to GHCR for pushing images"
+    required: false
+    default: "false"
+  github-token:
+    description: "GitHub token for GHCR authentication"
+    required: false
+    default: ""
+  github-actor:
+    description: "GitHub actor for GHCR authentication"
+    required: false
+    default: ""
+
+outputs:
+  docker-config:
+    description: "Path to the CI Docker config directory"
+    value: ${{ steps.docker-config.outputs.config-dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: "🗑️ Remove Docker Desktop buildx symlink & create CI Docker config"
+      id: docker-config
+      shell: bash
+      run: |
+        # 1. Remove Docker Desktop buildx symlink so setup-buildx-action can
+        #    install its binary as a regular file (symlink to Docker.app = EPERM).
+        rm -f ~/.docker/cli-plugins/docker-buildx
+
+        # 2. Create a clean CI-specific DOCKER_CONFIG with credsStore:"" (empty).
+        CI_CFG=$(mktemp -d)
+        jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+          > "$CI_CFG/config.json" 2>/dev/null \
+          || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+        echo "CI DOCKER_CONFIG: $(cat "$CI_CFG/config.json")"
+        echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
+        echo "config-dir=$CI_CFG" >> "$GITHUB_OUTPUT"
+
+    - name: "🩺 Ensure Docker daemon is running (Colima)"
+      shell: bash
+      timeout-minutes: 6
+      run: |
+        COLIMA_BIN="/opt/homebrew/bin/colima"
+        COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+
+        export DOCKER_HOST="unix://$COLIMA_SOCKET"
+        echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+
+        # Fast path: Docker already responding
+        if docker version > /dev/null 2>&1; then
+          echo "✅ Docker daemon is healthy (Colima already running)"
+          docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+          exit 0
+        fi
+
+        echo "⚠️ Docker not responding via Colima socket. Checking Colima status..."
+        if [ -x "$COLIMA_BIN" ]; then
+          "$COLIMA_BIN" status 2>&1 || true
+          echo "▶️ Starting Colima..."
+          "$COLIMA_BIN" start 2>&1 | head -30 || true
+        else
+          echo "::error::Colima not found at $COLIMA_BIN — instalar con: brew install colima"
+          exit 1
+        fi
+
+        for i in $(seq 1 36); do
+          sleep 5
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker ready after $((i*5))s"
+            docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+            exit 0
+          fi
+          if [ $i -eq 36 ]; then
+            echo "::error::Docker daemon no respondió en 3 minutos"
+            [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" status 2>&1 || true
+            exit 1
+          fi
+          echo "  Waiting... $((i*5))s / 180s"
+        done
+
+    - name: "🐳 Pre-pull buildkit image"
+      shell: bash
+      run: |
+        if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+          echo "✅ moby/buildkit:buildx-stable-1 already cached"
+        else
+          echo "⚠️ Pulling moby/buildkit:buildx-stable-1 anonymously..."
+          DOCKER_CONFIG=/tmp/docker-anon-cfg \
+            && mkdir -p "$DOCKER_CONFIG" \
+            && printf '{"auths":{}}' > "$DOCKER_CONFIG/config.json" \
+            && DOCKER_CONFIG="$DOCKER_CONFIG" docker pull moby/buildkit:buildx-stable-1
+        fi
+
+    - name: "🔧 Set up Docker Buildx"
+      uses: docker/setup-buildx-action@v3
+      with:
+        version: latest
+        driver-opts: |
+          network=host
+
+    - name: "🔐 Reset Docker config post-buildx"
+      if: inputs.push-to-registry == 'true'
+      shell: bash
+      run: |
+        jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+          > /tmp/dc_reset.json \
+          && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+          || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+    - name: "🔐 Login to GHCR"
+      if: inputs.push-to-registry == 'true'
+      shell: bash
+      timeout-minutes: 2
+      run: |
+        TOKEN="${{ inputs.github-token }}"
+        USER="${{ inputs.github-actor }}"
+        AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+        jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+          "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+          && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+        echo "✅ Logged into ghcr.io"

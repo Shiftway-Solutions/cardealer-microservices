@@ -130,7 +130,6 @@ jobs:
       - name: 🧪 Run unit tests
         working-directory: ${{ inputs.working-directory }}
         run: pnpm test -- --run --reporter=verbose --coverage
-        continue-on-error: true
 
       - name: 📊 Upload coverage
         if: always()
@@ -147,7 +146,7 @@ jobs:
     name: 🐳 Docker Build
     needs: unit-tests
     runs-on: [self-hosted, macOS, ARM64]
-    if: always() && !cancelled() && inputs.run-docker-build
+    if: success() && inputs.run-docker-build
     permissions:
       contents: read
       packages: write
@@ -294,6 +293,7 @@ jobs:
           network: host
           tags: |
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:${{ steps.version.outputs.version }}
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:sha-${{ github.sha }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/frontend-web:latest
           cache-from: type=local,src=/tmp/.buildx-cache-frontend-web
           cache-to: type=local,dest=/tmp/.buildx-cache-new-frontend-web,mode=max

@@ -92,7 +92,6 @@ jobs:
       - name: 🧪 Unit tests
         working-directory: frontend/web-next
         run: pnpm test -- --run --reporter=verbose
-        continue-on-error: true
 
   # ============================================
   # BACKEND CHECKS (Parallel)
@@ -159,16 +158,21 @@ jobs:
       - name: 🛡️ NuGet Vulnerability Check
         run: |
           cd backend
+          CRITICAL_FOUND=false
           for svc in ${{ steps.changed-services.outputs.services }}; do
             if [ -d "$svc" ] && [ -f "$svc/${svc}.sln" ]; then
               echo "🛡️ Checking vulnerabilities for $svc..."
               dotnet list "$svc/${svc}.sln" package --vulnerable --include-transitive 2>&1 | tee /tmp/vuln-$svc.txt
               if grep -qi "Critical" /tmp/vuln-$svc.txt 2>/dev/null; then
                 echo "::error::Critical vulnerability in $svc!"
+                CRITICAL_FOUND=true
               fi
             fi
           done
-        continue-on-error: true
+          if [ "$CRITICAL_FOUND" = true ]; then
+            echo "::error::Critical NuGet vulnerabilities detected — PR blocked"
+            exit 1
+          fi
 
   # ============================================
   # PR QUALITY CHECKS
