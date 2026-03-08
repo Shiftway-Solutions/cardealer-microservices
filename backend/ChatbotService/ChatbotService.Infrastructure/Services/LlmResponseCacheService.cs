@@ -145,15 +145,66 @@ public class LlmResponseCacheService : ILlmResponseCacheService
     }
 
     /// <summary>
-    /// Invalidate all cached responses (e.g., after model update).
+    /// Invalidate all cached LLM responses (e.g., after inventory sync or model update).
+    /// Uses StackExchange.Redis SCAN to find and delete all llm:cache:* keys.
     /// </summary>
-    public Task InvalidateAllAsync(CancellationToken ct = default)
+    public async Task InvalidateAllAsync(CancellationToken ct = default)
     {
         _logger.LogInformation("Invalidating all LLM response cache entries");
-        // Note: IDistributedCache doesn't support wildcard deletion.
-        // For production, use StackExchange.Redis directly with SCAN/DEL.
-        // For now, entries will naturally expire via TTL.
-        return Task.CompletedTask;
+
+        try
+        {
+            // Access the underlying StackExchange.Redis connection for SCAN support.
+            // IDistributedCache doesn't support wildcard operations, so we use the
+            // concrete Redis connection to efficiently scan and delete cached responses.
+            if (_cache is Microsoft.Extensions.Caching.StackExchangeRedis.RedisCache redisCache)
+            {
+                var field = typeof(Microsoft.Extensions.Caching.StackExchangeRedis.RedisCache)
+                    .GetField("_cache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field?.GetValue(redisCache) is StackExchange.Redis.IDatabase db)
+                {
+                    var server = db.Multiplexer.GetServer(db.Multiplexer.GetEndPoints().First());
+                    var keysDeleted = 0;
+
+                    await foreach (var key in server.KeysAsync(pattern: "llm:cache:*", pageSize: 100))
+                    {
+                        await db.KeyDeleteAsync(key);
+                        keysDeleted++;
+                    }
+
+                    _logger.LogInformation("Invalidated {Count} cached LLM responses", keysDeleted);
+                    return;
+                }
+            }
+
+            _logger.LogWarning("Could not access Redis directly for cache invalidation. Entries will expire via TTL.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache invalidation failed. Entries will expire naturally via TTL.");
+        }
+    }
+
+    /// <summary>
+    /// Invalidate a specific cached LLM response by query and system prompt.
+    /// Used to remove hallucinated or moderated cached responses.
+    /// </summary>
+    public async Task InvalidateAsync(string query, string? systemPrompt = null, CancellationToken ct = default)
+    {
+        if (!_enabled || string.IsNullOrWhiteSpace(query))
+            return;
+
+        var key = BuildCacheKey(query, systemPrompt);
+
+        try
+        {
+            await _cache.RemoveAsync(key, ct);
+            _logger.LogInformation("Invalidated cached response for key {Key}", key[..12]);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to invalidate cache entry {Key}", key[..12]);
+        }
     }
 
     private static string BuildCacheKey(string query, string? systemPrompt)
@@ -162,8 +213,12 @@ public class LlmResponseCacheService : ILlmResponseCacheService
         var normalized = query.Trim().ToLowerInvariant();
         normalized = System.Text.RegularExpressions.Regex.Replace(normalized, @"\s+", " ");
 
+        // CRITICAL: Use SHA256 for system prompt hashing instead of GetHashCode().
+        // string.GetHashCode() is non-deterministic in .NET 6+ (randomized per process)
+        // which causes cache misses across pod restarts and different replicas in K8s.
+        // SHA256 is deterministic and consistent across all processes/platforms.
         var input = systemPrompt != null
-            ? $"{normalized}|{systemPrompt.GetHashCode()}"
+            ? $"{normalized}|{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(systemPrompt)))[..16]}"
             : normalized;
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));

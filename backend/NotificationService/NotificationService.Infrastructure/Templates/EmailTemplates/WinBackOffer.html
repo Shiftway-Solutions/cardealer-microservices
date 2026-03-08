@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Te extrañamos en OKLA - Oferta especial</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header .subtitle { margin-top: 8px; opacity: 0.9; }
+        .content { background: #ffffff; padding: 30px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+        .offer-box { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 2px solid #8b5cf6; border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center; }
+        .offer-box .discount { font-size: 48px; font-weight: bold; color: #7c3aed; }
+        .offer-box .discount-label { font-size: 18px; color: #6b7280; margin-top: 4px; }
+        .offer-box .promo-code { background: #7c3aed; color: white; display: inline-block; padding: 8px 24px; border-radius: 8px; font-family: monospace; font-size: 20px; letter-spacing: 2px; margin-top: 12px; }
+        .stats-box { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .stat { text-align: center; display: inline-block; width: 30%; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #111; }
+        .stat-label { font-size: 12px; color: #6b7280; }
+        .new-features { list-style: none; padding: 0; }
+        .new-features li { padding: 10px 0 10px 36px; border-bottom: 1px solid #f3f4f6; position: relative; }
+        .new-features li::before { content: "🆕"; position: absolute; left: 0; }
+        .button { display: inline-block; background: #7c3aed; color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; }
+        .urgency { background: #fef3c7; border-radius: 8px; padding: 12px; text-align: center; margin: 16px 0; font-size: 14px; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+        .footer a { color: #8b5cf6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 ¡Te extrañamos en OKLA!</h1>
+            <div class="subtitle">Tenemos algo especial para ti</div>
+        </div>
+        <div class="content">
+            <p>Hola {{ DealerName }},</p>
+
+            <p>Han pasado unos días desde que dejaste OKLA y queremos que sepas que tu dealer sigue siendo importante para nosotros.</p>
+
+            <div class="offer-box">
+                <div class="discount">{{ DiscountPercent }}% OFF</div>
+                <div class="discount-label">en tu primer mes de regreso</div>
+                <div style="margin-top: 16px;">
+                    <div class="promo-code">{{ PromoCode }}</div>
+                </div>
+                <div style="margin-top: 8px; color: #6b7280; font-size: 13px;">Válido hasta {{ OfferExpiresAt }}</div>
+            </div>
+
+            <p><strong>Mientras no estuviste, agregamos nuevas funciones:</strong></p>
+
+            <ul class="new-features">
+                <li>Historial de vehículos integrado (CARFAX)</li>
+                <li>Análisis de precios de mercado en tiempo real</li>
+                <li>Importación desde Facebook Marketplace con IA</li>
+                <li>OKLA Coins para promociones y destacados</li>
+                <li>Chatbot asistente con soporte en español dominicano</li>
+            </ul>
+
+            <div class="urgency">
+                ⏰ Esta oferta expira en <strong>{{ DaysUntilExpiry }} días</strong> · Solo para dealers que regresan
+            </div>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="{{ ReactivateUrl }}" class="button">Volver a OKLA con {{ DiscountPercent }}% OFF</a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px;">Si ya encontraste otra solución o tienes alguna duda, simplemente responde a este email. Estamos aquí para ayudarte. 💪</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ Year }} OKLA Marketplace · Santo Domingo, República Dominicana</p>
+            <p><a href="{{ UnsubscribeUrl }}">Dejar de recibir estos emails</a></p>
+        </div>
+    </div>
+</body>
+</html>

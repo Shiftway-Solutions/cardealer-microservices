@@ -26,6 +26,13 @@ public class ChatbotConfiguration
     public int FreeInteractionsPerMonth { get; set; } = 180;
     public decimal CostPerInteraction { get; set; } = 0.002m;
     
+    /// <summary>
+    /// Cost per overage conversation (beyond free tier).
+    /// Standard plan: $0.08 per conversation that exceeds FreeInteractionsPerMonth.
+    /// This is the rate billed to the dealer for overage usage.
+    /// </summary>
+    public decimal OverageCostPerConversation { get; set; } = 0.08m;
+    
     // Límites de interacciones
     public int MaxInteractionsPerSession { get; set; } = 10;
     public int MaxInteractionsPerUserPerDay { get; set; } = 50;

@@ -31,6 +31,7 @@ public class TemplatesController : ControllerBase
     /// Create a new notification template
     /// </summary>
     [HttpPost]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(typeof(TemplateResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateTemplate([FromBody] CreateTemplateRequest request)
@@ -177,6 +178,7 @@ public class TemplatesController : ControllerBase
     /// Update template
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(typeof(TemplateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTemplate(Guid id, [FromBody] UpdateTemplateRequest request)
@@ -229,6 +231,7 @@ public class TemplatesController : ControllerBase
     /// Delete template
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTemplate(Guid id)
@@ -245,6 +248,7 @@ public class TemplatesController : ControllerBase
     /// Activate template
     /// </summary>
     [HttpPost("{id}/activate")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(typeof(TemplateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ActivateTemplate(Guid id)
@@ -263,6 +267,7 @@ public class TemplatesController : ControllerBase
     /// Deactivate template
     /// </summary>
     [HttpPost("{id}/deactivate")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(typeof(TemplateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeactivateTemplate(Guid id)
@@ -373,6 +378,7 @@ public class TemplatesController : ControllerBase
     /// Create a new version of an existing template
     /// </summary>
     [HttpPost("{id}/version")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     [ProducesResponseType(typeof(TemplateResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateTemplateVersion(Guid id)

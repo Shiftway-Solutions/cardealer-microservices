@@ -6,10 +6,12 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using ChatbotService.Domain.Interfaces;
+using ChatbotService.Application.Interfaces;
 using ChatbotService.Infrastructure.Persistence;
 using ChatbotService.Infrastructure.Persistence.Repositories;
 using ChatbotService.Infrastructure.Services;
 using ChatbotService.Infrastructure.Services.Strategies;
+using CarDealer.Shared.Resilience.Extensions;
 
 namespace ChatbotService.Infrastructure;
 
@@ -87,10 +89,11 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(30);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        }).AddStandardResilience(configuration);
 
         // Observability — .NET 8 Metrics
         services.AddSingleton<ChatbotMetrics>();
+        services.AddSingleton<IChatbotSafetyMetrics>(sp => sp.GetRequiredService<ChatbotMetrics>());
 
         // HTTP Client para Claude API (Anthropic)
         // Claude Sonnet responds in 1-5s; timeout reduced from 120s to 60s for Claude API
@@ -103,7 +106,8 @@ public static class DependencyInjection
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
         {
             AllowAutoRedirect = false,
-        });
+        })
+        .AddStandardResilience(configuration);
 
         // HTTP Client para Embedding Server (separado del LLM Server)
         // Puede apuntar a: llm-server local, HuggingFace Inference API (gratis), OpenAI, etc.
@@ -113,7 +117,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(configuration["Embedding:ServerUrl"] ?? "http://llm-server:8000");
             client.Timeout = TimeSpan.FromSeconds(int.Parse(configuration["Embedding:TimeoutSeconds"] ?? "10"));
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        }).AddStandardResilience(configuration);
 
         // HTTP Clients with Polly resilience
         services.AddHttpClient("VehiclesApi", client =>

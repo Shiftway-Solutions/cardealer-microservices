@@ -53,7 +53,7 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         if (page < 1) page = 1;
         if (pageSize is < 1 or > 100) pageSize = 20;
@@ -87,7 +87,7 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         var count = await _repository.GetUnreadCountAsync(userId.Value);
         return Ok(new UnreadCountResponse(count));
@@ -104,17 +104,17 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         if (!Guid.TryParse(notificationId, out var notifId))
-            return BadRequest(new { Message = "Invalid notification ID" });
+            return BadRequest(new { error = "Invalid notification ID" });
 
         var updated = await _repository.MarkAsReadAsync(notifId, userId.Value);
         if (!updated)
-            return NotFound(new { Message = "Notification not found" });
+            return NotFound(new { error = "Notification not found" });
 
         _logger.LogDebug("Marked notification {NotifId} as read for UserId={UserId}", notifId, userId);
-        return Ok(new { Message = "Notification marked as read" });
+        return Ok(new { message = "Notification marked as read" });
     }
 
     // ─── PATCH /api/notifications/read-all ───────────────────────────────────────
@@ -127,11 +127,11 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         var count = await _repository.MarkAllAsReadAsync(userId.Value);
         _logger.LogInformation("Marked {Count} notifications as read for UserId={UserId}", count, userId);
-        return Ok(new { Message = "All notifications marked as read", Count = count });
+        return Ok(new { message = "All notifications marked as read", count });
     }
 
     // ─── DELETE /api/notifications/{id} ──────────────────────────────────────────
@@ -145,19 +145,19 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         if (!Guid.TryParse(notificationId, out var notifId))
-            return BadRequest(new { Message = "Invalid notification ID" });
+            return BadRequest(new { error = "Invalid notification ID" });
 
         // Ownership check: load and validate before delete
         var notification = await _repository.GetByIdAsync(notifId);
         if (notification == null || notification.UserId != userId.Value)
-            return NotFound(new { Message = "Notification not found" });
+            return NotFound(new { error = "Notification not found" });
 
         await _repository.DeleteAsync(notifId);
         _logger.LogDebug("Deleted notification {NotifId} for UserId={UserId}", notifId, userId);
-        return Ok(new { Message = "Notification deleted" });
+        return Ok(new { message = "Notification deleted" });
     }
 
     // ─── DELETE /api/notifications/read ──────────────────────────────────────────
@@ -170,11 +170,11 @@ public class UserNotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { Message = "User ID not found in token" });
+            return Unauthorized(new { message = "User ID not found in token" });
 
         var count = await _repository.DeleteReadAsync(userId.Value);
         _logger.LogInformation("Deleted {Count} read notifications for UserId={UserId}", count, userId);
-        return Ok(new { Message = $"Deleted {count} read notifications", Count = count });
+        return Ok(new { message = $"Deleted {count} read notifications", count });
     }
 
     // ─── Mapping ─────────────────────────────────────────────────────────────────

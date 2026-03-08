@@ -38,6 +38,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IScheduledNotificationRepository, EfScheduledNotificationRepository>();
         services.AddScoped<INotificationLogRepository, EfNotificationLogRepository>();
         services.AddScoped<IUserNotificationRepository, EfUserNotificationRepository>();
+        services.AddScoped<IPriceAlertRepository, EfPriceAlertRepository>();
+        services.AddScoped<ISavedSearchRepository, EfSavedSearchRepository>();
 
         // ── User Notification Service (in-app notifications) ──
         services.AddScoped<IUserNotificationService, UserNotificationService>();
@@ -60,7 +62,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWhatsAppProvider>(sp =>
         {
             var factory = sp.GetRequiredService<IWhatsAppProviderFactory>();
-            return factory.GetProviderAsync().GetAwaiter().GetResult();
+            // Use synchronous resolution to avoid deadlock from GetAwaiter().GetResult()
+            return factory.GetProviderAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         });
 
         // ── Webhook Providers (Teams + Slack) ─────────────────
@@ -91,7 +94,7 @@ public static class ServiceCollectionExtensions
         // ── ErrorService Client ───────────────────────────────
         services.AddHttpClient<ErrorServiceClient>(client =>
         {
-            client.BaseAddress = new Uri(configuration["Services:ErrorService"] ?? "http://errorservice:80");
+            client.BaseAddress = new Uri(configuration["Services:ErrorService"] ?? "http://errorservice:8080");
             client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
         });
 

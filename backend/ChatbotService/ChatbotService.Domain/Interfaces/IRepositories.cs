@@ -34,6 +34,11 @@ public interface IChatMessageRepository
     Task<IEnumerable<ChatMessage>> GetFallbackMessagesAsync(Guid configurationId, DateTime since, CancellationToken ct = default);
     Task<IEnumerable<ChatMessage>> GetRecentBySessionTokenAsync(string sessionToken, int maxMessages, CancellationToken ct = default);
     Task<int> GetLlmCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default);
+    
+    /// <summary>
+    /// Counts LLM interactions by a specific user within a time range (for daily/monthly limits).
+    /// </summary>
+    Task<int> GetLlmCallsCountByUserAsync(Guid userId, DateTime from, DateTime to, CancellationToken ct = default);
 }
 
 /// <summary>

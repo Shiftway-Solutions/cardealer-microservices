@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using NotificationService.Infrastructure.Extensions;
 using NotificationService.Infrastructure.Persistence;
 using NotificationService.Infrastructure.Providers;
@@ -23,6 +24,7 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using NotificationService.Api.Middleware;
+using NotificationService.Api.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -32,16 +34,27 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
 const string ServiceName = "NotificationService";
+const string ServiceVersion = "1.0.0";
 
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
 builder.UseStandardSerilog(ServiceName);
 
+// ============= SECRETS PROVIDER =============
+builder.Services.AddSecretProvider();
+
 // Add services to the container.
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<FluentValidationFilter>();
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -81,17 +94,27 @@ builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========== SERVICE DISCOVERY ==========
 
-// Consul Client
-builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+// Service Discovery Configuration - with fallback to NoOp when Consul is disabled
+var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
 {
-    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
-}));
+    builder.Services.AddSingleton<IConsulClient>(sp =>
+    {
+        var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+        return new ConsulClient(config => config.Address = new Uri(consulAddress));
+    });
 
-// Service Discovery Services
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddHttpClient("HealthCheck");
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+    builder.Services.AddHttpClient("HealthCheck");
+    builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+}
+else
+{
+    // Use NoOp implementations when Consul is disabled
+    builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
+}
 
 // ========================================
 
@@ -101,11 +124,16 @@ builder.Services.AddHostedService<UserRegisteredNotificationConsumer>();
 builder.Services.AddHostedService<VehicleCreatedNotificationConsumer>();
 builder.Services.AddHostedService<PaymentReceiptNotificationConsumer>();
 builder.Services.AddHostedService<InvoiceNotificationConsumer>(); // Factura electrónica e-CF por email
-builder.Services.AddHostedService<KYCStatusChangedNotificationConsumer>();
+// KYCStatusChangedNotificationConsumer — already registered in AddInfrastructure() (ServiceCollectionExtensions.cs)
 builder.Services.AddHostedService<PriceAlertTriggeredConsumer>();
 builder.Services.AddHostedService<SavedSearchActivatedConsumer>();
 builder.Services.AddHostedService<UserLoggedInEventConsumer>(); // Security in-app notifications on login
 builder.Services.AddHostedService<UserSettingsChangedEventConsumer>(); // In-app confirmation when user saves settings
+
+// 🔄 RETENTION: Subscription lifecycle notification consumers
+builder.Services.AddHostedService<TrialEndingNotificationConsumer>();               // Trial expiry warnings (3-day + 1-day)
+builder.Services.AddHostedService<PaymentFailedNotificationConsumer>();              // Payment failure alerts with update CTA
+builder.Services.AddHostedService<SubscriptionCancelledNotificationConsumer>();      // Cancellation confirmation + feedback request
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");
@@ -146,9 +174,7 @@ builder.Services.AddValidatorsFromAssembly(Assembly.Load("NotificationService.Ap
 // ValidationBehavior — ensures FluentValidation validators (NoSqlInjection, NoXss) run automatically in MediatR pipeline
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(NotificationService.Application.Behaviors.ValidationBehavior<,>));
 
-// Configure settings
-builder.Services.Configure<NotificationSettings>(
-    builder.Configuration.GetSection("NotificationSettings"));
+// NotificationSettings already registered in AddInfrastructure — no duplicate Configure<> needed
 
 // ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
 try
@@ -243,6 +269,22 @@ builder.Services.AddHttpClient<NotificationService.Application.Interfaces.IAudit
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
 var app = builder.Build();
 
 // Apply database migrations conditionally (disabled in production to avoid race conditions with HPA replicas)
@@ -276,39 +318,51 @@ app.UseGlobalErrorHandling();
 // 2. Security Headers (OWASP) — early in pipeline
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-// 3. Request Logging
+// 3. Response Compression — early, after error handling
+app.UseResponseCompression();
+
+// 4. Request Logging
 app.UseRequestLogging();
 
-// 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+// 5. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
 if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
 
-// 5. Swagger — development only
+// 6. Swagger — development only
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// 6. CORS — before auth
+// 6.5. Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// 7. CORS — before auth
 app.UseCors();
 
-// 7. Rate Limiting
+// 8. Rate Limiting
 app.UseRateLimiter();
 
-// 8. Authentication & Authorization
+// 9. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 7. Audit middleware — after auth (has userId context)
+// 9.1. Internal API Key validation — defense-in-depth for /api/internal/* endpoints
+app.UseInternalApiKeyValidation();
+
+// 10. Audit middleware — after auth (has userId context)
 app.UseAuditMiddleware();
 
-// 8. Service Discovery Auto-Registration
+// 11. Service Discovery Auto-Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
 
-// 9. Endpoints
+// 12. Endpoints
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = check => !check.Tags.Contains("external")
@@ -322,6 +376,15 @@ app.MapControllers();
 
 Log.Information("NotificationService starting up with ErrorService middleware and RabbitMQ Consumer...");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "💀 {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Expose Program class for integration testing
 public partial class Program { }

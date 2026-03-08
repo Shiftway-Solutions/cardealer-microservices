@@ -1,7 +1,9 @@
 using ContactService.Domain.Interfaces;
+using Microsoft.AspNetCore.HttpOverrides;
 using ContactService.Infrastructure.Persistence;
 using ContactService.Infrastructure.Repositories;
 using ContactService.Application.Clients;
+using ContactService.Application.Behaviors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,11 +18,15 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Resilience.Extensions;
-
+using FluentValidation;
+using MediatR;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
 const string ServiceName = "ContactService";
-const string ServiceVersion = "1.0.1"; // fix: valid appsettings.Production.json
+const string ServiceVersion = "1.0.2";
 
 try
 {
@@ -28,6 +34,9 @@ try
 
     // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
     builder.UseStandardSerilog(ServiceName);
+
+    // ============= SECRETS PROVIDER =============
+    builder.Services.AddSecretProvider();
 
     // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
     builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
@@ -37,6 +46,12 @@ try
 
     // ============= AUDIT (→ AuditService via RabbitMQ) =============
     builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // ============= MediatR + FluentValidation =============
+    builder.Services.AddMediatR(cfg =>
+        cfg.RegisterServicesFromAssembly(typeof(ContactService.Application.Behaviors.ValidationBehavior<,>).Assembly));
+    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    builder.Services.AddValidatorsFromAssembly(typeof(ContactService.Application.Behaviors.ValidationBehavior<,>).Assembly);
 
     // Add services to the container.
     builder.Services.AddControllers()
@@ -133,6 +148,22 @@ builder.Services.AddRateLimiter(options =>
 // Health Checks
 builder.Services.AddHealthChecks();
 
+    // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "application/json",
+            "text/json",
+            "application/problem+json"
+        });
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
     var app = builder.Build();
 
     // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
@@ -142,36 +173,45 @@ builder.Services.AddHealthChecks();
     // 2. Security Headers (OWASP) — early in pipeline
     app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-    // 3. Request Logging
+    // 3. Response Compression — early, after error handling
+    app.UseResponseCompression();
+
+    // 4. Request Logging
     app.UseRequestLogging();
 
-    // 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+    // 5. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
     if (!app.Environment.IsProduction())
     {
         app.UseHttpsRedirection();
     }
 
-    // 5. Swagger — development only
+    // 6. Swagger — development only
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
 
-    // 6. CORS — before auth
+    // 6.5. Forwarded Headers — required for correct client IP behind K8s/LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+
+    // 7. CORS — before auth
     app.UseCors();
 
-    // 7. Rate Limiting
+    // 8. Rate Limiting
     app.UseRateLimiter();
 
-    // 8. Authentication & Authorization
+    // 9. Authentication & Authorization
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // 7. Audit middleware — after auth (has userId context)
+    // 10. Audit middleware — after auth (has userId context)
     app.UseAuditMiddleware();
 
-    // 8. Endpoints
+    // 11. Endpoints
     app.MapControllers();
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {

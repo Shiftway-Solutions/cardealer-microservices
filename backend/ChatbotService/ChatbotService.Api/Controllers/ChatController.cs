@@ -10,6 +10,7 @@ namespace ChatbotService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ChatController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -33,6 +34,7 @@ public class ChatController : ControllerBase
     /// Start a new chat session
     /// </summary>
     [HttpPost("start")]
+    [AllowAnonymous]
     [EnableRateLimiting("SessionStart")]
     [ProducesResponseType(typeof(StartSessionResponse), 200)]
     [ProducesResponseType(400)]
@@ -70,6 +72,7 @@ public class ChatController : ControllerBase
     /// Send a message to the chatbot
     /// </summary>
     [HttpPost("message")]
+    [AllowAnonymous]
     [EnableRateLimiting("ChatMessage")]
     [ProducesResponseType(typeof(ChatbotResponse), 200)]
     [ProducesResponseType(400)]
@@ -107,6 +110,7 @@ public class ChatController : ControllerBase
     /// End a chat session
     /// </summary>
     [HttpPost("end")]
+    [AllowAnonymous]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> EndSession([FromBody] EndSessionRequest request, CancellationToken cancellationToken)
@@ -134,6 +138,7 @@ public class ChatController : ControllerBase
     /// Transfer session to a human agent
     /// </summary>
     [HttpPost("transfer")]
+    [AllowAnonymous]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> TransferToAgent([FromBody] TransferToAgentRequest request, CancellationToken cancellationToken)
@@ -161,6 +166,7 @@ public class ChatController : ControllerBase
     /// Get session by token
     /// </summary>
     [HttpGet("session")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ChatSessionDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetSessionByToken([FromQuery] string token, CancellationToken cancellationToken)
@@ -204,6 +210,7 @@ public class ChatController : ControllerBase
     /// Get messages for a session
     /// </summary>
     [HttpGet("session/{sessionToken}/messages")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<ChatMessageDto>), 200)]
     public async Task<IActionResult> GetSessionMessages(string sessionToken, CancellationToken cancellationToken)
     {
@@ -239,6 +246,7 @@ public class ChatController : ControllerBase
     /// Get active sessions count
     /// </summary>
     [HttpGet("sessions/active/count")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(int), 200)]
     public async Task<IActionResult> GetActiveSessionsCount(CancellationToken cancellationToken)
     {

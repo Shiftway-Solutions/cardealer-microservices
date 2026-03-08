@@ -1,4 +1,5 @@
 using FluentValidation;
+using NotificationService.Application.Validators;
 using NotificationService.Application.UseCases.GetNotifications;
 
 namespace NotificationService.Application.UseCases.GetNotifications;
@@ -7,6 +8,24 @@ public class GetNotificationsQueryValidator : AbstractValidator<GetNotifications
 {
     public GetNotificationsQueryValidator()
     {
+        RuleFor(x => x.Request.Recipient)
+            .MaximumLength(254)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Request.Recipient));
+
+        RuleFor(x => x.Request.Type)
+            .MaximumLength(50)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Request.Type));
+
+        RuleFor(x => x.Request.Status)
+            .MaximumLength(50)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Request.Status));
+
         RuleFor(x => x.Request.Page)
             .GreaterThan(0).WithMessage("Page number must be greater than 0");
 

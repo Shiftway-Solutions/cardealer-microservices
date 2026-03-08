@@ -51,7 +51,8 @@ public class WebhooksController : ControllerBase
         }
         else
         {
-            _logger.LogWarning("SendGrid verification key not configured — configure Webhooks:SendGrid:VerificationKey for production");
+            _logger.LogError("SendGrid verification key not configured — REJECTING webhook (fail-closed). Configure Webhooks:SendGrid:VerificationKey");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "Webhook verification not configured" });
         }
 
         _logger.LogInformation("SendGrid webhook processed. Body length: {Length}", body.Length);
@@ -91,7 +92,8 @@ public class WebhooksController : ControllerBase
         }
         else
         {
-            _logger.LogWarning("Twilio auth token not configured — configure Webhooks:Twilio:AuthToken for production");
+            _logger.LogError("Twilio auth token not configured — REJECTING webhook (fail-closed). Configure Webhooks:Twilio:AuthToken");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "Webhook verification not configured" });
         }
 
         _logger.LogInformation("Twilio webhook processed. Body length: {Length}", body.Length);

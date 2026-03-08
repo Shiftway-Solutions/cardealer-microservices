@@ -67,6 +67,8 @@ public class InMemoryDeadLetterQueue : IDeadLetterQueue
             if (failedEvent.HasExceededMaxRetries(_maxRetries))
             {
                 _logger.LogError("❌ NotificationService DLQ max retries: {EventType}", failedEvent.EventType);
+                // RELIABILITY: Remove exhausted events to prevent unbounded memory growth
+                _failedEvents.TryRemove(eventId, out _);
             }
         }
 

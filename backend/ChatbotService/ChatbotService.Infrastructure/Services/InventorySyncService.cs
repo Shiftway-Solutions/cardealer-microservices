@@ -18,17 +18,20 @@ public class InventorySyncService : IInventorySyncService
 {
     private readonly InventorySyncSettings _settings;
     private readonly IChatbotVehicleRepository _vehicleRepository;
+    private readonly IVectorSearchService _vectorSearch;
     private readonly ILogger<InventorySyncService> _logger;
     private readonly HttpClient _httpClient;
 
     public InventorySyncService(
         IOptions<InventorySyncSettings> settings,
         IChatbotVehicleRepository vehicleRepository,
+        IVectorSearchService vectorSearch,
         IHttpClientFactory httpClientFactory,
         ILogger<InventorySyncService> logger)
     {
         _settings = settings.Value;
         _vehicleRepository = vehicleRepository;
+        _vectorSearch = vectorSearch;
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("VehiclesApi");
         _httpClient.Timeout = TimeSpan.FromSeconds(_settings.TimeoutSeconds);
@@ -43,26 +46,57 @@ public class InventorySyncService : IInventorySyncService
         {
             _logger.LogInformation("Starting inventory sync for configuration {ConfigId}", configurationId);
 
-            var response = await _httpClient.GetAsync($"{_settings.VehiclesApiUrl}?pageSize=1000&status=Active", ct);
-            if (!response.IsSuccessStatusCode)
+            // ── PAGINATED FETCH: Handles dealers with >1000 vehicles ──
+            var allVehicles = new List<VehicleApiDto>();
+            int page = 1;
+            const int pageSize = 200;
+            bool hasMore = true;
+
+            while (hasMore)
             {
-                result.Success = false;
-                result.ErrorMessage = $"API returned {response.StatusCode}";
-                return result;
+                var response = await _httpClient.GetAsync(
+                    $"{_settings.VehiclesApiUrl}?page={page}&pageSize={pageSize}&status=Active", ct);
+                if (!response.IsSuccessStatusCode)
+                {
+                    result.Success = false;
+                    result.ErrorMessage = $"API returned {response.StatusCode} on page {page}";
+                    return result;
+                }
+
+                var vehiclesData = await response.Content.ReadFromJsonAsync<VehiclesApiResponse>(ct);
+                if (vehiclesData?.Items == null || vehiclesData.Items.Count == 0)
+                {
+                    hasMore = false;
+                }
+                else
+                {
+                    allVehicles.AddRange(vehiclesData.Items);
+                    hasMore = vehiclesData.Items.Count == pageSize; // More pages if full page returned
+                    page++;
+                }
+
+                // Safety limit to prevent infinite loops
+                if (page > 100)
+                {
+                    _logger.LogWarning("InventorySync hit page limit (100) for config {ConfigId}", configurationId);
+                    break;
+                }
             }
 
-            var vehiclesData = await response.Content.ReadFromJsonAsync<VehiclesApiResponse>(ct);
-            if (vehiclesData?.Items == null)
+            if (allVehicles.Count == 0)
             {
                 result.Success = false;
                 result.ErrorMessage = "No vehicles data received";
                 return result;
             }
 
+            _logger.LogInformation("Fetched {Count} vehicles across {Pages} pages", allVehicles.Count, page - 1);
+
             var existingVehicles = (await _vehicleRepository.GetByConfigurationIdAsync(configurationId, ct)).ToDictionary(v => v.VehicleId);
             var processedIds = new HashSet<Guid>();
+            var changedVehicles = new List<ChatbotVehicle>(); // Track vehicles needing embedding refresh
 
-            foreach (var vehicle in vehiclesData.Items)
+            foreach (var vehicle in allVehicles)
             {
                 processedIds.Add(vehicle.Id);
                 var chatbotVehicle = MapToChatbotVehicle(vehicle, configurationId);
@@ -74,11 +108,21 @@ public class InventorySyncService : IInventorySyncService
                     chatbotVehicle.InquiryCount = existing.InquiryCount;
                     await _vehicleRepository.UpdateAsync(chatbotVehicle, ct);
                     result.VehiclesUpdated++;
+
+                    // Track vehicles with price/description changes for embedding refresh
+                    if (existing.Price != chatbotVehicle.Price ||
+                        existing.Description != chatbotVehicle.Description ||
+                        existing.Make != chatbotVehicle.Make ||
+                        existing.Model != chatbotVehicle.Model)
+                    {
+                        changedVehicles.Add(chatbotVehicle);
+                    }
                 }
                 else
                 {
                     await _vehicleRepository.CreateAsync(chatbotVehicle, ct);
                     result.NewVehiclesAdded++;
+                    changedVehicles.Add(chatbotVehicle); // New vehicles always need embeddings
                 }
 
                 result.TotalVehiclesProcessed++;
@@ -95,7 +139,7 @@ public class InventorySyncService : IInventorySyncService
                 }
             }
 
-            // Mark unavailable vehicles
+            // Mark unavailable vehicles and delete their stale embeddings
             foreach (var existing in existingVehicles.Values)
             {
                 if (!processedIds.Contains(existing.VehicleId))
@@ -104,6 +148,51 @@ public class InventorySyncService : IInventorySyncService
                     existing.LastSyncedAt = DateTime.UtcNow;
                     await _vehicleRepository.UpdateAsync(existing, ct);
                     result.VehiclesRemoved++;
+
+                    // P0 FIX: Delete embedding for sold/removed vehicles to prevent
+                    // stale data from appearing in RAG search results
+                    try
+                    {
+                        await _vectorSearch.DeleteVehicleEmbeddingAsync(existing.VehicleId, ct);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete embedding for removed vehicle {VehicleId}", existing.VehicleId);
+                    }
+                }
+            }
+
+            // P0 FIX: Refresh embeddings for new and changed vehicles.
+            // This ensures RAG search returns results with current prices and descriptions.
+            if (changedVehicles.Count > 0)
+            {
+                try
+                {
+                    // Determine dealer ID from the first vehicle's config or existing data
+                    var dealerId = existingVehicles.Values.FirstOrDefault()?.ChatbotConfigurationId ?? configurationId;
+
+                    var embeddingsRefreshed = 0;
+                    foreach (var vehicle in changedVehicles)
+                    {
+                        try
+                        {
+                            await _vectorSearch.UpsertVehicleEmbeddingAsync(vehicle, dealerId, ct);
+                            embeddingsRefreshed++;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to upsert embedding for vehicle {VehicleId}", vehicle.VehicleId);
+                        }
+                    }
+
+                    _logger.LogInformation(
+                        "Embedding refresh: {Refreshed}/{Total} embeddings updated, {Removed} stale embeddings deleted",
+                        embeddingsRefreshed, changedVehicles.Count, result.VehiclesRemoved);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Embedding refresh failed during inventory sync");
+                    // Non-fatal: inventory sync succeeded even if embedding refresh fails
                 }
             }
 

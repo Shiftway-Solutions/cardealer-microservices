@@ -126,8 +126,13 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
             }
             if (!string.IsNullOrEmpty(filters.Model))
             {
-                conditions.Add("LOWER(metadata->>'Model') LIKE LOWER(@model)");
-                parameters.Add(new("model", $"%{filters.Model}%"));
+                // SECURITY: Escape LIKE wildcards (%, _, \) to prevent injection
+                var escapedModel = filters.Model
+                    .Replace("\\", "\\\\")
+                    .Replace("%", "\\%")
+                    .Replace("_", "\\_");
+                conditions.Add("LOWER(metadata->>'Model') LIKE LOWER(@model) ESCAPE '\\'");
+                parameters.Add(new("model", $"%{escapedModel}%"));
             }
             if (filters.YearMin.HasValue)
             {

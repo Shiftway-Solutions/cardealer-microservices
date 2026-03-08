@@ -6,12 +6,16 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
+using System.IO.Compression;
 using CarDealer.Shared.Logging.Extensions;
+using Microsoft.AspNetCore.ResponseCompression;
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using SupportAgent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +28,7 @@ try
 
     // === Shared infrastructure ===
     builder.UseStandardSerilog(ServiceName);
+    builder.Services.AddSecretProvider();
     builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
     builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
     builder.Services.AddAuditPublisher(builder.Configuration);
@@ -115,11 +120,28 @@ try
     // === Health Checks ===
     builder.Services.AddHealthChecks();
 
+    // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "application/json",
+            "text/json",
+            "application/problem+json"
+        });
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
     var app = builder.Build();
 
     // === Middleware Pipeline ===
     app.UseGlobalErrorHandling();
     app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+    app.UseResponseCompression();
     app.UseRequestLogging();
 
     if (!app.Environment.IsProduction())
@@ -130,6 +152,12 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Forwarded Headers — required for correct client IP behind K8s/LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
 
     app.UseCors();
     app.UseRateLimiter();

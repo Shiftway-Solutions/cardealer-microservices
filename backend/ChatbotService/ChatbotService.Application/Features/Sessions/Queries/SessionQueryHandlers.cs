@@ -162,11 +162,14 @@ public class GetInteractionUsageQueryHandler : IRequestHandler<GetInteractionUsa
         var todayMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, today, today.AddDays(1), ct);
         var monthMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, monthStart, today.AddDays(1), ct);
 
-        const int freeInteractionsPerMonth = 180;
-        const decimal costPerInteraction = 0.002m;
+        var freeInteractionsPerMonth = config.FreeInteractionsPerMonth;
+        var costPerInteraction = config.CostPerInteraction;
         
         var paidInteractions = Math.Max(0, monthMessages - freeInteractionsPerMonth);
         var totalCost = paidInteractions * costPerInteraction;
+        var overageCost = paidInteractions > 0
+            ? paidInteractions * config.OverageCostPerConversation
+            : 0m;
 
         return new InteractionUsageDto
         {
@@ -174,7 +177,8 @@ public class GetInteractionUsageQueryHandler : IRequestHandler<GetInteractionUsa
             Month = monthMessages,
             FreeRemaining = Math.Max(0, freeInteractionsPerMonth - monthMessages),
             PaidToDate = paidInteractions,
-            TotalCostToDate = totalCost
+            TotalCostToDate = totalCost,
+            OverageCost = overageCost
         };
     }
 }

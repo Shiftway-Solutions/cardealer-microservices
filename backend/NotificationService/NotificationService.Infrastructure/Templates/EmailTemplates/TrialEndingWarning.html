@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tu periodo de prueba está por terminar - OKLA</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #ffffff; padding: 30px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+        .highlight-box { background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0; }
+        .highlight-box .days { font-size: 36px; font-weight: bold; color: #d97706; }
+        .features-list { list-style: none; padding: 0; }
+        .features-list li { padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+        .features-list li::before { content: "✅ "; }
+        .button { display: inline-block; background: #f59e0b; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .button:hover { background: #d97706; }
+        .price { font-size: 28px; font-weight: bold; color: #111; }
+        .price-period { color: #6b7280; font-size: 14px; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+        .footer a { color: #f59e0b; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Tu periodo de prueba está por terminar</h1>
+        </div>
+        <div class="content">
+            <p>Hola {{ DealerName }},</p>
+
+            <p>Queremos recordarte que tu periodo de prueba del plan <strong>{{ PlanName }}</strong> en OKLA termina pronto.</p>
+
+            <div class="highlight-box" style="text-align: center;">
+                <div class="days">{{ DaysRemaining }}</div>
+                <div>días restantes de tu prueba</div>
+                <div style="margin-top: 8px; color: #6b7280;">Finaliza el {{ TrialEndsAt }}</div>
+            </div>
+
+            <p>Durante tu periodo de prueba has tenido acceso a todas estas funcionalidades:</p>
+
+            <ul class="features-list">
+                <li>Publicaciones ilimitadas de vehículos</li>
+                <li>Historial de vehículos (CARFAX)</li>
+                <li>Análisis de precios del mercado</li>
+                <li>Estadísticas avanzadas de tus listados</li>
+                <li>Soporte prioritario en español</li>
+            </ul>
+
+            <p>Para no perder acceso, activa tu suscripción:</p>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <div class="price">{{ MonthlyPrice }} <span class="price-period">/mes</span></div>
+                <p style="color: #6b7280; margin-top: 4px;">Plan {{ PlanName }} · Cancela cuando quieras</p>
+                <a href="{{ ActivateUrl }}" class="button">Activar Mi Suscripción</a>
+            </div>
+
+            <p>Si tienes preguntas o necesitas ayuda eligiendo el plan correcto, responde a este email o contáctanos por WhatsApp.</p>
+
+            <p>¡Gracias por ser parte de OKLA! 🚗</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ Year }} OKLA Marketplace · Santo Domingo, República Dominicana</p>
+            <p><a href="{{ UnsubscribeUrl }}">Dejar de recibir estos emails</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotificationService.Application.DTOs;
 
@@ -8,6 +9,7 @@ namespace NotificationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/notifications/preferences")]
+[Authorize]
 public class NotificationPreferencesController : ControllerBase
 {
     private readonly ILogger<NotificationPreferencesController> _logger;
@@ -21,10 +23,12 @@ public class NotificationPreferencesController : ControllerBase
     /// Get notification preferences for the current user/dealer
     /// </summary>
     [HttpGet]
-    public ActionResult<List<NotificationPreferenceDto>> GetPreferences(
-        [FromHeader(Name = "X-Dealer-Id")] string? dealerId,
-        [FromHeader(Name = "X-User-Id")] string? userId)
+    public ActionResult<List<NotificationPreferenceDto>> GetPreferences()
     {
+        // Extract user identity from JWT claims (NEVER trust request headers for identity)
+        var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var dealerId = User.FindFirst("dealerId")?.Value;
+
         _logger.LogInformation("Getting notification preferences for dealer {DealerId}, user {UserId}", 
             dealerId, userId);
 
@@ -39,10 +43,12 @@ public class NotificationPreferencesController : ControllerBase
     [HttpPut("{type}")]
     public ActionResult<NotificationPreferenceDto> UpdatePreference(
         string type,
-        [FromBody] UpdateNotificationPreferenceRequest request,
-        [FromHeader(Name = "X-Dealer-Id")] string? dealerId,
-        [FromHeader(Name = "X-User-Id")] string? userId)
+        [FromBody] UpdateNotificationPreferenceRequest request)
     {
+        // Extract user identity from JWT claims (NEVER trust request headers for identity)
+        var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var dealerId = User.FindFirst("dealerId")?.Value;
+
         _logger.LogInformation("Updating notification preference {Type} for dealer {DealerId}, user {UserId}", 
             type, dealerId, userId);
 
@@ -70,10 +76,12 @@ public class NotificationPreferencesController : ControllerBase
     /// </summary>
     [HttpPut]
     public ActionResult<List<NotificationPreferenceDto>> UpdatePreferences(
-        [FromBody] List<UpdateNotificationPreferenceRequest> requests,
-        [FromHeader(Name = "X-Dealer-Id")] string? dealerId,
-        [FromHeader(Name = "X-User-Id")] string? userId)
+        [FromBody] List<UpdateNotificationPreferenceRequest> requests)
     {
+        // Extract user identity from JWT claims (NEVER trust request headers for identity)
+        var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var dealerId = User.FindFirst("dealerId")?.Value;
+
         _logger.LogInformation("Bulk updating {Count} notification preferences for dealer {DealerId}", 
             requests.Count, dealerId);
 
@@ -100,9 +108,9 @@ public class NotificationPreferencesController : ControllerBase
     /// Reset all preferences to defaults
     /// </summary>
     [HttpPost("reset")]
-    public ActionResult<List<NotificationPreferenceDto>> ResetPreferences(
-        [FromHeader(Name = "X-Dealer-Id")] string? dealerId)
+    public ActionResult<List<NotificationPreferenceDto>> ResetPreferences()
     {
+        var dealerId = User.FindFirst("dealerId")?.Value;
         _logger.LogInformation("Resetting notification preferences to defaults for dealer {DealerId}", dealerId);
         return Ok(GetDefaultPreferences());
     }

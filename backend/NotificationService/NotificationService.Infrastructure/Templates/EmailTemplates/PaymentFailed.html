@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Problema con tu pago - OKLA</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #ffffff; padding: 30px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+        .alert-box { background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; padding: 16px; margin: 20px 0; }
+        .alert-box .amount { font-size: 28px; font-weight: bold; color: #dc2626; }
+        .steps-list { list-style: none; padding: 0; counter-reset: steps; }
+        .steps-list li { padding: 12px 0 12px 48px; border-bottom: 1px solid #f3f4f6; position: relative; }
+        .steps-list li::before { counter-increment: steps; content: counter(steps); position: absolute; left: 0; top: 10px; width: 32px; height: 32px; background: #ef4444; color: white; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; }
+        .button { display: inline-block; background: #ef4444; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .warning-text { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+        .footer a { color: #ef4444; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ No pudimos procesar tu pago</h1>
+        </div>
+        <div class="content">
+            <p>Hola {{ DealerName }},</p>
+
+            <p>Tuvimos un problema al procesar el pago de tu suscripción <strong>{{ PlanName }}</strong> en OKLA.</p>
+
+            <div class="alert-box" style="text-align: center;">
+                <div class="amount">{{ Amount }} {{ Currency }}</div>
+                <div style="margin-top: 8px; color: #6b7280;">Intento #{{ AttemptNumber }} · {{ FailureReason }}</div>
+            </div>
+
+            <p><strong>¿Qué puedes hacer?</strong></p>
+
+            <ol class="steps-list">
+                <li>Verifica que tu tarjeta tenga fondos suficientes</li>
+                <li>Confirma que los datos de tu tarjeta estén actualizados</li>
+                <li>Contacta a tu banco si el problema persiste</li>
+            </ol>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="{{ UpdatePaymentUrl }}" class="button">Actualizar Método de Pago</a>
+            </div>
+
+            <div class="warning-text">
+                <strong>⚡ Importante:</strong> Si no se resuelve el pago dentro de los próximos días, 
+                tu cuenta será suspendida y tus listados dejarán de ser visibles para los compradores.
+            </div>
+
+            <p>El próximo intento automático será el <strong>{{ NextRetryDate }}</strong>. Si necesitas ayuda, responde a este email o llámanos.</p>
+
+            <p>Saludos,<br>El equipo de OKLA 🚗</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ Year }} OKLA Marketplace · Santo Domingo, República Dominicana</p>
+            <p><a href="{{ UnsubscribeUrl }}">Dejar de recibir estos emails</a></p>
+        </div>
+    </div>
+</body>
+</html>

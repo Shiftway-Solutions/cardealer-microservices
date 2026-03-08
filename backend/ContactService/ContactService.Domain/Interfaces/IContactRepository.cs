@@ -4,21 +4,21 @@ namespace ContactService.Domain.Interfaces;
 
 public interface IContactRequestRepository
 {
-    Task<ContactRequest?> GetByIdAsync(Guid id);
-    Task<List<ContactRequest>> GetByBuyerIdAsync(Guid buyerId);
-    Task<List<ContactRequest>> GetBySellerIdAsync(Guid sellerId);
-    Task<List<ContactRequest>> GetByVehicleIdAsync(Guid vehicleId);
-    Task<ContactRequest> CreateAsync(ContactRequest contactRequest);
-    Task<ContactRequest> UpdateAsync(ContactRequest contactRequest);
-    Task DeleteAsync(Guid id);
-    Task<int> GetUnreadCountForSellerAsync(Guid sellerId);
+    Task<ContactRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<ContactRequest>> GetByBuyerIdAsync(Guid buyerId, CancellationToken cancellationToken = default);
+    Task<List<ContactRequest>> GetBySellerIdAsync(Guid sellerId, CancellationToken cancellationToken = default);
+    Task<List<ContactRequest>> GetByVehicleIdAsync(Guid vehicleId, CancellationToken cancellationToken = default);
+    Task<ContactRequest> CreateAsync(ContactRequest contactRequest, CancellationToken cancellationToken = default);
+    Task<ContactRequest> UpdateAsync(ContactRequest contactRequest, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<int> GetUnreadCountForSellerAsync(Guid sellerId, CancellationToken cancellationToken = default);
 }
 
 public interface IContactMessageRepository
 {
-    Task<ContactMessage?> GetByIdAsync(Guid id);
-    Task<List<ContactMessage>> GetByContactRequestIdAsync(Guid contactRequestId);
-    Task<ContactMessage> CreateAsync(ContactMessage message);
-    Task MarkAsReadAsync(Guid messageId);
-    Task<int> GetUnreadCountForUserAsync(Guid userId);
+    Task<ContactMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<ContactMessage>> GetByContactRequestIdAsync(Guid contactRequestId, CancellationToken cancellationToken = default);
+    Task<ContactMessage> CreateAsync(ContactMessage message, CancellationToken cancellationToken = default);
+    Task MarkAsReadAsync(Guid messageId, CancellationToken cancellationToken = default);
+    Task<int> GetUnreadCountForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }

@@ -31,6 +31,7 @@ public class EfNotificationTemplateRepository : INotificationTemplateRepository
         return await _context.NotificationTemplates
             .AsNoTracking()
             .Where(t => t.Type == type && t.IsActive)
+            .Take(200) // Safety limit
             .ToListAsync();
     }
 
@@ -39,6 +40,7 @@ public class EfNotificationTemplateRepository : INotificationTemplateRepository
         return await _context.NotificationTemplates
             .AsNoTracking()
             .Where(t => t.IsActive)
+            .Take(500) // Safety limit
             .ToListAsync();
     }
 

@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -24,6 +24,9 @@
     <ProjectReference Include="../CRMService.Infrastructure/CRMService.Infrastructure.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
   </ItemGroup>
 
 </Project>

@@ -173,6 +173,18 @@ public interface ILlmResponseCacheService
     /// </summary>
     Task SetAsync(string query, string response, string? intent, float confidence, bool isFallback,
         string? systemPrompt = null, TimeSpan? ttl = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Invalidate all cached LLM responses (e.g., after inventory sync or model update).
+    /// Stale cache entries can serve outdated prices and sold vehicle data.
+    /// </summary>
+    Task InvalidateAllAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Invalidate a specific cached LLM response by query and system prompt.
+    /// Used to remove hallucinated or moderated cached responses.
+    /// </summary>
+    Task InvalidateAsync(string query, string? systemPrompt = null, CancellationToken ct = default);
 }
 
 /// <summary>

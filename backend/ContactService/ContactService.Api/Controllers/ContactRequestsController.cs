@@ -1,5 +1,7 @@
-using ContactService.Domain.Entities;
-using ContactService.Domain.Interfaces;
+using ContactService.Application.Features.ContactRequests.Commands;
+using ContactService.Application.Features.ContactRequests.Queries;
+using ContactService.Shared;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,70 +13,35 @@ namespace ContactService.Api.Controllers;
 [Authorize]
 public class ContactRequestsController : ControllerBase
 {
-    private readonly IContactRequestRepository _contactRequestRepository;
-    private readonly IContactMessageRepository _contactMessageRepository;
+    private readonly IMediator _mediator;
 
-    public ContactRequestsController(IContactRequestRepository contactRequestRepository, 
-                                   IContactMessageRepository contactMessageRepository)
+    public ContactRequestsController(IMediator mediator)
     {
-        _contactRequestRepository = contactRequestRepository;
-        _contactMessageRepository = contactMessageRepository;
+        _mediator = mediator;
     }
 
     /// <summary>
     /// Create a new contact request (inquiry)
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> CreateContactRequest(CreateContactRequestDto dto)
+    public async Task<IActionResult> CreateContactRequest(CreateContactRequestInputDto dto)
     {
-        // Input validation
-        if (string.IsNullOrWhiteSpace(dto.Subject) || dto.Subject.Length > 200)
-            return BadRequest(new { error = "Subject is required and must be 200 characters or less." });
-        if (string.IsNullOrWhiteSpace(dto.BuyerName) || dto.BuyerName.Length > 100)
-            return BadRequest(new { error = "BuyerName is required and must be 100 characters or less." });
-        if (string.IsNullOrWhiteSpace(dto.BuyerEmail) || dto.BuyerEmail.Length > 254)
-            return BadRequest(new { error = "BuyerEmail is required and must be a valid email." });
-        if (string.IsNullOrWhiteSpace(dto.Message) || dto.Message.Length > 5000)
-            return BadRequest(new { error = "Message is required and must be 5000 characters or less." });
-        if (dto.VehicleId == Guid.Empty || dto.SellerId == Guid.Empty)
-            return BadRequest(new { error = "VehicleId and SellerId are required." });
-
-        // Security validation - check for XSS/SQL injection patterns
-        var textFields = new[] { dto.Subject, dto.BuyerName, dto.BuyerEmail, dto.Message, dto.BuyerPhone ?? "" };
-        foreach (var field in textFields)
-        {
-            if (ContainsDangerousPatterns(field))
-                return BadRequest(new { error = "Input contains potentially dangerous content." });
-        }
-
         var buyerId = GetCurrentUserId();
-        
-        var contactRequest = new ContactRequest(
-            dto.VehicleId,
-            buyerId,
-            dto.SellerId,
-            dto.Subject,
-            dto.BuyerName,
-            dto.BuyerEmail,
-            dto.Message
-        );
-        
-        contactRequest.BuyerPhone = dto.BuyerPhone;
 
-        var created = await _contactRequestRepository.CreateAsync(contactRequest);
-        
-        // Create initial message
-        var initialMessage = new ContactMessage(created.Id, buyerId, dto.Message, true);
-        await _contactMessageRepository.CreateAsync(initialMessage);
-
-        return Ok(new
+        var command = new CreateContactRequestCommand
         {
-            Id = created.Id,
-            VehicleId = created.VehicleId,
-            Subject = created.Subject,
-            Status = created.Status,
-            CreatedAt = created.CreatedAt
-        });
+            VehicleId = dto.VehicleId,
+            SellerId = dto.SellerId,
+            BuyerId = buyerId,
+            Subject = dto.Subject,
+            BuyerName = dto.BuyerName,
+            BuyerEmail = dto.BuyerEmail,
+            BuyerPhone = dto.BuyerPhone,
+            Message = dto.Message
+        };
+
+        var result = await _mediator.Send(command);
+        return StatusCode(201, ApiResponse<object>.SuccessResponse(result, "Solicitud de contacto creada exitosamente"));
     }
 
     /// <summary>
@@ -83,27 +50,9 @@ public class ContactRequestsController : ControllerBase
     [HttpGet("my-inquiries")]
     public async Task<IActionResult> GetMyInquiries()
     {
-        try
-        {
-            var buyerId = GetCurrentUserId();
-            var inquiries = await _contactRequestRepository.GetByBuyerIdAsync(buyerId);
-
-            return Ok(inquiries.Select(i => new
-            {
-                Id = i.Id,
-                VehicleId = i.VehicleId,
-                Subject = i.Subject,
-                Status = i.Status,
-                CreatedAt = i.CreatedAt,
-                RespondedAt = i.RespondedAt,
-                MessageCount = i.Messages?.Count ?? 0,
-                LastMessage = i.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Message
-            }));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, new { error = "Error retrieving inquiries. Please try again later." });
-        }
+        var buyerId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetContactRequestsByBuyerQuery { BuyerId = buyerId });
+        return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -112,30 +61,9 @@ public class ContactRequestsController : ControllerBase
     [HttpGet("received")]
     public async Task<IActionResult> GetReceivedInquiries()
     {
-        try
-        {
-            var sellerId = GetCurrentUserId();
-            var inquiries = await _contactRequestRepository.GetBySellerIdAsync(sellerId);
-
-            return Ok(inquiries.Select(i => new
-            {
-                Id = i.Id,
-                VehicleId = i.VehicleId,
-                Subject = i.Subject,
-                BuyerName = i.BuyerName,
-                BuyerEmail = i.BuyerEmail,
-                BuyerPhone = i.BuyerPhone,
-                Status = i.Status,
-                CreatedAt = i.CreatedAt,
-                RespondedAt = i.RespondedAt,
-                MessageCount = i.Messages?.Count ?? 0,
-                UnreadCount = i.Messages?.Count(m => m.IsFromBuyer && !m.IsRead) ?? 0
-            }));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, new { error = "Error retrieving received inquiries. Please try again later." });
-        }
+        var sellerId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetContactRequestsBySellerQuery { SellerId = sellerId });
+        return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -144,78 +72,33 @@ public class ContactRequestsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetContactRequest(Guid id)
     {
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(id);
-        if (contactRequest == null) return NotFound();
-
         var currentUserId = GetCurrentUserId();
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
+        var result = await _mediator.Send(new GetContactRequestDetailQuery
         {
-            return Forbid();
-        }
-
-        var messages = await _contactMessageRepository.GetByContactRequestIdAsync(id);
-
-        return Ok(new
-        {
-            Id = contactRequest.Id,
-            VehicleId = contactRequest.VehicleId,
-            Subject = contactRequest.Subject,
-            BuyerName = contactRequest.BuyerName,
-            BuyerEmail = contactRequest.BuyerEmail,
-            BuyerPhone = contactRequest.BuyerPhone,
-            Status = contactRequest.Status,
-            CreatedAt = contactRequest.CreatedAt,
-            Messages = messages.Select(m => new
-            {
-                Id = m.Id,
-                SenderId = m.SenderId,
-                Message = m.Message,
-                IsFromBuyer = m.IsFromBuyer,
-                IsRead = m.IsRead,
-                SentAt = m.SentAt
-            })
+            ContactRequestId = id,
+            CurrentUserId = currentUserId
         });
+
+        if (result == null) return NotFound(ApiResponse<object>.ErrorResponse("Solicitud de contacto no encontrada"));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
     /// <summary>
     /// Reply to a contact request
     /// </summary>
     [HttpPost("{id}/reply")]
-    public async Task<IActionResult> ReplyToContactRequest(Guid id, ReplyToContactRequestDto dto)
+    public async Task<IActionResult> ReplyToContactRequest(Guid id, ReplyInputDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Message) || dto.Message.Length > 5000)
-            return BadRequest(new { error = "Message is required and must be 5000 characters or less." });
-        if (ContainsDangerousPatterns(dto.Message))
-            return BadRequest(new { error = "Input contains potentially dangerous content." });
-
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(id);
-        if (contactRequest == null) return NotFound();
-
         var currentUserId = GetCurrentUserId();
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
-        {
-            return Forbid();
-        }
 
-        var isFromBuyer = contactRequest.BuyerId == currentUserId;
-        
-        var message = new ContactMessage(id, currentUserId, dto.Message, isFromBuyer);
-        await _contactMessageRepository.CreateAsync(message);
-
-        // Update contact request status
-        if (!isFromBuyer && contactRequest.Status == "Open")
+        var result = await _mediator.Send(new ReplyToContactRequestCommand
         {
-            contactRequest.Status = "Responded";
-            contactRequest.RespondedAt = DateTime.UtcNow;
-            await _contactRequestRepository.UpdateAsync(contactRequest);
-        }
-
-        return Ok(new
-        {
-            Id = message.Id,
-            Message = message.Message,
-            SentAt = message.SentAt
+            ContactRequestId = id,
+            CurrentUserId = currentUserId,
+            Message = dto.Message
         });
+
+        return StatusCode(201, ApiResponse<object>.SuccessResponse(result, "Respuesta enviada exitosamente"));
     }
 
     /// <summary>
@@ -224,18 +107,13 @@ public class ContactRequestsController : ControllerBase
     [HttpPatch("{id}/read")]
     public async Task<IActionResult> MarkAsRead(Guid id)
     {
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(id);
-        if (contactRequest == null) return NotFound();
-
         var currentUserId = GetCurrentUserId();
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
+        await _mediator.Send(new UpdateContactRequestStatusCommand
         {
-            return Forbid();
-        }
-
-        contactRequest.Status = "Read";
-        await _contactRequestRepository.UpdateAsync(contactRequest);
-
+            ContactRequestId = id,
+            CurrentUserId = currentUserId,
+            NewStatus = "Read"
+        });
         return NoContent();
     }
 
@@ -245,18 +123,13 @@ public class ContactRequestsController : ControllerBase
     [HttpPatch("{id}/archive")]
     public async Task<IActionResult> ArchiveContactRequest(Guid id)
     {
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(id);
-        if (contactRequest == null) return NotFound();
-
         var currentUserId = GetCurrentUserId();
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
+        await _mediator.Send(new UpdateContactRequestStatusCommand
         {
-            return Forbid();
-        }
-
-        contactRequest.Status = "Archived";
-        await _contactRequestRepository.UpdateAsync(contactRequest);
-
+            ContactRequestId = id,
+            CurrentUserId = currentUserId,
+            NewStatus = "Archived"
+        });
         return NoContent();
     }
 
@@ -266,48 +139,25 @@ public class ContactRequestsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteContactRequest(Guid id)
     {
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(id);
-        if (contactRequest == null) return NotFound();
-
         var currentUserId = GetCurrentUserId();
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
+        await _mediator.Send(new DeleteContactRequestCommand
         {
-            return Forbid();
-        }
-
-        await _contactRequestRepository.DeleteAsync(id);
-
+            ContactRequestId = id,
+            CurrentUserId = currentUserId
+        });
         return NoContent();
     }
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException());
-    }
-
-    private static bool ContainsDangerousPatterns(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return false;
-
-        var lower = input.ToLowerInvariant();
-        var upper = input.ToUpperInvariant();
-
-        // XSS patterns
-        string[] xssPatterns = { "<script", "javascript:", "onerror=", "onload=", "onclick=",
-            "<iframe", "eval(", "expression(", "vbscript:", "data:text/html" };
-        if (xssPatterns.Any(p => lower.Contains(p))) return true;
-
-        // SQL injection patterns
-        string[] sqlPatterns = { "DROP ", "DELETE ", "INSERT ", "UPDATE ", "--", "/*", "*/",
-            "EXEC ", "UNION ", "xp_", "sp_", "OR 1=1", "OR '1'='1'" };
-        if (sqlPatterns.Any(p => upper.Contains(p))) return true;
-
-        return false;
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException("User ID claim not found"));
     }
 }
 
-public record CreateContactRequestDto(
+/// <summary>Input DTO for creating a contact request.</summary>
+public record CreateContactRequestInputDto(
     Guid VehicleId,
     Guid SellerId,
     string Subject,
@@ -317,4 +167,5 @@ public record CreateContactRequestDto(
     string Message
 );
 
-public record ReplyToContactRequestDto(string Message);
+/// <summary>Input DTO for replying to a contact request.</summary>
+public record ReplyInputDto(string Message);

@@ -337,6 +337,137 @@ namespace NotificationService.Infrastructure.Migrations
                     b.ToTable("notification_templates", (string)null);
                 });
 
+            modelBuilder.Entity("NotificationService.Domain.Entities.PriceAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("CurrentPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("NotifyByEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyByPush")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyBySms")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("PriceDropPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal>("TargetPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("TriggeredCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VehicleImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("VehicleTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("UserId", "IsActive");
+
+                    b.HasIndex("VehicleId", "IsActive");
+
+                    b.ToTable("PriceAlerts", (string)null);
+                });
+
+            modelBuilder.Entity("NotificationService.Domain.Entities.SavedSearch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CriteriaJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastMatchAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MatchCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NotificationFrequency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("daily");
+
+                    b.Property<bool>("NotifyByEmail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyByPush")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnNewResults")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("IsActive", "NotifyOnNewResults");
+
+                    b.ToTable("SavedSearches", (string)null);
+                });
+
             modelBuilder.Entity("NotificationService.Domain.Entities.ScheduledNotification", b =>
                 {
                     b.Property<Guid>("Id")

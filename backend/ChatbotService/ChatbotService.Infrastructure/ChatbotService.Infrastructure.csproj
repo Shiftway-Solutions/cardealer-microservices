@@ -53,6 +53,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../ChatbotService.Application/ChatbotService.Application.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 
 </Project>

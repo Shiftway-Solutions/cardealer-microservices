@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Confirmación de cancelación - OKLA</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #ffffff; padding: 30px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+        .summary-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+        .summary-label { color: #6b7280; }
+        .summary-value { font-weight: bold; }
+        .feedback-box { background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        .button-primary { display: inline-block; background: #3b82f6; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .button-secondary { display: inline-block; background: #10b981; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 12px; }
+        .keep-access { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; margin: 20px 0; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+        .footer a { color: #3b82f6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Tu suscripción ha sido cancelada</h1>
+        </div>
+        <div class="content">
+            <p>Hola {{ DealerName }},</p>
+
+            <p>Confirmamos que tu suscripción al plan <strong>{{ PlanName }}</strong> de OKLA ha sido cancelada.</p>
+
+            <div class="summary-box">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="padding: 8px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Plan</td>
+                        <td style="padding: 8px 0; font-weight: bold; text-align: right; border-bottom: 1px solid #f3f4f6;">{{ PlanName }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Precio mensual</td>
+                        <td style="padding: 8px 0; font-weight: bold; text-align: right; border-bottom: 1px solid #f3f4f6;">{{ MonthlyAmount }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Tiempo en el plan</td>
+                        <td style="padding: 8px 0; font-weight: bold; text-align: right; border-bottom: 1px solid #f3f4f6;">{{ DaysOnPlan }} días</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #6b7280;">Acceso hasta</td>
+                        <td style="padding: 8px 0; font-weight: bold; text-align: right;">{{ EffectiveAt }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="keep-access">
+                <strong>📌 Nota:</strong> Mantienes acceso a todas las funciones del plan hasta el {{ EffectiveAt }}. 
+                Después de esa fecha, tu cuenta pasará al plan Libre (gratuito).
+            </div>
+
+            <p>Lamentamos verte ir. Si cambias de opinión, puedes reactivar tu suscripción en cualquier momento:</p>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="{{ ReactivateUrl }}" class="button-secondary">Reactivar Mi Suscripción</a>
+            </div>
+
+            <div class="feedback-box">
+                <p style="margin: 0 0 12px 0;"><strong>¿Nos ayudas a mejorar?</strong></p>
+                <p style="margin: 0 0 16px 0; color: #6b7280;">Tu opinión nos ayuda a crear una mejor plataforma para los dealers dominicanos.</p>
+                <a href="{{ FeedbackUrl }}" class="button-primary">Compartir Mi Opinión</a>
+            </div>
+
+            <p>Gracias por haber sido parte de OKLA. ¡Siempre eres bienvenido! 🚗</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ Year }} OKLA Marketplace · Santo Domingo, República Dominicana</p>
+            <p><a href="{{ UnsubscribeUrl }}">Dejar de recibir estos emails</a></p>
+        </div>
+    </div>
+</body>
+</html>

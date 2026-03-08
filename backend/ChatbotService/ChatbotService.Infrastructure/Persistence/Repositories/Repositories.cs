@@ -107,6 +107,14 @@ public class ChatMessageRepository : IChatMessageRepository
             .OrderBy(m => m.CreatedAt)
             .ToListAsync(ct);
     }
+
+    public async Task<int> GetLlmCallsCountByUserAsync(Guid userId, DateTime from, DateTime to, CancellationToken ct = default)
+        => await _context.ChatMessages
+            .Include(m => m.Session)
+            .CountAsync(m => m.Session!.UserId == userId
+                && m.CreatedAt >= from
+                && m.CreatedAt < to
+                && m.ConsumedInteraction, ct);
 }
 
 public class ChatLeadRepository : IChatLeadRepository

@@ -9,7 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Consul" Version="1.7.14.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
@@ -22,6 +23,7 @@
     <ProjectReference Include="../ContactService.Application/ContactService.Application.csproj" />
     <ProjectReference Include="../ContactService.Domain/ContactService.Domain.csproj" />
     <ProjectReference Include="../ContactService.Infrastructure/ContactService.Infrastructure.csproj" />
+    <ProjectReference Include="../ContactService.Shared/ContactService.Shared.csproj" />
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />

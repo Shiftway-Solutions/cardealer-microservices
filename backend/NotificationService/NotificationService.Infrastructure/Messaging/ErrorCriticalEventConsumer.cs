@@ -46,11 +46,11 @@ public class ErrorCriticalEventConsumer : BackgroundService
 
             if (_channel == null)
             {
-                _logger.LogError("Failed to initialize RabbitMQ channel");
+                _logger.LogWarning("RabbitMQ channel is null after initialization for ErrorCriticalEventConsumer. Consumer will not start");
                 return;
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
             {
                 try
@@ -161,9 +161,10 @@ public class ErrorCriticalEventConsumer : BackgroundService
                           ?? "localhost";
             var port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672");
             var userName = _configuration["RabbitMQ:UserName"]
-                           ?? _configuration["RabbitMQ:User"]
-                           ?? "guest";
-            var password = _configuration["RabbitMQ:Password"] ?? "guest";
+                           ?? _configuration["RabbitMQ:Username"]
+                           ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured");
+            var password = _configuration["RabbitMQ:Password"]
+                           ?? throw new InvalidOperationException("RabbitMQ:Password is not configured");
             var exchangeName = _configuration["RabbitMQ:ExchangeName"] ?? "cardealer.events";
             var queueName = "notification-service.error-critical";
 
@@ -177,6 +178,7 @@ public class ErrorCriticalEventConsumer : BackgroundService
                 Port = port,
                 UserName = userName,
                 Password = password,
+                DispatchConsumersAsync = true,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };

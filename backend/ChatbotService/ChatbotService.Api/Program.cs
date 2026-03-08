@@ -1,124 +1,101 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Serilog;
-using FluentValidation;
-using MediatR;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 using ChatbotService.Application;
 using ChatbotService.Infrastructure;
 using ChatbotService.Infrastructure.Persistence;
 using ChatbotService.Api.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+const string ServiceName = "ChatbotService";
+const string ServiceVersion = "1.1.0";
 
-// Configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
-    .Enrich.WithProperty("Service", "ChatbotService")
-    .WriteTo.Console()
-    .WriteTo.File("logs/chatbotservice-.log", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
-// Add services to the container
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
-builder.Services.AddEndpointsApiExplorer();
-
-// Swagger configuration
-builder.Services.AddSwaggerGen(c =>
+try
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "ChatbotService API",
-        Version = "v1",
-        Description = "API for Chatbot with LLM integration - OKLA Marketplace",
-        Contact = new OpenApiContact
-        {
-            Name = "OKLA Team",
-            Email = "dev@okla.com.do"
-        }
-    });
+    var builder = WebApplication.CreateBuilder(args);
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
+    // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+    builder.UseStandardSerilog(ServiceName);
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    // ============= SECRETS PROVIDER =============
+    builder.Services.AddSecretProvider();
+
+    // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
+    builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
+
+    // ============= ERROR HANDLING (→ ErrorService) =============
+    builder.Services.AddStandardErrorHandling(builder.Configuration, ServiceName);
+
+    // ============= AUDIT (→ AuditService via RabbitMQ) =============
+    builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // ============= APPLICATION + INFRASTRUCTURE LAYERS =============
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
         {
-            new OpenApiSecurityScheme
+            options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        });
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+    builder.Services.AddHttpContextAccessor();
+
+    // ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+    var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
 
-// JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured"));
+    // CORS — configurable origins from appsettings
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? (builder.Environment.IsDevelopment()
+            ? new[] { "http://localhost:3000", "http://localhost:5173" }
+            : new[] { "https://okla.com.do", "https://www.okla.com.do" });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+    builder.Services.AddCors(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ClockSkew = TimeSpan.Zero
-    };
-});
-
-// CORS
-var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowedOrigins", policy =>
-    {
-        policy.WithOrigins(corsOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                  .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+                  .AllowCredentials();
+        });
     });
-});
 
-// Add Application and Infrastructure layers
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
-
-// Rate Limiting
-builder.Services.AddRateLimiter(options =>
-{
+    // ============= RATE LIMITING (Per-IP) =============
+    builder.Services.AddRateLimiter(options =>
+    {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     // Policy: Chat messages — max 20 requests per minute per IP
@@ -181,134 +158,154 @@ catch
     builder.Services.AddDistributedMemoryCache();
 }
 
-// Health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
-        name: "postgresql",
-        tags: new[] { "db", "sql", "postgresql" })
-    .AddRedis(
-        builder.Configuration["Redis:ConnectionString"] ?? "redis:6379",
-        name: "redis",
-        tags: new[] { "cache", "redis" });
+    // Health checks
+    builder.Services.AddHealthChecks()
+        .AddNpgSql(
+            builder.Configuration.GetConnectionString("DefaultConnection")!,
+            name: "postgresql",
+            tags: new[] { "ready", "external" })
+        .AddRedis(
+            builder.Configuration["Redis:ConnectionString"] ?? "redis:6379",
+            name: "redis",
+            tags: new[] { "ready", "external" });
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline
-// OWASP Security Headers
-app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
-
-if (app.Environment.IsDevelopment())
-{
-
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+    builder.Services.AddResponseCompression(options =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatbotService API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
-
-// Security (CWE-532): Configure Serilog request logging to avoid logging sensitive headers
-app.UseSerilogRequestLogging(options =>
-{
-    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-    {
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown");
-        // DO NOT log Authorization, Cookie, or other sensitive headers
-    };
-});
-
-app.UseCors("AllowedOrigins");
-
-app.UseRateLimiter();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = System.Text.Json.JsonSerializer.Serialize(new
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
         {
-            status = report.Status.ToString(),
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                duration = e.Value.Duration.TotalMilliseconds
-            }),
-            totalDuration = report.TotalDuration.TotalMilliseconds
+            "application/json",
+            "text/json",
+            "application/problem+json"
         });
-        await context.Response.WriteAsync(result);
-    }
-});
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 
-// Apply migrations and seed on startup (all environments).
-// The seeder is idempotent: it checks AnyAsync() before inserting.
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
-    try
+    var app = builder.Build();
+
+    // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
+    // 1. Global exception handling — ALWAYS FIRST
+    app.UseGlobalErrorHandling();
+
+    // 2. Security Headers (OWASP) — early in pipeline
+    app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+    // 3. Response Compression — early, after error handling
+    app.UseResponseCompression();
+
+    // 4. Request Logging
+    app.UseRequestLogging();
+
+    // 4. HTTPS Redirection — only outside K8s
+    if (!app.Environment.IsProduction())
+        app.UseHttpsRedirection();
+
+    // 5. Swagger — development only
+    if (app.Environment.IsDevelopment())
     {
-        // Always apply pending EF migrations
-        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
-        if (pendingMigrations.Any())
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
         {
-            await dbContext.Database.MigrateAsync();
-            Log.Information("Database migrations applied successfully");
-        }
-        else
-        {
-            // In case the schema was never created (new empty DB)
-            await dbContext.Database.EnsureCreatedAsync();
-            Log.Information("Database schema verified via EnsureCreated");
-        }
-
-        // Idempotent column additions — safe for existing production databases
-        // (EnsureCreated does not alter existing tables; this handles schema evolution)
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE chatbot_configurations ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255)");
-        Log.Information("Schema evolution checks completed");
-
-        // Seed default configurations (idempotent)
-        await ChatbotDataSeeder.SeedAsync(dbContext);
-        Log.Information("Database seed check completed");
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatbotService API v1");
+            c.RoutePrefix = "swagger";
+        });
     }
-    catch (Exception ex)
+
+    // 5.5. Forwarded Headers — required for correct client IP behind K8s/LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
     {
-        Log.Warning(ex, "Could not apply migrations, trying EnsureCreated...");
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+
+    // 6. CORS — before auth
+    app.UseCors();
+
+    // 7. Rate Limiting
+    app.UseRateLimiter();
+
+    // 8. Authentication & Authorization
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // 9. Audit middleware — after auth (has userId context)
+    app.UseAuditMiddleware();
+
+    // 10. Endpoints
+    app.MapControllers();
+
+    // ============= HEALTH CHECKS (Triple Pattern) =============
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => !check.Tags.Contains("external")
+    });
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
+
+    // ============= DATABASE MIGRATION & SEED =============
+    var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);
+    if (autoMigrate)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ChatbotDbContext>();
         try
         {
-            await dbContext.Database.EnsureCreatedAsync();
-            Log.Information("Database schema created via EnsureCreated (fallback)");
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+            if (pendingMigrations.Any())
+            {
+                await dbContext.Database.MigrateAsync();
+                Log.Information("Database migrations applied for {ServiceName}", ServiceName);
+            }
+            else
+            {
+                await dbContext.Database.EnsureCreatedAsync();
+                Log.Information("Database schema verified via EnsureCreated for {ServiceName}", ServiceName);
+            }
 
+            // Idempotent column additions — safe for existing production databases
+            await dbContext.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE chatbot_configurations ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255)");
+
+            // Seed default configurations (idempotent)
             await ChatbotDataSeeder.SeedAsync(dbContext);
-            Log.Information("Database seed check completed (fallback path)");
+            Log.Information("Database migration and seed completed for {ServiceName}", ServiceName);
         }
-        catch (Exception ex2)
+        catch (Exception ex)
         {
-            Log.Error(ex2, "Failed to create database schema");
+            Log.Warning(ex, "Migration failed for {ServiceName}, trying EnsureCreated fallback...", ServiceName);
+            try
+            {
+                await dbContext.Database.EnsureCreatedAsync();
+                await ChatbotDataSeeder.SeedAsync(dbContext);
+                Log.Information("Database schema created via EnsureCreated (fallback) for {ServiceName}", ServiceName);
+            }
+            catch (Exception ex2)
+            {
+                Log.Error(ex2, "Failed to create database schema for {ServiceName}", ServiceName);
+            }
         }
     }
-}
 
-Log.Information("ChatbotService starting on port 8080");
-
-try
-{
+    Log.Information("Starting {ServiceName} v{ServiceVersion} — LLM-Powered Customer Support", ServiceName, ServiceVersion);
     await app.RunAsync();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "ChatbotService terminated unexpectedly");
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", "ChatbotService");
 }
 finally
 {
     Log.CloseAndFlush();
 }
+
+// Make Program class accessible for integration tests
+public partial class Program { }

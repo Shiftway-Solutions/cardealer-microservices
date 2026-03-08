@@ -13,5 +13,11 @@ namespace ContactService.Infrastructure.Persistence
 
         public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
         public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace NotificationService.Api.Controllers;
 
 [ApiController]
 [Route("api/notifications/scheduled")]
-[Authorize]
+[Authorize(Roles = "admin,notification-admin")]
 public class ScheduledNotificationsController : ControllerBase
 {
     private readonly IScheduledNotificationRepository _repository;

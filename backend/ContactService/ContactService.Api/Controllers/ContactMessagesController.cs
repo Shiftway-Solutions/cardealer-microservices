@@ -1,4 +1,5 @@
-using ContactService.Domain.Interfaces;
+using ContactService.Application.Features.ContactRequests.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -10,15 +11,11 @@ namespace ContactService.Api.Controllers;
 [Authorize]
 public class ContactMessagesController : ControllerBase
 {
-    private readonly IContactMessageRepository _messageRepository;
-    private readonly IContactRequestRepository _contactRequestRepository;
+    private readonly IMediator _mediator;
 
-    public ContactMessagesController(
-        IContactMessageRepository messageRepository,
-        IContactRequestRepository contactRequestRepository)
+    public ContactMessagesController(IMediator mediator)
     {
-        _messageRepository = messageRepository;
-        _contactRequestRepository = contactRequestRepository;
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -27,22 +24,13 @@ public class ContactMessagesController : ControllerBase
     [HttpPost("{id}/mark-read")]
     public async Task<IActionResult> MarkAsRead(Guid id)
     {
-        var message = await _messageRepository.GetByIdAsync(id);
-        if (message == null)
-            return NotFound(new { error = "Message not found" });
-
-        // Verify the current user is the recipient (not the sender)
         var currentUserId = GetCurrentUserId();
-        var contactRequest = await _contactRequestRepository.GetByIdAsync(message.ContactRequestId);
-        if (contactRequest == null)
-            return NotFound(new { error = "Contact request not found" });
-
-        // Only the other party (not the sender) should mark messages as read
-        if (contactRequest.BuyerId != currentUserId && contactRequest.SellerId != currentUserId)
-            return Forbid();
-
-        await _messageRepository.MarkAsReadAsync(id);
-        return Ok();
+        await _mediator.Send(new MarkMessageAsReadCommand
+        {
+            MessageId = id,
+            CurrentUserId = currentUserId
+        });
+        return NoContent();
     }
 
     /// <summary>
@@ -52,13 +40,14 @@ public class ContactMessagesController : ControllerBase
     public async Task<IActionResult> GetUnreadCount()
     {
         var userId = GetCurrentUserId();
-        var count = await _messageRepository.GetUnreadCountForUserAsync(userId);
+        var count = await _mediator.Send(new GetUnreadCountQuery { UserId = userId });
         return Ok(new { Count = count });
     }
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException());
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException("User ID claim not found"));
     }
 }

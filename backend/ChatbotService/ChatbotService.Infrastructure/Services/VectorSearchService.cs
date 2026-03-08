@@ -80,7 +80,25 @@ public class EmbeddingService : IEmbeddingService
     public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct = default)
     {
         var results = await GenerateEmbeddingsBatchAsync(new List<string> { text }, ct);
-        return results.FirstOrDefault() ?? Array.Empty<float>();
+        var embedding = results.FirstOrDefault() ?? Array.Empty<float>();
+
+        // Validate: reject zero-vectors (they match everything in cosine similarity)
+        if (embedding.Length > 0 && embedding.All(v => v == 0f))
+        {
+            _logger.LogWarning("Embedding service returned zero-vector for text: {TextPreview}",
+                text.Length > 80 ? text[..80] + "..." : text);
+            return Array.Empty<float>();
+        }
+
+        // Validate dimension matches expected
+        if (embedding.Length > 0 && embedding.Length != _settings.Dimensions)
+        {
+            _logger.LogError("Embedding dimension mismatch: expected {Expected}, got {Actual}",
+                _settings.Dimensions, embedding.Length);
+            return Array.Empty<float>();
+        }
+
+        return embedding;
     }
 
     public async Task<List<float[]>> GenerateEmbeddingsBatchAsync(
@@ -89,6 +107,30 @@ public class EmbeddingService : IEmbeddingService
         if (!texts.Any())
             return new List<float[]>();
 
+        // Batch size limit to prevent OOM with large inventories
+        const int maxBatchSize = 64;
+
+        if (texts.Count > maxBatchSize)
+        {
+            _logger.LogInformation("Splitting {Count} texts into batches of {BatchSize}",
+                texts.Count, maxBatchSize);
+
+            var allResults = new List<float[]>();
+            for (int i = 0; i < texts.Count; i += maxBatchSize)
+            {
+                var batch = texts.Skip(i).Take(maxBatchSize).ToList();
+                var batchResults = await GenerateSingleBatchAsync(batch, ct);
+                allResults.AddRange(batchResults);
+            }
+            return allResults;
+        }
+
+        return await GenerateSingleBatchAsync(texts, ct);
+    }
+
+    private async Task<List<float[]>> GenerateSingleBatchAsync(
+        List<string> texts, CancellationToken ct)
+    {
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
@@ -126,8 +168,8 @@ public class EmbeddingService : IEmbeddingService
 
             if (result?.Data == null)
             {
-                _logger.LogWarning("Embedding response has no data");
-                return texts.Select(_ => new float[_settings.Dimensions]).ToList();
+                _logger.LogWarning("Embedding response has no data — returning empty arrays (will skip RAG)");
+                return texts.Select(_ => Array.Empty<float>()).ToList();
             }
 
             return result.Data
@@ -138,8 +180,8 @@ public class EmbeddingService : IEmbeddingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate embeddings for {Count} texts", texts.Count);
-            // Retornar vectores vacíos como fallback
-            return texts.Select(_ => new float[_settings.Dimensions]).ToList();
+            // Return empty arrays — callers must check length > 0 before using
+            return texts.Select(_ => Array.Empty<float>()).ToList();
         }
     }
 
@@ -192,12 +234,27 @@ public class EmbeddingService : IEmbeddingService
 /// <summary>
 /// Servicio de búsqueda vectorial usando pgvector para RAG.
 /// Implementa búsqueda híbrida: semántica (cosine similarity) + filtros SQL.
+/// Includes minimum relevance filtering and latency measurement.
 /// </summary>
 public class VectorSearchService : IVectorSearchService
 {
     private readonly IEmbeddingService _embeddingService;
     private readonly IVehicleEmbeddingRepository _embeddingRepository;
     private readonly ILogger<VectorSearchService> _logger;
+
+    /// <summary>
+    /// Minimum cosine similarity score to include a result.
+    /// Below this threshold, results are considered irrelevant noise.
+    /// Cosine similarity range: 0 (completely different) to 1 (identical).
+    /// 0.25 = very loose relevance, 0.5 = moderate, 0.7 = highly relevant.
+    /// </summary>
+    private const float MinRelevanceScore = 0.30f;
+
+    /// <summary>
+    /// Maximum acceptable latency for search operations in milliseconds.
+    /// Used for SLA monitoring and alerting.
+    /// </summary>
+    private const int LatencySlaMs = 500;
 
     public VectorSearchService(
         IEmbeddingService embeddingService,
@@ -219,9 +276,13 @@ public class VectorSearchService : IVectorSearchService
         if (string.IsNullOrWhiteSpace(query))
             return new List<VehicleSearchResult>();
 
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         // 1. Generar embedding del query del usuario
         var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, ct);
         
+        var embeddingMs = stopwatch.ElapsedMilliseconds;
+
         if (queryEmbedding.Length == 0)
         {
             _logger.LogWarning("Failed to generate query embedding, falling back to text search");
@@ -232,13 +293,32 @@ public class VectorSearchService : IVectorSearchService
         var results = await _embeddingRepository.HybridSearchAsync(
             dealerId, queryEmbedding, filters, topK, ct);
 
-        _logger.LogInformation(
-            "Vector search for dealer {DealerId}: query='{Query}', results={Count}, " +
-            "filters={HasFilters}",
-            dealerId, query.Length > 50 ? query[..50] + "..." : query,
-            results.Count, filters != null);
+        var searchMs = stopwatch.ElapsedMilliseconds;
+        stopwatch.Stop();
 
-        return results;
+        // 3. Filter out irrelevant results (below minimum similarity threshold)
+        var relevantResults = results
+            .Where(r => r.SimilarityScore >= MinRelevanceScore)
+            .ToList();
+
+        var filteredOut = results.Count - relevantResults.Count;
+
+        // 4. Log latency and results for SLA monitoring
+        var totalMs = searchMs;
+        var latencyLevel = totalMs > LatencySlaMs ? LogLevel.Warning : LogLevel.Information;
+
+        _logger.Log(latencyLevel,
+            "Vector search for dealer {DealerId}: query='{Query}', " +
+            "results={Count}/{Total} (filtered {FilteredOut} below {MinScore} threshold), " +
+            "latency={TotalMs}ms (embedding={EmbeddingMs}ms, search={SearchMs}ms), " +
+            "SLA={SlaStatus}, filters={HasFilters}",
+            dealerId, query.Length > 50 ? query[..50] + "..." : query,
+            relevantResults.Count, results.Count, filteredOut, MinRelevanceScore,
+            totalMs, embeddingMs, searchMs - embeddingMs,
+            totalMs <= LatencySlaMs ? "OK" : $"BREACH ({totalMs}ms > {LatencySlaMs}ms)",
+            filters != null);
+
+        return relevantResults;
     }
 
     public async Task UpsertVehicleEmbeddingAsync(
@@ -344,6 +424,7 @@ public class VectorSearchService : IVectorSearchService
     /// <summary>
     /// Construye el texto de un vehículo para generar su embedding.
     /// Formato optimizado para búsqueda semántica en español dominicano.
+    /// Includes all searchable fields + condition for better semantic matching.
     /// </summary>
     private static string BuildVehicleEmbeddingText(ChatbotVehicle vehicle)
     {
@@ -358,7 +439,7 @@ public class VectorSearchService : IVectorSearchService
             $"Tipo: {vehicle.BodyType ?? "N/A"}",
             $"Color: {vehicle.ExteriorColor ?? vehicle.Color ?? "N/A"}",
             !string.IsNullOrEmpty(vehicle.Description) ? vehicle.Description : "",
-            vehicle.IsOnSale ? "EN OFERTA" : ""
+            vehicle.IsOnSale ? "EN OFERTA ESPECIAL" : ""
         };
 
         return string.Join(". ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));

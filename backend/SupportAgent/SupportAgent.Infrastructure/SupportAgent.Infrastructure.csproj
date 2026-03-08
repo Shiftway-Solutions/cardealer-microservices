@@ -14,5 +14,6 @@
     <ProjectReference Include="../SupportAgent.Domain/SupportAgent.Domain.csproj" />
     <ProjectReference Include="../SupportAgent.Application/SupportAgent.Application.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 </Project>

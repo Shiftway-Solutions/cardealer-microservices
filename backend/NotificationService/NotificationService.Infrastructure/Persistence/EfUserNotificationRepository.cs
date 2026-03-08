@@ -102,41 +102,27 @@ public class EfUserNotificationRepository : IUserNotificationRepository
 
     public async Task<int> MarkAllAsReadAsync(Guid userId)
     {
-        var now = DateTime.UtcNow;
-        var unread = await _context.UserNotifications
+        // Performance: Use ExecuteUpdateAsync instead of loading all entities into memory
+        return await _context.UserNotifications
             .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-
-        foreach (var n in unread)
-        {
-            n.IsRead = true;
-            n.ReadAt = now;
-        }
-
-        await _context.SaveChangesAsync();
-        return unread.Count;
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(n => n.IsRead, true)
+                .SetProperty(n => n.ReadAt, DateTime.UtcNow));
     }
 
     public async Task<int> DeleteReadAsync(Guid userId)
     {
-        var read = await _context.UserNotifications
+        // Performance: Use ExecuteDeleteAsync instead of loading all entities into memory
+        return await _context.UserNotifications
             .Where(n => n.UserId == userId && n.IsRead)
-            .ToListAsync();
-
-        _context.UserNotifications.RemoveRange(read);
-        await _context.SaveChangesAsync();
-        return read.Count;
+            .ExecuteDeleteAsync();
     }
 
     public async Task<int> DeleteExpiredAsync()
     {
-        var now = DateTime.UtcNow;
-        var expired = await _context.UserNotifications
-            .Where(n => n.ExpiresAt != null && n.ExpiresAt < now)
-            .ToListAsync();
-
-        _context.UserNotifications.RemoveRange(expired);
-        await _context.SaveChangesAsync();
-        return expired.Count;
+        // Performance: Use ExecuteDeleteAsync instead of loading all entities into memory
+        return await _context.UserNotifications
+            .Where(n => n.ExpiresAt != null && n.ExpiresAt < DateTime.UtcNow)
+            .ExecuteDeleteAsync();
     }
 }

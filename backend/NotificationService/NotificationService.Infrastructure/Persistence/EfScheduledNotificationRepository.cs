@@ -116,6 +116,7 @@ public class EfScheduledNotificationRepository : IScheduledNotificationRepositor
             .Include(sn => sn.Notification)
             .Where(sn => sn.NotificationId == notificationId)
             .OrderBy(sn => sn.ScheduledFor)
+            .Take(500) // Safety limit
             .ToListAsync();
     }
 

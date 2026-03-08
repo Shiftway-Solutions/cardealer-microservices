@@ -56,11 +56,11 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
 
             if (_channel == null)
             {
-                _logger.LogError("Failed to initialize RabbitMQ channel for KYCStatusChangedNotificationConsumer");
+                _logger.LogWarning("RabbitMQ channel is null after initialization for KYCStatusChangedNotificationConsumer. Consumer will not start");
                 return;
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.Received += async (_, ea) =>
             {
@@ -124,10 +124,12 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
                            ?? "localhost",
                 Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
                 UserName = _configuration["RabbitMQ:UserName"]
-                           ?? _configuration["RabbitMQ:User"]
-                           ?? "guest",
-                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                           ?? _configuration["RabbitMQ:Username"]
+                           ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured"),
+                Password = _configuration["RabbitMQ:Password"]
+                           ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
+                DispatchConsumersAsync = true,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };

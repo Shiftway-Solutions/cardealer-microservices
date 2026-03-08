@@ -7,6 +7,7 @@ using ChatbotService.Domain.Entities;
 using ChatbotService.Domain.Enums;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Domain.Models;
+using ChatbotService.Application.Interfaces;
 
 namespace ChatbotService.Tests;
 
@@ -58,6 +59,7 @@ public class SendMessageCommandHandlerTests
             _strategyFactory.Object,
             _llmService.Object,
             _cacheService.Object,
+            new Mock<IChatbotSafetyMetrics>().Object,
             _logger.Object);
     }
 

@@ -54,11 +54,11 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
 
             if (_channel == null)
             {
-                _logger.LogError("Failed to initialize RabbitMQ channel");
+                _logger.LogWarning("RabbitMQ channel is null after initialization for PaymentReceiptNotificationConsumer. Consumer will not start");
                 return;
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -125,6 +125,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                 UserName = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
                 Password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
+                DispatchConsumersAsync = true,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
@@ -254,7 +255,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                             <p>Si tienes alguna pregunta sobre este pago, no dudes en contactarnos.</p>
                             
                             <p style='margin-top: 30px;'>
-                                <a href='https://cardealer.com/billing/payments' 
+                                <a href='https://okla.com.do/billing/payments' 
                                    style='display: inline-block; background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;'>
                                     Ver Historial de Pagos
                                 </a>
@@ -262,7 +263,7 @@ public class PaymentReceiptNotificationConsumer : BackgroundService
                         </div>
                         
                         <div style='background-color: #343a40; color: #adb5bd; padding: 20px; text-align: center; font-size: 12px;'>
-                            <p style='margin: 0;'>CarDealer - Plataforma de Venta de Vehículos</p>
+                            <p style='margin: 0;'>OKLA - Plataforma de Venta de Vehículos</p>
                             <p style='margin: 5px 0 0 0;'>Este es un recibo automático. No responder a este correo.</p>
                         </div>
                     </div>

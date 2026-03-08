@@ -18,9 +18,9 @@ public class InMemoryMessageBus : IMessageBus
                 {
                     if (t.IsFaulted)
                     {
-                        // Log error
+                        System.Diagnostics.Debug.WriteLine($"InMemoryMessageBus handler failed for queue '{queueName}': {t.Exception?.GetBaseException().Message}");
                     }
-                });
+                }, System.Threading.Tasks.TaskScheduler.Default);
             }
         }
         return Task.CompletedTask;

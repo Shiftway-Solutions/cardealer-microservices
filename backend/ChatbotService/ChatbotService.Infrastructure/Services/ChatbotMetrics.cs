@@ -1,17 +1,20 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using ChatbotService.Application.Interfaces;
 
 namespace ChatbotService.Infrastructure.Services;
 
 /// <summary>
 /// .NET 8 Metrics for ChatbotService observability.
 /// Exposes counters and histograms compatible with OpenTelemetry / Prometheus.
+/// Implements IChatbotSafetyMetrics for Application-layer injection.
 /// 
 /// Usage:
-///   builder.Services.AddSingleton&lt;ChatbotMetrics&gt;();
+///   builder.Services.AddSingleton<ChatbotMetrics>();
+///   builder.Services.AddSingleton<IChatbotSafetyMetrics>(sp => sp.GetRequiredService<ChatbotMetrics>());
 ///   // Metrics are auto-collected by OpenTelemetry or Prometheus exporters.
 /// </summary>
-public sealed class ChatbotMetrics
+public sealed class ChatbotMetrics : IChatbotSafetyMetrics
 {
     public static readonly string MeterName = "ChatbotService";
 
@@ -32,6 +35,14 @@ public sealed class ChatbotMetrics
     private readonly Counter<long> _circuitBreakerTrips;
     private readonly Counter<long> _cacheHits;
     private readonly Counter<long> _cacheMisses;
+
+    // ── Safety & Quality Metrics (LLM-as-a-Judge audit) ──────────────
+    private readonly Counter<long> _hallucinationDetected;
+    private readonly Counter<long> _groundingViolations;
+    private readonly Counter<long> _moderationBlocked;
+    private readonly Counter<long> _injectionDetected;
+    private readonly Counter<long> _piiDetected;
+    private readonly Histogram<double> _responseQualityScore;
 
     public ChatbotMetrics(IMeterFactory meterFactory)
     {
@@ -121,6 +132,38 @@ public sealed class ChatbotMetrics
             "chatbot.cache.misses",
             unit: "{miss}",
             description: "LLM response cache misses (R17)");
+
+        // ── Safety & Quality Metrics ─────────────────────────────────
+
+        _hallucinationDetected = meter.CreateCounter<long>(
+            "chatbot.hallucination.detected",
+            unit: "{event}",
+            description: "Hallucination events detected by grounding validators");
+
+        _groundingViolations = meter.CreateCounter<long>(
+            "chatbot.grounding.violations",
+            unit: "{violation}",
+            description: "Ungrounded claims found in LLM responses (price, vehicle, phrase)");
+
+        _moderationBlocked = meter.CreateCounter<long>(
+            "chatbot.moderation.blocked",
+            unit: "{event}",
+            description: "Messages blocked or sanitized by content moderation filter");
+
+        _injectionDetected = meter.CreateCounter<long>(
+            "chatbot.injection.detected",
+            unit: "{event}",
+            description: "Prompt injection attempts detected (blocked + sanitized)");
+
+        _piiDetected = meter.CreateCounter<long>(
+            "chatbot.pii.detected",
+            unit: "{event}",
+            description: "PII detection events (cédula, credit card, phone, etc.)");
+
+        _responseQualityScore = meter.CreateHistogram<double>(
+            "chatbot.response.quality.score",
+            unit: "{score}",
+            description: "Response quality score (0.0-1.0) from grounding + moderation checks");
     }
 
     // ── Public Recording Methods ─────────────────────────────────────────────
@@ -178,4 +221,49 @@ public sealed class ChatbotMetrics
 
     public void RecordCacheMiss()
         => _cacheMisses.Add(1);
+
+    // ── Safety & Quality Recording Methods ───────────────────────────
+
+    /// <summary>
+    /// Records a hallucination event with type classification.
+    /// Types: price_mismatch, ungrounded_phrase, fabricated_vehicle, url_fabrication
+    /// </summary>
+    public void RecordHallucinationDetected(string type)
+        => _hallucinationDetected.Add(1, new KeyValuePair<string, object?>("type", type));
+
+    /// <summary>
+    /// Records individual grounding violations (each ungrounded claim counts).
+    /// </summary>
+    public void RecordGroundingViolation(string claimType)
+        => _groundingViolations.Add(1, new KeyValuePair<string, object?>("claim_type", claimType));
+
+    /// <summary>
+    /// Records content moderation events with category (hate_speech, sexual, scam, etc.).
+    /// </summary>
+    public void RecordModerationBlocked(string category, string stage)
+        => _moderationBlocked.Add(1,
+            new KeyValuePair<string, object?>("category", category),
+            new KeyValuePair<string, object?>("stage", stage));
+
+    /// <summary>
+    /// Records prompt injection detection events with severity.
+    /// </summary>
+    public void RecordInjectionDetected(string severity, bool blocked)
+        => _injectionDetected.Add(1,
+            new KeyValuePair<string, object?>("severity", severity),
+            new KeyValuePair<string, object?>("blocked", blocked));
+
+    /// <summary>
+    /// Records PII detection events with the type of PII found.
+    /// </summary>
+    public void RecordPiiDetected(string piiType)
+        => _piiDetected.Add(1, new KeyValuePair<string, object?>("pii_type", piiType));
+
+    /// <summary>
+    /// Records a response quality score (0.0 = hallucinated/blocked, 1.0 = fully grounded + clean).
+    /// Score formula: starts at 1.0, deducted for grounding violations, moderation issues.
+    /// </summary>
+    public void RecordResponseQualityScore(double score, string chatMode)
+        => _responseQualityScore.Record(score,
+            new KeyValuePair<string, object?>("chat_mode", chatMode));
 }

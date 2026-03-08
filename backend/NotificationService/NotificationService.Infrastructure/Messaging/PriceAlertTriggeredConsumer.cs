@@ -58,11 +58,11 @@ public class PriceAlertTriggeredConsumer : BackgroundService
 
             if (_channel == null)
             {
-                _logger.LogError("Failed to initialize RabbitMQ channel for PriceAlertTriggeredConsumer");
+                _logger.LogWarning("RabbitMQ channel is null after initialization for PriceAlertTriggeredConsumer. Consumer will not start");
                 return;
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.Received += async (model, ea) =>
             {
@@ -130,6 +130,7 @@ public class PriceAlertTriggeredConsumer : BackgroundService
                 Password = _configuration["RabbitMQ:Password"]
                     ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                 VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
+                DispatchConsumersAsync = true,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                 ClientProvidedName = $"notificationservice-price-alert-consumer-{Environment.MachineName}"

@@ -25,7 +25,7 @@ public class LlmSettings
     public float TopP { get; set; } = 0.9f;
     public int MaxTokens { get; set; } = 600;
     public float RepetitionPenalty { get; set; } = 1.15f;
-    public string SystemPrompt { get; set; } = "Eres Ana, asistente de ventas de vehículos en República Dominicana. Responde en español breve y amigable. Ayuda con inventario, precios y financiamiento.";
+    public string SystemPrompt { get; set; } = "Eres el asistente virtual de OKLA Marketplace, la plataforma de compraventa de vehículos de República Dominicana. Responde en español dominicano, breve y amigable (2-4 oraciones). Ayuda con inventario, precios de referencia y financiamiento. NUNCA inventes datos de vehículos ni precios. NUNCA solicites cédula ni datos personales. Los precios son de referencia y no incluyen traspaso ni impuestos (DGII).";
 
     /// <summary>
     /// API Key para autenticación con proveedores externos (HuggingFace, OpenAI, Groq, etc.).

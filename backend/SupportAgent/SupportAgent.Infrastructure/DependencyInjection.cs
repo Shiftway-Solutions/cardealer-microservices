@@ -6,6 +6,7 @@ using SupportAgent.Domain.Interfaces;
 using SupportAgent.Infrastructure.Persistence;
 using SupportAgent.Infrastructure.Repositories;
 using SupportAgent.Infrastructure.Services;
+using CarDealer.Shared.Resilience.Extensions;
 
 namespace SupportAgent.Infrastructure;
 
@@ -31,7 +32,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri("https://api.anthropic.com/");
             client.Timeout = TimeSpan.FromSeconds(60);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        }).AddStandardResilience(configuration);
         services.AddScoped<IClaudeSupportService, ClaudeSupportService>();
 
         return services;

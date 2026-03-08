@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NotificationService.Domain.Interfaces;
 using NotificationService.Shared;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace NotificationService.Infrastructure.Services;
@@ -95,7 +96,7 @@ public class TemplateService : ITemplateEngine
             }
         }
 
-        return current?.ToString() ?? string.Empty;
+        return WebUtility.HtmlEncode(current?.ToString() ?? string.Empty);
     }
 
     public void ClearCache()

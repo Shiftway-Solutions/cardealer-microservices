@@ -76,21 +76,32 @@ public class AppointmentsController : ControllerBase
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult GetById(Guid id)
     {
-        _logger.LogInformation("Getting appointment {AppointmentId}", id);
+        var currentUserId = GetCurrentUserId();
+        _logger.LogInformation("Getting appointment {AppointmentId} for user {UserId}", id, currentUserId);
 
         // TODO: Replace with MediatR query when AppointmentService logic is migrated
+        // NOTE: When implemented, MUST verify the appointment belongs to the current user
+        // (either as buyer or seller) before returning. Example:
+        //   var appointment = await repo.GetByIdAsync(id);
+        //   if (appointment.BuyerId != currentUserId && appointment.SellerId != currentUserId)
+        //       return Forbid();
+
+        var stubBuyerId = currentUserId; // Stub uses current user as buyer for demo
+        var stubSellerId = Guid.NewGuid();
+
         var stubData = new
         {
             Id = id,
             VehicleId = Guid.NewGuid(),
             VehicleTitle = "2024 Toyota Corolla",
-            BuyerId = GetCurrentUserId(),
+            BuyerId = stubBuyerId,
             BuyerName = "John Doe",
             BuyerEmail = "john@example.com",
             BuyerPhone = "809-555-0100",
-            SellerId = Guid.NewGuid(),
+            SellerId = stubSellerId,
             SellerName = "Auto Premium RD",
             SellerPhone = "809-555-0200",
             ScheduledDate = DateTime.UtcNow.AddDays(3),
@@ -124,6 +135,19 @@ public class AppointmentsController : ControllerBase
         if (request.ScheduledDate <= DateTime.UtcNow)
             return BadRequest(new { error = "Scheduled date must be in the future." });
 
+        // Security validation - check for XSS/SQL injection patterns
+        var textFields = new[] { request.Type ?? "", request.Location ?? "", request.Notes ?? "" };
+        foreach (var field in textFields)
+        {
+            if (ContainsDangerousPatterns(field))
+                return BadRequest(new { error = "Input contains potentially dangerous content." });
+        }
+
+        if (request.Location != null && request.Location.Length > 500)
+            return BadRequest(new { error = "Location must be 500 characters or less." });
+        if (request.Notes != null && request.Notes.Length > 2000)
+            return BadRequest(new { error = "Notes must be 2000 characters or less." });
+
         // TODO: Replace with MediatR command when AppointmentService logic is migrated
         var stubData = new
         {
@@ -153,11 +177,32 @@ public class AppointmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult Update(Guid id, [FromBody] UpdateAppointmentRequest request)
     {
-        _logger.LogInformation("Updating appointment {AppointmentId}", id);
+        var currentUserId = GetCurrentUserId();
+        _logger.LogInformation("Updating appointment {AppointmentId} by user {UserId}", id, currentUserId);
+
+        // Input validation for string fields
+        var textFields = new[] { request.Status ?? "", request.Location ?? "", request.Notes ?? "" };
+        foreach (var field in textFields)
+        {
+            if (ContainsDangerousPatterns(field))
+                return BadRequest(new { error = "Input contains potentially dangerous content." });
+        }
+
+        if (request.Location != null && request.Location.Length > 500)
+            return BadRequest(new { error = "Location must be 500 characters or less." });
+        if (request.Notes != null && request.Notes.Length > 2000)
+            return BadRequest(new { error = "Notes must be 2000 characters or less." });
 
         // TODO: Replace with MediatR command when AppointmentService logic is migrated
+        // NOTE: When implemented, MUST verify the appointment belongs to the current user
+        // (either as buyer or seller) before allowing update. Example:
+        //   var appointment = await repo.GetByIdAsync(id);
+        //   if (appointment.BuyerId != currentUserId && appointment.SellerId != currentUserId)
+        //       return Forbid();
+
         var stubData = new
         {
             Id = id,
@@ -180,11 +225,19 @@ public class AppointmentsController : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult Delete(Guid id)
     {
-        _logger.LogInformation("Cancelling appointment {AppointmentId}", id);
+        var currentUserId = GetCurrentUserId();
+        _logger.LogInformation("Cancelling appointment {AppointmentId} by user {UserId}", id, currentUserId);
 
         // TODO: Replace with MediatR command when AppointmentService logic is migrated
+        // NOTE: When implemented, MUST verify the appointment belongs to the current user
+        // (either as buyer or seller) before allowing deletion. Example:
+        //   var appointment = await repo.GetByIdAsync(id);
+        //   if (appointment.BuyerId != currentUserId && appointment.SellerId != currentUserId)
+        //       return Forbid();
+
         return NoContent();
     }
 
@@ -241,7 +294,27 @@ public class AppointmentsController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException("User ID claim not found"));
+    }
+
+    private static bool ContainsDangerousPatterns(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return false;
+
+        var lower = input.ToLowerInvariant();
+        var upper = input.ToUpperInvariant();
+
+        // XSS patterns
+        string[] xssPatterns = { "<script", "javascript:", "onerror=", "onload=", "onclick=",
+            "<iframe", "eval(", "expression(", "vbscript:", "data:text/html" };
+        if (xssPatterns.Any(p => lower.Contains(p))) return true;
+
+        // SQL injection patterns
+        string[] sqlPatterns = { "DROP ", "DELETE ", "INSERT ", "UPDATE ", "--", "/*", "*/",
+            "EXEC ", "UNION ", "xp_", "sp_", "OR 1=1", "OR '1'='1'" };
+        if (sqlPatterns.Any(p => upper.Contains(p))) return true;
+
+        return false;
     }
 }
 

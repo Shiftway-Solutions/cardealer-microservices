@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NotificationService.Application.DTOs;
 using NotificationService.Domain.Interfaces;
 
 namespace NotificationService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = "NotificationServiceAdmin")]
 public class TeamsController : ControllerBase
 {
     private readonly ITeamsProvider _teamsProvider;
@@ -51,7 +54,7 @@ public class TeamsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending Teams alert");
-            return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            return StatusCode(500, new { error = "Internal server error" });
         }
     }
 
@@ -70,10 +73,3 @@ public class TeamsController : ControllerBase
         });
     }
 }
-
-public record TeamsAlertRequest(
-    string Title,
-    string Message,
-    string? Severity = "Info",
-    Dictionary<string, string>? Metadata = null
-);

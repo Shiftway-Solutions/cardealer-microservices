@@ -89,6 +89,7 @@ public class NotificationsController : ControllerBase
     /// Reads admin alert toggles and channels from ConfigurationService.
     /// </summary>
     [HttpPost("admin-alert")]
+    [Authorize(Policy = "NotificationServiceAdmin")]
     public async Task<ActionResult<SendAdminAlertResponse>> SendAdminAlert(
         [FromBody] SendAdminAlertCommand command)
     {

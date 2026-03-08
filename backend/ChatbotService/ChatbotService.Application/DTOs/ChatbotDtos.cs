@@ -306,6 +306,8 @@ public record InteractionUsageDto
     public int FreeRemaining { get; init; }
     public int PaidToDate { get; init; }
     public decimal TotalCostToDate { get; init; }
+    /// <summary>Overage cost at $0.08 per conversation beyond free tier.</summary>
+    public decimal OverageCost { get; init; }
     public decimal UsagePercentage { get; init; }
     public UsageStatus Status { get; init; }
     public string StatusMessage { get; init; } = string.Empty;

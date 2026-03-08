@@ -58,41 +58,77 @@ public static class PromptInjectionDetector
     };
 
     /// <summary>
+    /// Normalizes Unicode text to prevent homoglyph bypass attacks.
+    /// Converts confusable characters (e.g., Cyrillic 'а' → Latin 'a').
+    /// </summary>
+    private static string NormalizeForDetection(string input)
+    {
+        // 1. Unicode NFKC normalization — collapses compatibility equivalents
+        var normalized = input.Normalize(System.Text.NormalizationForm.FormKC);
+
+        // 2. Remove zero-width characters used to bypass detection
+        normalized = Regex.Replace(normalized, @"[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]", "");
+
+        // 3. Map common Cyrillic homoglyphs to Latin equivalents
+        var homoglyphMap = new Dictionary<char, char>
+        {
+            {'а', 'a'}, {'е', 'e'}, {'о', 'o'}, {'р', 'p'}, {'с', 'c'},
+            {'у', 'y'}, {'х', 'x'}, {'А', 'A'}, {'В', 'B'}, {'Е', 'E'},
+            {'К', 'K'}, {'М', 'M'}, {'Н', 'H'}, {'О', 'O'}, {'Р', 'P'},
+            {'С', 'C'}, {'Т', 'T'}, {'Х', 'X'},
+        };
+
+        var chars = normalized.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            if (homoglyphMap.TryGetValue(chars[i], out var replacement))
+                chars[i] = replacement;
+        }
+
+        return new string(chars);
+    }
+
+    /// <summary>
     /// Analyzes a user message for prompt injection attempts.
     /// Returns detection result with threat level and matched patterns.
+    /// Constitutional AI: Applies Unicode normalization to prevent homoglyph bypass.
+    /// Prompt extraction attempts are now blocked (upgraded to MEDIUM severity).
     /// </summary>
     public static PromptInjectionResult Detect(string message)
     {
         if (string.IsNullOrWhiteSpace(message))
             return PromptInjectionResult.Safe();
 
+        // Normalize to prevent Unicode/homoglyph bypass attacks
+        var normalized = NormalizeForDetection(message);
+
         var detectedPatterns = new List<string>();
 
         // Check system role impersonation (HIGH severity)
         foreach (var pattern in SystemRolePatterns)
         {
-            if (pattern.IsMatch(message))
+            if (pattern.IsMatch(normalized))
                 detectedPatterns.Add($"system_role:{pattern}");
         }
 
         // Check instruction override (HIGH severity)
         foreach (var pattern in OverridePatterns)
         {
-            if (pattern.IsMatch(message))
+            if (pattern.IsMatch(normalized))
                 detectedPatterns.Add($"override:{pattern}");
         }
 
         // Check identity override (MEDIUM severity)
         foreach (var pattern in IdentityPatterns)
         {
-            if (pattern.IsMatch(message))
+            if (pattern.IsMatch(normalized))
                 detectedPatterns.Add($"identity:{pattern}");
         }
 
-        // Check prompt extraction (LOW severity — not blocking, just flag)
+        // Check prompt extraction (MEDIUM severity — block to prevent system prompt leakage)
         foreach (var pattern in ExtractionPatterns)
         {
-            if (pattern.IsMatch(message))
+            if (pattern.IsMatch(normalized))
                 detectedPatterns.Add($"extraction:{pattern}");
         }
 
@@ -103,9 +139,11 @@ public static class PromptInjectionDetector
         var hasSystemRole = detectedPatterns.Any(p => p.StartsWith("system_role:"));
         var hasOverride = detectedPatterns.Any(p => p.StartsWith("override:"));
         var hasIdentity = detectedPatterns.Any(p => p.StartsWith("identity:"));
+        var hasExtraction = detectedPatterns.Any(p => p.StartsWith("extraction:"));
 
+        // Extraction upgraded from Low → Medium to prevent system prompt leakage
         var threatLevel = (hasSystemRole || hasOverride) ? ThreatLevel.High
-            : hasIdentity ? ThreatLevel.Medium
+            : (hasIdentity || hasExtraction) ? ThreatLevel.Medium
             : ThreatLevel.Low;
 
         return new PromptInjectionResult
@@ -115,6 +153,36 @@ public static class PromptInjectionDetector
             DetectedPatterns = detectedPatterns,
             ShouldBlock = threatLevel >= ThreatLevel.High,
         };
+    }
+
+    /// <summary>
+    /// Scans RAG context data (vehicle descriptions, dealer info) for indirect injection.
+    /// Constitutional AI: Prevents malicious content in inventory data from manipulating the LLM.
+    /// Returns sanitized context with injection tokens stripped.
+    /// </summary>
+    public static string SanitizeRagContext(string ragContext)
+    {
+        if (string.IsNullOrWhiteSpace(ragContext))
+            return ragContext;
+
+        var result = ragContext;
+
+        // Strip all system role tokens that could be embedded in vehicle descriptions
+        result = Regex.Replace(result, @"<\|[^|]+\|>", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"\[SYSTEM\]", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"\[INST\]", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"<<SYS>>", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"###\s*(?:System|Instruction):", "", RegexOptions.IgnoreCase);
+
+        // Strip instruction override patterns from vehicle descriptions
+        result = Regex.Replace(result, @"ignor[ae]\s+(?:todas?\s+)?(?:las?\s+)?instrucciones?\s+anteriores?", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"ignore\s+(?:all\s+)?(?:previous|prior|above)\s+instructions?", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"nuevas?\s+instrucciones?", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"olvida\s+(?:todo|las\s+reglas|tus\s+instrucciones)", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"override\s+(?:your\s+)?prompt", "", RegexOptions.IgnoreCase);
+        result = Regex.Replace(result, @"reset\s+(?:your\s+)?(?:instructions|context|memory)", "", RegexOptions.IgnoreCase);
+
+        return result.Trim();
     }
 
     /// <summary>

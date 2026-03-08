@@ -1,9 +1,11 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ChatbotService.Domain.Entities;
 using ChatbotService.Domain.Enums;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Application.DTOs;
+using ChatbotService.Application.Interfaces;
 using ChatbotService.Application.Services;
 
 namespace ChatbotService.Application.Features.Sessions.Commands;
@@ -155,6 +157,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
     private readonly IChatModeStrategyFactory _strategyFactory;
     private readonly ILlmService _llmService;
     private readonly ILlmResponseCacheService _cacheService;
+    private readonly IChatbotSafetyMetrics _metrics;
     private readonly ILogger<SendMessageCommandHandler> _logger;
 
     public SendMessageCommandHandler(
@@ -165,6 +168,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         IChatModeStrategyFactory strategyFactory,
         ILlmService llmService,
         ILlmResponseCacheService cacheService,
+        IChatbotSafetyMetrics metrics,
         ILogger<SendMessageCommandHandler> logger)
     {
         _sessionRepository = sessionRepository;
@@ -174,6 +178,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         _strategyFactory = strategyFactory;
         _llmService = llmService;
         _cacheService = cacheService;
+        _metrics = metrics;
         _logger = logger;
     }
 
@@ -219,7 +224,41 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             };
         }
 
-        // ── 3. Verificar límite de interacciones ──────────────────────
+        // ── 2b. Verificar horario de atención (RestrictToBusinessHours) ──
+        if (config.RestrictToBusinessHours && !IsWithinBusinessHours(config))
+        {
+            var offlineMsg = config.OfflineMessage ??
+                "En este momento no estamos disponibles. Deja tu mensaje y te contactaremos pronto.";
+
+            // Persist user message even outside business hours so the dealer can review later
+            var offlineUserMsg = new ChatMessage
+            {
+                Id = Guid.NewGuid(),
+                SessionId = session.Id,
+                Type = Enum.TryParse<MessageType>(request.MessageType, out var mtOff) ? mtOff : MessageType.UserText,
+                Content = request.Message,
+                IsFromBot = false,
+                ConsumedInteraction = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _messageRepository.CreateAsync(offlineUserMsg, ct);
+            session.MessageCount++;
+            session.LastActivityAt = DateTime.UtcNow;
+            await _sessionRepository.UpdateAsync(session, ct);
+
+            return new ChatbotResponse
+            {
+                MessageId = offlineUserMsg.Id,
+                Response = offlineMsg,
+                IsFallback = false,
+                IntentName = "business_hours_offline",
+                ConfidenceScore = 1.0m,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
+
+        // ── 3. Verificar límite de interacciones (session + daily/monthly) ──
         if (session.InteractionLimitReached)
         {
             return new ChatbotResponse
@@ -232,8 +271,57 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             };
         }
 
+        // ── 3b. Daily/monthly limit enforcement ──────────────────────
+        if (session.UserId.HasValue)
+        {
+            var today = DateTime.UtcNow.Date;
+            var monthStart = new DateTime(today.Year, today.Month, 1);
+
+            var todayCount = await _messageRepository.GetLlmCallsCountByUserAsync(
+                session.UserId.Value, today, today.AddDays(1), ct);
+            if (todayCount >= config.MaxInteractionsPerUserPerDay)
+            {
+                _logger.LogWarning(
+                    "Daily interaction limit reached: user {UserId} has {Count}/{Max}",
+                    session.UserId, todayCount, config.MaxInteractionsPerUserPerDay);
+
+                return new ChatbotResponse
+                {
+                    MessageId = Guid.NewGuid(),
+                    Response = "Has alcanzado el límite diario de consultas. Intenta mañana o contacta a un agente. 📞",
+                    IsFallback = true,
+                    RemainingInteractions = 0,
+                    ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+                };
+            }
+
+            var monthCount = await _messageRepository.GetLlmCallsCountByUserAsync(
+                session.UserId.Value, monthStart, today.AddDays(1), ct);
+            if (monthCount >= config.MaxInteractionsPerUserPerMonth)
+            {
+                _logger.LogWarning(
+                    "Monthly interaction limit reached: user {UserId} has {Count}/{Max}",
+                    session.UserId, monthCount, config.MaxInteractionsPerUserPerMonth);
+
+                return new ChatbotResponse
+                {
+                    MessageId = Guid.NewGuid(),
+                    Response = "Has alcanzado el límite mensual de consultas. Contacta con el equipo de ventas directamente. 📞",
+                    IsFallback = true,
+                    RemainingInteractions = 0,
+                    ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+                };
+            }
+        }
+
         // ── 4. SEGURIDAD: Prompt injection detection ──────────────────
         var injectionResult = PromptInjectionDetector.Detect(request.Message);
+        if (injectionResult.IsInjectionDetected)
+        {
+            _metrics.RecordInjectionDetected(
+                injectionResult.ThreatLevel.ToString().ToLowerInvariant(),
+                injectionResult.ShouldBlock);
+        }
         if (injectionResult.ShouldBlock)
         {
             _logger.LogWarning("Prompt injection BLOCKED in session {SessionId}: {Patterns}",
@@ -255,6 +343,11 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
 
         // ── 5. SEGURIDAD: PII detection ───────────────────────────────
         var piiResult = PiiDetector.Sanitize(sanitizedMessage);
+        if (piiResult.DetectionInfo.WasSanitized)
+        {
+            foreach (var piiType in piiResult.DetectionInfo.DetectedTypes)
+                _metrics.RecordPiiDetected(piiType);
+        }
         if (piiResult.DetectionInfo.RequiresAgentTransfer)
         {
             _logger.LogWarning("PII requiring agent transfer in session {SessionId}: {Types}",
@@ -279,6 +372,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         var inputModeration = ContentModerationFilter.ModerateUserMessage(messageForLlm);
         if (!inputModeration.IsSafe)
         {
+            _metrics.RecordModerationBlocked(inputModeration.Category.ToString(), "pre_llm");
             _logger.LogWarning(
                 "Content moderation BLOCKED user input. Category={Category}, Reason={Reason}, Session={SessionId}",
                 inputModeration.Category, inputModeration.Reason, session.Id);
@@ -342,6 +436,35 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 isFallback = false;
                 consumedInteraction = false; // Cache hits don't consume interactions
 
+                // Constitutional AI: Run grounding validation even on cached responses
+                // to prevent serving previously-cached hallucinated content
+                var cachedGrounding = await strategy.ValidateResponseGroundingAsync(
+                    session, botResponse, ct);
+                if (!cachedGrounding.IsGrounded && cachedGrounding.SanitizedResponse != null)
+                {
+                    _logger.LogWarning("Cached response not grounded in session {SessionId}: {Claims}",
+                        session.Id, string.Join(", ", cachedGrounding.UngroundedClaims));
+                    botResponse = cachedGrounding.SanitizedResponse;
+                    _metrics.RecordHallucinationDetected("cached_response");
+                    foreach (var claim in cachedGrounding.UngroundedClaims)
+                        _metrics.RecordGroundingViolation("cached");
+                    // Invalidate the bad cache entry
+                    _ = _cacheService.InvalidateAsync(messageForLlm, systemPrompt, ct);
+                }
+
+                // Constitutional AI: Content moderation on cached bot output
+                var cachedModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
+                if (!cachedModeration.IsSafe)
+                {
+                    _metrics.RecordModerationBlocked(cachedModeration.Category.ToString(), "cached_output");
+                    _logger.LogWarning(
+                        "Cached bot output moderated. Category={Category}, Session={SessionId}",
+                        cachedModeration.Category, session.Id);
+                    botResponse = cachedModeration.SuggestedAction
+                        ?? "¿Hay algo más sobre el vehículo en lo que pueda ayudarte?";
+                    _ = _cacheService.InvalidateAsync(messageForLlm, systemPrompt, ct);
+                }
+
                 _logger.LogInformation(
                     "Cache HIT for session {SessionId}, saved LLM call. Intent: {Intent}",
                     session.Id, intentName);
@@ -378,12 +501,16 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
                 _logger.LogWarning("Response not grounded in session {SessionId}: {Claims}",
                     session.Id, string.Join(", ", groundingResult.UngroundedClaims));
                 botResponse = groundingResult.SanitizedResponse;
+                _metrics.RecordHallucinationDetected("fresh_response");
+                foreach (var claim in groundingResult.UngroundedClaims)
+                    _metrics.RecordGroundingViolation("fresh");
             }
 
             // ── 10b. SEGURIDAD: Content moderation on bot output ──────
             var outputModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
             if (!outputModeration.IsSafe)
             {
+                _metrics.RecordModerationBlocked(outputModeration.Category.ToString(), "post_llm");
                 _logger.LogWarning(
                     "Bot output moderated. Category={Category}, Reason={Reason}, Session={SessionId}",
                     outputModeration.Category, outputModeration.Reason, session.Id);
@@ -422,7 +549,19 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             }
         }
 
-        // ── 12. Persistir mensajes ────────────────────────────────────
+        // ── 12. Emit quality score metric ─────────────────────────────
+        // Quality score = 1.0 (perfect), deducted for issues:
+        //   -0.5 for grounding violations, -0.3 for moderation, -0.2 for low confidence
+        {
+            var qualityScore = 1.0;
+            if (isFallback) qualityScore -= 0.3;
+            if ((double)confidenceScore < 0.5 && confidenceScore > 0) qualityScore -= 0.2;
+            _metrics.RecordResponseQualityScore(
+                Math.Max(0.0, qualityScore),
+                session.ChatMode.ToString());
+        }
+
+        // ── 13. Persistir mensajes ────────────────────────────────────
         var userMessage = new ChatMessage
         {
             Id = Guid.NewGuid(),
@@ -447,7 +586,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             ConfidenceScore = confidenceScore,
             IsFromBot = true,
             ConsumedInteraction = consumedInteraction,
-            InteractionCost = consumedInteraction ? 0.003m : 0m, // Claude Sonnet cost per interaction
+            InteractionCost = consumedInteraction ? config.CostPerInteraction : 0m,
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds,
             CreatedAt = DateTime.UtcNow
         };
@@ -475,6 +614,53 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
             ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
         };
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // Business Hours Enforcement
+    // ══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Checks if the current time falls within the dealer's configured business hours.
+    /// BusinessHoursJson format: {"monday":{"open":"08:00","close":"18:00"},...}
+    /// If parsing fails, defaults to allowing (24/7 fallback).
+    /// </summary>
+    internal static bool IsWithinBusinessHours(ChatbotConfiguration config)
+    {
+        if (string.IsNullOrWhiteSpace(config.BusinessHoursJson))
+            return false; // RestrictToBusinessHours is true but no hours defined → offline
+
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(config.TimeZone ?? "America/Santo_Domingo");
+            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+            var dayOfWeek = now.DayOfWeek.ToString().ToLowerInvariant();
+
+            using var doc = JsonDocument.Parse(config.BusinessHoursJson);
+            if (!doc.RootElement.TryGetProperty(dayOfWeek, out var daySchedule))
+                return false; // No schedule for today → offline
+
+            if (daySchedule.TryGetProperty("closed", out var closedProp) &&
+                closedProp.GetBoolean())
+                return false; // Explicitly closed
+
+            var openStr = daySchedule.GetProperty("open").GetString();
+            var closeStr = daySchedule.GetProperty("close").GetString();
+
+            if (string.IsNullOrEmpty(openStr) || string.IsNullOrEmpty(closeStr))
+                return false;
+
+            var openTime = TimeOnly.Parse(openStr);
+            var closeTime = TimeOnly.Parse(closeStr);
+            var currentTime = TimeOnly.FromDateTime(now);
+
+            return currentTime >= openTime && currentTime <= closeTime;
+        }
+        catch (Exception)
+        {
+            // If parsing fails, allow through (graceful degradation → 24/7)
+            return true;
+        }
     }
 }
 

@@ -18,6 +18,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
     private readonly IHealthMonitoringService _healthService;
     private readonly IReportingService _reportingService;
     private readonly ILlmService _llmService;
+    private readonly ILlmResponseCacheService _llmCacheService;
     private readonly ILogger<RunMaintenanceTaskCommandHandler> _logger;
 
     public RunMaintenanceTaskCommandHandler(
@@ -27,6 +28,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
         IHealthMonitoringService healthService,
         IReportingService reportingService,
         ILlmService llmService,
+        ILlmResponseCacheService llmCacheService,
         ILogger<RunMaintenanceTaskCommandHandler> logger)
     {
         _taskRepository = taskRepository;
@@ -35,6 +37,7 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
         _healthService = healthService;
         _reportingService = reportingService;
         _llmService = llmService;
+        _llmCacheService = llmCacheService;
         _logger = logger;
     }
 
@@ -115,7 +118,23 @@ public class RunMaintenanceTaskCommandHandler : IRequestHandler<RunMaintenanceTa
                 case MaintenanceTaskType.InventorySync:
                     var syncResult = await _inventoryService.SyncVehiclesAsync(task.ChatbotConfigurationId, ct);
                     success = syncResult.Success;
-                    message = $"Synced {syncResult.TotalVehiclesProcessed} vehicles: {syncResult.NewVehiclesAdded} added, {syncResult.VehiclesUpdated} updated";
+                    message = $"Synced {syncResult.TotalVehiclesProcessed} vehicles: {syncResult.NewVehiclesAdded} added, {syncResult.VehiclesUpdated} updated, {syncResult.VehiclesRemoved} removed";
+
+                    // P1 FIX: Invalidate LLM response cache after inventory sync.
+                    // Cached responses may reference old prices, sold vehicles, or stale inventory counts.
+                    if (syncResult.Success && (syncResult.NewVehiclesAdded > 0 || syncResult.VehiclesUpdated > 0 || syncResult.VehiclesRemoved > 0))
+                    {
+                        try
+                        {
+                            await _llmCacheService.InvalidateAllAsync(ct);
+                            _logger.LogInformation("LLM cache invalidated after inventory sync ({Added} added, {Updated} updated, {Removed} removed)",
+                                syncResult.NewVehiclesAdded, syncResult.VehiclesUpdated, syncResult.VehiclesRemoved);
+                        }
+                        catch (Exception cacheEx)
+                        {
+                            _logger.LogWarning(cacheEx, "Failed to invalidate LLM cache after inventory sync");
+                        }
+                    }
                     break;
 
                 case MaintenanceTaskType.HealthCheck:

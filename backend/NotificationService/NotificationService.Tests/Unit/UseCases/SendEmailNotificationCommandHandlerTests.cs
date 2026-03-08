@@ -7,6 +7,7 @@ using NotificationService.Domain.Entities;
 using NotificationService.Domain.Enums;
 using NotificationService.Domain.Interfaces.External;
 using NotificationService.Domain.Interfaces.Repositories;
+using NotificationService.Application.Interfaces;
 using ErrorService.Shared.Exceptions;
 using Xunit;
 
@@ -17,6 +18,7 @@ public class SendEmailNotificationCommandHandlerTests
     private readonly Mock<INotificationRepository> _notificationRepositoryMock;
     private readonly Mock<INotificationLogRepository> _logRepositoryMock;
     private readonly Mock<IEmailProvider> _emailProviderMock;
+    private readonly Mock<IConfigurationServiceClient> _configClientMock;
     private readonly Mock<ILogger<SendEmailNotificationCommandHandler>> _loggerMock;
     private readonly SendEmailNotificationCommandHandler _handler;
 
@@ -25,14 +27,18 @@ public class SendEmailNotificationCommandHandlerTests
         _notificationRepositoryMock = new Mock<INotificationRepository>();
         _logRepositoryMock = new Mock<INotificationLogRepository>();
         _emailProviderMock = new Mock<IEmailProvider>();
+        _configClientMock = new Mock<IConfigurationServiceClient>();
         _loggerMock = new Mock<ILogger<SendEmailNotificationCommandHandler>>();
 
         _emailProviderMock.Setup(x => x.ProviderName).Returns("TestProvider");
+        _configClientMock.Setup(x => x.IsEnabledAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _handler = new SendEmailNotificationCommandHandler(
             _notificationRepositoryMock.Object,
             _logRepositoryMock.Object,
             _emailProviderMock.Object,
+            _configClientMock.Object,
             _loggerMock.Object);
     }
 

@@ -7,6 +7,7 @@ using NotificationService.Domain.Entities;
 using NotificationService.Domain.Enums;
 using NotificationService.Domain.Interfaces.External;
 using NotificationService.Domain.Interfaces.Repositories;
+using NotificationService.Application.Interfaces;
 using ErrorService.Shared.Exceptions;
 using Xunit;
 
@@ -17,6 +18,7 @@ public class SendPushNotificationCommandHandlerTests
     private readonly Mock<INotificationRepository> _notificationRepositoryMock;
     private readonly Mock<INotificationLogRepository> _logRepositoryMock;
     private readonly Mock<IPushNotificationProvider> _pushProviderMock;
+    private readonly Mock<IConfigurationServiceClient> _configClientMock;
     private readonly Mock<ILogger<SendPushNotificationCommandHandler>> _loggerMock;
     private readonly SendPushNotificationCommandHandler _handler;
 
@@ -25,14 +27,18 @@ public class SendPushNotificationCommandHandlerTests
         _notificationRepositoryMock = new Mock<INotificationRepository>();
         _logRepositoryMock = new Mock<INotificationLogRepository>();
         _pushProviderMock = new Mock<IPushNotificationProvider>();
+        _configClientMock = new Mock<IConfigurationServiceClient>();
         _loggerMock = new Mock<ILogger<SendPushNotificationCommandHandler>>();
 
         _pushProviderMock.Setup(x => x.ProviderName).Returns("Firebase");
+        _configClientMock.Setup(x => x.IsEnabledAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _handler = new SendPushNotificationCommandHandler(
             _notificationRepositoryMock.Object,
             _logRepositoryMock.Object,
             _pushProviderMock.Object,
+            _configClientMock.Object,
             _loggerMock.Object);
     }
 
