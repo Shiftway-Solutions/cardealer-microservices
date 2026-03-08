@@ -14,15 +14,18 @@
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Caching/CarDealer.Shared.Caching.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
     <!-- FASE 2: Serilog packages for logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Infrastructure.Persistence;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -11,6 +13,8 @@ namespace VehiclesSaleService.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
+[EnableRateLimiting("VehiclesPolicy")]
 public class HomepageSectionsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -119,6 +123,7 @@ public class HomepageSectionsController : ControllerBase
     /// Obtiene todas las secciones del homepage (sin vehículos).
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(List<HomepageSectionDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<HomepageSectionDto>>> GetAllSections(
         [FromQuery] bool? activeOnly = true)
@@ -156,6 +161,7 @@ public class HomepageSectionsController : ControllerBase
     /// Obtiene una sección por slug con sus vehículos asignados.
     /// </summary>
     [HttpGet("{slug}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(HomepageSectionWithVehiclesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<HomepageSectionWithVehiclesDto>> GetSectionBySlug(string slug)
@@ -228,23 +234,30 @@ public class HomepageSectionsController : ControllerBase
     /// Obtiene todas las secciones activas con sus vehículos para renderizar el homepage completo.
     /// </summary>
     [HttpGet("homepage")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(List<HomepageSectionWithVehiclesDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<HomepageSectionWithVehiclesDto>>> GetHomepageSections()
     {
+        // Step 1: Load only section metadata (no vehicle data) to avoid loading all vehicles into memory
         var sections = await _context.HomepageSectionConfigs
             .AsNoTracking()
             .Where(s => s.IsActive)
             .OrderBy(s => s.DisplayOrder)
-            .Include(s => s.VehicleSections)
-                .ThenInclude(vs => vs.Vehicle)
-                    .ThenInclude(v => v.Images)
             .ToListAsync();
 
-        var result = sections.Select(s =>
+        var now = DateTime.UtcNow;
+        var result = new List<HomepageSectionWithVehiclesDto>();
+
+        // Step 2: For each section, query vehicles with DB-level filtering, sorting, and Take
+        // BUG FIX: Filter only Active vehicles to prevent Draft/Sold/Archived/Rejected from appearing
+        foreach (var s in sections)
         {
-            var vehicles = s.VehicleSections
-                .Where(vs => vs.StartDate == null || vs.StartDate <= DateTime.UtcNow)
-                .Where(vs => vs.EndDate == null || vs.EndDate >= DateTime.UtcNow)
+            var vehicles = await _context.VehicleHomepageSections
+                .AsNoTracking()
+                .Where(vs => vs.HomepageSectionConfigId == s.Id)
+                .Where(vs => vs.Vehicle.Status == VehicleStatus.Active && !vs.Vehicle.IsDeleted)
+                .Where(vs => vs.StartDate == null || vs.StartDate <= now)
+                .Where(vs => vs.EndDate == null || vs.EndDate >= now)
                 .OrderByDescending(vs => vs.IsPinned)
                 .ThenBy(vs => vs.SortOrder)
                 .Take(s.MaxItems)
@@ -260,14 +273,14 @@ public class HomepageSectionsController : ControllerBase
                     vs.Vehicle.Transmission.ToString(),
                     vs.Vehicle.ExteriorColor,
                     vs.Vehicle.BodyStyle.ToString(),
-                    vs.Vehicle.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
+                    vs.Vehicle.Images.OrderBy(i => i.SortOrder).FirstOrDefault()!.Url,
                     vs.Vehicle.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList(),
                     vs.SortOrder,
                     vs.IsPinned
                 ))
-                .ToList();
+                .ToListAsync();
 
-            return new HomepageSectionWithVehiclesDto(
+            result.Add(new HomepageSectionWithVehiclesDto(
                 s.Id,
                 s.Name,
                 s.Slug,
@@ -281,8 +294,8 @@ public class HomepageSectionsController : ControllerBase
                 s.LayoutType.ToString(),
                 s.Subtitle,
                 vehicles
-            );
-        }).ToList();
+            ));
+        }
 
         return Ok(result);
     }
@@ -295,6 +308,7 @@ public class HomepageSectionsController : ControllerBase
     /// Asigna un vehículo a una sección del homepage.
     /// </summary>
     [HttpPost("{slug}/vehicles")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -359,6 +373,7 @@ public class HomepageSectionsController : ControllerBase
     /// Remueve un vehículo de una sección del homepage.
     /// </summary>
     [HttpDelete("{slug}/vehicles/{vehicleId:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveVehicleFromSection(string slug, Guid vehicleId)
@@ -395,6 +410,7 @@ public class HomepageSectionsController : ControllerBase
     /// Obtiene los vehículos asignados a una sección.
     /// </summary>
     [HttpGet("{slug}/vehicles")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(List<VehicleInSectionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<VehicleInSectionDto>>> GetSectionVehicles(string slug)
@@ -445,6 +461,7 @@ public class HomepageSectionsController : ControllerBase
     /// Crea una nueva sección del homepage.
     /// </summary>
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(HomepageSectionDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<HomepageSectionDto>> CreateSection([FromBody] CreateSectionRequest request)
@@ -504,6 +521,7 @@ public class HomepageSectionsController : ControllerBase
     /// Actualiza una sección del homepage.
     /// </summary>
     [HttpPut("{slug}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(HomepageSectionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<HomepageSectionDto>> UpdateSection(
@@ -561,6 +579,7 @@ public class HomepageSectionsController : ControllerBase
     /// Elimina una sección del homepage.
     /// </summary>
     [HttpDelete("{slug}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSection(string slug)
@@ -593,6 +612,7 @@ public class HomepageSectionsController : ControllerBase
     /// Asigna múltiples vehículos a una sección en una sola operación.
     /// </summary>
     [HttpPost("{slug}/vehicles/bulk")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BulkAssignVehicles(

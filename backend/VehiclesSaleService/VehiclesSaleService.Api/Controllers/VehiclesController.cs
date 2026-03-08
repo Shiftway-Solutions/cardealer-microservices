@@ -7,13 +7,17 @@ using VehiclesSaleService.Infrastructure.Messaging;
 using VehiclesSaleService.Infrastructure.Persistence;
 using CarDealer.Contracts.Events.Vehicle;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Caching.Interfaces;
+using System.Security.Claims;
 using Entities = VehiclesSaleService.Domain.Entities;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("VehiclesPolicy")]
 public class VehiclesController : ControllerBase
 {
     private readonly IVehicleRepository _vehicleRepository;
@@ -24,6 +28,7 @@ public class VehiclesController : ControllerBase
     private readonly IConfigurationServiceClient _configClient;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly VehiclesSaleService.Application.Interfaces.IDealerVerificationClient _dealerVerificationClient;
+    private readonly ICacheService _cache;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
@@ -33,7 +38,8 @@ public class VehiclesController : ControllerBase
         ApplicationDbContext context,
         IConfigurationServiceClient configClient,
         IHttpClientFactory httpClientFactory,
-        VehiclesSaleService.Application.Interfaces.IDealerVerificationClient dealerVerificationClient)
+        VehiclesSaleService.Application.Interfaces.IDealerVerificationClient dealerVerificationClient,
+        ICacheService cache)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
@@ -43,6 +49,7 @@ public class VehiclesController : ControllerBase
         _configClient = configClient;
         _httpClientFactory = httpClientFactory;
         _dealerVerificationClient = dealerVerificationClient;
+        _cache = cache;
     }
 
     /// <summary>
@@ -129,10 +136,16 @@ public class VehiclesController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<Vehicle>> GetById(Guid id)
     {
+        var cacheKey = $"vehicle:detail:{id}";
+        var cached = await _cache.GetAsync<Vehicle>(cacheKey);
+        if (cached is not null)
+            return Ok(cached);
+
         var vehicle = await _vehicleRepository.GetByIdAsync(id);
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        await _cache.SetAsync(cacheKey, vehicle, ttlSeconds: 300); // 5 min
         return Ok(vehicle);
     }
 
@@ -155,10 +168,17 @@ public class VehiclesController : ControllerBase
         if (shortId.Length != 8)
             return NotFound(new { message = "Vehicle not found" });
 
-        // Search for vehicle whose ID starts with the short ID
+        // SECURITY: Validate shortId is strictly hex to prevent LIKE wildcard injection (%, _)
+        if (!System.Text.RegularExpressions.Regex.IsMatch(shortId, "^[0-9a-fA-F]{8}$"))
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Search for vehicle whose ID starts with the short ID using SQL-translatable pattern
+        var idPattern = $"{shortId}%";
         var vehicles = await _context.Vehicles
             .Include(v => v.Images)
-            .Where(v => !v.IsDeleted && v.Id.ToString().Replace("-", "").StartsWith(shortId))
+            .Where(v => !v.IsDeleted && EF.Functions.Like(
+                v.Id.ToString().Replace("-", ""), idPattern))
+            .Take(10) // Limit results to prevent excessive loading
             .ToListAsync();
 
         // Verify the full slug matches to avoid collisions
@@ -217,8 +237,15 @@ public class VehiclesController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Vehicle>>> GetFeatured([FromQuery] int take = 10)
     {
+        var cacheKey = $"vehicle:featured:{take}";
+        var cached = await _cache.GetAsync<List<Vehicle>>(cacheKey);
+        if (cached is not null)
+            return Ok(cached);
+
         var vehicles = await _vehicleRepository.GetFeaturedAsync(take);
-        return Ok(vehicles);
+        var vehicleList = vehicles.ToList();
+        await _cache.SetAsync(cacheKey, vehicleList, ttlSeconds: 600); // 10 min
+        return Ok(vehicleList);
     }
 
     /// <summary>
@@ -226,10 +253,21 @@ public class VehiclesController : ControllerBase
     /// </summary>
     [HttpGet("dealer/{dealerId:guid}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<Vehicle>>> GetByDealer(Guid dealerId)
+    public async Task<ActionResult> GetByDealer(
+        Guid dealerId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 12)
     {
-        var vehicles = await _vehicleRepository.GetByDealerAsync(dealerId);
-        return Ok(vehicles);
+        var (vehicles, totalCount) = await _vehicleRepository.GetByDealerAsync(dealerId, page, pageSize);
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        return Ok(new
+        {
+            Data = vehicles,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        });
     }
 
     /// <summary>
@@ -244,28 +282,17 @@ public class VehiclesController : ControllerBase
         [FromQuery] int pageSize = 12,
         [FromQuery] string? status = null)
     {
-        var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
-        
-        // Filter by status if provided
+        VehicleStatus? statusFilter = null;
         if (!string.IsNullOrEmpty(status) && status != "all")
         {
             if (Enum.TryParse<VehicleStatus>(status, true, out var statusEnum))
-            {
-                vehicles = vehicles.Where(v => v.Status == statusEnum);
-            }
+                statusFilter = statusEnum;
         }
-        
-        // Filter out deleted vehicles
-        vehicles = vehicles.Where(v => !v.IsDeleted);
-        
-        var totalCount = vehicles.Count();
+
+        var (vehicles, totalCount) = await _vehicleRepository.GetBySellerAsync(sellerId, page, pageSize, statusFilter);
         var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
         
-        var pagedVehicles = vehicles
-            .OrderByDescending(v => v.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(v => new SellerVehicleDto
+        var pagedVehicles = vehicles.Select(v => new SellerVehicleDto
             {
                 Id = v.Id,
                 Title = v.Title,
@@ -303,17 +330,16 @@ public class VehiclesController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<SellerVehicleStats>> GetSellerStats(Guid sellerId)
     {
-        var vehicles = await _vehicleRepository.GetBySellerAsync(sellerId);
-        var activeVehicles = vehicles.Where(v => !v.IsDeleted).ToList();
+        var stats = await _vehicleRepository.GetSellerStatsAsync(sellerId);
         
         return Ok(new SellerVehicleStats
         {
-            TotalListings = activeVehicles.Count,
-            ActiveListings = activeVehicles.Count(v => v.Status == VehicleStatus.Active),
-            SoldListings = activeVehicles.Count(v => v.Status == VehicleStatus.Sold),
-            PendingListings = activeVehicles.Count(v => v.Status == VehicleStatus.PendingReview),
-            TotalViews = activeVehicles.Sum(v => v.ViewCount),
-            TotalFavorites = activeVehicles.Sum(v => v.FavoriteCount)
+            TotalListings = stats.TotalListings,
+            ActiveListings = stats.ActiveListings,
+            SoldListings = stats.SoldListings,
+            PendingListings = stats.PendingListings,
+            TotalViews = (int)stats.TotalViews,
+            TotalFavorites = (int)stats.TotalFavorites
         });
     }
 
@@ -331,15 +357,9 @@ public class VehiclesController : ControllerBase
         if (request.VehicleIds.Count > defaultMaxCompare)
             return BadRequest(new { message = $"Cannot compare more than {defaultMaxCompare} vehicles at once" });
 
-        var vehicles = new List<Vehicle>();
-        foreach (var id in request.VehicleIds)
-        {
-            var vehicle = await _vehicleRepository.GetByIdAsync(id);
-            if (vehicle != null && !vehicle.IsDeleted && vehicle.Status != VehicleStatus.Archived)
-            {
-                vehicles.Add(vehicle);
-            }
-        }
+        var vehicles = (await _vehicleRepository.GetByIdsAsync(request.VehicleIds))
+            .Where(v => !v.IsDeleted && v.Status != VehicleStatus.Archived)
+            .ToList();
 
         if (!vehicles.Any())
             return NotFound(new { message = "No vehicles found with the provided IDs" });
@@ -460,6 +480,33 @@ public class VehiclesController : ControllerBase
         // Currency default to DOP for DR market
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "DOP" : request.Currency;
 
+        // ═══════════════════════════════════════════════════════════════
+        // FRAUD PREVENTION: VIN validation at creation time
+        // ═══════════════════════════════════════════════════════════════
+        string? normalizedVin = null;
+        if (!string.IsNullOrWhiteSpace(request.VIN))
+        {
+            var vinResult = VehiclesSaleService.Application.Services.VinValidationService.ValidateFormat(request.VIN);
+            if (!vinResult.IsValid)
+            {
+                return BadRequest(new { message = vinResult.Error, field = "VIN" });
+            }
+            normalizedVin = vinResult.NormalizedVin;
+
+            // Check for duplicate VIN on active/pending listings
+            var existingVehicle = await _context.Vehicles
+                .FirstOrDefaultAsync(v => v.VIN == normalizedVin && !v.IsDeleted);
+            if (existingVehicle != null)
+            {
+                return Conflict(new
+                {
+                    message = $"Ya existe un vehículo registrado con el VIN {normalizedVin}.",
+                    existingVehicleId = existingVehicle.Id,
+                    field = "VIN"
+                });
+            }
+        }
+
         var vehicle = new Vehicle
         {
             Title = title,
@@ -467,7 +514,7 @@ public class VehiclesController : ControllerBase
             Price = request.Price,
             Currency = currency,
             Status = VehicleStatus.Draft,
-            VIN = request.VIN,
+            VIN = normalizedVin ?? request.VIN,
             Make = request.Make,
             Model = request.Model,
             Trim = request.Trim,
@@ -604,8 +651,36 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Ownership check: only the seller or Admin/Moderator can update
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso para editar este vehículo." });
+
         // Track price change for alert notifications
         var oldPrice = vehicle.Price;
+        var oldMileage = vehicle.Mileage;
+        var oldStatus = vehicle.Status;
+
+        // ═══════════════════════════════════════════════════════════════
+        // FRAUD PREVENTION: Mileage rollback detection
+        // ═══════════════════════════════════════════════════════════════
+        if (request.Mileage.HasValue && request.Mileage.Value < vehicle.Mileage)
+        {
+            _logger.LogWarning(
+                "MILEAGE ROLLBACK DETECTED: Vehicle {VehicleId} mileage decreased from {OldMileage} to {NewMileage} by seller {SellerId}",
+                id, vehicle.Mileage, request.Mileage.Value, vehicle.SellerId);
+
+            // Block the mileage decrease — require admin override
+            if (!IsAdmin())
+            {
+                return BadRequest(new
+                {
+                    message = "No se puede reducir el kilometraje de un vehículo. Si el valor es incorrecto, contacte a soporte.",
+                    field = "Mileage",
+                    currentMileage = vehicle.Mileage,
+                    attemptedMileage = request.Mileage.Value
+                });
+            }
+        }
 
         // Update only provided fields
         if (!string.IsNullOrEmpty(request.Title)) vehicle.Title = request.Title;
@@ -627,12 +702,44 @@ public class VehiclesController : ControllerBase
         if (!string.IsNullOrEmpty(request.City)) vehicle.City = request.City;
         if (!string.IsNullOrEmpty(request.State)) vehicle.State = request.State;
         if (!string.IsNullOrEmpty(request.ZipCode)) vehicle.ZipCode = request.ZipCode;
-        if (request.IsFeatured.HasValue) vehicle.IsFeatured = request.IsFeatured.Value;
-        if (request.HomepageSections.HasValue) vehicle.HomepageSections = request.HomepageSections.Value;
+
+        // SECURITY FIX: Only Admin/Moderator can set IsFeatured and HomepageSections
+        // Prevents sellers from self-featuring their vehicles
+        if (User.IsInRole("Admin") || User.IsInRole("Moderator") || User.IsInRole("admin") || User.IsInRole("moderator"))
+        {
+            if (request.IsFeatured.HasValue) vehicle.IsFeatured = request.IsFeatured.Value;
+            if (request.HomepageSections.HasValue) vehicle.HomepageSections = request.HomepageSections.Value;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FRAUD PREVENTION: Reset to PendingReview when critical fields
+        // change on an already-approved listing (H-1/H-2)
+        // ═══════════════════════════════════════════════════════════════
+        bool criticalFieldChanged = false;
+        if (oldStatus == VehicleStatus.Active || oldStatus == VehicleStatus.PendingReview)
+        {
+            criticalFieldChanged =
+                (request.Price.HasValue && request.Price.Value != oldPrice) ||
+                (request.Mileage.HasValue && request.Mileage.Value != oldMileage) ||
+                (request.Condition.HasValue && request.Condition.Value != vehicle.Condition) ||
+                (request.HasCleanTitle.HasValue && request.HasCleanTitle.Value != vehicle.HasCleanTitle);
+
+            if (criticalFieldChanged && oldStatus == VehicleStatus.Active && !IsAdmin())
+            {
+                vehicle.Status = VehicleStatus.PendingReview;
+                vehicle.SubmittedForReviewAt = DateTime.UtcNow;
+                _logger.LogInformation(
+                    "Vehicle {VehicleId} reset to PendingReview due to critical field changes after approval",
+                    id);
+            }
+        }
 
         vehicle.UpdatedAt = DateTime.UtcNow;
 
         await _vehicleRepository.UpdateAsync(vehicle);
+
+        // Invalidate cache for this vehicle
+        await InvalidateVehicleCacheAsync(id);
 
         _logger.LogInformation("Vehicle updated: {VehicleId}", id);
 
@@ -678,11 +785,19 @@ public class VehiclesController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var exists = await _vehicleRepository.ExistsAsync(id);
-        if (!exists)
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+        if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Ownership check: only the seller or Admin/Moderator can delete
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso para eliminar este vehículo." });
+
         await _vehicleRepository.DeleteAsync(id);
+
+        // Invalidate cache for this vehicle
+        await InvalidateVehicleCacheAsync(id);
 
         _logger.LogInformation("Vehicle deleted: {VehicleId}", id);
 
@@ -715,6 +830,10 @@ public class VehiclesController : ControllerBase
 
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
+
+        // Ownership check: only the seller or Admin/Moderator can publish
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso para publicar este vehículo." });
 
         // --- Dealer KYC gate ---
         // Dealers must complete KYC verification before publishing any listing.
@@ -779,6 +898,23 @@ public class VehiclesController : ControllerBase
         if (string.IsNullOrWhiteSpace(vehicle.SellerPhone) && string.IsNullOrWhiteSpace(vehicle.SellerEmail))
             validationErrors.Add("At least one contact method (phone or email) is required");
 
+        // ═══════════════════════════════════════════════════════════════
+        // FRAUD PREVENTION: VIN validation at publish time
+        // ═══════════════════════════════════════════════════════════════
+        if (!string.IsNullOrWhiteSpace(vehicle.VIN))
+        {
+            var vinResult = VehiclesSaleService.Application.Services.VinValidationService.Validate(vehicle.VIN);
+            if (!vinResult.IsValid)
+            {
+                validationErrors.Add($"VIN inválido: {vinResult.Error}");
+            }
+        }
+        // VIN recommended warning (not blocking for now, but logged)
+        if (string.IsNullOrWhiteSpace(vehicle.VIN))
+        {
+            _logger.LogWarning("Vehicle {VehicleId} submitted for review without VIN", id);
+        }
+
         if (validationErrors.Any())
         {
             return BadRequest(new { 
@@ -787,8 +923,20 @@ public class VehiclesController : ControllerBase
             });
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // FRAUD SCORING: Evaluate listing for fraud signals
+        // ═══════════════════════════════════════════════════════════════
+        var fraudEvaluation = VehiclesSaleService.Application.Services.ListingFraudDetector.Evaluate(vehicle);
+        if (fraudEvaluation.FraudScore > 0)
+        {
+            _logger.LogInformation(
+                "Fraud evaluation for vehicle {VehicleId}: Score={FraudScore}, Risk={RiskLevel}, Signals={SignalCount}",
+                id, fraudEvaluation.FraudScore, fraudEvaluation.RiskLevel, fraudEvaluation.Signals.Count);
+        }
+
         // Update status → PendingReview (requires staff approval before visible)
         vehicle.Status = VehicleStatus.PendingReview;
+        vehicle.FraudScore = fraudEvaluation.FraudScore;
         vehicle.SubmittedForReviewAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
         // Clear any previous rejection data if re-submitting
@@ -848,6 +996,10 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Ownership check: only the seller or Admin/Moderator can unpublish
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso para despublicar este vehículo." });
+
         // Only Active or Reserved vehicles can be unpublished
         if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
         {
@@ -882,6 +1034,7 @@ public class VehiclesController : ControllerBase
     /// Only staff/admin should call this endpoint.
     /// </summary>
     [HttpPost("{id:guid}/approve")]
+    [Authorize(Roles = "Admin,Moderator")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -934,6 +1087,7 @@ public class VehiclesController : ControllerBase
     /// Only staff/admin should call this endpoint.
     /// </summary>
     [HttpPost("{id:guid}/reject")]
+    [Authorize(Roles = "Admin,Moderator")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -984,10 +1138,10 @@ public class VehiclesController : ControllerBase
     /// <summary>
     /// Get vehicles pending review (moderation queue).
     /// Returns only PendingReview vehicles, ordered by submission date (oldest first).
-    /// AllowAnonymous: called pod-to-pod by AdminService (no Bearer token).
+    /// Secured: requires Admin or Moderator role. Pod-to-pod calls must forward JWT.
     /// </summary>
     [HttpGet("moderation/queue")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin,Moderator")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetModerationQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -1036,7 +1190,7 @@ public class VehiclesController : ControllerBase
     /// Used by AdminService to populate the "Todos" tab in the admin panel.
     /// </summary>
     [HttpGet("admin/search")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin,Moderator")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> AdminSearch(
         [FromQuery] string? search,
@@ -1132,6 +1286,10 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Ownership check: only the seller or Admin/Moderator can mark as sold
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso para marcar este vehículo como vendido." });
+
         // Only Active or Reserved vehicles can be marked as sold
         if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
         {
@@ -1156,14 +1314,14 @@ public class VehiclesController : ControllerBase
         var transaction = new SaleTransaction
         {
             VehicleId = vehicle.Id,
-            SellerId = vehicle.UserId,
-            SellerType = vehicle.SellerType ?? "Individual",
+            SellerId = vehicle.SellerId,
+            SellerType = vehicle.SellerType.ToString(),
             BuyerEmail = request?.BuyerEmail,
             ListedPrice = listedPrice,
             SalePrice = request?.SalePrice ?? vehicle.Price,
             Currency = "DOP",
             VehicleTitle = $"{vehicle.Make} {vehicle.Model} {vehicle.Year}",
-            Vin = vehicle.Vin,
+            Vin = vehicle.VIN,
             Make = vehicle.Make,
             Model = vehicle.Model,
             Year = vehicle.Year,
@@ -1185,7 +1343,7 @@ public class VehiclesController : ControllerBase
             var soldEvent = new VehicleSoldEvent
             {
                 VehicleId = vehicle.Id,
-                SellerId = vehicle.UserId,
+                SellerId = vehicle.SellerId,
                 SalePrice = request?.SalePrice ?? vehicle.Price,
                 ListedPrice = listedPrice,
                 SoldAt = vehicle.SoldAt!.Value,
@@ -1217,6 +1375,7 @@ public class VehiclesController : ControllerBase
     /// Feature or unfeature a vehicle (Admin only)
     /// </summary>
     [HttpPost("{id:guid}/feature")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(FeatureVehicleResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<FeatureVehicleResponse>> Feature(Guid id, [FromBody] FeatureVehicleRequest request)
@@ -1350,9 +1509,10 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Bulk add images to multiple vehicles (for seeding)
+    /// Bulk add images to multiple vehicles (Admin only — for seeding)
     /// </summary>
     [HttpPost("bulk-images")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<BulkAddImagesResponse>> BulkAddImages([FromBody] BulkAddVehicleImagesRequest request)
     {
         var vehicleIds = request.VehicleImages.Select(v => v.VehicleId).Distinct().ToList();
@@ -1422,6 +1582,59 @@ public class VehiclesController : ControllerBase
         // Add short ID to ensure uniqueness
         var shortId = vehicle.Id.ToString("N")[..8];
         return $"{baseSlug}-{shortId}";
+    }
+
+    /// <summary>
+    /// Invalidate all cache keys related to a vehicle after mutation (update/delete/publish/etc.)
+    /// </summary>
+    private async Task InvalidateVehicleCacheAsync(Guid vehicleId)
+    {
+        await _cache.RemoveAsync($"vehicle:detail:{vehicleId}");
+        // Also invalidate featured list since the vehicle may have changed featured status
+        await _cache.InvalidateByPatternAsync("vehicle:featured:*");
+    }
+
+    // ========================================
+    // OWNERSHIP HELPERS
+    // ========================================
+
+    /// <summary>
+    /// Extracts the authenticated user's ID from JWT claims.
+    /// Returns null if no valid claim is found (should not happen on [Authorize] endpoints).
+    /// </summary>
+    private Guid? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("userId")?.Value;
+
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            return userId;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Checks whether the current user is the vehicle owner OR has Admin/Moderator role.
+    /// Returns true if authorized, false otherwise.
+    /// </summary>
+    private bool IsOwnerOrAdmin(Vehicle vehicle)
+    {
+        // Admins/Moderators can operate on any vehicle
+        if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+            return true;
+
+        var userId = GetCurrentUserId();
+        return userId.HasValue && vehicle.SellerId == userId.Value;
+    }
+
+    /// <summary>
+    /// Checks whether the current user has Admin or Moderator role.
+    /// </summary>
+    private bool IsAdmin()
+    {
+        return User.IsInRole("Admin") || User.IsInRole("Moderator")
+            || User.IsInRole("admin") || User.IsInRole("moderator");
     }
 }
 

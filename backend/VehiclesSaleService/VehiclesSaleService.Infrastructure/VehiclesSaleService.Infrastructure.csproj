@@ -11,11 +11,12 @@
     <ProjectReference Include="../VehiclesSaleService.Application/VehiclesSaleService.Application.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Caching/CarDealer.Shared.Caching.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>

@@ -6,12 +6,16 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
+using System.IO.Compression;
 using CarDealer.Shared.Logging.Extensions;
+using Microsoft.AspNetCore.ResponseCompression;
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using SearchAgent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +28,9 @@ try
 
     // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
     builder.UseStandardSerilog(ServiceName);
+
+    // ============= SECRETS PROVIDER =============
+    builder.Services.AddSecretProvider();
 
     // ============= OBSERVABILITY (OpenTelemetry → Jaeger) =============
     builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
@@ -84,28 +91,34 @@ try
         });
     });
 
-    // ============= RATE LIMITING =============
+    // ============= RATE LIMITING (Per-IP) =============
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-        // General: 60 req/min
-        options.AddFixedWindowLimiter("fixed", opt =>
-        {
-            opt.PermitLimit = 60;
-            opt.Window = TimeSpan.FromMinutes(1);
-            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            opt.QueueLimit = 5;
-        });
+        // General: 60 req/min per IP
+        options.AddPolicy("fixed", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 60,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 5
+                }));
 
-        // Search endpoint: stricter to control Claude API costs
-        options.AddFixedWindowLimiter("search", opt =>
-        {
-            opt.PermitLimit = 30;
-            opt.Window = TimeSpan.FromMinutes(1);
-            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            opt.QueueLimit = 3;
-        });
+        // Search endpoint: 10 req/min per IP to control Claude API costs
+        options.AddPolicy("search", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 2
+                }));
 
         options.OnRejected = async (context, ct) =>
         {
@@ -113,18 +126,41 @@ try
                 context.HttpContext.Connection.RemoteIpAddress,
                 context.HttpContext.Request.Path);
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            await context.HttpContext.Response.WriteAsync(
-                "Demasiadas solicitudes. Por favor intenta de nuevo en un momento.", ct);
+            context.HttpContext.Response.ContentType = "application/json";
+            await context.HttpContext.Response.WriteAsJsonAsync(new
+            {
+                type = "https://httpstatuses.com/429",
+                title = "Demasiadas solicitudes",
+                status = 429,
+                detail = "Has excedido el límite de solicitudes. Por favor intenta de nuevo en un momento."
+            }, ct);
         };
     });
 
     builder.Services.AddHealthChecks();
+
+    // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "application/json",
+            "text/json",
+            "application/problem+json"
+        });
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 
     var app = builder.Build();
 
     // ============= MIDDLEWARE PIPELINE (Canonical Order) =============
     app.UseGlobalErrorHandling();
     app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+    app.UseResponseCompression();
     app.UseRequestLogging();
 
     if (!app.Environment.IsProduction())
@@ -135,6 +171,12 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Forwarded Headers — required for correct client IP behind K8s/LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
 
     app.UseCors();
     app.UseRateLimiter();

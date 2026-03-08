@@ -5,6 +5,7 @@ using RecoAgent.Domain.Interfaces;
 using RecoAgent.Infrastructure.Persistence;
 using RecoAgent.Infrastructure.Repositories;
 using RecoAgent.Infrastructure.Services;
+using CarDealer.Shared.Resilience.Extensions;
 
 namespace RecoAgent.Infrastructure;
 
@@ -26,7 +27,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri("https://api.anthropic.com/");
             client.Timeout = TimeSpan.FromSeconds(45); // Higher timeout for Sonnet 4.5
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        }).AddStandardResilience(configuration);
         services.AddScoped<IClaudeRecoService, ClaudeRecoService>();
 
         // Redis Cache

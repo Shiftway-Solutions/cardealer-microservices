@@ -46,14 +46,38 @@ public class VehicleRepository : IVehicleRepository
     {
         var query = BuildSearchQuery(p);
 
-        // Sorting
+        // Premium/Featured boost: Premium vehicles (paid campaigns) appear first,
+        // then Featured (admin-curated), then normal vehicles.
+        // This is the core monetization lever for the Freemium model — sellers pay
+        // for visibility via Premium placement and OKLA Coins.
+        // Only apply boost when not using a specific user-requested sort.
+        var now = DateTime.UtcNow;
+
+        // Sorting with promotion boost
         query = p.SortBy?.ToLower() switch
         {
-            "price" => p.SortDescending ? query.OrderByDescending(v => v.Price) : query.OrderBy(v => v.Price),
-            "year" => p.SortDescending ? query.OrderByDescending(v => v.Year) : query.OrderBy(v => v.Year),
-            "mileage" => p.SortDescending ? query.OrderByDescending(v => v.Mileage) : query.OrderBy(v => v.Mileage),
-            "make" => p.SortDescending ? query.OrderByDescending(v => v.Make) : query.OrderBy(v => v.Make),
-            _ => p.SortDescending ? query.OrderByDescending(v => v.CreatedAt) : query.OrderBy(v => v.CreatedAt)
+            "price" => p.SortDescending
+                ? query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenByDescending(v => v.Price)
+                : query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenBy(v => v.Price),
+            "year" => p.SortDescending
+                ? query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenByDescending(v => v.Year)
+                : query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenBy(v => v.Year),
+            "mileage" => p.SortDescending
+                ? query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenByDescending(v => v.Mileage)
+                : query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenBy(v => v.Mileage),
+            "make" => p.SortDescending
+                ? query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenByDescending(v => v.Make)
+                : query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                    .ThenBy(v => v.Make),
+            _ => query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
+                .ThenByDescending(v => v.CreatedAt)
         };
 
         return await query
@@ -62,23 +86,72 @@ public class VehicleRepository : IVehicleRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Vehicle>> GetBySellerAsync(Guid sellerId)
+    public async Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetBySellerAsync(Guid sellerId, int page = 1, int pageSize = 12, VehicleStatus? status = null)
     {
-        return await _context.Vehicles
+        var query = _context.Vehicles
             .Include(v => v.Images.Where(i => i.IsPrimary))
             .Include(v => v.Category)
-            .Where(v => v.SellerId == sellerId && !v.IsDeleted)
+            .Where(v => v.SellerId == sellerId && !v.IsDeleted);
+
+        if (status.HasValue)
+            query = query.Where(v => v.Status == status.Value);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(v => v.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (items, totalCount);
     }
 
-    public async Task<IEnumerable<Vehicle>> GetByDealerAsync(Guid dealerId)
+    public async Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetByDealerAsync(Guid dealerId, int page = 1, int pageSize = 12)
     {
-        return await _context.Vehicles
+        var query = _context.Vehicles
             .Include(v => v.Images.Where(i => i.IsPrimary))
             .Include(v => v.Category)
-            .Where(v => v.DealerId == dealerId && !v.IsDeleted)
+            .Where(v => v.DealerId == dealerId && !v.IsDeleted);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(v => v.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<SellerVehicleStatsResult> GetSellerStatsAsync(Guid sellerId)
+    {
+        var stats = await _context.Vehicles
+            .Where(v => v.SellerId == sellerId && !v.IsDeleted)
+            .GroupBy(_ => 1)
+            .Select(g => new SellerVehicleStatsResult
+            {
+                TotalListings = g.Count(),
+                ActiveListings = g.Count(v => v.Status == VehicleStatus.Active),
+                SoldListings = g.Count(v => v.Status == VehicleStatus.Sold),
+                PendingListings = g.Count(v => v.Status == VehicleStatus.PendingReview),
+                TotalViews = g.Sum(v => (long)v.ViewCount),
+                TotalFavorites = g.Sum(v => (long)v.FavoriteCount)
+            })
+            .FirstOrDefaultAsync();
+
+        return stats ?? new SellerVehicleStatsResult();
+    }
+
+    public async Task<IEnumerable<Vehicle>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var idList = ids.Take(50).ToList(); // Safety cap to prevent unbounded queries
+        return await _context.Vehicles
+            .AsNoTracking()
+            .Include(v => v.Images.Where(i => i.IsPrimary)) // Only primary image for list views
+            .Include(v => v.Category)
+            .Where(v => idList.Contains(v.Id) && !v.IsDeleted)
             .ToListAsync();
     }
 

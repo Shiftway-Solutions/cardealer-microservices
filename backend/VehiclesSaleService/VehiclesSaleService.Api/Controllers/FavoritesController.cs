@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("VehiclesPolicy")]
 public class FavoritesController : ControllerBase
 {
     private readonly IFavoriteRepository _favoriteRepository;
@@ -30,11 +32,13 @@ public class FavoritesController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(FavoritesListResponseDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<FavoritesListResponseDto>> GetMyFavorites()
+    public async Task<ActionResult<FavoritesListResponseDto>> GetMyFavorites(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var userId = GetCurrentUserId();
-        // GetByUserIdAsync now includes Vehicle + Images (see FavoriteRepository)
-        var favorites = await _favoriteRepository.GetByUserIdAsync(userId);
+        var totalCount = await _favoriteRepository.GetCountByUserIdAsync(userId);
+        var favorites = await _favoriteRepository.GetByUserIdAsync(userId, page, pageSize);
 
         var items = favorites
             .Where(f => f.Vehicle != null)
@@ -53,7 +57,7 @@ public class FavoritesController : ControllerBase
         return Ok(new FavoritesListResponseDto
         {
             Favorites = items,
-            Total = items.Count
+            Total = totalCount
         });
     }
 

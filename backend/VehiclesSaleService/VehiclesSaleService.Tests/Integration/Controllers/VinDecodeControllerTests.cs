@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using VehiclesSaleService.Api.Controllers;
 using VehiclesSaleService.Domain.Interfaces;
+using CarDealer.Shared.Caching.Interfaces;
 
 namespace VehiclesSaleService.Tests.Integration.Controllers;
 
@@ -16,17 +17,23 @@ public class VinDecodeControllerTests
     private readonly Mock<IVehicleCatalogRepository> _catalogRepositoryMock;
     private readonly Mock<IVehicleRepository> _vehicleRepositoryMock;
     private readonly Mock<ILogger<CatalogController>> _loggerMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
 
     public VinDecodeControllerTests()
     {
         _catalogRepositoryMock = new Mock<IVehicleCatalogRepository>();
         _vehicleRepositoryMock = new Mock<IVehicleRepository>();
         _loggerMock = new Mock<ILogger<CatalogController>>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
         _controller = new CatalogController(
             _catalogRepositoryMock.Object,
             _vehicleRepositoryMock.Object,
-            _loggerMock.Object
+            _loggerMock.Object,
+            _cacheServiceMock.Object,
+            _httpClientFactoryMock.Object
         );
     }
 

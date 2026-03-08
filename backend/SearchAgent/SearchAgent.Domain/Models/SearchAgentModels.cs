@@ -82,6 +82,18 @@ public class SearchFilters
 
     [JsonPropertyName("kilometraje_max")]
     public int? KilometrajeMax { get; set; }
+
+    [JsonPropertyName("provincia")]
+    public string? Provincia { get; set; }
+
+    [JsonPropertyName("ciudad")]
+    public string? Ciudad { get; set; }
+
+    [JsonPropertyName("color")]
+    public string? Color { get; set; }
+
+    [JsonPropertyName("traccion")]
+    public string? Traccion { get; set; }
 }
 
 public class SponsoredConfig

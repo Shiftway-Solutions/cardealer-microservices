@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Infrastructure.Persistence;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -12,6 +13,7 @@ namespace VehiclesSaleService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("VehiclesPolicy")]
 public class LeadsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -38,6 +40,11 @@ public class LeadsController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(request.Message))
             return BadRequest(new { error = "El mensaje es requerido." });
+
+        // Security: Sanitize all string inputs (this endpoint is anonymous and bypasses MediatR/ValidationBehavior)
+        if (ContainsSuspiciousInput(request.BuyerName) || ContainsSuspiciousInput(request.BuyerEmail) ||
+            ContainsSuspiciousInput(request.Message) || ContainsSuspiciousInput(request.BuyerPhone))
+            return BadRequest(new { error = "La solicitud contiene caracteres no permitidos." });
 
         var vehicle = await _db.Vehicles
             .AsNoTracking()
@@ -348,6 +355,19 @@ public class LeadsController : ControllerBase
         var userIdClaim = User.FindFirst("sub")?.Value
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+    }
+
+    /// <summary>
+    /// Basic XSS/SQLi detection for anonymous endpoints that bypass MediatR ValidationBehavior.
+    /// </summary>
+    private static bool ContainsSuspiciousInput(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return false;
+        var lower = input.ToLowerInvariant();
+        return lower.Contains("<script") || lower.Contains("javascript:") ||
+               lower.Contains("onerror=") || lower.Contains("onload=") ||
+               lower.Contains("'; drop") || lower.Contains("1=1") ||
+               lower.Contains("union select") || lower.Contains("--") && lower.Contains("'");
     }
 
     private static LeadResponseDto MapToDto(Lead lead) => new()

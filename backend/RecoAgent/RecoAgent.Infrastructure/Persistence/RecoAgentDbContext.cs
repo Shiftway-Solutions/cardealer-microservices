@@ -47,7 +47,7 @@ public class RecoAgentDbContext : DbContext
                 IsEnabled = true,
                 Model = "claude-sonnet-4-5-20251022",
                 Temperature = 0.5f,
-                MaxTokens = 2048,
+                MaxTokens = 1536,
                 MinRecommendations = 8,
                 MaxRecommendations = 12,
                 SponsoredAffinityThreshold = 0.50f,

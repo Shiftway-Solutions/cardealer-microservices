@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehicleIntelligenceService.Application.DTOs;
 using VehicleIntelligenceService.Application.Features.Pricing.Commands;
@@ -8,6 +9,7 @@ namespace VehicleIntelligenceService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PricingController : ControllerBase
 {
     private readonly IMediator _mediator;

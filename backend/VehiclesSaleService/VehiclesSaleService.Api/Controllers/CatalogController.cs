@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
+using CarDealer.Shared.Caching.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -18,21 +21,27 @@ namespace VehiclesSaleService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("VehiclesPolicy")]
 public class CatalogController : ControllerBase
 {
     private readonly IVehicleCatalogRepository _catalogRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly ILogger<CatalogController> _logger;
-    private static readonly HttpClient _nhtsaHttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private readonly ICacheService _cache;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public CatalogController(
         IVehicleCatalogRepository catalogRepository,
         IVehicleRepository vehicleRepository,
-        ILogger<CatalogController> logger)
+        ILogger<CatalogController> logger,
+        ICacheService cache,
+        IHttpClientFactory httpClientFactory)
     {
         _catalogRepository = catalogRepository;
         _vehicleRepository = vehicleRepository;
         _logger = logger;
+        _cache = cache;
+        _httpClientFactory = httpClientFactory;
     }
 
     // ========================================
@@ -51,6 +60,11 @@ public class CatalogController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<MakeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MakeDto>>> GetAllMakes()
     {
+        const string cacheKey = "catalog:makes:all";
+        var cached = await _cache.GetAsync<List<MakeDto>>(cacheKey);
+        if (cached is not null)
+            return Ok(cached);
+
         var makes = await _catalogRepository.GetAllMakesAsync();
         var dtos = makes.Select(m => new MakeDto
         {
@@ -60,7 +74,9 @@ public class CatalogController : ControllerBase
             LogoUrl = m.LogoUrl,
             Country = m.Country,
             IsPopular = m.IsPopular
-        });
+        }).ToList();
+
+        await _cache.SetAsync(cacheKey, dtos, ttlSeconds: 86400); // 24h
         return Ok(dtos);
     }
 
@@ -71,6 +87,11 @@ public class CatalogController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<MakeDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MakeDto>>> GetPopularMakes([FromQuery] int take = 20)
     {
+        var cacheKey = $"catalog:makes:popular:{take}";
+        var cached = await _cache.GetAsync<List<MakeDto>>(cacheKey);
+        if (cached is not null)
+            return Ok(cached);
+
         var makes = await _catalogRepository.GetPopularMakesAsync(take);
         var dtos = makes.Select(m => new MakeDto
         {
@@ -80,7 +101,9 @@ public class CatalogController : ControllerBase
             LogoUrl = m.LogoUrl,
             Country = m.Country,
             IsPopular = m.IsPopular
-        });
+        }).ToList();
+
+        await _cache.SetAsync(cacheKey, dtos, ttlSeconds: 86400); // 24h
         return Ok(dtos);
     }
 
@@ -351,12 +374,12 @@ public class CatalogController : ControllerBase
 
         try
         {
-            // Call NHTSA VPIC API
-            using var httpClient = new HttpClient();
+            // Call NHTSA VPIC API (uses IHttpClientFactory for DNS rotation + resilience)
             var nhtsaUrl = $"https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json";
             
             _logger.LogInformation("Decoding VIN: {VIN} via NHTSA API", vin);
             
+            var httpClient = _httpClientFactory.CreateClient("NHTSA");
             var response = await httpClient.GetAsync(nhtsaUrl);
             response.EnsureSuccessStatusCode();
             
@@ -509,7 +532,8 @@ public class CatalogController : ControllerBase
             var nhtsaUrl = $"https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json";
             _logger.LogInformation("Smart VIN decode: {VIN} via NHTSA API", vin);
 
-            var response = await _nhtsaHttpClient.GetAsync(nhtsaUrl);
+            var httpClient = _httpClientFactory.CreateClient("NHTSA");
+            var response = await httpClient.GetAsync(nhtsaUrl);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -698,6 +722,7 @@ public class CatalogController : ControllerBase
     /// Batch VIN decode for dealers. Max 50 VINs per request.
     /// </summary>
     [HttpPost("vin/decode-batch")]
+    [Authorize]
     [ProducesResponseType(typeof(BatchVinDecodeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<BatchVinDecodeResponse>> DecodeVinBatch([FromBody] BatchVinDecodeRequest request)
@@ -1231,6 +1256,7 @@ public class CatalogController : ControllerBase
     /// }
     /// </remarks>
     [HttpPost("seed")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(SeedResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SeedResult>> SeedCatalog([FromBody] SeedCatalogRequest request)

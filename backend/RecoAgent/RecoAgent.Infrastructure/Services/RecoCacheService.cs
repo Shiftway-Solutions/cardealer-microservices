@@ -56,15 +56,45 @@ public class RecoCacheService : IRecoCacheService
         try
         {
             // Invalidate by removing all cache entries for this user
-            // In a production Redis setup, you'd use SCAN + DEL with a pattern
-            // For now, we remove the most common cache key patterns
+            // The cache keys are SHA256 hashes that include the userId, so we can't
+            // predict the exact key. We also store reverse-mapping keys to enable lookup.
             await _cache.RemoveAsync($"{CachePrefix}{userId}:batch", ct);
             await _cache.RemoveAsync($"{CachePrefix}{userId}:realtime", ct);
+
+            // Also remove the last-known cache key for this user (stored at set time)
+            var lastKeyBatch = await _cache.GetStringAsync($"{CachePrefix}user-key:{userId}:batch", ct);
+            if (!string.IsNullOrEmpty(lastKeyBatch))
+                await _cache.RemoveAsync($"{CachePrefix}{lastKeyBatch}", ct);
+
+            var lastKeyRt = await _cache.GetStringAsync($"{CachePrefix}user-key:{userId}:realtime", ct);
+            if (!string.IsNullOrEmpty(lastKeyRt))
+                await _cache.RemoveAsync($"{CachePrefix}{lastKeyRt}", ct);
+
             _logger.LogInformation("Cache invalidated for user {UserId}", userId);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to invalidate cache for user {UserId}", userId);
+        }
+    }
+
+    /// <summary>
+    /// Stores a reverse-mapping key so we can find the SHA256 cache key for a given user.
+    /// Call this when setting a cache entry.
+    /// </summary>
+    public async Task StoreUserCacheKeyMappingAsync(string userId, string cacheKey, string mode, int ttlSeconds, CancellationToken ct = default)
+    {
+        try
+        {
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(ttlSeconds)
+            };
+            await _cache.SetStringAsync($"{CachePrefix}user-key:{userId}:{mode}", cacheKey, options, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to store cache key mapping for user {UserId}", userId);
         }
     }
 }

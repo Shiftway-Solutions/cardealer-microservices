@@ -5,6 +5,7 @@ using SearchAgent.Domain.Interfaces;
 using SearchAgent.Infrastructure.Persistence;
 using SearchAgent.Infrastructure.Repositories;
 using SearchAgent.Infrastructure.Services;
+using CarDealer.Shared.Resilience.Extensions;
 
 namespace SearchAgent.Infrastructure;
 
@@ -26,7 +27,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri("https://api.anthropic.com/");
             client.Timeout = TimeSpan.FromSeconds(30);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        }).AddStandardResilience(configuration);
         services.AddScoped<IClaudeSearchService, ClaudeSearchService>();
 
         // Redis Cache
@@ -46,6 +47,9 @@ public static class DependencyInjection
         }
 
         services.AddScoped<ISearchCacheService, SearchCacheService>();
+
+        // In-memory cache for config and other short-lived data (avoids DB round-trip per request)
+        services.AddMemoryCache();
 
         return services;
     }

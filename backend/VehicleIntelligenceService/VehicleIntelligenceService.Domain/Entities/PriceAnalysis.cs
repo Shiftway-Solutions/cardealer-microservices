@@ -14,7 +14,25 @@ public class PriceAnalysis
     // Comparación con mercado
     public decimal MarketAvgPrice { get; set; }
     public decimal PriceVsMarket { get; set; }        // 1.05 = 5% arriba
-    public string PricePosition { get; set; } = "Fair"; // "Above Market", "Below Market", "Fair"
+    
+    /// <summary>
+    /// Posición de precio en el mercado (5 niveles):
+    /// "Great Deal" (≤-15%), "Good Deal" (-15% a -5%), "Fair" (±5%),
+    /// "High Price" (+5% a +15%), "Overpriced" (>+15%)
+    /// </summary>
+    public string PricePosition { get; set; } = "Fair";
+    
+    /// <summary>
+    /// Indica si el vehículo está sobrevaluado más de 20% respecto al mercado.
+    /// Activa alertas y recomendaciones especiales para el vendedor.
+    /// </summary>
+    public bool IsOvervalued { get; set; }
+    
+    /// <summary>
+    /// Porcentaje exacto por encima del mercado (ej: 25.5 = 25.5% arriba).
+    /// Valor negativo indica que está por debajo del mercado.
+    /// </summary>
+    public decimal OvervaluationPercentage { get; set; }
     
     // Predicción
     public int PredictedDaysToSaleAtCurrentPrice { get; set; }

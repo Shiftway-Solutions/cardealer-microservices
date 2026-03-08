@@ -75,7 +75,7 @@ public class Vehicle : ITenantEntity
     // KILOMETRAJE Y CONDICIÓN
     // ========================================
     public int Mileage { get; set; }
-    public MileageUnit MileageUnit { get; set; } = MileageUnit.Miles;
+    public MileageUnit MileageUnit { get; set; } = MileageUnit.Kilometers; // FIX B2: DR marketplace defaults to km
     public VehicleCondition Condition { get; set; } = VehicleCondition.Used;
     public int? PreviousOwners { get; set; }
     public bool AccidentHistory { get; set; } = false;
@@ -182,6 +182,15 @@ public class Vehicle : ITenantEntity
 
     /// <summary>Cantidad de veces que ha sido rechazado.</summary>
     public int RejectionCount { get; set; } = 0;
+
+    // ========================================
+    // DETECCIÓN DE FRAUDE
+    // ========================================
+    /// <summary>
+    /// Fraud risk score (0-100). Calculated at publish time by ListingFraudDetector.
+    /// 0 = low risk, 50+ = requires manual review, 75+ = high risk.
+    /// </summary>
+    public int FraudScore { get; set; } = 0;
 
     // ── Propiedades de Campaña Publicitaria (AdvertisingService sync) ─────────
     /// <summary>Vehículo tiene una campaña PremiumSpot activa.</summary>

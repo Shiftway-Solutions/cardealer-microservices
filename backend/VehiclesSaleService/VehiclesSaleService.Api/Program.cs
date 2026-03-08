@@ -1,4 +1,5 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -13,10 +14,21 @@ using CarDealer.Shared.MultiTenancy;
 // ConfigurationServiceClient for dynamic config from admin panel
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
+using CarDealer.Shared.Caching.Extensions;
 using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
+
+const string ServiceName = "VehiclesSaleService";
+const string ServiceVersion = "2.0.0";
+
+try
+{
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,27 +131,45 @@ builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 // RabbitMQ Event Publisher
 builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
+// ========================================
+// REDIS CACHING (standard shared library)
+// ========================================
+// TTLs: catalog=86400s (24h), featured=600s (10m), search=120s (2m), detail=300s (5m)
+builder.Services.AddStandardCaching(builder.Configuration, "VehiclesSaleService");
+
+// ========================================
+// RESPONSE COMPRESSION (Brotli + Gzip)
+// ========================================
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "text/json", "application/problem+json" });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest; // Fastest for API responses
+});
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
 // RabbitMQ Campaign Events Consumer — syncs vehicle promotion flags (IsPremium, IsFeatured)
 // when AdvertisingService publishes campaign lifecycle events.
 builder.Services.AddHostedService<CampaignEventsConsumer>();
 
+// RabbitMQ Cache Invalidation Consumer — invalidates Redis/memory cache when
+// vehicle lifecycle events arrive (created, updated, deleted, sold, published).
+builder.Services.AddHostedService<CacheInvalidationConsumer>();
+
 // ========================================
-// JWT AUTHENTICATION
+// JWT AUTHENTICATION (centralized config)
 // ========================================
 
-var jwtSecret = builder.Configuration["Jwt:Key"] 
-    ?? builder.Configuration["JWT:Secret"]
-    ?? Environment.GetEnvironmentVariable("JWT_SECRET")
-    ?? throw new InvalidOperationException(
-        "JWT secret key is not configured. Set 'Jwt:Key' in appsettings, 'JWT:Secret', or 'JWT_SECRET' environment variable.");
-
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] 
-    ?? builder.Configuration["JWT:Issuer"] 
-    ?? "CarDealerPlatform";
-
-var jwtAudience = builder.Configuration["Jwt:Audience"] 
-    ?? builder.Configuration["JWT:Audience"] 
-    ?? "CarDealerAPI";
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -147,18 +177,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
             ValidAudience = jwtAudience,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero, // Security: No tolerance for expired tokens (CWE-613)
+            ClockSkew = TimeSpan.Zero,
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
 
 builder.Services.AddAuthorization();
+
+// ============= AUDIT =============
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========================================
 // CORS
@@ -168,24 +201,14 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
-        if (isDev)
-        {
-            policy.SetIsOriginAllowed(_ => true)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
-        else
-        {
-            policy.WithOrigins(
-                    "https://okla.com.do",
-                    "https://www.okla.com.do",
-                    "https://api.okla.com.do")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://okla.com.do", "https://www.okla.com.do", "https://api.okla.com.do" };
+
+        policy.WithOrigins(allowedOrigins)
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
     });
 });
 
@@ -203,6 +226,26 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueLimit = 0;
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/problem+json";
+
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue
+            : TimeSpan.FromSeconds(60);
+
+        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "https://httpstatuses.io/429",
+            title = "Too Many Requests",
+            status = 429,
+            detail = $"Rate limit exceeded. Retry after {(int)retryAfter.TotalSeconds} seconds.",
+            retryAfterSeconds = (int)retryAfter.TotalSeconds
+        }, cancellationToken);
+    };
 });
 
 // HEALTH CHECKS
@@ -247,7 +290,7 @@ builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IAudit
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IErrorServiceClient, VehiclesSaleService.Infrastructure.External.ErrorServiceClient>(client =>
 {
@@ -255,7 +298,7 @@ builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IError
     client.BaseAddress = new Uri(errorServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // AlertService client for price change notifications
 builder.Services.AddHttpClient("AlertService", client =>
@@ -264,7 +307,15 @@ builder.Services.AddHttpClient("AlertService", client =>
     client.BaseAddress = new Uri(alertServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
+
+// NHTSA VPIC API client for VIN decoding (replaces static HttpClient — DNS rotation + resilience)
+builder.Services.AddHttpClient("NHTSA", client =>
+{
+    client.BaseAddress = new Uri("https://vpic.nhtsa.dot.gov");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
 
 // KYCService client for dealer KYC verification checks (used by Publish endpoint).
 // Consistent with frontend useCanSell hook which also checks KYCService.
@@ -274,7 +325,121 @@ builder.Services.AddHttpClient<VehiclesSaleService.Application.Interfaces.IDeale
     client.BaseAddress = new Uri(kycServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
+
+// ============================================================================
+// TIER 3 EXTERNAL API INTEGRATIONS — Config-driven provider switching
+// Set "ExternalApis:{Service}:Provider" in appsettings/secrets to switch:
+//   "Mock" (default) | "VinAudit" | "CARFAX" | "Edmunds" | "MarketCheck"
+// All real providers fall back to Mock when API key is missing (FallbackToMock=true)
+// ============================================================================
+
+// Configuration binding for external API options
+builder.Services.Configure<VehiclesSaleService.Infrastructure.External.Configuration.ExternalApiOptions>(
+    builder.Configuration.GetSection("ExternalApis"));
+
+// HttpClient registration for external API providers
+builder.Services.AddHttpClient("Edmunds", client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:VehicleSpecs:BaseUrl"] ?? "https://api.edmunds.com";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+builder.Services.AddHttpClient("MarketCheck", client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:MarketPrice:BaseUrl"] ?? "https://api.marketcheck.com";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+builder.Services.AddHttpClient("Carfax", client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:Carfax:BaseUrl"] ?? "https://api.carfax.com";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+builder.Services.AddHttpClient("VinAudit", client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:VehicleHistory:BaseUrl"] ?? "https://api.vinaudit.com";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+// BCRD — Banco Central República Dominicana Exchange Rate API (DOP/USD)
+builder.Services.AddHttpClient("BCRD", client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:ExchangeRate:BaseUrl"] ?? "https://api.bancentral.gov.do";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+// IExchangeRateService — live DOP/USD rate from BCRD with cache + fallback chain
+builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IExchangeRateService,
+    VehiclesSaleService.Infrastructure.External.BcrdExchangeRateService>();
+
+// CARFAX/VinAudit — Vehicle History Reports
+var historyProvider = builder.Configuration["ExternalApis:VehicleHistory:Provider"] ?? "Mock";
+if (historyProvider.Equals("VinAudit", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IVehicleHistoryService,
+        VehiclesSaleService.Infrastructure.External.VinAuditVehicleHistoryService>();
+}
+else if (historyProvider.Equals("CARFAX", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IVehicleHistoryService,
+        VehiclesSaleService.Infrastructure.External.CarfaxVehicleHistoryService>();
+}
+else
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IVehicleHistoryService,
+        VehiclesSaleService.Infrastructure.External.MockVehicleHistoryService>();
+}
+
+// Edmunds — Vehicle Technical Specifications
+var specsProvider = builder.Configuration["ExternalApis:VehicleSpecs:Provider"] ?? "Mock";
+if (specsProvider.Equals("Edmunds", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IVehicleSpecsService,
+        VehiclesSaleService.Infrastructure.External.EdmundsVehicleSpecsService>();
+}
+else
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IVehicleSpecsService,
+        VehiclesSaleService.Infrastructure.External.MockVehicleSpecsService>();
+}
+
+// MarketCheck — Market Price Comparison & Trends
+var priceProvider = builder.Configuration["ExternalApis:MarketPrice:Provider"] ?? "Mock";
+if (priceProvider.Equals("MarketCheck", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IMarketPriceService,
+        VehiclesSaleService.Infrastructure.External.MarketCheckPriceService>();
+}
+else
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IMarketPriceService,
+        VehiclesSaleService.Infrastructure.External.MockMarketPriceService>();
+}
+
+// NHTSA — Free Vehicle Data API (recalls, VIN decode, complaints)
+var nhtsaEnabled = bool.TryParse(
+    builder.Configuration["ExternalApis:Nhtsa:Enabled"], out var ne) ? ne : true;
+if (nhtsaEnabled)
+{
+    builder.Services.AddSingleton<VehiclesSaleService.Infrastructure.External.INhtsaVehicleDataService,
+        VehiclesSaleService.Infrastructure.External.NhtsaVehicleDataService>();
+}
+
+Log.Information("External API Providers configured: History={HistoryProvider}, Specs={SpecsProvider}, " +
+    "Price={PriceProvider}, NHTSA={NhtsaEnabled}",
+    historyProvider, specsProvider, priceProvider, nhtsaEnabled);
 
 var app = builder.Build();
 
@@ -284,6 +449,9 @@ var app = builder.Build();
 
 // FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
 app.UseGlobalErrorHandling();
+
+// Response Compression — early in pipeline to compress all responses
+app.UseResponseCompression();
 
 // FASE 2: Request Logging con enrichment de TraceId, UserId, CorrelationId
 app.UseRequestLogging();
@@ -299,14 +467,35 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Audit Middleware
+app.UseAuditMiddleware();
+
 app.MapControllers();
 
-// Health check endpoint
-app.MapHealthChecks("/health");
+// ============= HEALTH CHECKS (Triple Pattern) =============
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 // ========================================
 // DATABASE MIGRATION
@@ -319,14 +508,14 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await dbContext.Database.MigrateAsync();
-        Console.WriteLine("✅ Database migration completed successfully");
+        Log.Information("Database migration completed for {ServiceName}", ServiceName);
 
         // Seed catalog data (makes, models) if empty
         await VehiclesSaleService.Infrastructure.Persistence.CatalogDataSeeder.SeedAsync(dbContext, startupLogger);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Database migration failed: {ex.Message}");
+        Log.Error(ex, "Database migration error for {ServiceName}", ServiceName);
     }
 }
 
@@ -334,9 +523,19 @@ using (var scope = app.Services.CreateScope())
 // START
 // ========================================
 
-Console.WriteLine("🚀 VehiclesSaleService API starting...");
-Console.WriteLine($"📦 Environment: {app.Environment.EnvironmentName}");
-Console.WriteLine($"🗄️  Database: {connectionString}");
+Log.Information("Starting {ServiceName} v{ServiceVersion}", ServiceName, ServiceVersion);
 
 app.Run();
-// build trigger 1772031539
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", "VehiclesSaleService");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+// Make the implicit Program class public so it can be accessed by tests
+public partial class Program { }

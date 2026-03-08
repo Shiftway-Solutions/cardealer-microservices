@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Infrastructure.Persistence;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -14,6 +15,7 @@ namespace VehiclesSaleService.Api.Controllers;
 [ApiController]
 [Route("api/history/views")]
 [Authorize]
+[EnableRateLimiting("VehiclesPolicy")]
 public class HistoryController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -150,15 +152,13 @@ public class HistoryController : ControllerBase
     {
         var userId = GetCurrentUserId();
 
-        var items = await _db.VehicleViewHistories
+        var deleted = await _db.VehicleViewHistories
             .Where(h => h.UserId == userId && h.VehicleId == vehicleId)
-            .ToListAsync();
+            .ExecuteDeleteAsync();
 
-        if (items.Count == 0)
+        if (deleted == 0)
             return NotFound();
 
-        _db.VehicleViewHistories.RemoveRange(items);
-        await _db.SaveChangesAsync();
         return Ok();
     }
 
@@ -171,12 +171,10 @@ public class HistoryController : ControllerBase
     {
         var userId = GetCurrentUserId();
 
-        var items = await _db.VehicleViewHistories
+        await _db.VehicleViewHistories
             .Where(h => h.UserId == userId)
-            .ToListAsync();
+            .ExecuteDeleteAsync();
 
-        _db.VehicleViewHistories.RemoveRange(items);
-        await _db.SaveChangesAsync();
         return Ok();
     }
 
@@ -192,18 +190,28 @@ public class HistoryController : ControllerBase
 
         var userId = GetCurrentUserId();
 
-        foreach (var item in request.Items)
+        // Parse all vehicleIds upfront
+        var parsedItems = request.Items
+            .Where(i => Guid.TryParse(i.VehicleId, out _))
+            .Select(i => (VehicleId: Guid.Parse(i.VehicleId), i.ViewedAt))
+            .ToList();
+
+        if (parsedItems.Count == 0)
+            return Ok();
+
+        // Pre-load all existing history for this user in ONE query (eliminates N+1)
+        var vehicleIds = parsedItems.Select(i => i.VehicleId).ToHashSet();
+        var existingHistory = await _db.VehicleViewHistories
+            .Where(h => h.UserId == userId && vehicleIds.Contains(h.VehicleId))
+            .ToDictionaryAsync(h => h.VehicleId);
+
+        foreach (var (vehicleId, viewedAt) in parsedItems)
         {
-            if (!Guid.TryParse(item.VehicleId, out var vehicleId)) continue;
-
-            var existing = await _db.VehicleViewHistories
-                .FirstOrDefaultAsync(h => h.UserId == userId && h.VehicleId == vehicleId);
-
-            if (existing != null)
+            if (existingHistory.TryGetValue(vehicleId, out var existing))
             {
                 // Keep the most recent timestamp
-                if (item.ViewedAt > existing.ViewedAt)
-                    existing.ViewedAt = item.ViewedAt;
+                if (viewedAt > existing.ViewedAt)
+                    existing.ViewedAt = viewedAt;
             }
             else
             {
@@ -211,7 +219,7 @@ public class HistoryController : ControllerBase
                 {
                     UserId = userId,
                     VehicleId = vehicleId,
-                    ViewedAt = item.ViewedAt
+                    ViewedAt = viewedAt
                 });
             }
         }

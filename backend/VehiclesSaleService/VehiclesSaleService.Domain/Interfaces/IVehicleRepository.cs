@@ -2,15 +2,30 @@ using VehiclesSaleService.Domain.Entities;
 
 namespace VehiclesSaleService.Domain.Interfaces;
 
+/// <summary>
+/// Result of seller stats aggregation (computed at database level).
+/// </summary>
+public record SellerVehicleStatsResult
+{
+    public int TotalListings { get; init; }
+    public int ActiveListings { get; init; }
+    public int SoldListings { get; init; }
+    public int PendingListings { get; init; }
+    public long TotalViews { get; init; }
+    public long TotalFavorites { get; init; }
+}
+
 public interface IVehicleRepository
 {
     Task<Vehicle?> GetByIdAsync(Guid id);
     Task<Vehicle?> GetByVINAsync(string vin);
     Task<IEnumerable<Vehicle>> GetAllAsync(int skip = 0, int take = 100);
     Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchParameters parameters);
-    Task<IEnumerable<Vehicle>> GetBySellerAsync(Guid sellerId);
-    Task<IEnumerable<Vehicle>> GetByDealerAsync(Guid dealerId);
+    Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetBySellerAsync(Guid sellerId, int page = 1, int pageSize = 12, VehicleStatus? status = null);
+    Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetByDealerAsync(Guid dealerId, int page = 1, int pageSize = 12);
+    Task<SellerVehicleStatsResult> GetSellerStatsAsync(Guid sellerId);
     Task<IEnumerable<Vehicle>> GetFeaturedAsync(int take = 10);
+    Task<IEnumerable<Vehicle>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<Vehicle> CreateAsync(Vehicle vehicle);
     Task UpdateAsync(Vehicle vehicle);
     Task DeleteAsync(Guid id);

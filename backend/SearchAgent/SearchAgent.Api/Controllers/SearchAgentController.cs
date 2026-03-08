@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SearchAgent.Application.DTOs;
 using SearchAgent.Application.Features.Config.Commands;
 using SearchAgent.Application.Features.Config.Queries;
@@ -28,6 +30,7 @@ public class SearchAgentController : ControllerBase
     /// </summary>
     [HttpPost("search")]
     [AllowAnonymous]
+    [EnableRateLimiting("search")]
     public async Task<IActionResult> Search([FromBody] SearchAgentRequest request, CancellationToken ct)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -56,6 +59,7 @@ public class SearchAgentController : ControllerBase
     /// </summary>
     [HttpGet("config")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     public async Task<IActionResult> GetConfig(CancellationToken ct)
     {
         var config = await _mediator.Send(new GetSearchAgentConfigQuery(), ct);
@@ -68,6 +72,7 @@ public class SearchAgentController : ControllerBase
     /// </summary>
     [HttpPut("config")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     public async Task<IActionResult> UpdateConfig(
         [FromBody] UpdateSearchAgentConfigRequest request,
         CancellationToken ct)

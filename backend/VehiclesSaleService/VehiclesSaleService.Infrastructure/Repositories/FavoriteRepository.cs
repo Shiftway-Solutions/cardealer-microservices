@@ -34,27 +34,33 @@ public class FavoriteRepository : IFavoriteRepository
 
     public async Task<IEnumerable<Favorite>> GetByUserIdAsync(
         Guid userId, 
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
             .Where(f => f.UserId == userId)
             .Include(f => f.Vehicle)
-                .ThenInclude(v => v!.Images)
+                .ThenInclude(v => v!.Images.Where(i => i.IsPrimary))
             .OrderByDescending(f => f.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Vehicle>> GetFavoriteVehiclesByUserIdAsync(
-        Guid userId, 
+        Guid userId,
+        int page = 1,
+        int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
-            .Where(f => f.UserId == userId)
-            .Include(f => f.Vehicle)
-                .ThenInclude(v => v!.Images)
+            .Where(f => f.UserId == userId && f.Vehicle!.Status == VehicleStatus.Active)
             .OrderByDescending(f => f.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(f => f.Vehicle!)
-            .Where(v => v.Status == VehicleStatus.Active) // Solo vehículos activos
+            .Include(v => v.Images.Where(i => i.IsPrimary))
             .ToListAsync(cancellationToken);
     }
 

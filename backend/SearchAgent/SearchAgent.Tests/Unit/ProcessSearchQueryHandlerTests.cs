@@ -6,6 +6,7 @@ using SearchAgent.Domain.Models;
 using SearchAgent.Domain.Entities;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SearchAgent.Tests.Unit;
 
@@ -16,6 +17,7 @@ public class ProcessSearchQueryHandlerTests
     private readonly Mock<ISearchAgentConfigRepository> _configRepoMock;
     private readonly Mock<ISearchQueryRepository> _queryRepoMock;
     private readonly Mock<ILogger<ProcessSearchQueryHandler>> _loggerMock;
+    private readonly Mock<IMemoryCache> _memoryCacheMock;
     private readonly ProcessSearchQueryHandler _handler;
 
     private static readonly SearchAgentConfig DefaultConfig = new()
@@ -51,12 +53,16 @@ public class ProcessSearchQueryHandlerTests
             .Setup(r => r.SaveAsync(It.IsAny<SearchQuery>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        _memoryCacheMock = new Mock<IMemoryCache>();
+        var cacheEntry = Mock.Of<ICacheEntry>();
+        _memoryCacheMock.Setup(m => m.CreateEntry(It.IsAny<object>())).Returns(cacheEntry);
         _handler = new ProcessSearchQueryHandler(
             _claudeServiceMock.Object,
             _cacheServiceMock.Object,
             _configRepoMock.Object,
             _queryRepoMock.Object,
-            _loggerMock.Object
+            _loggerMock.Object,
+            _memoryCacheMock.Object
         );
     }
 

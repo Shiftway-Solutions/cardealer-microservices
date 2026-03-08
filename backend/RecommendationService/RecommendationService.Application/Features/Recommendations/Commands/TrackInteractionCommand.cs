@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using RecommendationService.Application.DTOs;
 using RecommendationService.Domain.Entities;
 using RecommendationService.Domain.Interfaces;
@@ -19,13 +20,16 @@ public class TrackInteractionCommandHandler : IRequestHandler<TrackInteractionCo
 {
     private readonly IVehicleInteractionRepository _interactionRepository;
     private readonly IUserPreferenceRepository _preferenceRepository;
+    private readonly ILogger<TrackInteractionCommandHandler> _logger;
 
     public TrackInteractionCommandHandler(
         IVehicleInteractionRepository interactionRepository,
-        IUserPreferenceRepository preferenceRepository)
+        IUserPreferenceRepository preferenceRepository,
+        ILogger<TrackInteractionCommandHandler> logger)
     {
         _interactionRepository = interactionRepository;
         _preferenceRepository = preferenceRepository;
+        _logger = logger;
     }
 
     public async Task<VehicleInteractionDto> Handle(TrackInteractionCommand request, CancellationToken cancellationToken)
@@ -81,9 +85,9 @@ public class TrackInteractionCommandHandler : IRequestHandler<TrackInteractionCo
 
             await _preferenceRepository.UpdateAsync(preferences);
         }
-        catch
+        catch (Exception ex)
         {
-            // No fallar si no se pueden actualizar preferencias
+            _logger.LogWarning(ex, "Failed to update user preferences for user {UserId}", userId);
         }
     }
 }

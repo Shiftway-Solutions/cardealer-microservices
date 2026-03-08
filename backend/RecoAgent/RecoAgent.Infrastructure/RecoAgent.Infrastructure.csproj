@@ -11,10 +11,13 @@
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Polly.Core" Version="8.5.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../RecoAgent.Domain/RecoAgent.Domain.csproj" />
     <ProjectReference Include="../RecoAgent.Application/RecoAgent.Application.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 </Project>

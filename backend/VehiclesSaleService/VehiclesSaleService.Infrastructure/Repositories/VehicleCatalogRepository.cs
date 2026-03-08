@@ -23,7 +23,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
 
     public async Task<IEnumerable<VehicleMake>> GetAllMakesAsync(bool includeInactive = false)
     {
-        var query = _context.VehicleMakes.AsQueryable();
+        var query = _context.VehicleMakes.AsNoTracking().AsQueryable();
 
         if (!includeInactive)
             query = query.Where(m => m.IsActive);
@@ -38,6 +38,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<IEnumerable<VehicleMake>> GetPopularMakesAsync(int take = 20)
     {
         return await _context.VehicleMakes
+            .AsNoTracking()
             .Where(m => m.IsActive && m.IsPopular)
             .OrderBy(m => m.SortOrder)
             .ThenBy(m => m.Name)
@@ -52,6 +53,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
 
         var term = searchTerm.ToLower();
         return await _context.VehicleMakes
+            .AsNoTracking()
             .Where(m => m.IsActive && m.Name.ToLower().Contains(term))
             .OrderByDescending(m => m.Name.ToLower().StartsWith(term))
             .ThenBy(m => m.Name)
@@ -62,6 +64,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleMake?> GetMakeByIdAsync(Guid id)
     {
         return await _context.VehicleMakes
+            .AsNoTracking()
             .Include(m => m.Models.Where(model => model.IsActive))
             .FirstOrDefaultAsync(m => m.Id == id);
     }
@@ -69,6 +72,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleMake?> GetMakeBySlugAsync(string slug)
     {
         return await _context.VehicleMakes
+            .AsNoTracking()
             .Include(m => m.Models.Where(model => model.IsActive))
             .FirstOrDefaultAsync(m => m.Slug == slug.ToLower());
     }
@@ -80,6 +84,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<IEnumerable<VehicleModel>> GetModelsByMakeIdAsync(Guid makeId, bool includeInactive = false)
     {
         var query = _context.VehicleModels
+            .AsNoTracking()
             .Include(m => m.Make)
             .Where(m => m.MakeId == makeId);
 
@@ -95,6 +100,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<IEnumerable<VehicleModel>> GetModelsByMakeSlugAsync(string makeSlug, bool includeInactive = false)
     {
         var make = await _context.VehicleMakes
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Slug == makeSlug.ToLower());
 
         if (make == null)
@@ -110,6 +116,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
 
         var term = searchTerm.ToLower();
         return await _context.VehicleModels
+            .AsNoTracking()
             .Include(m => m.Make)
             .Where(m => m.MakeId == makeId && m.IsActive && m.Name.ToLower().Contains(term))
             .OrderByDescending(m => m.Name.ToLower().StartsWith(term))
@@ -121,6 +128,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleModel?> GetModelByIdAsync(Guid id)
     {
         return await _context.VehicleModels
+            .AsNoTracking()
             .Include(m => m.Make)
             .Include(m => m.Trims.Where(t => t.IsActive))
             .FirstOrDefaultAsync(m => m.Id == id);
@@ -129,6 +137,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleModel?> GetModelBySlugAsync(string makeSlug, string modelSlug)
     {
         return await _context.VehicleModels
+            .AsNoTracking()
             .Include(m => m.Make)
             .Include(m => m.Trims.Where(t => t.IsActive))
             .FirstOrDefaultAsync(m =>
@@ -144,6 +153,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<IEnumerable<VehicleTrim>> GetTrimsByModelAndYearAsync(Guid modelId, int year)
     {
         return await _context.VehicleTrims
+            .AsNoTracking()
             .Include(t => t.Model)
             .ThenInclude(m => m!.Make)
             .Where(t => t.ModelId == modelId && t.Year == year && t.IsActive)
@@ -155,6 +165,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<IEnumerable<int>> GetAvailableYearsAsync(Guid modelId)
     {
         return await _context.VehicleTrims
+            .AsNoTracking()
             .Where(t => t.ModelId == modelId && t.IsActive)
             .Select(t => t.Year)
             .Distinct()
@@ -165,6 +176,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleTrim?> GetTrimByIdAsync(Guid id)
     {
         return await _context.VehicleTrims
+            .AsNoTracking()
             .Include(t => t.Model)
             .ThenInclude(m => m!.Make)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -173,6 +185,7 @@ public class VehicleCatalogRepository : IVehicleCatalogRepository
     public async Task<VehicleTrim?> GetTrimSpecsAsync(Guid modelId, int year, string trimName)
     {
         return await _context.VehicleTrims
+            .AsNoTracking()
             .Include(t => t.Model)
             .ThenInclude(m => m!.Make)
             .FirstOrDefaultAsync(t =>

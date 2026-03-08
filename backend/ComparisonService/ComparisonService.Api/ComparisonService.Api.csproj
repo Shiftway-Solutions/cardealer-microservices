@@ -8,19 +8,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ComparisonService.Application\ComparisonService.Application.csproj" />
     <ProjectReference Include="..\ComparisonService.Domain\ComparisonService.Domain.csproj" />
     <ProjectReference Include="..\ComparisonService.Infrastructure\ComparisonService.Infrastructure.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 
 </Project>

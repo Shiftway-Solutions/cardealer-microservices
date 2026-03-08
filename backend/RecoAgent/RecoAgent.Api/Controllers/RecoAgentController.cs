@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RecoAgent.Application.DTOs;
 using RecoAgent.Application.Features.Config.Commands;
 using RecoAgent.Application.Features.Config.Queries;
@@ -28,7 +29,8 @@ public class RecoAgentController : ControllerBase
     /// Accepts user profile + vehicle candidates, returns ranked recommendations with explanations.
     /// </summary>
     [HttpPost("recommend")]
-    [AllowAnonymous]
+    [Authorize]
+    [EnableRateLimiting("recommend")]
     public async Task<IActionResult> Recommend([FromBody] RecoAgentRequest request, CancellationToken ct)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -45,7 +47,8 @@ public class RecoAgentController : ControllerBase
     /// Used to improve future recommendations for this user.
     /// </summary>
     [HttpPost("feedback")]
-    [AllowAnonymous]
+    [Authorize]
+    [EnableRateLimiting("fixed")]
     public async Task<IActionResult> Feedback([FromBody] RecommendationFeedbackRequest request, CancellationToken ct)
     {
         var command = new RecordFeedbackCommand(request);
@@ -59,6 +62,7 @@ public class RecoAgentController : ControllerBase
     /// </summary>
     [HttpGet("config")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     public async Task<IActionResult> GetConfig(CancellationToken ct)
     {
         var config = await _mediator.Send(new GetRecoAgentConfigQuery(), ct);
@@ -71,6 +75,7 @@ public class RecoAgentController : ControllerBase
     /// </summary>
     [HttpPut("config")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     public async Task<IActionResult> UpdateConfig(
         [FromBody] UpdateRecoAgentConfigRequest request,
         CancellationToken ct)

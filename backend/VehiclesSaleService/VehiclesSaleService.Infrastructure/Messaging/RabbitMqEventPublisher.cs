@@ -19,6 +19,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private IConnection? _connection;
     private IModel? _channel;
     private const string ExchangeName = "cardealer.events";
+    private readonly object _publishLock = new();
 
     public RabbitMqEventPublisher(
         IConfiguration configuration,
@@ -78,22 +79,25 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
             var message = JsonSerializer.Serialize(@event);
             var body = Encoding.UTF8.GetBytes(message);
 
-            var properties = _channel.CreateBasicProperties();
-            properties.Persistent = true;
-            properties.MessageId = @event.EventId.ToString();
-            properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            properties.ContentType = "application/json";
-            properties.Headers = new Dictionary<string, object>
+            lock (_publishLock)
             {
-                ["event_type"] = @event.EventType
-            };
+                var properties = _channel.CreateBasicProperties();
+                properties.Persistent = true;
+                properties.MessageId = @event.EventId.ToString();
+                properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                properties.ContentType = "application/json";
+                properties.Headers = new Dictionary<string, object>
+                {
+                    ["event_type"] = @event.EventType
+                };
 
-            _channel.BasicPublish(
-                exchange: ExchangeName,
-                routingKey: routingKey,
-                basicProperties: properties,
-                body: body
-            );
+                _channel.BasicPublish(
+                    exchange: ExchangeName,
+                    routingKey: routingKey,
+                    basicProperties: properties,
+                    body: body
+                );
+            }
 
             _logger.LogInformation(
                 "Published event {EventType} with ID {EventId}",

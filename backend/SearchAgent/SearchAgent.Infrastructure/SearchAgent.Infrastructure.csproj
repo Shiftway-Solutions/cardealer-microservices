@@ -16,5 +16,6 @@
     <ProjectReference Include="../SearchAgent.Domain/SearchAgent.Domain.csproj" />
     <ProjectReference Include="../SearchAgent.Application/SearchAgent.Application.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 </Project>

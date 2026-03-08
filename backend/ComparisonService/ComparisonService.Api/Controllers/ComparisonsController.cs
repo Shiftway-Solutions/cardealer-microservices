@@ -20,7 +20,7 @@ public class ComparisonsController : ControllerBase
         ILogger<ComparisonsController> logger)
     {
         _comparisonRepository = comparisonRepository;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient("VehiclesSaleService");
         _logger = logger;
     }
 
@@ -278,11 +278,8 @@ public class ComparisonsController : ControllerBase
         {
             try
             {
-                // Call VehiclesSaleService
-                var vehiclesServiceUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL")
-                    ?? "http://vehiclessaleservice:80";
-                
-                var response = await _httpClient.GetAsync($"{vehiclesServiceUrl}/api/vehicles/{vehicleId}");
+                // Call VehiclesSaleService (base URL configured in Program.cs)
+                var response = await _httpClient.GetAsync($"api/vehicles/{vehicleId}");
                 
                 if (response.IsSuccessStatusCode)
                 {

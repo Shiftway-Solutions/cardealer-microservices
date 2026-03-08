@@ -9,6 +9,7 @@ using VehiclesSaleService.Infrastructure.Messaging;
 using VehiclesSaleService.Infrastructure.Persistence;
 using CarDealer.Shared.MultiTenancy;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Caching.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using VehicleDriveType = VehiclesSaleService.Domain.Entities.DriveType;
 using System.Net.Http;
@@ -29,6 +30,7 @@ public class VehicleLifecycleControllerTests : IDisposable
     private readonly Mock<IConfigurationServiceClient> _configClientMock;
     private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
     private readonly Mock<VehiclesSaleService.Application.Interfaces.IDealerVerificationClient> _dealerVerificationClientMock;
+    private readonly Mock<ICacheService> _cacheServiceMock = new();
 
     public VehicleLifecycleControllerTests()
     {
@@ -75,7 +77,8 @@ public class VehicleLifecycleControllerTests : IDisposable
             _context,
             _configClientMock.Object,
             _httpClientFactoryMock.Object,
-            _dealerVerificationClientMock.Object
+            _dealerVerificationClientMock.Object,
+            _cacheServiceMock.Object
         );
     }
 

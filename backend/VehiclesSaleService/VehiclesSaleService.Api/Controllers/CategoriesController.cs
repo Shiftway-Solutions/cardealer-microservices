@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using VehiclesSaleService.Domain.Entities;
 using VehiclesSaleService.Domain.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VehiclesSaleService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("VehiclesPolicy")]
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryRepository _categoryRepository;

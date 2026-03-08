@@ -13,7 +13,7 @@ public class RecoAgentConfig
     // LLM Settings — Sonnet 4.5 for higher reasoning
     public string Model { get; set; } = "claude-sonnet-4-5-20251022";
     public float Temperature { get; set; } = 0.5f;
-    public int MaxTokens { get; set; } = 2048;
+    public int MaxTokens { get; set; } = 1536;
 
     // Business Rules
     public int MinRecommendations { get; set; } = 8;

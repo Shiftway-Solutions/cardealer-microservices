@@ -18,6 +18,13 @@ public class ClaudeRecoService : IClaudeRecoService
     private readonly ILogger<ClaudeRecoService> _logger;
     private readonly string _apiKey;
 
+    // ── Reuse static JsonSerializerOptions (avoid per-request allocation) ──
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     public ClaudeRecoService(
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
@@ -53,13 +60,7 @@ public class ClaudeRecoService : IClaudeRecoService
             ]
         };
 
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        };
-
-        var requestJson = JsonSerializer.Serialize(requestBody, jsonOptions);
+        var requestJson = JsonSerializer.Serialize(requestBody, _snakeCaseOptions);
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -76,13 +77,25 @@ public class ClaudeRecoService : IClaudeRecoService
 
         if (!response.IsSuccessStatusCode)
         {
+            var statusCode = (int)response.StatusCode;
             var errorBody = await response.Content.ReadAsStringAsync(ct);
+
+            // Transient errors: 429 Rate-Limited, 529 Overloaded (Anthropic-specific)
+            // Return empty JSON so the handler uses fallback response instead of propagating 500
+            if (statusCode is 429 or 529)
+            {
+                _logger.LogWarning(
+                    "Claude API temporarily unavailable ({StatusCode}). Returning empty fallback for recommendations.",
+                    statusCode);
+                return "{}";
+            }
+
             _logger.LogError("Claude API error {StatusCode}: {Error}", response.StatusCode, errorBody);
             throw new HttpRequestException($"Claude API returned {response.StatusCode}: {errorBody}");
         }
 
         var responseBody = await response.Content.ReadAsStringAsync(ct);
-        var claudeResponse = JsonSerializer.Deserialize<ClaudeResponse>(responseBody, jsonOptions);
+        var claudeResponse = JsonSerializer.Deserialize<ClaudeResponse>(responseBody, _snakeCaseOptions);
 
         if (claudeResponse?.Content == null || claudeResponse.Content.Count == 0)
         {
@@ -129,7 +142,7 @@ internal class ClaudeRequest
     public string Model { get; set; } = "claude-sonnet-4-5-20251022";
 
     [JsonPropertyName("max_tokens")]
-    public int MaxTokens { get; set; } = 2048;
+    public int MaxTokens { get; set; } = 1536;
 
     [JsonPropertyName("temperature")]
     public float Temperature { get; set; } = 0.5f;

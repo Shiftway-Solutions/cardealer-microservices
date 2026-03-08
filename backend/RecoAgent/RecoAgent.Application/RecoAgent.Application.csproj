@@ -14,5 +14,6 @@
   <ItemGroup>
     <ProjectReference Include="../RecoAgent.Domain/RecoAgent.Domain.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 </Project>
