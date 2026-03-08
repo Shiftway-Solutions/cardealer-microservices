@@ -582,6 +582,7 @@ export function SmartPublishWizard({
       year: formData.year,
       trim: formData.trim || undefined,
       mileage: formData.mileage,
+      mileageUnit: formData.mileageUnit, // FIX B1: Send mileage unit to backend
       vin: formData.vin || undefined,
       transmission: formData.transmission,
       fuelType: formData.fuelType,

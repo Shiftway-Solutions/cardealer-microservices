@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle,
   DollarSign,
+  ShieldAlert,
 } from 'lucide-react';
 
 // =============================================================================
@@ -31,6 +32,15 @@ const VERDICT_CONFIG: Record<
     description: string;
   }
 > = {
+  suspicious_deal: {
+    labelEs: '🚨 ¡Ojo! Precio Sospechoso',
+    color: 'text-red-800',
+    bgColor: 'bg-red-100',
+    borderColor: 'border-red-400',
+    icon: ShieldAlert,
+    description:
+      'Precio demasiado bajo — puede ser estafa, vehículo con daños ocultos o clonado. Verifica antes de contactar.',
+  },
   excellent_deal: {
     labelEs: '¡Excelente Oferta!',
     color: 'text-emerald-700',
@@ -96,7 +106,7 @@ const formatUSD = (n: number) =>
   }).format(n);
 
 export function PriceAnalysisCard({ analysis, className }: PriceAnalysisCardProps) {
-  const verdict = VERDICT_CONFIG[analysis.priceVerdict];
+  const verdict = VERDICT_CONFIG[analysis.priceVerdict] ?? VERDICT_CONFIG.fair_price;
   const Icon = verdict.icon;
   const diff = analysis.priceDiffPercent;
 

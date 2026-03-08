@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
       openGraph: {
         title,
         description,
-        images: imageUrl ? [imageUrl] : [],
+        // OG image is generated dynamically by opengraph-image.tsx (branded overlay)
         type: 'website',
         siteName: 'OKLA',
         locale: 'es_DO',
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
         card: 'summary_large_image',
         title,
         description,
-        images: imageUrl ? [imageUrl] : [],
+        // Twitter image is generated dynamically by twitter-image.tsx
       },
       other: {
         'og:price:amount': vehicle.price.toString(),

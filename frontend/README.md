@@ -1,6 +1,7 @@
 # 🚗 CarDealer Frontend
 
-Frontend moderno para el marketplace de vehículos CarDealer, construido con React + Vite + TypeScript.
+Frontend moderno para el marketplace de vehículos CarDealer, construido con
+React + Vite + TypeScript.
 
 ## 🎯 Características
 
@@ -8,7 +9,6 @@ Frontend moderno para el marketplace de vehículos CarDealer, construido con Rea
 - ⚡ **Vite 7.2** - Build tool ultra-rápido
 - 🎨 **Tailwind CSS** - Utility-first CSS framework
 - 🔄 **React Query** - Data fetching y caching
-- 🏪 **Zustand** - State management simple y escalable
 - 📱 **Responsive Design** - Mobile-first approach
 - ♿ **Accessible** - WCAG AA compliant
 - 🎭 **Framer Motion** - Animaciones suaves
@@ -37,7 +37,6 @@ frontend/
 │   ├── services/         # API clients
 │   │   ├── api.ts        # Axios config
 │   │   └── endpoints/    # Service endpoints
-│   ├── store/            # Zustand stores
 │   ├── types/            # TypeScript types
 │   └── utils/            # Helper functions
 ├── public/               # Static assets
@@ -86,6 +85,7 @@ npm run type-check       # Verifica tipos TypeScript
 ## 🔌 API Backend
 
 El frontend se conecta al API Gateway en:
+
 - **Development**: `http://localhost:15095`
 - **Production**: `https://api.cardealer.com`
 
@@ -123,19 +123,19 @@ Accent:    #FF6B35 (Naranja llamativo)
 
 ## 📋 Roadmap - Sprints
 
-| Sprint | Duración | Descripción |
-|--------|----------|-------------|
-| **Sprint 0** | 1 semana | Setup & Arquitectura ✅ |
-| **Sprint 1** | 1 semana | Autenticación |
-| **Sprint 2** | 1 semana | Home & Navigation |
-| **Sprint 3** | 1.5 semanas | Vehicle Catalog |
-| **Sprint 4** | 1.5 semanas | Vehicle Detail |
-| **Sprint 5** | 1.5 semanas | Sell Vehicle |
-| **Sprint 6** | 1 semana | User Dashboard |
-| **Sprint 7** | 1 semana | Messages |
-| **Sprint 8** | 1 semana | Admin Panel |
-| **Sprint 9** | 1 semana | Testing & Polish |
-| **Sprint 10** | 1 semana | Production Deploy |
+| Sprint        | Duración    | Descripción             |
+| ------------- | ----------- | ----------------------- |
+| **Sprint 0**  | 1 semana    | Setup & Arquitectura ✅ |
+| **Sprint 1**  | 1 semana    | Autenticación           |
+| **Sprint 2**  | 1 semana    | Home & Navigation       |
+| **Sprint 3**  | 1.5 semanas | Vehicle Catalog         |
+| **Sprint 4**  | 1.5 semanas | Vehicle Detail          |
+| **Sprint 5**  | 1.5 semanas | Sell Vehicle            |
+| **Sprint 6**  | 1 semana    | User Dashboard          |
+| **Sprint 7**  | 1 semana    | Messages                |
+| **Sprint 8**  | 1 semana    | Admin Panel             |
+| **Sprint 9**  | 1 semana    | Testing & Polish        |
+| **Sprint 10** | 1 semana    | Production Deploy       |
 
 **Total**: 11-13 semanas
 

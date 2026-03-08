@@ -32,7 +32,7 @@ export const OKLA_SCORE_LEVELS: OklaScoreLevelInfo[] = [
     min: 850,
     max: 1000,
     recommendation: 'BUY',
-    recommendationEs: 'COMPRAR',
+    recommendationEs: '¡Dale, cómpralo!',
   },
   {
     level: 'good',
@@ -43,7 +43,7 @@ export const OKLA_SCORE_LEVELS: OklaScoreLevelInfo[] = [
     min: 700,
     max: 849,
     recommendation: 'BUY',
-    recommendationEs: 'COMPRAR',
+    recommendationEs: '¡Dale, cómpralo!',
   },
   {
     level: 'regular',
@@ -54,29 +54,29 @@ export const OKLA_SCORE_LEVELS: OklaScoreLevelInfo[] = [
     min: 550,
     max: 699,
     recommendation: 'WITH CAUTION',
-    recommendationEs: 'CON CAUTELA',
+    recommendationEs: 'Con cuidado, verifica',
   },
   {
     level: 'deficient',
     label: 'Deficient',
-    labelEs: 'Deficiente',
+    labelEs: 'Mala compra',
     color: 'red',
     emoji: '🔴',
     min: 400,
     max: 549,
     recommendation: 'CAUTION',
-    recommendationEs: 'PRECAUCIÓN',
+    recommendationEs: 'Piénsalo bien',
   },
   {
     level: 'critical',
     label: 'Critical',
-    labelEs: 'Crítico',
+    labelEs: 'No te metas',
     color: 'slate',
     emoji: '⚫',
     min: 0,
     max: 399,
     recommendation: 'DO NOT BUY',
-    recommendationEs: 'NO COMPRAR',
+    recommendationEs: '¡No compres!',
   },
 ];
 
@@ -116,6 +116,7 @@ export interface VinHistoryReport {
   isLemonBuyback: boolean;
   isRentalFleet: boolean;
   isStolenOrCloned: boolean;
+  odometerRollback: boolean; // Backend DetectOdometerRollback() — sequential analysis
   odometerReadings: OdometerReading[];
   serviceRecords: number;
   lastReportedMileage?: number;
@@ -220,7 +221,7 @@ export const DIMENSION_CONFIG: Record<
   },
   D5: {
     label: 'Safety & Recalls',
-    labelEs: 'Seguridad y Recalls',
+    labelEs: 'Seguridad y Retiros',
     weight: 10,
     maxPoints: 100,
     icon: '🛡️',
@@ -271,7 +272,8 @@ export interface PriceAnalysis {
 }
 
 export type PriceVerdict =
-  | 'excellent_deal' // ≤ -15%
+  | 'suspicious_deal' // ≤ -40% (possible scam)
+  | 'excellent_deal' // -40% to -15%
   | 'good_price' // -15% to -5%
   | 'fair_price' // ±5%
   | 'expensive' // +5% to +15%

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Heart,
   MapPin,
@@ -22,6 +23,8 @@ import { DealRatingBadge, type DealRating } from './deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
+import { vehicleService } from '@/services/vehicles';
+import { vehicleKeys } from '@/hooks/use-vehicles';
 import type { VehicleCardData } from '@/types';
 
 export interface VehicleCardProps {
@@ -47,6 +50,19 @@ export function VehicleCard({
 }: VehicleCardProps) {
   const [imageError, setImageError] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+  const queryClient = useQueryClient();
+
+  // Prefetch vehicle detail on hover (fires once per slug)
+  const prefetchedRef = React.useRef(false);
+  const handlePrefetch = React.useCallback(() => {
+    if (prefetchedRef.current || !vehicle.slug) return;
+    prefetchedRef.current = true;
+    queryClient.prefetchQuery({
+      queryKey: vehicleKeys.detailBySlug(vehicle.slug),
+      queryFn: () => vehicleService.getBySlug(vehicle.slug),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+  }, [vehicle.slug, queryClient]);
 
   // Compute fallback image based on vehicle properties
   const fallbackImage = React.useMemo(
@@ -164,7 +180,7 @@ export function VehicleCard({
             src={effectiveImageUrl}
             alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             quality={75}
             loading={priority ? 'eager' : 'lazy'}
@@ -191,10 +207,13 @@ export function VehicleCard({
     <Link
       href={vehicleUrl}
       className={cn(
-        'group border-border bg-card block overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl',
+        'group border-border bg-card hover:border-primary/30 block overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl',
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        handlePrefetch();
+      }}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Section */}
@@ -203,7 +222,7 @@ export function VehicleCard({
           src={effectiveImageUrl}
           alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           quality={75}
           loading={priority ? 'eager' : 'lazy'}
@@ -286,7 +305,7 @@ export function VehicleCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-card-foreground text-base leading-tight font-bold transition-colors group-hover:text-primary">
+        <h3 className="text-card-foreground group-hover:text-primary text-base leading-tight font-bold transition-colors">
           {vehicle.year} {vehicle.make} {vehicle.model}
         </h3>
         {vehicle.trim && <p className="text-muted-foreground mt-0.5 text-xs">{vehicle.trim}</p>}
@@ -319,7 +338,7 @@ export function VehicleCard({
         <div className="border-border mt-3 border-t pt-3">
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-xl font-extrabold text-primary">
+              <span className="text-primary text-xl font-extrabold">
                 {formatCurrency(vehicle.price)}
               </span>
               {vehicle.monthlyPayment && (
@@ -341,7 +360,7 @@ export function VehicleCard({
               window.location.href = vehicleUrl;
             }}
             className={cn(
-              'mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white transition-all duration-200',
+              'bg-primary mt-3 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200',
               'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
             )}
             aria-label="Ver detalles y contactar vendedor"

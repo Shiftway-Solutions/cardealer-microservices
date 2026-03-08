@@ -89,8 +89,13 @@ function SearchContent() {
 
     if (isActive) {
       setActiveQuickFilters(prev => prev.filter(id => id !== filter.id));
-      // Remove the filter values - simplified approach
-      clearFilters();
+      // Only remove the specific keys that this quick filter set
+      const keysToRemove = Object.keys(filter.filters) as (keyof typeof filters)[];
+      const cleaned = { ...filters };
+      for (const key of keysToRemove) {
+        delete cleaned[key];
+      }
+      setFilters({ ...cleaned, page: 1 } as typeof filters);
     } else {
       setActiveQuickFilters(prev => [...prev, filter.id]);
       setFilters({ ...filters, ...filter.filters } as typeof filters);

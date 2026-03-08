@@ -8,15 +8,7 @@ import { Label } from '@/components/ui/label';
 import { ScoreReport } from '@/components/okla-score/score-report';
 import { useCalculateScore, useVinDecode } from '@/hooks/use-okla-score';
 import type { OklaScoreReport } from '@/types/okla-score';
-import {
-  Search,
-  ShieldCheck,
-  AlertTriangle,
-  DollarSign,
-  Loader2,
-  Info,
-  Car,
-} from 'lucide-react';
+import { Search, ShieldCheck, AlertTriangle, DollarSign, Loader2, Info, Car } from 'lucide-react';
 
 // =============================================================================
 // OKLA Score™ — VIN Lookup Page
@@ -121,7 +113,7 @@ export default function OklaScorePage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="price">Precio Listado (RD$) — Opcional</Label>
                   <div className="relative mt-1">

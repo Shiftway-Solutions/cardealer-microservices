@@ -16,6 +16,7 @@ import {
   type VinHistoryReport,
   type NhtsaSafetyRating,
   type NhtsaRecall,
+  type NhtsaComplaintSummary,
   type PriceAnalysis,
   type PriceVerdict,
   type ScoreAlert,
@@ -39,6 +40,9 @@ export interface ScoreInput {
   mileageUnit: 'miles' | 'km';
   safetyRating?: NhtsaSafetyRating;
   recalls?: NhtsaRecall[];
+  complaints?: NhtsaComplaintSummary;
+  /** Known safety/ADAS features from Edmunds or VIN decode */
+  safetyFeatures?: string[];
   sellerType: 'dealer' | 'individual';
   sellerScore?: number; // 0–1 internal reputation
   sellerDisputes?: number;
@@ -48,6 +52,16 @@ export interface ScoreInput {
 // =============================================================================
 // D1 — VIN HISTORY (25%, max 250 pts)
 // =============================================================================
+
+/** Spanish translations for US title types (shown to DR buyers) */
+const TITLE_TYPE_ES: Record<string, string> = {
+  Clean: 'Limpio',
+  Salvage: 'Salvamento',
+  Rebuilt: 'Reconstruido',
+  Flood: 'Inundación',
+  Junk: 'Chatarra',
+  Unknown: 'Desconocido',
+};
 
 function calculateD1(history?: VinHistoryReport): DimensionScore {
   const factors: ScoreFactor[] = [];
@@ -79,10 +93,10 @@ function calculateD1(history?: VinHistoryReport): DimensionScore {
     raw += titlePenalty;
     factors.push({
       name: `Title: ${history.titleType}`,
-      nameEs: `Título: ${history.titleType}`,
+      nameEs: `Título: ${TITLE_TYPE_ES[history.titleType] || history.titleType}`,
       impact: titlePenalty,
       description: `Vehicle has a ${history.titleType} title`,
-      descriptionEs: `El vehículo tiene título ${history.titleType}`,
+      descriptionEs: `El vehículo tiene título de ${TITLE_TYPE_ES[history.titleType] || history.titleType}`,
       source: 'VinAudit/NMVTIS',
     });
   }
@@ -131,7 +145,7 @@ function calculateD1(history?: VinHistoryReport): DimensionScore {
     raw -= 180;
     factors.push({
       name: 'Lemon Buyback',
-      nameEs: 'Lemon Law Buyback',
+      nameEs: 'Recompra por Ley Limón',
       impact: -180,
       description: 'Manufacturer repurchased due to chronic defects',
       descriptionEs: 'El fabricante recompró por defectos crónicos',
@@ -229,62 +243,240 @@ function calculateD1(history?: VinHistoryReport): DimensionScore {
 
 // =============================================================================
 // D2 — MECHANICAL CONDITION (20%, max 200 pts)
+// Spec: Engine (+60), Transmission (+30), Drivetrain (+25),
+//       Safety Tech (+20), Recalls (−15 each), Complaints (−5/10)
 // =============================================================================
 
-function calculateD2(vinDecode: VinDecodeResult): DimensionScore {
+function calculateD2(
+  vinDecode: VinDecodeResult,
+  recalls?: NhtsaRecall[],
+  complaints?: NhtsaComplaintSummary,
+  safetyFeatures?: string[]
+): DimensionScore {
   const factors: ScoreFactor[] = [];
-  let raw = 100; // base
+  let raw = 100; // base score for a standard vehicle
 
-  // Engine type bonuses
-  if (
-    vinDecode.engineType?.toLowerCase().includes('hybrid') ||
-    vinDecode.engineType?.toLowerCase().includes('electric')
-  ) {
-    raw += 40;
+  // ── 1. ENGINE SCORING (up to +60 pts) ──────────────────────────
+  // Hybrid/Electric > Turbo > High Displacement > Standard
+  const engineLower = vinDecode.engineType?.toLowerCase() || '';
+  const isElectric = engineLower.includes('electric');
+  const isHybrid = engineLower.includes('hybrid');
+  const isTurbo = engineLower.includes('turbo') || engineLower.includes('supercharg');
+  const displacement = vinDecode.displacementL || 0;
+  const cylinders = vinDecode.engineCylinders || 4;
+
+  if (isElectric) {
+    raw += 60;
     factors.push({
-      name: 'Hybrid/Electric',
-      nameEs: 'Híbrido/Eléctrico',
-      impact: 40,
-      description: 'Modern powertrain',
-      descriptionEs: 'Tren motriz moderno',
+      name: 'Electric Powertrain',
+      nameEs: 'Motor Eléctrico',
+      impact: 60,
+      description: 'Zero-emission electric drivetrain — highest value retention',
+      descriptionEs: 'Tren motriz eléctrico cero emisiones — mayor retención de valor',
       source: 'NHTSA vPIC',
     });
-  } else if (vinDecode.engineType?.toLowerCase().includes('turbo')) {
-    raw += 20;
+  } else if (isHybrid) {
+    raw += 50;
     factors.push({
-      name: 'Turbo Engine',
-      nameEs: 'Motor Turbo',
+      name: 'Hybrid Powertrain',
+      nameEs: 'Motor Híbrido',
+      impact: 50,
+      description: 'Fuel-efficient hybrid drivetrain',
+      descriptionEs: 'Tren motriz híbrido de alta eficiencia',
+      source: 'NHTSA vPIC',
+    });
+  } else {
+    // ICE engine — score by displacement and turbo
+    let enginePts = 0;
+
+    if (isTurbo) {
+      enginePts += 25;
+      factors.push({
+        name: 'Turbocharged Engine',
+        nameEs: 'Motor Turbo',
+        impact: 25,
+        description: 'Forced induction for better performance',
+        descriptionEs: 'Inducción forzada para mejor rendimiento',
+        source: 'NHTSA vPIC',
+      });
+    }
+
+    // Displacement bonus (sweet spot: 2.0L–3.5L for DR market)
+    if (displacement >= 2.0 && displacement <= 3.5) {
+      const dispPts = Math.round(15 + (displacement - 2.0) * 5); // 15–22 pts
+      enginePts += Math.min(dispPts, 22);
+    } else if (displacement > 3.5) {
+      enginePts += 15; // Large engines — functional but less efficient for DR
+    } else if (displacement > 0 && displacement < 2.0) {
+      enginePts += 10; // Small engines — economical
+    }
+
+    // Cylinder bonus
+    if (cylinders >= 8) {
+      enginePts += 10;
+    } else if (cylinders >= 6) {
+      enginePts += 8;
+    }
+
+    enginePts = Math.min(enginePts, 60); // cap at spec max
+    if (enginePts > 0) {
+      raw += enginePts;
+      if (!isTurbo) {
+        factors.push({
+          name: `${displacement > 0 ? displacement.toFixed(1) + 'L ' : ''}${cylinders}-cyl Engine`,
+          nameEs: `Motor ${displacement > 0 ? displacement.toFixed(1) + 'L ' : ''}${cylinders} cilindros`,
+          impact: enginePts,
+          description: `Engine displacement and configuration bonus`,
+          descriptionEs: `Bonificación por cilindrada y configuración del motor`,
+          source: 'NHTSA vPIC',
+        });
+      }
+    }
+  }
+
+  // ── 2. TRANSMISSION SCORING (up to +30 pts) ───────────────────
+  const transLower = vinDecode.transmission?.toLowerCase() || '';
+  let transPts = 0;
+
+  if (transLower.includes('cvt')) {
+    transPts = 30;
+    factors.push({
+      name: 'CVT Transmission',
+      nameEs: 'Transmisión CVT',
+      impact: 30,
+      description: 'Continuously variable — optimal fuel efficiency',
+      descriptionEs: 'Variable continua — eficiencia óptima de combustible',
+      source: 'NHTSA vPIC',
+    });
+  } else if (transLower.includes('dct') || transLower.includes('dual clutch')) {
+    transPts = 28;
+    factors.push({
+      name: 'DCT Transmission',
+      nameEs: 'Transmisión DCT',
+      impact: 28,
+      description: 'Dual-clutch for fast shifting and efficiency',
+      descriptionEs: 'Doble embrague para cambios rápidos y eficiencia',
+      source: 'NHTSA vPIC',
+    });
+  } else if (transLower.includes('tiptronic') || transLower.includes('sport')) {
+    transPts = 25;
+    factors.push({
+      name: 'Tiptronic/Sport Auto',
+      nameEs: 'Tiptronic/Sport Automática',
+      impact: 25,
+      description: 'Sport automatic with manual mode',
+      descriptionEs: 'Automática deportiva con modo manual',
+      source: 'NHTSA vPIC',
+    });
+  } else if (transLower.includes('auto')) {
+    transPts = 20;
+    factors.push({
+      name: 'Automatic Transmission',
+      nameEs: 'Transmisión Automática',
       impact: 20,
-      description: 'Performance engine',
-      descriptionEs: 'Motor de rendimiento',
+      description: 'Standard automatic transmission',
+      descriptionEs: 'Transmisión automática estándar',
+      source: 'NHTSA vPIC',
+    });
+  } else if (transLower.includes('manual')) {
+    transPts = 10;
+    factors.push({
+      name: 'Manual Transmission',
+      nameEs: 'Transmisión Manual',
+      impact: 10,
+      description: 'Manual — lower demand in DR market',
+      descriptionEs: 'Manual — menor demanda en mercado RD',
       source: 'NHTSA vPIC',
     });
   }
+  raw += transPts;
 
-  // Cylinders (higher = more power = higher base)
-  if (vinDecode.engineCylinders && vinDecode.engineCylinders >= 6) {
-    raw += 20;
-  }
-
-  // Drivetrain
+  // ── 3. DRIVETRAIN (+25 pts for AWD/4WD) ───────────────────────
   if (vinDecode.drivetrain === 'AWD' || vinDecode.drivetrain === '4WD') {
     raw += 25;
     factors.push({
       name: 'AWD/4WD',
-      nameEs: 'AWD/4WD',
+      nameEs: 'Tracción Total AWD/4WD',
       impact: 25,
-      description: 'All-wheel drive',
-      descriptionEs: 'Tracción total',
+      description: 'All-wheel or four-wheel drive — versatility and resale value',
+      descriptionEs: 'Tracción total — versatilidad y valor de reventa',
       source: 'NHTSA vPIC',
     });
   }
 
-  // Transmission
-  if (vinDecode.transmission?.toLowerCase().includes('auto')) {
-    raw += 15;
+  // ── 4. SAFETY TECHNOLOGY (+20 pts) ────────────────────────────
+  // ADAS features from Edmunds or VIN equipment data
+  const knownFeatures = (safetyFeatures || []).map(f => f.toLowerCase());
+  const adasKeywords = [
+    { keyword: 'lane', label: 'Lane Assist', labelEs: 'Asistente de Carril' },
+    { keyword: 'aeb', label: 'AEB', labelEs: 'Frenado Automático de Emergencia' },
+    { keyword: 'autonomous emergency', label: 'AEB', labelEs: 'Frenado Automático' },
+    { keyword: 'blind spot', label: 'Blind Spot Monitor', labelEs: 'Monitor de Punto Ciego' },
+    { keyword: 'collision', label: 'Collision Warning', labelEs: 'Alerta de Colisión' },
+    { keyword: 'adaptive cruise', label: 'Adaptive Cruise', labelEs: 'Cruise Adaptativo' },
+  ];
+
+  const detectedAdas = new Set<string>();
+  for (const feat of adasKeywords) {
+    if (knownFeatures.some(f => f.includes(feat.keyword))) {
+      detectedAdas.add(feat.label);
+    }
   }
 
-  return buildDimension('D2', Math.min(200, raw), factors);
+  if (detectedAdas.size > 0) {
+    // +7 pts per ADAS feature, capped at +20
+    const techPts = Math.min(detectedAdas.size * 7, 20);
+    raw += techPts;
+    factors.push({
+      name: `Safety Tech: ${Array.from(detectedAdas).join(', ')}`,
+      nameEs: `Tecnología de Seguridad: ${Array.from(detectedAdas).join(', ')}`,
+      impact: techPts,
+      description: `${detectedAdas.size} active safety feature(s) detected`,
+      descriptionEs: `${detectedAdas.size} función(es) de seguridad activa detectada(s)`,
+      source: 'Edmunds',
+    });
+  }
+
+  // ── 5. ACTIVE RECALLS PENALTY (−15 pts per active recall) ─────
+  const activeRecalls = recalls?.filter(r => !r.isResolved) || [];
+  if (activeRecalls.length > 0) {
+    const recallPenalty = activeRecalls.length * -15;
+    raw += recallPenalty;
+    factors.push({
+      name: `${activeRecalls.length} Active Recall(s)`,
+      nameEs: `${activeRecalls.length} retiro(s) de fábrica pendiente(s)`,
+      impact: recallPenalty,
+      description: `Unresolved recalls: ${activeRecalls.map(r => r.component).join(', ')}`,
+      descriptionEs: `Retiros de fábrica sin resolver: ${activeRecalls.map(r => r.component).join(', ')}`,
+      source: 'NHTSA',
+    });
+  }
+
+  // ── 6. NHTSA COMPLAINTS PENALTY (−5 pts per 10 complaints) ────
+  if (complaints && complaints.totalComplaints > 0) {
+    const complaintGroups = Math.floor(complaints.totalComplaints / 10);
+    if (complaintGroups > 0) {
+      const complaintPenalty = complaintGroups * -5;
+      raw += complaintPenalty;
+
+      // Top complaint components
+      const topComponents = Object.entries(complaints.componentBreakdown)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([comp, count]) => `${comp} (${count})`);
+
+      factors.push({
+        name: `${complaints.totalComplaints} NHTSA Complaints`,
+        nameEs: `${complaints.totalComplaints} Quejas NHTSA`,
+        impact: complaintPenalty,
+        description: `Top issues: ${topComponents.join(', ')}`,
+        descriptionEs: `Principales problemas: ${topComponents.join(', ')}`,
+        source: 'NHTSA',
+      });
+    }
+  }
+
+  return buildDimension('D2', Math.max(0, Math.min(200, raw)), factors);
 }
 
 // =============================================================================
@@ -294,50 +486,138 @@ function calculateD2(vinDecode: VinDecodeResult): DimensionScore {
 function calculateD3(
   declaredMileage: number,
   unit: 'miles' | 'km',
+  vehicleYear: number,
   history?: VinHistoryReport
 ): DimensionScore {
   const factors: ScoreFactor[] = [];
   const miles = unit === 'km' ? declaredMileage / 1.60934 : declaredMileage;
 
-  // Score based on mileage
+  // ── FIX C1: Penalize zero/missing mileage instead of rewarding it ──
+  if (!declaredMileage || declaredMileage <= 0) {
+    factors.push({
+      name: 'No mileage declared',
+      nameEs: 'Sin kilometraje declarado',
+      impact: -40,
+      description: 'Mileage was not provided — cannot verify odometer',
+      descriptionEs: 'No se proporcionó el kilometraje — no se puede verificar el odómetro',
+      source: 'OKLA Validation',
+    });
+    return buildDimension('D3', 50, factors); // neutral-low instead of max 180
+  }
+
+  // ── FIX C2: Age-adjusted mileage scoring ──
+  // Use miles-per-year instead of absolute mileage for fairer comparison.
+  // Average in DR/US market: ~12,000 mi/yr
+  const currentYear = new Date().getFullYear();
+  const vehicleAge = Math.max(1, currentYear - (vehicleYear || currentYear));
+  const milesPerYear = miles / vehicleAge;
+
   let raw: number;
-  if (miles <= 30000) {
+  if (milesPerYear <= 8000) {
+    // Excellent: under 8k mi/yr (≈13k km/yr)
     raw = 180;
-  } else if (miles <= 60000) {
-    raw = 140;
-  } else if (miles <= 90000) {
-    raw = 100;
-  } else if (miles <= 120000) {
-    raw = 60;
-  } else if (miles <= 150000) {
-    raw = 30;
+  } else if (milesPerYear <= 12000) {
+    // Good: average usage
+    raw = 150;
+  } else if (milesPerYear <= 15000) {
+    // Above average
+    raw = 120;
+  } else if (milesPerYear <= 20000) {
+    // High usage
+    raw = 80;
+  } else if (milesPerYear <= 25000) {
+    // Very high
+    raw = 40;
   } else {
+    // Extreme (commercial/taxi use likely)
     raw = 10;
   }
 
   factors.push({
-    name: `Mileage: ${Math.round(miles).toLocaleString()} mi`,
-    nameEs: `Kilometraje: ${Math.round(miles * 1.60934).toLocaleString()} km`,
-    impact: raw - 90, // relative to "moderate" baseline
-    description: `${Math.round(miles).toLocaleString()} miles reported`,
-    descriptionEs: `${Math.round(miles * 1.60934).toLocaleString()} km reportados`,
+    name: `Mileage: ${Math.round(miles).toLocaleString()} mi (${Math.round(milesPerYear).toLocaleString()} mi/yr)`,
+    nameEs: `Kilometraje: ${Math.round(miles * 1.60934).toLocaleString()} km (${Math.round(milesPerYear * 1.60934).toLocaleString()} km/año)`,
+    impact: raw - 90,
+    description: `${Math.round(miles).toLocaleString()} miles over ${vehicleAge} years = ${Math.round(milesPerYear).toLocaleString()} mi/yr`,
+    descriptionEs: `${Math.round(miles * 1.60934).toLocaleString()} km en ${vehicleAge} años = ${Math.round(milesPerYear * 1.60934).toLocaleString()} km/año`,
     source: 'Seller declaration',
   });
 
-  // Odometer fraud check
-  if (history?.lastReportedMileage) {
+  // ── FIX A2: Use backend's sequential rollback detection (VinAudit/NMVTIS) ──
+  if (history?.odometerRollback) {
+    raw = 0; // hard penalty — backend confirmed sequential rollback
+    factors.push({
+      name: 'ODOMETER ROLLBACK DETECTED',
+      nameEs: 'RETROCESO DE ODÓMETRO DETECTADO',
+      impact: -180,
+      description: 'Sequential odometer records show a decrease >500 miles — confirmed rollback',
+      descriptionEs:
+        'Registros secuenciales del odómetro muestran una disminución >500 millas — retroceso confirmado',
+      source: 'VinAudit/NMVTIS',
+    });
+    return buildDimension('D3', 0, factors);
+  }
+
+  // ── FIX A1: DIRECTIONAL discrepancy check (replaces broken Math.abs) ──
+  // Only flag as suspicious if declared mileage is LOWER than last reported.
+  // A higher declared mileage is a NORMAL increase — not fraud.
+  if (history?.lastReportedMileage && history.lastReportedMileage > 0) {
     const lastMiles = history.lastReportedMileage;
-    const discrepancy = Math.abs(miles - lastMiles) / Math.max(lastMiles, 1);
-    if (discrepancy > 0.2) {
-      raw = 0; // fraud detected
+
+    if (miles < lastMiles * 0.85) {
+      // Declared mileage is significantly LOWER than historical → potential fraud
+      const discrepancy = ((lastMiles - miles) / lastMiles) * 100;
+      raw = 0;
       factors.push({
-        name: 'ODOMETER FRAUD',
-        nameEs: 'FRAUDE DE ODÓMETRO',
+        name: 'ODOMETER FRAUD SUSPECTED',
+        nameEs: 'SOSPECHA DE FRAUDE DE ODÓMETRO',
         impact: -180,
-        description: `Declared ${Math.round(miles)} mi vs historical ${Math.round(lastMiles)} mi (${(discrepancy * 100).toFixed(0)}% discrepancy)`,
-        descriptionEs: `Declarado ${Math.round(miles)} mi vs histórico ${Math.round(lastMiles)} mi (${(discrepancy * 100).toFixed(0)}% discrepancia)`,
+        description: `Declared ${Math.round(miles).toLocaleString()} mi but last reported was ${Math.round(lastMiles).toLocaleString()} mi (${discrepancy.toFixed(0)}% lower)`,
+        descriptionEs: `Declarado ${Math.round(miles).toLocaleString()} mi pero último reporte fue ${Math.round(lastMiles).toLocaleString()} mi (${discrepancy.toFixed(0)}% menor)`,
         source: 'VinAudit/NMVTIS',
       });
+    } else if (miles > lastMiles) {
+      // Normal increase — optionally check if rate is realistic
+      const daysSinceReport = history.lastReportedDate
+        ? Math.max(
+            1,
+            (Date.now() - new Date(history.lastReportedDate).getTime()) / (1000 * 60 * 60 * 24)
+          )
+        : 365;
+      const milesPerDay = (miles - lastMiles) / daysSinceReport;
+
+      // > 200 mi/day sustained is suspicious (~73k mi/yr, well above commercial)
+      if (milesPerDay > 200) {
+        raw = Math.max(10, raw - 60);
+        factors.push({
+          name: 'Unusually rapid mileage increase',
+          nameEs: 'Aumento inusualmente rápido del kilometraje',
+          impact: -60,
+          description: `${Math.round(miles - lastMiles).toLocaleString()} mi increase in ~${Math.round(daysSinceReport)} days (${Math.round(milesPerDay)} mi/day)`,
+          descriptionEs: `${Math.round((miles - lastMiles) * 1.60934).toLocaleString()} km de aumento en ~${Math.round(daysSinceReport)} días`,
+          source: 'VinAudit/NMVTIS',
+        });
+      }
+    }
+  }
+
+  // ── FIX A3: Use odometerReadings for sequential analysis when available ──
+  if (history?.odometerReadings && history.odometerReadings.length >= 2) {
+    const sorted = [...history.odometerReadings].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].mileage < sorted[i - 1].mileage - 500) {
+        raw = 0;
+        factors.push({
+          name: 'SEQUENTIAL ROLLBACK IN RECORDS',
+          nameEs: 'RETROCESO SECUENCIAL EN REGISTROS',
+          impact: -180,
+          description: `Record ${sorted[i].date}: ${sorted[i].mileage.toLocaleString()} mi < prior ${sorted[i - 1].date}: ${sorted[i - 1].mileage.toLocaleString()} mi`,
+          descriptionEs: `Registro ${sorted[i].date}: ${sorted[i].mileage.toLocaleString()} mi < anterior ${sorted[i - 1].date}: ${sorted[i - 1].mileage.toLocaleString()} mi`,
+          source: 'Service Records',
+        });
+        break;
+      }
     }
   }
 
@@ -351,15 +631,32 @@ function calculateD3(
 function calculateD4(listedPriceDOP: number, marketPriceDOP?: number): DimensionScore {
   const factors: ScoreFactor[] = [];
 
+  // FIX B9: When no market data, return LOW-neutral score (60/170 ≈ 35%)
+  // instead of generous 85/170 (50%). This prevents artificially inflating
+  // scores for vehicles whose pricing hasn't been validated.
   if (!marketPriceDOP || marketPriceDOP <= 0) {
-    return buildDimension('D4', 85, [
+    return buildDimension('D4', 60, [
       {
-        // neutral when no market data
-        name: 'No market data',
-        nameEs: 'Sin datos de mercado',
-        impact: 0,
-        description: 'Market price comparison not available',
-        descriptionEs: 'Comparación de precio de mercado no disponible',
+        name: 'Price unverified',
+        nameEs: 'Precio no verificado',
+        impact: -25,
+        description: 'No market comparison data available — price cannot be validated',
+        descriptionEs: 'Sin datos de comparación de mercado — no se puede validar el precio',
+        source: 'OKLA Market Algorithm',
+      },
+    ]);
+  }
+
+  // FIX B1: Reject clearly invalid prices (listed price must be > 0)
+  if (listedPriceDOP <= 0) {
+    return buildDimension('D4', 0, [
+      {
+        name: 'Invalid price',
+        nameEs: 'Precio inválido',
+        impact: -170,
+        description: 'Listed price is zero or negative',
+        descriptionEs: 'El precio listado es cero o negativo',
+        source: 'OKLA Market Algorithm',
       },
     ]);
   }
@@ -367,17 +664,29 @@ function calculateD4(listedPriceDOP: number, marketPriceDOP?: number): Dimension
   const diff = ((listedPriceDOP - marketPriceDOP) / marketPriceDOP) * 100;
   let raw: number;
 
-  if (diff <= -15) {
+  // FIX: Improved scoring curve with smoother transitions and
+  // "suspiciously low" detection (>40% below market = possible scam)
+  if (diff <= -40) {
+    // Suspiciously low — possible scam, hidden damage, or bait pricing
+    raw = 80;
+  } else if (diff <= -15) {
+    // Great deal (verified low price)
     raw = 170;
   } else if (diff <= -5) {
     raw = 140;
-  } else if (Math.abs(diff) <= 5) {
-    raw = 110;
+  } else if (diff <= 5) {
+    // At market (±5%)
+    raw = 120;
+  } else if (diff <= 10) {
+    raw = 90;
   } else if (diff <= 15) {
     raw = 60;
-  } else if (diff <= 30) {
-    raw = 20;
+  } else if (diff <= 25) {
+    raw = 30;
+  } else if (diff <= 35) {
+    raw = 10;
   } else {
+    // >35% above market
     raw = 0;
   }
 
@@ -396,6 +705,30 @@ function calculateD4(listedPriceDOP: number, marketPriceDOP?: number): Dimension
     descriptionEs: `Listado ${formatDOP(listedPriceDOP)} vs promedio ${formatDOP(marketPriceDOP)}`,
     source: 'OKLA Market Algorithm',
   });
+
+  // FIX: Add suspicious pricing alert factor
+  if (diff <= -40) {
+    factors.push({
+      name: 'SUSPICIOUS_LOW_PRICE',
+      nameEs: 'PRECIO SOSPECHOSAMENTE BAJO',
+      impact: -90,
+      description: `Price is ${Math.abs(diff).toFixed(0)}% below market — possible scam or undisclosed issues`,
+      descriptionEs: `Precio está ${Math.abs(diff).toFixed(0)}% por debajo del mercado — posible fraude o problemas no divulgados`,
+      source: 'OKLA Fraud Detection',
+    });
+  }
+
+  // FIX: Add "abusive pricing" alert factor
+  if (diff > 30) {
+    factors.push({
+      name: 'ABUSIVE_PRICE',
+      nameEs: 'PRECIO ABUSIVO',
+      impact: -85,
+      description: `Price is ${diff.toFixed(0)}% above market average`,
+      descriptionEs: `Precio está ${diff.toFixed(0)}% por encima del promedio del mercado`,
+      source: 'OKLA Market Algorithm',
+    });
+  }
 
   return buildDimension('D4', raw, factors);
 }
@@ -581,8 +914,13 @@ function buildDimension(
 export function calculateOklaScore(input: ScoreInput): OklaScoreReport {
   // Calculate all 7 dimensions
   const d1 = calculateD1(input.history);
-  const d2 = calculateD2(input.vinDecode);
-  const d3 = calculateD3(input.declaredMileage, input.mileageUnit, input.history);
+  const d2 = calculateD2(input.vinDecode, input.recalls, input.complaints, input.safetyFeatures);
+  const d3 = calculateD3(
+    input.declaredMileage,
+    input.mileageUnit,
+    input.vinDecode.year,
+    input.history
+  );
   const d4 = calculateD4(input.listedPriceDOP, input.marketPriceDOP);
   const d5 = calculateD5(input.recalls, input.safetyRating);
   const d6 = calculateD6(input.vinDecode.year);
@@ -603,9 +941,11 @@ export function calculateOklaScore(input: ScoreInput): OklaScoreReport {
     fairPriceDOP > 0 ? ((input.listedPriceDOP - fairPriceDOP) / fairPriceDOP) * 100 : 0;
 
   let priceVerdict: PriceVerdict = 'fair_price';
-  if (priceDiff <= -15) priceVerdict = 'excellent_deal';
+  if (priceDiff <= -40)
+    priceVerdict = 'suspicious_deal'; // FIX: new category for scam-level pricing
+  else if (priceDiff <= -15) priceVerdict = 'excellent_deal';
   else if (priceDiff <= -5) priceVerdict = 'good_price';
-  else if (Math.abs(priceDiff) <= 5) priceVerdict = 'fair_price';
+  else if (priceDiff <= 5) priceVerdict = 'fair_price';
   else if (priceDiff <= 15) priceVerdict = 'expensive';
   else if (priceDiff <= 30) priceVerdict = 'very_expensive';
   else priceVerdict = 'abusive_price';
@@ -663,6 +1003,74 @@ export function calculateOklaScore(input: ScoreInput): OklaScoreReport {
       titleEs: 'Precio Abusivo',
       description: `Price is ${priceDiff.toFixed(0)}% above market`,
       descriptionEs: `Precio ${priceDiff.toFixed(0)}% por encima del mercado`,
+      dimension: 'D4',
+    });
+  }
+
+  // D2 FIX: Active recalls mechanical alert
+  const activeRecallsCount = (input.recalls || []).filter(r => !r.isResolved).length;
+  if (activeRecallsCount >= 3) {
+    alerts.push({
+      severity: 'warning',
+      code: 'MULTIPLE_ACTIVE_RECALLS',
+      title: 'Multiple Unresolved Recalls',
+      titleEs: 'Múltiples Retiros de Fábrica Pendientes',
+      description: `${activeRecallsCount} active recalls may indicate mechanical risk`,
+      descriptionEs: `${activeRecallsCount} retiros de fábrica activos pueden indicar riesgo mecánico`,
+      dimension: 'D2',
+    });
+  }
+
+  // D2 FIX: High NHTSA complaint count alert
+  if (input.complaints && input.complaints.totalComplaints >= 50) {
+    alerts.push({
+      severity: 'info',
+      code: 'HIGH_NHTSA_COMPLAINTS',
+      title: 'High NHTSA Complaint Volume',
+      titleEs: 'Alto Volumen de Quejas NHTSA',
+      description: `${input.complaints.totalComplaints} complaints reported for this make/model/year`,
+      descriptionEs: `${input.complaints.totalComplaints} quejas reportadas para esta marca/modelo/año`,
+      dimension: 'D2',
+    });
+  }
+
+  // FIX A4: Odometer fraud/rollback alert — was missing entirely
+  if (d3.factors.some(f => f.name.includes('ODOMETER') || f.name.includes('ROLLBACK'))) {
+    alerts.push({
+      severity: 'critical',
+      code: 'ODOMETER_FRAUD',
+      title: 'Odometer Tampering Detected',
+      titleEs: 'Manipulación del Odómetro Detectada',
+      description: 'Odometer readings indicate possible fraud or rollback',
+      descriptionEs: 'Las lecturas del odómetro indican posible fraude o retroceso',
+      dimension: 'D3',
+    });
+  }
+
+  // D4 FIX: Price-based alerts
+  if (d4.factors.some(f => f.name === 'SUSPICIOUS_LOW_PRICE')) {
+    alerts.push({
+      severity: 'warning',
+      code: 'SUSPICIOUS_LOW_PRICE',
+      title: 'Suspiciously Low Price',
+      titleEs: 'Precio Sospechosamente Bajo',
+      description:
+        'This vehicle is priced significantly below market value — investigate before purchasing',
+      descriptionEs:
+        'Este vehículo tiene un precio muy por debajo del valor de mercado — investigue antes de comprar',
+      dimension: 'D4',
+    });
+  }
+
+  if (d4.factors.some(f => f.name === 'ABUSIVE_PRICE')) {
+    alerts.push({
+      severity: 'info',
+      code: 'ABUSIVE_PRICE',
+      title: 'Price Significantly Above Market',
+      titleEs: 'Precio Significativamente Sobre el Mercado',
+      description: 'This vehicle is priced well above the market average for similar vehicles',
+      descriptionEs:
+        'Este vehículo tiene un precio muy superior al promedio del mercado para vehículos similares',
       dimension: 'D4',
     });
   }

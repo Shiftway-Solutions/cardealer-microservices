@@ -267,6 +267,7 @@ export default function NewVehiclePage() {
         year: sanitizeYear(parseInt(formData.year)),
         bodyType: sanitizeText(formData.bodyType || 'sedan', { maxLength: 30 }),
         mileage: sanitizeMileage(parseInt(formData.mileage) || 0),
+        mileageUnit: (formData as Record<string, string>).mileageUnit === 'mi' ? 'mi' : 'km', // FIX B1: Send mileage unit
         condition: sanitizeText(formData.condition || 'used', { maxLength: 20 }),
         transmission: sanitizeText(formData.transmission || 'automatic', { maxLength: 30 }),
         fuelType: sanitizeText(formData.fuelType || 'gasoline', { maxLength: 30 }),

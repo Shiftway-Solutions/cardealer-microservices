@@ -36,6 +36,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -176,12 +177,14 @@ function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
       <div className="flex flex-col items-center justify-between gap-4 px-6 pb-5 sm:flex-row">
         <div className="flex items-center gap-4">
           {banner.image ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={banner.image}
               alt=""
               aria-hidden="true"
+              width={48}
+              height={48}
               className="h-12 w-12 shrink-0 rounded-xl object-cover"
+              unoptimized
             />
           ) : (
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
@@ -222,8 +225,13 @@ function AdSlotLeaderboard() {
 
   const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
 
-  // No fallback — this page is for buyers, not sellers
-  return activeBanner ? <ConfigurableBannerCard banner={activeBanner} /> : null;
+  // No fallback — this page is for buyers, not sellers.
+  // Reserve min-height to prevent CLS when banner loads/disappears.
+  return activeBanner ? (
+    <div className="col-span-full min-h-[88px]">
+      <ConfigurableBannerCard banner={activeBanner} />
+    </div>
+  ) : null;
 }
 
 function AdSlotRectangle({ className }: { className?: string }) {
@@ -236,8 +244,8 @@ function AdSlotRectangle({ className }: { className?: string }) {
       aria-label="Panel de alertas"
     >
       <div className="flex flex-col items-center gap-3 p-5 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
-          <Bell className="h-6 w-6 text-primary" />
+        <div className="bg-primary/20 flex h-12 w-12 items-center justify-center rounded-xl">
+          <Bell className="text-primary h-6 w-6" />
         </div>
         <div>
           <p className="font-bold text-white">Crea una alerta</p>
@@ -247,7 +255,7 @@ function AdSlotRectangle({ className }: { className?: string }) {
         </div>
         <Link
           href="/cuenta/alertas"
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition-all hover:bg-primary/80"
+          className="bg-primary hover:bg-primary/80 mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition-all"
         >
           <Bell className="h-4 w-4" />
           Activar alertas
@@ -291,9 +299,9 @@ function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
   return (
     <div className="col-span-full my-3">
       {/* Green banner container — visually separates sponsored from organic */}
-      <div className="rounded-xl border-2 border-primary bg-primary/5 px-4 py-4 dark:bg-primary/10">
+      <div className="border-primary bg-primary/5 dark:bg-primary/10 rounded-xl border-2 px-4 py-4">
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[11px] font-semibold tracking-wider text-primary uppercase">
+          <span className="text-primary text-[11px] font-semibold tracking-wider uppercase">
             Vehículos Patrocinados
           </span>
           <SponsoredBadge tier="sponsored" />
@@ -322,10 +330,10 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
       <button
         type="button"
         onClick={onRemove}
-        className="hover:bg-muted ml-0.5 flex-shrink-0 rounded-full p-0.5 transition-colors"
+        className="hover:bg-muted ml-0.5 flex min-h-[28px] min-w-[28px] flex-shrink-0 items-center justify-center rounded-full p-1.5 transition-colors"
         aria-label={`Eliminar filtro ${label}`}
       >
-        <X className="h-2.5 w-2.5" />
+        <X className="h-3.5 w-3.5" />
       </button>
     </Badge>
   );
@@ -691,7 +699,7 @@ export default function VehiculosClient() {
               }}
             >
               {isAiSearching ? (
-                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-primary" />
+                <Sparkles className="text-primary pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse" />
               ) : (
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               )}
@@ -704,10 +712,7 @@ export default function VehiculosClient() {
                   // Clear AI info when user edits
                   if (aiSearchInfo) setAiSearchInfo(null);
                 }}
-                className={cn(
-                  'h-10 pr-10 pl-9 text-sm',
-                  isAiSearching && 'ring-2 ring-primary/40'
-                )}
+                className={cn('h-10 pr-10 pl-9 text-sm', isAiSearching && 'ring-primary/40 ring-2')}
                 aria-label="Buscar vehículos con IA"
                 disabled={isAiSearching}
               />
@@ -785,7 +790,7 @@ export default function VehiculosClient() {
               <SlidersHorizontal className="h-4 w-4" />
               <span className="hidden sm:inline">Filtros</span>
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                <span className="bg-primary absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white">
                   {activeFilterCount}
                 </span>
               )}
@@ -795,7 +800,7 @@ export default function VehiculosClient() {
           {/* Row 2: Trust micro-bar (social proof — compact, always visible) */}
           <div className="scrollbar-none mt-1.5 flex items-center gap-4 overflow-x-auto pb-0.5">
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
-              <ShieldCheck className="h-3 w-3 text-primary" />
+              <ShieldCheck className="text-primary h-3 w-3" />
               <span>Vendedores verificados</span>
             </div>
             <span className="text-border shrink-0">·</span>
@@ -805,30 +810,30 @@ export default function VehiculosClient() {
             </div>
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
-              <Phone className="h-3 w-3 text-primary" />
+              <Phone className="text-primary h-3 w-3" />
               <span>Contacto directo</span>
             </div>
             <span className="text-border hidden shrink-0 sm:inline">·</span>
             <div className="text-muted-foreground hidden shrink-0 items-center gap-1 text-[11px] sm:flex">
-              <Bell className="h-3 w-3 text-primary" />
+              <Bell className="text-primary h-3 w-3" />
               <span>Alertas gratis</span>
             </div>
           </div>
 
           {/* AI search info banner */}
           {aiSearchInfo && (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-1.5 dark:bg-primary/10">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <div className="bg-primary/5 dark:bg-primary/10 mt-1.5 flex items-center gap-2 rounded-lg px-3 py-1.5">
+              <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
               <span className="truncate text-xs text-[#005236] dark:text-[#4fd4a4]">
                 IA interpretó: <strong>&ldquo;{aiSearchInfo.query}&rdquo;</strong>
               </span>
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary dark:bg-primary/20 dark:text-[#4fd4a4]">
+                <span className="bg-primary/10 text-primary dark:bg-primary/20 rounded-full px-2 py-0.5 text-[10px] font-medium dark:text-[#4fd4a4]">
                   {Math.round(aiSearchInfo.confidence * 100)}% confianza
                 </span>
-                <span className="text-[10px] text-primary/60">{aiSearchInfo.latencyMs}ms</span>
+                <span className="text-primary/60 text-[10px]">{aiSearchInfo.latencyMs}ms</span>
                 {aiSearchInfo.wasCached && (
-                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                  <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px]">
                     caché
                   </span>
                 )}
@@ -839,7 +844,7 @@ export default function VehiculosClient() {
                     clearFilters();
                     setSearchInput('');
                   }}
-                  className="ml-1 text-primary/50 hover:text-primary"
+                  className="text-primary/50 hover:text-primary ml-1"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -860,10 +865,10 @@ export default function VehiculosClient() {
               {/* Sidebar header */}
               <div className="border-border flex items-center justify-between border-b px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4 text-primary" />
+                  <SlidersHorizontal className="text-primary h-4 w-4" />
                   <span className="text-sm font-bold">Filtros</span>
                   {activeFilterCount > 0 && (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                    <span className="bg-primary flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
                       {activeFilterCount}
                     </span>
                   )}
@@ -921,7 +926,7 @@ export default function VehiculosClient() {
                       'flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
                       isActive
                         ? 'border-primary bg-primary text-white shadow-sm'
-                        : 'border-border text-muted-foreground hover:text-foreground bg-white hover:border-primary/60 dark:bg-slate-900'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/60 bg-white dark:bg-slate-900'
                     )}
                   >
                     <qf.icon className="h-3 w-3" />
@@ -976,7 +981,7 @@ export default function VehiculosClient() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 border-primary text-xs text-primary hover:bg-primary/10"
+                      className="border-primary text-primary hover:bg-primary/10 h-8 gap-1.5 text-xs"
                       onClick={() => setSaveModalOpen(true)}
                     >
                       <BookmarkPlus className="h-3.5 w-3.5" />
@@ -1063,7 +1068,7 @@ export default function VehiculosClient() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="mt-5 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-primary/80 hover:shadow-lg"
+                  className="bg-primary hover:bg-primary/80 mt-5 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
                 >
                   Limpiar filtros y ver todos
                 </button>
@@ -1071,7 +1076,7 @@ export default function VehiculosClient() {
                   <button
                     type="button"
                     onClick={() => setSaveModalOpen(true)}
-                    className="mt-3 flex items-center gap-2 text-sm text-primary underline-offset-2 hover:underline"
+                    className="text-primary mt-3 flex items-center gap-2 text-sm underline-offset-2 hover:underline"
                   >
                     <Bell className="h-3.5 w-3.5" />
                     Recibir alerta cuando haya resultados
@@ -1087,7 +1092,7 @@ export default function VehiculosClient() {
             {(isLoading || isFetching) && allVehicles.length > 0 && (
               <div className="mt-2 flex justify-center py-8">
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <RefreshCcw className="h-4 w-4 animate-spin text-primary" />
+                  <RefreshCcw className="text-primary h-4 w-4 animate-spin" />
                   Cargando más vehículos…
                 </div>
               </div>
@@ -1127,7 +1132,7 @@ export default function VehiculosClient() {
           />
           <div className="bg-card sticky bottom-0 mt-4 pt-4 pb-2">
             <Button
-              className="w-full bg-primary hover:bg-primary/80"
+              className="bg-primary hover:bg-primary/80 w-full"
               onClick={() => setMobileFiltersOpen(false)}
             >
               Ver {totalResults > 0 ? `${totalResults.toLocaleString()} ` : ''}resultados
@@ -1147,7 +1152,7 @@ export default function VehiculosClient() {
               ? setSaveModalOpen(true)
               : (window.location.href = '/login?redirect=/vehiculos')
           }
-          className="flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:bg-primary/80 hover:shadow-2xl active:scale-95"
+          className="bg-primary hover:bg-primary/80 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:shadow-2xl active:scale-95"
           aria-label="Guardar búsqueda y crear alerta"
         >
           <Bell className="h-4 w-4" />

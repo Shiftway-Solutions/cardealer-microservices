@@ -5,11 +5,12 @@ import { cn } from '@/lib/utils';
 // =============================================================================
 // Deal Rating Badge - Sistema de calificación de precios estilo marketplace
 // =============================================================================
-// great  = Precio excelente (muy por debajo del mercado)
-// good   = Buen precio (por debajo del mercado)
-// fair   = Precio justo (en línea con el mercado)
-// high   = Precio alto (por encima del mercado)
-// uncertain = Sin datos suficientes para calificar
+// great      = Precio excelente (muy por debajo del mercado)
+// good       = Buen precio (por debajo del mercado)
+// fair       = Precio justo (en línea con el mercado)
+// high       = Precio alto (por encima del mercado)
+// overpriced = Sobrepreciado (>15% por encima del mercado, alerta >20%)
+// uncertain  = Sin datos suficientes para calificar
 
 const dealRatingVariants = cva(
   'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
@@ -19,7 +20,8 @@ const dealRatingVariants = cva(
         great: 'bg-primary text-primary-foreground',
         good: 'bg-green-500 text-white dark:bg-green-600',
         fair: 'bg-amber-500 text-white dark:bg-amber-600',
-        high: 'bg-red-500 text-white dark:bg-red-600',
+        high: 'bg-orange-500 text-white dark:bg-orange-600',
+        overpriced: 'bg-red-700 text-white dark:bg-red-800 animate-pulse',
         uncertain: 'bg-muted text-muted-foreground',
       },
       size: {
@@ -35,7 +37,7 @@ const dealRatingVariants = cva(
   }
 );
 
-export type DealRating = 'great' | 'good' | 'fair' | 'high' | 'uncertain';
+export type DealRating = 'great' | 'good' | 'fair' | 'high' | 'overpriced' | 'uncertain';
 
 export interface DealRatingBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof dealRatingVariants> {
@@ -88,6 +90,20 @@ const ratingConfig: Record<
     ),
     description: 'Por encima del valor de mercado',
   },
+  overpriced: {
+    label: 'Overpriced',
+    labelEs: 'Sobrepreciado',
+    icon: (
+      <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+        <path
+          fillRule="evenodd"
+          d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+    description: 'Significativamente por encima del valor de mercado (>15%)',
+  },
   uncertain: {
     label: 'No Rating',
     labelEs: 'Sin Calificar',
@@ -122,6 +138,7 @@ const DealRatingBadge = React.forwardRef<HTMLSpanElement, DealRatingBadgeProps>(
 DealRatingBadge.displayName = 'DealRatingBadge';
 
 // Helper function to calculate deal rating based on price difference
+// 5-tier system aligned with backend PricingEngine.ClassifyPricePosition
 export function calculateDealRating(currentPrice: number, marketPrice: number | null): DealRating {
   if (!marketPrice || marketPrice <= 0) {
     return 'uncertain';
@@ -130,14 +147,26 @@ export function calculateDealRating(currentPrice: number, marketPrice: number | 
   const priceDifference = ((currentPrice - marketPrice) / marketPrice) * 100;
 
   if (priceDifference <= -15) {
-    return 'great'; // 15%+ below market
+    return 'great'; // 15%+ below market → Excelente
   } else if (priceDifference <= -5) {
-    return 'good'; // 5-15% below market
+    return 'good'; // 5-15% below market → Buen Precio
   } else if (priceDifference <= 5) {
-    return 'fair'; // Within 5% of market
+    return 'fair'; // Within ±5% of market → Precio Justo
+  } else if (priceDifference <= 15) {
+    return 'high'; // 5-15% above market → Precio Alto
   } else {
-    return 'high'; // 5%+ above market
+    return 'overpriced'; // >15% above market → Sobrepreciado
   }
+}
+
+/**
+ * Returns true if the vehicle is severely overvalued (>20% above market).
+ * Used to trigger special alerts and recommendations for the seller.
+ */
+export function isOvervalued(currentPrice: number, marketPrice: number | null): boolean {
+  if (!marketPrice || marketPrice <= 0) return false;
+  const priceDifference = ((currentPrice - marketPrice) / marketPrice) * 100;
+  return priceDifference > 20;
 }
 
 export { DealRatingBadge, dealRatingVariants, ratingConfig };

@@ -5,6 +5,7 @@
  *
  * Features:
  * - Syncs filters with URL search params
+ * - Integrates with Zustand store for persistent client state (undo, drafts, recent searches)
  * - Debounced updates to avoid excessive URL changes
  * - Provides type-safe filter interface
  * - Integrates with React Query for data fetching
@@ -14,71 +15,17 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { searchVehicles } from '@/services/vehicles';
+import { useSearchStore, type SearchFilters } from '@/stores/search-store';
 import type { VehicleSearchParams } from '@/types';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-export interface VehicleSearchFilters {
-  // Text search
-  query?: string;
-
-  // Basic filters
-  make?: string;
-  model?: string;
-  yearMin?: number;
-  yearMax?: number;
-  priceMin?: number;
-  priceMax?: number;
-
-  // Additional filters
-  mileageMax?: number;
-  bodyType?: string;
-  transmission?: 'automatica' | 'manual' | 'cvt';
-  fuelType?: 'gasolina' | 'diesel' | 'electrico' | 'hibrido' | 'glp';
-  drivetrain?: 'fwd' | 'rwd' | 'awd' | '4wd';
-  condition?: 'nuevo' | 'usado';
-
-  // Location
-  province?: string;
-  city?: string;
-
-  // Deal rating
-  dealRating?: 'great' | 'good' | 'fair';
-
-  // Seller type
-  sellerType?: 'dealer' | 'seller';
-
-  // Vehicle condition extras
-  isCertified?: boolean;
-  hasCleanTitle?: boolean;
-  color?: string;
-
-  // Features
-  features?: string[];
-
-  // Extended DR-market filters
-  seats?: number; // min seats
-  cylinders?: number; // engine cylinders (3, 4, 6, 8)
-  interiorColor?: string;
-
-  // Pagination
-  page?: number;
-  limit?: number;
-
-  // Sorting
-  sortBy?:
-    | 'price_asc'
-    | 'price_desc'
-    | 'year_desc'
-    | 'year_asc'
-    | 'mileage_asc'
-    | 'newest'
-    | 'relevance';
-}
+/** Re-export SearchFilters from the Zustand store as VehicleSearchFilters for backward compatibility */
+export type VehicleSearchFilters = SearchFilters;
 
 export interface VehicleSearchResult {
   id: string;
@@ -426,16 +373,44 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}): UseVehi
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
-  // Initialize filters from URL or initial values
-  const [filters, setFiltersState] = React.useState<VehicleSearchFilters>(() => {
+  // ── Zustand store integration ─────────────────────────────────
+  const storeFilters = useSearchStore(s => s.filters);
+  const storeSetFilter = useSearchStore(s => s.setFilter);
+  const storeSetFilters = useSearchStore(s => s.setFilters);
+  const storeClearAllFilters = useSearchStore(s => s.clearAllFilters);
+  const storeClearFilter = useSearchStore(s => s.clearFilter);
+  const storeAddRecentSearch = useSearchStore(s => s.addRecentSearch);
+  const storeSetIsSearching = useSearchStore(s => s.setIsSearching);
+
+  // Flag to track if we've initialized from URL (only on first mount)
+  const hasInitialized = React.useRef(false);
+
+  // Initialize from URL params on mount (takes priority over persisted store state)
+  React.useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     if (syncUrl && searchParams) {
-      return { ...defaultFilters, ...parseSearchParams(searchParams), ...initialFilters };
+      const urlFilters = parseSearchParams(searchParams);
+      // Merge URL params with initial filters (URL wins)
+      const mergedFilters = { ...defaultFilters, ...initialFilters, ...urlFilters };
+      // Only update store if URL had meaningful filters
+      const urlHasFilters = searchParams.toString().length > 0;
+      if (urlHasFilters) {
+        storeSetFilters(mergedFilters);
+      }
+    } else if (initialFilters) {
+      storeSetFilters({ ...defaultFilters, ...initialFilters });
     }
-    return { ...defaultFilters, ...initialFilters };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Debounced filters for URL sync
+  // Use store filters as the source of truth
+  const filters = storeFilters;
+
+  // Debounced filters for URL sync and data fetching
   const [debouncedFilters, setDebouncedFilters] = React.useState(filters);
 
   // Debounce effect
@@ -470,45 +445,74 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}): UseVehi
     queryFn: () => fetchVehicles(debouncedFilters),
     enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes — keep search results in cache longer
     placeholderData: previousData => previousData,
   });
 
-  // Set single filter
+  // Sync searching state to store
+  React.useEffect(() => {
+    storeSetIsSearching(isFetching);
+  }, [isFetching, storeSetIsSearching]);
+
+  // Track recent searches when results come back
+  React.useEffect(() => {
+    if (!results || results.total === 0) return;
+    if (!filters.query && !filters.make) return; // Only track meaningful searches
+
+    const label = filters.query
+      ? filters.query
+      : filters.make
+        ? `${filters.make}${filters.model ? ' ' + filters.model : ''}`
+        : '';
+
+    if (label) {
+      storeAddRecentSearch({
+        filters: { ...filters },
+        label,
+        resultCount: results.total,
+      });
+    }
+    // Only run when debounced results change, not on every filter change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results?.total, debouncedFilters]);
+
+  // Prefetch next page when current results load
+  React.useEffect(() => {
+    if (!results || results.page >= results.totalPages) return;
+
+    const nextPageFilters = { ...debouncedFilters, page: (debouncedFilters.page || 1) + 1 };
+    queryClient.prefetchQuery({
+      queryKey: ['vehicles', 'search', nextPageFilters],
+      queryFn: () => fetchVehicles(nextPageFilters),
+      staleTime: 1000 * 60 * 5,
+    });
+  }, [results, debouncedFilters, queryClient]);
+
+  // Delegate to store actions (maintains backward-compatible API)
   const setFilter = React.useCallback(
     <K extends keyof VehicleSearchFilters>(key: K, value: VehicleSearchFilters[K]) => {
-      setFiltersState(prev => ({
-        ...prev,
-        [key]: value,
-        // Reset page when changing filters
-        page: key !== 'page' ? 1 : (value as number),
-      }));
+      storeSetFilter(key, value);
     },
-    []
+    [storeSetFilter]
   );
 
-  // Set multiple filters
-  const setFilters = React.useCallback((newFilters: Partial<VehicleSearchFilters>) => {
-    setFiltersState(prev => ({
-      ...prev,
-      ...newFilters,
-      // Reset page when changing filters (unless page is being set)
-      page: 'page' in newFilters ? newFilters.page : 1,
-    }));
-  }, []);
+  const setFilters = React.useCallback(
+    (newFilters: Partial<VehicleSearchFilters>) => {
+      storeSetFilters(newFilters);
+    },
+    [storeSetFilters]
+  );
 
-  // Clear all filters
   const clearFilters = React.useCallback(() => {
-    setFiltersState(defaultFilters);
-  }, []);
+    storeClearAllFilters();
+  }, [storeClearAllFilters]);
 
-  // Clear specific filter
-  const clearFilter = React.useCallback((key: keyof VehicleSearchFilters) => {
-    setFiltersState(prev => {
-      const next = { ...prev };
-      delete next[key];
-      return { ...next, page: 1 };
-    });
-  }, []);
+  const clearFilter = React.useCallback(
+    (key: keyof VehicleSearchFilters) => {
+      storeClearFilter(key);
+    },
+    [storeClearFilter]
+  );
 
   // Count active filters
   const activeFilterCount = React.useMemo(() => countActiveFilters(filters), [filters]);

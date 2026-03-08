@@ -31,6 +31,15 @@ const BADGE_ICONS: Record<OklaScoreLevel, React.ElementType> = {
   critical: ShieldOff,
 };
 
+/** Accessible text-only indicator for colorblind users */
+const A11Y_LABEL: Record<OklaScoreLevel, string> = {
+  excellent: '✅',
+  good: '✅',
+  regular: '⚠️',
+  deficient: '❌',
+  critical: '🚫',
+};
+
 export function ScoreBadge({ score, variant = 'compact', className }: ScoreBadgeProps) {
   const level = getScoreLevel(score);
   const badge = getScoreBadge(score);
@@ -45,8 +54,11 @@ export function ScoreBadge({ score, variant = 'compact', className }: ScoreBadge
           className
         )}
         title={`OKLA Score™ ${score}/1000 — ${badge.labelEs}`}
+        role="status"
+        aria-label={`OKLA Score ${score} de 1000, ${level.labelEs}`}
       >
-        <Icon className="h-3 w-3" />
+        <span className="sr-only">{A11Y_LABEL[level.level]}</span>
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {score}
       </span>
     );
@@ -59,8 +71,10 @@ export function ScoreBadge({ score, variant = 'compact', className }: ScoreBadge
         BADGE_STYLES[level.level],
         className
       )}
+      role="status"
+      aria-label={`OKLA Score ${score} de 1000, ${level.labelEs}`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4" aria-hidden="true" />
       <span className="tabular-nums">{score}</span>
       <span className="text-xs font-normal opacity-75">{badge.shortLabelEs}</span>
     </div>

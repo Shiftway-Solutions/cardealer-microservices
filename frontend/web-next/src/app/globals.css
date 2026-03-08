@@ -471,6 +471,26 @@ input[type='number'] {
   animation: floatY 6s ease-in-out infinite;
 }
 
+/* Accessibility: Reduce motion for users who prefer it.
+   Also saves battery on mobile (fewer GPU compositing operations). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-orb,
+  .animate-bounce-gentle,
+  .animate-float-y,
+  .animate-scale-in,
+  .animate-slide-up,
+  .animate-slide-right,
+  .animate-slide-left {
+    animation: none !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out both;
 }

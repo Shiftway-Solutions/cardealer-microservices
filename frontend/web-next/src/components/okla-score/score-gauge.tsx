@@ -52,7 +52,8 @@ export function ScoreGauge({
           width={config.width}
           height={config.width}
           className="-rotate-90"
-          aria-label={`OKLA Score: ${score}`}
+          role="img"
+          aria-label={`OKLA Score: ${score} de 1000, ${level.labelEs}`}
         >
           {/* Background circle */}
           <circle

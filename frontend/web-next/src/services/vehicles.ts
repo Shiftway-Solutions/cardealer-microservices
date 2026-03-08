@@ -955,6 +955,7 @@ export interface CreateVehicleRequest {
   year: number;
   trim?: string;
   mileage: number;
+  mileageUnit?: 'km' | 'mi'; // FIX B1: Send unit to backend (maps to Kilometers/Miles enum)
   vin?: string;
   transmission: string;
   fuelType: string;
@@ -1075,6 +1076,7 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
     year: data.year,
     trim: data.trim,
     mileage: data.mileage ?? 0,
+    mileageUnit: data.mileageUnit === 'mi' ? 'Miles' : 'Kilometers', // FIX B1: Map frontend 'km'/'mi' → backend enum
     vin: data.vin,
     // Enums — map to PascalCase backend enum names
     transmission: toEnum(data.transmission, TRANSMISSION_TO_ENUM),

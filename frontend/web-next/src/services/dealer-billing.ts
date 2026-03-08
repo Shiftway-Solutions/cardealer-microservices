@@ -341,3 +341,83 @@ export function getUsageColor(percentage: number): string {
   if (percentage >= 70) return 'text-amber-600';
   return 'text-emerald-600';
 }
+
+// ============================================================================
+// Plan Enforcement & Feature Gating (Quick-win integrations)
+// ============================================================================
+
+export interface PlanEnforcement {
+  canPublish: boolean;
+  currentCount: number;
+  maxAllowed: number; // -1 = unlimited
+  remaining: number; // -1 = unlimited
+  plan: string;
+  message: string;
+}
+
+export interface PlanFeatures {
+  plan: string;
+  maxVehicles: number;
+  maxUsers: number;
+  maxPhotosPerListing: number;
+  featuredListingsPerMonth: number;
+  oklaCoinsMonthly: number;
+  chatAgentConversations: number;
+  videoTourEnabled: boolean;
+  verifiedBadge: boolean;
+  whatsAppIntegration: boolean;
+}
+
+/**
+ * Check if a dealer can publish more vehicles.
+ * Called before showing the "create listing" form.
+ * All OKLA plans have unlimited listings, but this enforces the check.
+ */
+export async function canPublish(
+  dealerId: string,
+  currentVehicleCount: number
+): Promise<PlanEnforcement> {
+  const response = await apiClient.get<PlanEnforcement>(
+    `/api/subscriptions/dealer/${dealerId}/can-publish?currentVehicleCount=${currentVehicleCount}`
+  );
+  return response.data;
+}
+
+/**
+ * Get plan features for feature gating (photos, featured listings, etc.)
+ * Used to show/hide premium features in the UI.
+ */
+export async function getPlanFeatures(dealerId: string): Promise<PlanFeatures> {
+  const response = await apiClient.get<PlanFeatures>(
+    `/api/subscriptions/dealer/${dealerId}/plan-features`
+  );
+  return response.data;
+}
+
+/**
+ * Upgrade dealer's subscription plan
+ */
+export async function upgradePlan(
+  subscriptionId: string,
+  newPlan: string
+): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.put<{ success: boolean; message: string }>(
+    `/api/subscriptions/${subscriptionId}/upgrade`,
+    { newPlan }
+  );
+  return response.data;
+}
+
+/**
+ * Switch billing cycle (monthly ↔ annual)
+ */
+export async function switchBillingCycle(
+  subscriptionId: string,
+  newCycle: 'monthly' | 'annual'
+): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.put<{ success: boolean; message: string }>(
+    `/api/subscriptions/${subscriptionId}/billing-cycle`,
+    { billingCycle: newCycle }
+  );
+  return response.data;
+}
