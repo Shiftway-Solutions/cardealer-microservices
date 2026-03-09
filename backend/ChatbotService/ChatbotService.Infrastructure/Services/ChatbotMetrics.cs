@@ -36,6 +36,10 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
     private readonly Counter<long> _cacheHits;
     private readonly Counter<long> _cacheMisses;
 
+    // ── Anthropic Prompt Caching Metrics (R17-PC) ─────────────────────────
+    private readonly Counter<long> _promptCacheReadTokens;
+    private readonly Counter<long> _promptCacheWriteTokens;
+
     // ── Safety & Quality Metrics (LLM-as-a-Judge audit) ──────────────
     private readonly Counter<long> _hallucinationDetected;
     private readonly Counter<long> _groundingViolations;
@@ -133,6 +137,17 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
             unit: "{miss}",
             description: "LLM response cache misses (R17)");
 
+        // ── Anthropic Prompt Caching Metrics (R17-PC) ────────────────
+        _promptCacheReadTokens = meter.CreateCounter<long>(
+            "chatbot.promptcache.read_tokens",
+            unit: "{token}",
+            description: "Tokens read from Anthropic server-side prompt cache (cost: 0.1x base price)");
+
+        _promptCacheWriteTokens = meter.CreateCounter<long>(
+            "chatbot.promptcache.write_tokens",
+            unit: "{token}",
+            description: "Tokens written to Anthropic server-side prompt cache (cost: 1.25x base price)");
+
         // ── Safety & Quality Metrics ─────────────────────────────────
 
         _hallucinationDetected = meter.CreateCounter<long>(
@@ -221,6 +236,21 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
 
     public void RecordCacheMiss()
         => _cacheMisses.Add(1);
+
+    /// <summary>
+    /// R17-PC (Anthropic Prompt Caching): Tracks server-side cache token usage per LLM call.
+    /// cacheReadTokens: tokens served from Anthropic cache — cost 0.1x base price (90% savings).
+    /// cacheWriteTokens: tokens written to Anthropic cache — cost 1.25x base price (25% premium).
+    /// High cacheReadTokens/totalInputTokens ratio = effective prompt caching.
+    /// Target: cacheReadTokens ≥ 60% of totalInputTokens to achieve >60% cost reduction.
+    /// </summary>
+    public void RecordPromptCacheTokens(long cacheReadTokens, long cacheWriteTokens)
+    {
+        if (cacheReadTokens > 0)
+            _promptCacheReadTokens.Add(cacheReadTokens);
+        if (cacheWriteTokens > 0)
+            _promptCacheWriteTokens.Add(cacheWriteTokens);
+    }
 
     // ── Safety & Quality Recording Methods ───────────────────────────
 

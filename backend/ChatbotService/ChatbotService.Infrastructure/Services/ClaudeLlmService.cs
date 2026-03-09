@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ChatbotService.Domain.Interfaces;
 using ChatbotService.Domain.Models;
-
 namespace ChatbotService.Infrastructure.Services;
 
 /// <summary>
@@ -20,6 +19,7 @@ public class ClaudeLlmService : ILlmService
     private readonly IChatMessageRepository _messageRepository;
     private readonly ILogger<ClaudeLlmService> _logger;
     private readonly ChatbotMetrics _metrics;
+    private readonly IPromptCacheStats _promptCacheStats;
     private DateTime? _lastSuccessfulCall;
     private int _failedCallsLast24h;
 
@@ -45,13 +45,15 @@ public class ClaudeLlmService : ILlmService
         IHttpClientFactory httpClientFactory,
         IChatMessageRepository messageRepository,
         ILogger<ClaudeLlmService> logger,
-        ChatbotMetrics metrics)
+        ChatbotMetrics metrics,
+        IPromptCacheStats promptCacheStats)
     {
         _settings = settings.Value;
         _httpClientFactory = httpClientFactory;
         _messageRepository = messageRepository;
         _logger = logger;
         _metrics = metrics;
+        _promptCacheStats = promptCacheStats;
     }
 
     public async Task<LlmDetectionResult> GenerateResponseAsync(
@@ -237,6 +239,15 @@ public class ClaudeLlmService : ILlmService
                 completion?.Usage?.CacheCreationInputTokens ?? 0);
 
             _metrics.RecordLlmCall(success: true, responseTimeMs: sw.ElapsedMilliseconds, tokensUsed: result.TokensUsed);
+
+            // R17-PC: Track Anthropic prompt cache token usage for cost-savings measurement.
+            // CacheReadInputTokens: served from cache at 0.1x price → savings vs base input.
+            // CacheCreationInputTokens: written to cache at 1.25x price → one-time creation cost.
+            var cacheRead = completion?.Usage?.CacheReadInputTokens ?? 0;
+            var cacheWrite = completion?.Usage?.CacheCreationInputTokens ?? 0;
+            var totalInput = completion?.Usage?.InputTokens ?? 0;
+            _metrics.RecordPromptCacheTokens(cacheRead, cacheWrite);
+            _promptCacheStats.RecordCall(cacheRead, cacheWrite, totalInput);
 
             return result;
         }

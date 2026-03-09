@@ -66,6 +66,9 @@ public static class DependencyInjection
         services.AddScoped<IReportingService, ReportingService>();
         services.AddScoped<IInventorySyncService, InventorySyncService>();
 
+        // R17-PC: Anthropic Prompt Cache stats (singleton — accumulates across the process lifetime)
+        services.AddSingleton<IPromptCacheStats, InMemoryPromptCacheStats>();
+
         // ═══════════════════════════════════════════════════════════
         // DUAL-MODE: Strategy Pattern + RAG + Embeddings
         // ═══════════════════════════════════════════════════════════

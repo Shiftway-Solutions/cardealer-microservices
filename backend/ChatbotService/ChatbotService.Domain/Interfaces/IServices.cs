@@ -198,3 +198,60 @@ public class CachedLlmResponseDto
     public DateTime CachedAt { get; set; }
     public bool FromCache { get; set; }
 }
+
+/// <summary>
+/// R17-PC: Tracks Anthropic server-side prompt cache token usage for cost-savings measurement.
+/// This is an in-memory accumulator used to feed the /metrics/prompt-cache REST endpoint.
+/// The actual OpenTelemetry metrics are handled separately by ChatbotMetrics.
+/// </summary>
+public interface IPromptCacheStats
+{
+    /// <summary>
+    /// Record token usage from a single Anthropic API call.
+    /// </summary>
+    void RecordCall(long cacheReadTokens, long cacheWriteTokens, long totalInputTokens);
+
+    /// <summary>
+    /// Get current accumulated stats.
+    /// </summary>
+    PromptCacheReport GetReport();
+}
+
+/// <summary>
+/// Snapshot of accumulated Anthropic Prompt Cache token usage and estimated cost savings.
+/// </summary>
+public sealed record PromptCacheReport
+{
+    public long TotalLlmCalls { get; init; }
+    public long TotalInputTokens { get; init; }
+    public long CacheReadTokens { get; init; }
+    public long CacheWriteTokens { get; init; }
+
+    /// <summary>
+    /// Fraction of input tokens served from cache (0–100%).
+    /// Higher = better cache hit rate.
+    /// </summary>
+    public double CacheHitRatePercent => TotalInputTokens > 0
+        ? Math.Round((double)CacheReadTokens / TotalInputTokens * 100, 1)
+        : 0;
+
+    /// <summary>
+    /// Estimated input-token cost savings vs. no caching.
+    /// Formula: savings = cacheReadTokens × (1 - 0.1) - cacheWriteTokens × (1.25 - 1.0)
+    ///          as a fraction of totalInputTokens × basePrice.
+    /// Simplifies to: (cacheReadTokens × 0.9 - cacheWriteTokens × 0.25) / totalInputTokens × 100
+    /// </summary>
+    public double EstimatedSavingsPercent => TotalInputTokens > 0
+        ? Math.Round(
+            (CacheReadTokens * 0.9 - CacheWriteTokens * 0.25) / TotalInputTokens * 100, 1)
+        : 0;
+
+    /// <summary>
+    /// True when estimated savings exceed the 60% target from the audit.
+    /// </summary>
+    public bool TargetMet => EstimatedSavingsPercent >= 60.0;
+
+    public double TargetPercent => 60.0;
+    public DateTimeOffset? LastCallAt { get; init; }
+    public DateTimeOffset MeasuredAt { get; init; }
+}

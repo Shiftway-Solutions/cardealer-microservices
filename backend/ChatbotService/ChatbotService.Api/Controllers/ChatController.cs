@@ -5,7 +5,6 @@ using MediatR;
 using ChatbotService.Application.DTOs;
 using ChatbotService.Application.Features.Sessions.Commands;
 using ChatbotService.Domain.Interfaces;
-
 namespace ChatbotService.Api.Controllers;
 
 [ApiController]
@@ -17,17 +16,20 @@ public class ChatController : ControllerBase
     private readonly ILogger<ChatController> _logger;
     private readonly IChatSessionRepository _sessionRepository;
     private readonly IChatMessageRepository _messageRepository;
+    private readonly IPromptCacheStats _promptCacheStats;
 
     public ChatController(
         IMediator mediator,
         ILogger<ChatController> logger,
         IChatSessionRepository sessionRepository,
-        IChatMessageRepository messageRepository)
+        IChatMessageRepository messageRepository,
+        IPromptCacheStats promptCacheStats)
     {
         _mediator = mediator;
         _logger = logger;
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;
+        _promptCacheStats = promptCacheStats;
     }
 
     /// <summary>
@@ -334,5 +336,43 @@ public class ChatController : ControllerBase
             _logger.LogError(ex, "Error returning to bot");
             return StatusCode(500, new { error = "Internal server error" });
         }
+    }
+
+    /// <summary>
+    /// R17-PC: Anthropic Prompt Caching metrics.
+    /// Returns accumulated token usage and estimated cost savings vs the >60% target.
+    ///
+    /// How it works:
+    ///   - Static system prompt (personality + rules + JSON schema, ≥1,024 tokens) is cached
+    ///     server-side by Anthropic on first request and reused across ALL dealers.
+    ///   - cache_read_tokens = tokens served from cache at 10% of base price (90% savings).
+    ///   - cache_write_tokens = tokens written to cache at 125% of base price (25% premium).
+    ///   - estimated_savings_percent ≥ 60% → target met.
+    /// </summary>
+    [HttpGet("metrics/prompt-cache")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(200)]
+    public IActionResult GetPromptCacheMetrics()
+    {
+        var report = _promptCacheStats.GetReport();
+
+        return Ok(new
+        {
+            totalLlmCalls = report.TotalLlmCalls,
+            totalInputTokens = report.TotalInputTokens,
+            cacheReadTokens = report.CacheReadTokens,
+            cacheWriteTokens = report.CacheWriteTokens,
+            cacheHitRatePercent = report.CacheHitRatePercent,
+            estimatedSavingsPercent = report.EstimatedSavingsPercent,
+            targetPercent = report.TargetPercent,
+            targetMet = report.TargetMet,
+            lastCallAt = report.LastCallAt,
+            measuredAt = report.MeasuredAt,
+            status = report.TargetMet
+                ? "✅ Target met — Anthropic Prompt Caching is reducing costs by ≥60%"
+                : report.TotalLlmCalls == 0
+                    ? "⏳ No LLM calls recorded yet. Call /api/chat/send to accumulate stats."
+                    : $"⚠️ Below target — {report.EstimatedSavingsPercent:F1}% savings, need ≥60%. Check CACHE_BREAK marker in system prompts."
+        });
     }
 }

@@ -42,7 +42,7 @@ public class GeneralChatStrategyPromptAuditTests
     {
         Id = Guid.NewGuid(),
         DealerId = Guid.NewGuid(),
-        BotName = botName,
+        BotName = botName ?? "Asistente OKLA", // domain default; null path tested below
         Name = "Test Dealer"
     };
 
@@ -146,7 +146,7 @@ public class GeneralChatStrategyPromptAuditTests
     // ── 8. Uses configurable bot name ──
     [Theory]
     [InlineData("María", "María")]
-    [InlineData(null, "Ana")]  // default fallback
+    [InlineData(null, "Asistente OKLA")]  // null => domain default "Asistente OKLA" is kept by strategy
     public async Task Prompt_UsesConfigurableBotName(string? configName, string expectedName)
     {
         var prompt = await _strategy.BuildSystemPromptAsync(
@@ -703,6 +703,7 @@ public class CrossStrategyConsistencyAuditTests
         var singleStrategy2 = new SingleVehicleStrategy(
             vehicleRepoMock2.Object,
             new Mock<ILogger<SingleVehicleStrategy>>().Object);
+        session.ChatbotConfigurationId = config.Id; // align session config ID so mock matches
         var singlePrompt = await singleStrategy2.BuildSystemPromptAsync(session, config, "hola", CancellationToken.None);
 
         return new List<(string, string)>
