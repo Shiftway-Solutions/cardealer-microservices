@@ -16,13 +16,16 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    # Security headers — set by Next.js (next.config.ts headers()) at application level.
-    # nginx.ingress.kubernetes.io/configuration-snippet is DISABLED in this cluster
-    # (nginx-ingress ≥1.9.0 sets allow-snippet-annotations=false by default for security).
-    # All headers (X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy,
-    # Permissions-Policy, X-XSS-Protection) are already emitted by the Next.js app.
+    # Security headers — defense-in-depth for the internet-facing frontend
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Permissions-Policy: camera=(), microphone=(), geolocation=()";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
     # Rate limiting — protect against DDoS and brute-force
     nginx.ingress.kubernetes.io/limit-rps: "20"
     nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
