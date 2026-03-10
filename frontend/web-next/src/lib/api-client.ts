@@ -26,6 +26,9 @@ const TOKEN_MIGRATED_KEY = 'okla_token_migrated';
 // Runs ONCE on first load, then sets a flag to avoid re-running.
 function migrateTokensFromLocalStorage(): void {
   if (typeof window === 'undefined') return;
+  // Defensive: localStorage may be unavailable in restricted contexts
+  // (jsdom 27 without storageQuota, private browsing, some iframe sandboxes).
+  if (typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') return;
 
   // Skip if migration already completed
   if (localStorage.getItem(TOKEN_MIGRATED_KEY) === 'true') return;

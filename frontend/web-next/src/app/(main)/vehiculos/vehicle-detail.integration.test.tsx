@@ -314,7 +314,7 @@ describe('Similar Vehicles', () => {
 
     expect(result.current.data).toHaveLength(3);
     expect(result.current.data?.every(v => v.id !== 'v1')).toBe(true);
-    expect(mockGetSimilar).toHaveBeenCalledWith('v1', 4);
+    expect(mockGetSimilar).toHaveBeenCalledWith('v1', 6);
   });
 
   it('should handle empty similar vehicles', async () => {

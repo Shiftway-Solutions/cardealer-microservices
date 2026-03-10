@@ -7,13 +7,14 @@
 
 ## 🚦 GATE OBLIGATORIO PRE-COMMIT Y PRE-PUSH
 
-NUNCA ejecutes `git commit` ni `git push` sin antes haber pasado los **6 pasos** de este gate.
+NUNCA ejecutes `git commit` ni `git push` sin antes haber pasado los **7 pasos** de este gate.
 Si cualquier paso falla, detente, corrige el problema y vuelve a correr el gate completo desde el paso 1.
 No hay excepciones. Este proceso garantiza que el CI/CD no se rompa.
 
 > ⚠️ **EL CI/CD TIENE DOS PIPELINES QUE DEBEN PASAR:**
+>
 > - **Pipeline Backend (.NET):** Pasos 1, 2, 4
-> - **Pipeline Frontend (Next.js/React):** Pasos 3a, 3b, 3c ← **El paso 3 se amplió porque el typecheck falló en producción**
+> - **Pipeline Frontend (Next.js/React):** Pasos 3a, 3b, 3c, 3d ← **El paso 3 tiene 4 sub-pasos que reproducen el CI/CD frontend exacto**
 
 ---
 
@@ -26,6 +27,7 @@ dotnet restore
 **Criterio de éxito:** salida sin errores `NU****` codes.
 
 Si falla:
+
 - Revisa que todos los proyectos referenciados en la `.sln` existan en disco.
 - Verifica que el `NuGet.Config` apunte a los feeds correctos.
 - Elimina la carpeta `obj/` del proyecto afectado y repite: `dotnet restore <proyecto>.csproj`
@@ -45,15 +47,15 @@ dotnet build /p:TreatWarningsAsErrors=true
 
 **Criterio de éxito:** `Build succeeded` con `0 errores` y `0 warnings`.
 
-| Código | Significado | Acción |
-|--------|-------------|--------|
-| CS8601 | Posible asignación de referencia nula | Agrega null check o usa `?.` / `!` |
-| CS8602 | Dereference de referencia posiblemente nula | Valida con `if (x != null)` o usa `??` |
-| CS8618 | Propiedad no-nullable sin inicializar | Inicializa en constructor o usa `= null!` |
-| CS0108 | Miembro oculta miembro heredado sin new | Agrega keyword `new` o renombra |
-| CS0162 | Código inalcanzable | Elimina o comenta el bloque |
-| CS1998 | Método async sin await | Agrega `await` o elimina `async` |
-| CS8625 | Literal null no puede convertirse a tipo | Cambia el tipo a `T?` o elimina el null |
+| Código | Significado                                 | Acción                                    |
+| ------ | ------------------------------------------- | ----------------------------------------- |
+| CS8601 | Posible asignación de referencia nula       | Agrega null check o usa `?.` / `!`        |
+| CS8602 | Dereference de referencia posiblemente nula | Valida con `if (x != null)` o usa `??`    |
+| CS8618 | Propiedad no-nullable sin inicializar       | Inicializa en constructor o usa `= null!` |
+| CS0108 | Miembro oculta miembro heredado sin new     | Agrega keyword `new` o renombra           |
+| CS0162 | Código inalcanzable                         | Elimina o comenta el bloque               |
+| CS1998 | Método async sin await                      | Agrega `await` o elimina `async`          |
+| CS8625 | Literal null no puede convertirse a tipo    | Cambia el tipo a `T?` o elimina el null   |
 
 Nunca uses `/p:TreatWarningsAsErrors=false` ni `#pragma warning disable` para forzar el paso.
 Si el warning es de una dependencia externa, usa `<NoWarn>CSXXXX</NoWarn>` en el `.csproj` con comentario XML justificando.
@@ -72,13 +74,13 @@ cd frontend/web-next && pnpm lint
 
 **Criterio de éxito:** `0 errors` (warnings son aceptables si tienen justificación con comentario).
 
-| Regla ESLint | Causa común | Acción |
-|--------------|-------------|--------|
-| `no-unused-vars` | Variable declarada pero no usada | Elimínala o prefixa con `_` |
-| `react-hooks/exhaustive-deps` | Dependencia faltante en `useEffect` | Agrega la dependencia al array |
-| `@next/next/no-img-element` | `<img>` nativo en lugar de `<Image>` | Reemplaza con `import Image from 'next/image'` |
-| `@typescript-eslint/no-explicit-any` | Tipo `any` explícito | Define un tipo o interfaz específica |
-| `react/no-unescaped-entities` | Comillas sin escapar en JSX | Usa `&apos;` `&quot;` |
+| Regla ESLint                         | Causa común                          | Acción                                         |
+| ------------------------------------ | ------------------------------------ | ---------------------------------------------- |
+| `no-unused-vars`                     | Variable declarada pero no usada     | Elimínala o prefixa con `_`                    |
+| `react-hooks/exhaustive-deps`        | Dependencia faltante en `useEffect`  | Agrega la dependencia al array                 |
+| `@next/next/no-img-element`          | `<img>` nativo en lugar de `<Image>` | Reemplaza con `import Image from 'next/image'` |
+| `@typescript-eslint/no-explicit-any` | Tipo `any` explícito                 | Define un tipo o interfaz específica           |
+| `react/no-unescaped-entities`        | Comillas sin escapar en JSX          | Usa `&apos;` `&quot;`                          |
 
 Nunca deshabilites reglas con `eslint-disable` para forzar el paso.
 Si es un false positive justificado, usa `// eslint-disable-next-line <regla> -- motivo` con motivo explícito.
@@ -100,16 +102,17 @@ Este paso reproduce **EXACTAMENTE** el job `🔍 Lint & Type Check` del CI/CD (`
 
 > ⚠️ **REGLAS CRÍTICAS DE TYPESCRIPT — Causas reales de fallos en CI/CD:**
 
-| Error TS | Causa | Acción |
-|----------|-------|--------|
-| **TS2393** Duplicate function implementation | Scripts `.ts` sin `import`/`export` son globales — si dos archivos declaran `async function main()`, TypeScript ve duplicado en el scope global. | **Agrega `export {};` al inicio del archivo** para hacerlo un módulo ES con scope propio. |
-| **TS2352** Conversion of type X to type Y may be a mistake | Interfaz local `FormData` se fusiona con el global `FormData` del browser. El cast `as Record<string, string>` falla. | **Agrega la propiedad faltante a la interfaz local** y accede directamente sin cast. Nunca uses `as X` para tapar huecos en el tipo. |
-| **TS2339** Property does not exist on type | Accediste a `result.totalPages` pero `PaginatedResponse<T>` tiene `result.pagination.totalPages` (la paginación está anidada). | **Verifica la estructura real del tipo** en `src/types/index.ts` antes de acceder a propiedades. |
-| **TS2307** Cannot find module | Paquete no instalado en `package.json` — el `tsconfig` include `**/*.ts` recoge también archivos de config como `vitest.config.ts`. | **Instala con `pnpm add -D <paquete>`** y verifica que `pnpm-lock.yaml` se actualiza y se incluye en el commit. |
-| **TS2345** Argument of type X not assignable to Y | Tipo incorrecto en llamada a función. | Revisa la firma del tipo esperado y ajusta el valor pasado. |
-| **TS7006** Parameter implicitly has 'any' type | Falta anotación de tipo. | Agrega `: TipoExplicito` al parámetro. |
+| Error TS                                                   | Causa                                                                                                                                            | Acción                                                                                                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **TS2393** Duplicate function implementation               | Scripts `.ts` sin `import`/`export` son globales — si dos archivos declaran `async function main()`, TypeScript ve duplicado en el scope global. | **Agrega `export {};` al inicio del archivo** para hacerlo un módulo ES con scope propio.                                            |
+| **TS2352** Conversion of type X to type Y may be a mistake | Interfaz local `FormData` se fusiona con el global `FormData` del browser. El cast `as Record<string, string>` falla.                            | **Agrega la propiedad faltante a la interfaz local** y accede directamente sin cast. Nunca uses `as X` para tapar huecos en el tipo. |
+| **TS2339** Property does not exist on type                 | Accediste a `result.totalPages` pero `PaginatedResponse<T>` tiene `result.pagination.totalPages` (la paginación está anidada).                   | **Verifica la estructura real del tipo** en `src/types/index.ts` antes de acceder a propiedades.                                     |
+| **TS2307** Cannot find module                              | Paquete no instalado en `package.json` — el `tsconfig` include `**/*.ts` recoge también archivos de config como `vitest.config.ts`.              | **Instala con `pnpm add -D <paquete>`** y verifica que `pnpm-lock.yaml` se actualiza y se incluye en el commit.                      |
+| **TS2345** Argument of type X not assignable to Y          | Tipo incorrecto en llamada a función.                                                                                                            | Revisa la firma del tipo esperado y ajusta el valor pasado.                                                                          |
+| **TS7006** Parameter implicitly has 'any' type             | Falta anotación de tipo.                                                                                                                         | Agrega `: TipoExplicito` al parámetro.                                                                                               |
 
 **Reglas específicas del proyecto OKLA:**
+
 - Todos los scripts en `frontend/web-next/scripts/*.ts` **DEBEN** tener `export {};` al inicio para evitar colisión de funciones globales. Si creas o modificas cualquier script sin `import`/`export`, agrega `export {};` como primera línea de código.
 - Acceso a `PaginatedResponse<T>`: los campos de paginación están en `result.pagination.totalPages` y `result.pagination.totalItems`, **NO** en `result.totalPages` ni `result.total`.
 - Nunca uses `as X` para castear tipos incompatibles. Primero agrega la propiedad al tipo. Solo usa `as unknown as X` como último recurso con comentario explicando por qué.
@@ -134,11 +137,44 @@ cd frontend/web-next && pnpm install --frozen-lockfile
 > ⚠️ El CI/CD usa `pnpm install --frozen-lockfile`. Cualquier paquete en `package.json` que no esté en `pnpm-lock.yaml` causa fallo en CI. Siempre incluye el `pnpm-lock.yaml` actualizado en el commit cuando instales paquetes nuevos.
 
 Si falla con `Lockfile is not up to date`:
+
 1. Corre `pnpm install` (sin `--frozen-lockfile`) para actualizar el lockfile.
 2. Incluye `pnpm-lock.yaml` en el commit.
 
 ```bash
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c] pnpm install --frozen-lockfile — OK" >> .github/copilot-audit.log
+```
+
+---
+
+### Paso 3d — `pnpm test -- --run` · Detecta tests unitarios rotos antes de CI/CD ← **PASO NUEVO**
+
+```bash
+cd frontend/web-next && pnpm test -- --run
+```
+
+Este paso reproduce exactamente el job `🧪 Unit Tests` del CI/CD (`_reusable-frontend.yml`).
+**Criterio de éxito:** `Test Files N passed` sin ninguna línea `FAIL` y sin `Tests N failed`.
+
+> ⚠️ **CAUSAS COMUNES DE FALLOS EN TESTS FRONTEND:**
+
+| Error                                                                          | Causa                                                                                                                                                                                         | Acción                                                                                                                                             |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AssertionError: expected "vi.fn()" to be called with arguments ['/api/X']`    | Test tiene el endpoint hardcodeado pero el servicio fue actualizado a `/api/Y`.                                                                                                               | **Actualiza el test** para usar el endpoint real del servicio. Nunca cambies el servicio para satisfacer el test si el nuevo endpoint es correcto. |
+| `TypeError: localStorage.getItem is not a function`                            | jsdom 27 requiere `storageQuota` explícito (**ya configurado en `vitest.config.ts`**). Si reaparece, agrega `typeof localStorage.getItem !== 'function'` check defensivo en el código fuente. | Ver `src/lib/api-client.ts` — patrón: `if (typeof localStorage === 'undefined' \|\| typeof localStorage.getItem !== 'function') return;`           |
+| `expected 'vi.fn()' to have been called with arguments [X, 4]` recibe `[X, 6]` | Default de un hook cambió pero el test no fue actualizado.                                                                                                                                    | Actualiza el test para reflejar el nuevo valor por defecto del hook.                                                                               |
+| `Cannot find module '@/X'`                                                     | Alias `@/` no resuelto — falta configuración `resolve.alias` en `vitest.config.ts`.                                                                                                           | Verifica el alias en `vitest.config.ts`.                                                                                                           |
+| Tests de suite completa con 0 tests ejecutados                                 | El archivo de test crashea en el import (module init error).                                                                                                                                  | Corre el test individualmente para ver el error real.                                                                                              |
+
+**Reglas específicas del proyecto OKLA:**
+
+- Los tests viven en `src/**/*.{test,spec}.{ts,tsx}`. NO en `e2e/`.
+- Si un test falla porque el **contrato del servicio cambió** (nuevo endpoint, nuevo default, nueva estructura de respuesta): **corrige el test** para reflejar la implementación actual.
+- Nunca uses `vi.spyOn(...).mockImplementation(() => undefined)` para silenciar un fallo real — corrige la causa raíz.
+- El CI corre `pnpm test -- --run --reporter=verbose --coverage`. Coverage thresholds en `vitest.config.ts` son 70% global — si fallan, agrega tests.
+
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d] pnpm test --run — OK | 0 tests fallidos" >> .github/copilot-audit.log
 ```
 
 ---
@@ -155,6 +191,7 @@ Usa `--no-build` porque el build ya fue validado en el Paso 2.
 > **EXCEPCIÓN ACEPTADA:** Tests que fallan con `The entry point exited without ever building an IHost` o `The server has not been started` son tests de **Integración/E2E que requieren Docker + Postgres + RabbitMQ** corriendo. Estos fallos son pre-existentes y no son regresiones. Los tests **unitarios** DEBEN pasar al 100%.
 
 Si falla un test unitario:
+
 - Identifica: `dotnet test --filter "FullyQualifiedName~NombreDelTest"`
 - Analiza: ¿es un Assert fallido, una excepción no manejada, o un problema de setup/teardown?
 - Nunca uses `[Skip]` o `[Ignore]` para forzar el paso — corrige el código o el test.
@@ -197,6 +234,11 @@ dotnet build /p:TreatWarningsAsErrors=true \
   && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c] pnpm install --frozen-lockfile — OK" >> .github/copilot-audit.log \
   || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c-FAIL] pnpm-lock.yaml desincronizado. Corre pnpm install y agrega el lockfile al commit." >> .github/copilot-audit.log; exit 1; }
 
+# Paso 3d — Frontend: Unit tests (NUEVO — reproduce CI/CD job 'Unit Tests' exacto)
+(cd frontend/web-next && pnpm test -- --run) \
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d] pnpm test --run — OK | 0 tests fallidos" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d-FAIL] pnpm test --run — FALLO. Commit bloqueado. Revisa los tests fallidos arriba." >> .github/copilot-audit.log; exit 1; }
+
 # Paso 4 — Backend: Tests
 dotnet test --no-build --logger "console;verbosity=minimal" 2>&1 | grep -E "Failed|Passed" | grep "\.dll"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — Revisa output: unit tests deben tener Failed: 0" >> .github/copilot-audit.log
@@ -210,8 +252,9 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con c
 - `dotnet restore` reporta errores `NU****` o falta de proyectos
 - `dotnet build` reporta cualquier warning o error (`TreatWarningsAsErrors=true`)
 - `pnpm lint` reporta líneas con `error` (warnings son aceptables con justificación)
-- **`pnpm typecheck` reporta CUALQUIER línea `error TS****`** ← BLOQUEO CRÍTICO
+- **`pnpm typecheck` reporta CUALQUIER línea `error TS\*\***`\*\* ← BLOQUEO CRÍTICO
 - `pnpm install --frozen-lockfile` falla por lockfile desincronizado
+- **`pnpm test -- --run` reporta `Tests N failed` o `Test Files N failed`** ← BLOQUEO CRÍTICO
 - `dotnet test` reporta `Failed > 0` en tests **unitarios** (no Integration/E2E)
 
 > **NOTA:** DESPUÉS QUE SE TERMINE UNA AUDITORÍA Y SE IMPLEMENTEN SUS RECOMENDACIONES, EJECUTA EL PRE-COMMIT GATE COMPLETO PARA VALIDAR QUE TODO EL PROYECTO SIGUE FUNCIONANDO CORRECTAMENTE.
@@ -335,4 +378,4 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [TIPO] OBJETIVO — DESCRIPCIÓN" >> .githu
 ---
 
 _Última actualización: 2026-03-10 — Ambiente controlado OKLA · Auditoría habilitada_
-_Cambio: Gate ampliado a 6 pasos — añadido pnpm typecheck (3b) y pnpm frozen-lockfile (3c) que son los pasos que ejecuta el CI/CD frontend._
+_Cambio: Gate ampliado a 7 pasos — añadidos pnpm typecheck (3b), pnpm frozen-lockfile (3c) y pnpm test --run (3d) que son todos los pasos que ejecuta el CI/CD frontend._
