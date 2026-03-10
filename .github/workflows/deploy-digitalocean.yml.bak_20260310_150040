@@ -245,11 +245,6 @@ jobs:
           echo "⏳ Waiting for infrastructure initialization..."
           sleep 10
 
-      - name: 🔐 Login to GHCR (image existence check)
-        run: |
-          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io \
-            -u ${{ github.repository_owner }} --password-stdin
-
       - name: Deploy services
         env:
           IMAGE_TAG: sha-${{ github.sha }}
@@ -268,40 +263,28 @@ jobs:
             -n okla 2>/dev/null || true
           kubectl apply -f k8s/chatbotservice.yaml
 
-          # Pin each service image to the immutable SHA tag ONLY if that image exists
-          # in GHCR. CI builds images only for services with code changes — services
-          # whose code did not change will NOT have an image for the current SHA, and
-          # blindly pinning them causes ImagePullBackOff → rollout failure.
-          echo "📌 Pinning images to immutable tag: $IMAGE_TAG (skipping if not built)"
-          PINNED=""
-          SKIPPED=""
+          # Pin each service image to the immutable SHA tag instead of :latest.
+          # This ensures deterministic rollouts and reliable rollbacks.
+          echo "📌 Pinning images to immutable tag: $IMAGE_TAG"
           FAILED_PINS=""
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
+            # Map service name to image name (most are 1:1, frontend-web is special)
             IMAGE_NAME="$SERVICE"
-            FULL_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
-            # docker manifest inspect uses the local docker login (no daemon needed).
-            # Returns 0 if the manifest exists in the registry, non-zero otherwise.
-            if docker manifest inspect "$FULL_IMAGE" > /dev/null 2>&1; then
-              echo "  🏷️  $SERVICE → $FULL_IMAGE"
-              if ! kubectl set image deployment/$SERVICE \
-                $SERVICE=$FULL_IMAGE \
-                -n okla 2>&1; then
-                echo "  ⚠️ Failed to pin $SERVICE — deployment may not exist"
-                FAILED_PINS="$FAILED_PINS $SERVICE"
-              else
-                PINNED="$PINNED $SERVICE"
-              fi
-            else
-              echo "  ⏭️  $SERVICE — no image for $IMAGE_TAG (not rebuilt), keeping current"
-              SKIPPED="$SKIPPED $SERVICE"
+            echo "  🏷️  $SERVICE → $REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+            if ! kubectl set image deployment/$SERVICE \
+              $SERVICE=$REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+              -n okla 2>&1; then
+              echo "  ⚠️ Failed to pin $SERVICE — deployment may not exist"
+              FAILED_PINS="$FAILED_PINS $SERVICE"
             fi
           done
 
-          [ -n "$PINNED" ]      && echo "::notice::Pinned to $IMAGE_TAG:$PINNED"
-          [ -n "$SKIPPED" ]     && echo "::notice::Skipped (no new build):$SKIPPED"
-          [ -n "$FAILED_PINS" ] && echo "::warning::Failed to pin:$FAILED_PINS"
-          echo "✅ Image pinning complete"
+          if [ -n "$FAILED_PINS" ]; then
+            echo "::warning::Failed to pin images for:$FAILED_PINS"
+          fi
+
+          echo "✅ All service images pinned to sha-${{ github.sha }}"
 
       - name: 📡 Apply Services
         run: |
@@ -318,26 +301,17 @@ jobs:
           echo "✅ Backup CronJob scheduled (daily at 3:00 AM RD / 7:00 AM UTC)"
 
       - name: ⏳ Wait for rollout
-        continue-on-error: true
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
-          ROLLOUT_ISSUES=""
 
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             echo "⏳ Waiting for $SERVICE rollout..."
-            if ! kubectl rollout status deployment/$SERVICE -n okla --timeout=300s 2>&1; then
-              echo "  ⚠️ $SERVICE rollout issue — may still be starting, continuing"
-              ROLLOUT_ISSUES="$ROLLOUT_ISSUES $SERVICE"
-            fi
+            kubectl rollout status deployment/$SERVICE -n okla --timeout=300s || true
           done
 
           # LLM Server needs extra time to load the model (~4.5GB)
           echo "⏳ Waiting for LLM Server rollout (model loading)..."
-          kubectl rollout status deployment/llm-server -n okla --timeout=600s 2>&1 || true
-
-          if [ -n "$ROLLOUT_ISSUES" ]; then
-            echo "::warning::Rollout issues (non-fatal):$ROLLOUT_ISSUES"
-          fi
+          kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
 
       - name: ✅ Verify deployment
         run: |
