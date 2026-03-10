@@ -41,6 +41,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserNotificationRepository, EfUserNotificationRepository>();
         services.AddScoped<IPriceAlertRepository, EfPriceAlertRepository>();
         services.AddScoped<ISavedSearchRepository, EfSavedSearchRepository>();
+        services.AddScoped<IOnboardingReportScheduleRepository, EfOnboardingReportScheduleRepository>();
 
         // ── User Notification Service (in-app notifications) ──
         services.AddScoped<IUserNotificationService, UserNotificationService>();

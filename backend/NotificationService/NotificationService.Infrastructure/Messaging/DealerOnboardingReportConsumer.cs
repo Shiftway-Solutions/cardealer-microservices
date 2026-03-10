@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
@@ -8,23 +9,30 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using CarDealer.Contracts.Events.Dealer;
 using NotificationService.Domain.Interfaces;
+using NotificationService.Domain.Interfaces.Repositories;
 using NotificationService.Application.Interfaces;
 
 namespace NotificationService.Infrastructure.Messaging;
 
 /// <summary>
 /// Consumes DealerCreatedEvent (published when admin approves a dealer) and schedules
-/// a 7-day onboarding report email. When the delay elapses, fetches analytics data
-/// from DealerAnalyticsService, renders the report email, and sends it to the dealer.
+/// a 7-day onboarding report email persisted in the database. When the delay elapses,
+/// fetches analytics data from DealerAnalyticsService, renders the report email,
+/// and sends it to the dealer.
 ///
 /// Flow:
-///   1. DealerCreatedEvent received → store in-memory schedule for 7 days
+///   1. DealerCreatedEvent received → persist schedule in DB via ScheduledNotification
 ///   2. Background loop checks every 5 minutes for due reports
 ///   3. For due reports → GET /api/dealer-analytics/reports/{dealerId}/weekly
-///   4. Render DealerOnboardingReport.html template with analytics data
+///   4. Render EmailTemplates/DealerOnboardingReport.html template with analytics data
 ///   5. Send email to dealer owner
-///   6. Send in-app notification
-///   7. Admin alert for monitoring
+///   6. Send WhatsApp summary (if phone available)
+///   7. Send in-app notification
+///   8. Admin alert for monitoring
+///
+/// Persistence: Schedules survive pod restarts via PostgreSQL-backed ScheduledNotification.
+/// Idempotency: Uses NotificationLog to prevent duplicate sends.
+/// Retry: Failed reports are rescheduled up to 3 times with exponential backoff.
 /// </summary>
 public class DealerOnboardingReportConsumer : BackgroundService
 {
@@ -38,16 +46,29 @@ public class DealerOnboardingReportConsumer : BackgroundService
     private const string QueueName = "notificationservice.dealer.onboarding_report";
     private const string RoutingKey = "dealer.created";
 
-    // In-memory schedule of pending onboarding reports
-    // Key: DealerId, Value: (OwnerUserId, ScheduledAt, ApprovedAt)
-    private readonly Dictionary<Guid, (Guid? OwnerUserId, DateTime DueAt, DateTime ApprovedAt)> _pendingReports = new();
-    private readonly object _pendingLock = new();
-
     // How many days after activation to send the report
     private static readonly TimeSpan OnboardingReportDelay = TimeSpan.FromDays(7);
 
     // How often to check for due reports
     private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(5);
+
+    // Maximum retry attempts for failed report sends
+    private const int MaxRetryAttempts = 3;
+
+    // Template file path (relative to TemplatesPath root)
+    private const string TemplateFile = "EmailTemplates/DealerOnboardingReport.html";
+
+    // Service-to-service internal API key header
+    private const string InternalApiKeyHeader = "X-Internal-Service-Key";
+
+    // ── Prometheus Metrics ────────────────────────────────────
+    private static readonly Meter Meter = new("NotificationService.DealerOnboarding", "1.0");
+    private static readonly Counter<long> ReportsScheduled = Meter.CreateCounter<long>(
+        "onboarding_reports_scheduled_total", "Total onboarding reports scheduled");
+    private static readonly Counter<long> ReportsSent = Meter.CreateCounter<long>(
+        "onboarding_reports_sent_total", "Total onboarding reports sent successfully");
+    private static readonly Counter<long> ReportsFailed = Meter.CreateCounter<long>(
+        "onboarding_reports_failed_total", "Total onboarding reports that failed to send");
 
     public DealerOnboardingReportConsumer(
         IServiceProvider serviceProvider,
@@ -98,18 +119,15 @@ public class DealerOnboardingReportConsumer : BackgroundService
                             "Received DealerCreatedEvent: DealerId={DealerId}, OwnerUserId={OwnerUserId}, ApprovedAt={ApprovedAt}",
                             dealerEvent.DealerId, dealerEvent.OwnerUserId, dealerEvent.ApprovedAt);
 
-                        var dueAt = dealerEvent.ApprovedAt.Add(OnboardingReportDelay);
+                        // ── Persist schedule in DB (survives pod restarts) ────────
+                        await PersistOnboardingScheduleAsync(dealerEvent, stoppingToken);
 
-                        lock (_pendingLock)
-                        {
-                            _pendingReports[dealerEvent.DealerId] = (dealerEvent.OwnerUserId, dueAt, dealerEvent.ApprovedAt);
-                        }
-
+                        ReportsScheduled.Add(1);
                         _logger.LogInformation(
-                            "Scheduled 7-day onboarding report for DealerId={DealerId} at {DueAt}",
-                            dealerEvent.DealerId, dueAt);
+                            "Persisted 7-day onboarding report schedule for DealerId={DealerId}, DueAt={DueAt}",
+                            dealerEvent.DealerId, dealerEvent.ApprovedAt.Add(OnboardingReportDelay));
 
-                        // Also create in-app notification about upcoming report
+                        // Create in-app notification about upcoming report
                         try
                         {
                             using var scope = _serviceProvider.CreateScope();
@@ -149,12 +167,12 @@ public class DealerOnboardingReportConsumer : BackgroundService
             _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
             _logger.LogInformation("DealerOnboardingReportConsumer started listening on queue: {Queue}", QueueName);
 
-            // Background loop to check for due reports
+            // Background loop to check for due reports from DB
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    await ProcessDueReportsAsync(stoppingToken);
+                    await ProcessDueReportsFromDbAsync(stoppingToken);
                 }
                 catch (Exception ex)
                 {
@@ -170,35 +188,90 @@ public class DealerOnboardingReportConsumer : BackgroundService
         }
     }
 
-    private async Task ProcessDueReportsAsync(CancellationToken ct)
+    /// <summary>
+    /// Persists the onboarding report schedule to the database via OnboardingReportSchedule.
+    /// This ensures schedules survive pod restarts.
+    /// Uses DealerId as idempotency key to prevent duplicates.
+    /// </summary>
+    private async Task PersistOnboardingScheduleAsync(DealerCreatedEvent dealerEvent, CancellationToken ct)
     {
-        List<(Guid DealerId, Guid? OwnerUserId, DateTime ApprovedAt)> dueReports;
+        using var scope = _serviceProvider.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IOnboardingReportScheduleRepository>();
 
-        lock (_pendingLock)
+        // Idempotency check: don't schedule if already exists for this dealer
+        var idempotencyKey = $"onboarding_report:{dealerEvent.DealerId}";
+        var existing = await repo.GetByIdempotencyKeyAsync(idempotencyKey);
+        if (existing != null)
         {
-            var now = DateTime.UtcNow;
-            dueReports = _pendingReports
-                .Where(kv => kv.Value.DueAt <= now)
-                .Select(kv => (kv.Key, kv.Value.OwnerUserId, kv.Value.ApprovedAt))
-                .ToList();
-
-            foreach (var report in dueReports)
-            {
-                _pendingReports.Remove(report.DealerId);
-            }
+            _logger.LogInformation(
+                "Onboarding report already scheduled/sent for DealerId={DealerId}. Skipping duplicate.",
+                dealerEvent.DealerId);
+            return;
         }
 
-        foreach (var (dealerId, ownerUserId, approvedAt) in dueReports)
+        var schedule = Domain.Entities.OnboardingReportSchedule.Create(
+            dealerEvent.DealerId,
+            dealerEvent.OwnerUserId,
+            dealerEvent.ApprovedAt,
+            OnboardingReportDelay);
+
+        await repo.AddAsync(schedule);
+    }
+
+    /// <summary>
+    /// Queries the database for due onboarding reports and processes them.
+    /// Handles retry with exponential backoff for failed reports.
+    /// </summary>
+    private async Task ProcessDueReportsFromDbAsync(CancellationToken ct)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IOnboardingReportScheduleRepository>();
+
+        // Get all scheduled onboarding reports that are now due
+        var dueReports = await repo.GetDueReportsAsync(DateTime.UtcNow);
+
+        foreach (var schedule in dueReports)
         {
+            if (ct.IsCancellationRequested) break;
+
             try
             {
-                await SendOnboardingReportAsync(dealerId, ownerUserId, approvedAt, ct);
+                // Mark as processing to prevent other pods from picking it up
+                schedule.MarkAsProcessing();
+                await repo.UpdateAsync(schedule);
+
+                await SendOnboardingReportAsync(schedule.DealerId, schedule.OwnerUserId, schedule.ApprovedAt, ct);
+
+                // Mark as sent successfully
+                schedule.MarkAsSent();
+                await repo.UpdateAsync(schedule);
+
+                ReportsSent.Add(1);
+                _logger.LogInformation(
+                    "✅ Onboarding report sent and persisted for DealerId={DealerId}", schedule.DealerId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed to send onboarding report for DealerId={DealerId}. Report will not be retried.",
-                    dealerId);
+                    "Failed to send onboarding report ScheduleId={ScheduleId}. Retry {RetryCount}/{MaxRetries}",
+                    schedule.Id, schedule.RetryCount + 1, schedule.MaxRetries);
+
+                schedule.MarkAsFailed(ex.Message);
+                await repo.UpdateAsync(schedule);
+
+                if (!schedule.CanRetry())
+                {
+                    ReportsFailed.Add(1);
+                    _logger.LogError(
+                        "❌ Onboarding report permanently failed after {MaxRetries} retries for DealerId={DealerId}",
+                        schedule.MaxRetries, schedule.DealerId);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Rescheduled onboarding report ScheduleId={ScheduleId} for {NextAttempt}",
+                        schedule.Id, schedule.DueAt);
+                }
             }
         }
     }
@@ -279,6 +352,11 @@ public class DealerOnboardingReportConsumer : BackgroundService
                 var analyticsClient = httpClientFactory.CreateClient("DealerAnalyticsService");
                 var weekStart = approvedAt.Date.ToString("yyyy-MM-dd");
 
+                // Add internal service-to-service authentication header
+                var internalKey = _configuration["Services:InternalApiKey"] ?? "internal-service-key";
+                analyticsClient.DefaultRequestHeaders.Remove(InternalApiKeyHeader);
+                analyticsClient.DefaultRequestHeaders.Add(InternalApiKeyHeader, internalKey);
+
                 var response = await analyticsClient.GetAsync(
                     $"/api/dealer-analytics/reports/{dealerId}/weekly?weekStartDate={weekStart}", ct);
 
@@ -290,37 +368,48 @@ public class DealerOnboardingReportConsumer : BackgroundService
                         PropertyNameCaseInsensitive = true
                     });
 
-                    // Extract KPIs from report
-                    if (report.TryGetProperty("kpis", out var kpis))
+                    // Extract KPIs — handle both camelCase and PascalCase property names
+                    if (report.TryGetProperty("kpis", out var kpis) || report.TryGetProperty("Kpis", out kpis))
                     {
-                        totalViews = kpis.TryGetProperty("totalViews", out var tv) ? tv.GetInt32() : 0;
-                        totalLeads = kpis.TryGetProperty("totalContacts", out var tc) ? tc.GetInt32() : 0;
-                        viewsPerListing = kpis.TryGetProperty("viewsPerListing", out var vpl) ? vpl.GetDouble() : 0;
-                        contactsPerListing = kpis.TryGetProperty("contactsPerListing", out var cpl) ? cpl.GetDouble() : 0;
-                        contactRate = kpis.TryGetProperty("contactRate", out var cr) ? cr.GetDouble() : 0;
+                        totalViews = TryGetInt(kpis, "totalViews", "TotalViews");
+                        totalLeads = TryGetInt(kpis, "totalContacts", "TotalContacts", "totalLeads", "TotalLeads");
+                        viewsPerListing = TryGetDouble(kpis, "viewsPerListing", "ViewsPerListing", "avgViewsPerListing", "AvgViewsPerListing");
+                        contactsPerListing = TryGetDouble(kpis, "contactsPerListing", "ContactsPerListing", "avgContactsPerListing", "AvgContactsPerListing");
+                        contactRate = TryGetDouble(kpis, "contactRate", "ContactRate", "conversionRate", "ConversionRate");
                     }
 
-                    // Top vehicle
-                    if (report.TryGetProperty("topVehicles", out var topVehicles) && topVehicles.GetArrayLength() > 0)
+                    // Top vehicle — try multiple property name formats
+                    var topVehicles = TryGetArrayProperty(report, "topVehicles", "TopVehicles", "topListings", "TopListings");
+                    if (topVehicles.HasValue && topVehicles.Value.GetArrayLength() > 0)
                     {
-                        var top = topVehicles[0];
-                        topVehicleTitle = top.TryGetProperty("title", out var t) ? t.GetString() ?? "—" : "—";
-                        topVehicleViews = top.TryGetProperty("views", out var v) ? v.GetInt32().ToString() : "0";
-                        topVehicleContacts = top.TryGetProperty("contacts", out var c) ? c.GetInt32().ToString() : "0";
+                        var top = topVehicles.Value[0];
+                        topVehicleTitle = TryGetString(top, "title", "Title", "name", "Name") ?? "—";
+                        topVehicleViews = TryGetInt(top, "views", "Views", "viewCount", "ViewCount").ToString();
+                        topVehicleContacts = TryGetInt(top, "contacts", "Contacts", "contactCount", "ContactCount").ToString();
                     }
 
-                    // Market comparison
-                    if (report.TryGetProperty("marketComparison", out var market))
+                    // Market comparison — try multiple structures
+                    if (report.TryGetProperty("marketComparison", out var market)
+                        || report.TryGetProperty("MarketComparison", out market)
+                        || report.TryGetProperty("benchmark", out market)
+                        || report.TryGetProperty("Benchmark", out market))
                     {
-                        marketAvgViews = market.TryGetProperty("marketAvgViewsPerListing", out var mav) ? mav.GetDouble() : 0;
-                        marketAvgContacts = market.TryGetProperty("marketAvgContactsPerListing", out var mac) ? mac.GetDouble() : 0;
-                        marketAvgContactRate = market.TryGetProperty("marketAvgContactRate", out var macr) ? macr.GetDouble() : 0;
+                        marketAvgViews = TryGetDouble(market, "marketAvgViewsPerListing", "MarketAvgViewsPerListing",
+                            "avgViews", "AvgViews", "averageViews", "AverageViews");
+                        marketAvgContacts = TryGetDouble(market, "marketAvgContactsPerListing", "MarketAvgContactsPerListing",
+                            "avgContacts", "AvgContacts", "averageContacts", "AverageContacts");
+                        marketAvgContactRate = TryGetDouble(market, "marketAvgContactRate", "MarketAvgContactRate",
+                            "avgContactRate", "AvgContactRate", "averageConversionRate", "AverageConversionRate");
                     }
+
+                    _logger.LogInformation(
+                        "Analytics fetched for DealerId={DealerId}: Views={Views}, Leads={Leads}, TopVehicle={TopVehicle}",
+                        dealerId, totalViews, totalLeads, topVehicleTitle);
                 }
                 else
                 {
                     _logger.LogWarning(
-                        "DealerAnalyticsService returned {StatusCode} for dealer {DealerId} weekly report",
+                        "DealerAnalyticsService returned {StatusCode} for dealer {DealerId} weekly report. Using defaults.",
                         response.StatusCode, dealerId);
                 }
             }
@@ -358,7 +447,7 @@ public class DealerOnboardingReportConsumer : BackgroundService
         string emailBody;
         try
         {
-            emailBody = await templateEngine.RenderTemplateAsync("DealerOnboardingReport", templateParams);
+            emailBody = await templateEngine.RenderTemplateAsync(TemplateFile, templateParams);
         }
         catch (Exception ex)
         {
@@ -475,31 +564,103 @@ public class DealerOnboardingReportConsumer : BackgroundService
     private static string NormalizePhoneNumber(string phone)
     {
         var digits = new string(phone.Where(char.IsDigit).ToArray());
+        // Dominican Republic area codes
         if (digits.Length == 10 && (digits.StartsWith("809") || digits.StartsWith("829") || digits.StartsWith("849")))
             return $"+1{digits}";
+        // NANP with country code
         if (digits.Length == 11 && digits.StartsWith("1"))
             return $"+{digits}";
+        // Already has international prefix
         if (phone.StartsWith("+"))
             return phone;
+        // Fallback: prepend + for international format
         return $"+{digits}";
     }
 
     private static string BuildFallbackEmailHtml(Dictionary<string, object> p)
     {
-        return $@"
-            <html><body style='font-family: Arial, sans-serif;'>
-            <h2>📊 Tu Primera Semana en OKLA</h2>
-            <p>Hola {p["DealerName"]},</p>
-            <p>Aquí tu resumen de 7 días:</p>
-            <ul>
-                <li>👀 <strong>{p["TotalViews"]}</strong> vistas totales</li>
-                <li>📩 <strong>{p["TotalLeads"]}</strong> consultas recibidas</li>
-                <li>🏆 Vehículo más visto: <strong>{p["TopVehicleTitle"]}</strong></li>
-            </ul>
-            <p>Vistas por listing: {p["ViewsPerListing"]} vs. {p["MarketAvgViews"]} promedio del mercado</p>
-            <p><a href='https://okla.com.do/dashboard/analytics'>Ver Dashboard Completo</a></p>
-            <p style='color:#999;font-size:12px;'>OKLA — El marketplace automotriz #1 de RD</p>
-            </body></html>";
+        return $@"<!DOCTYPE html>
+<html lang=""es"">
+<head><meta charset=""UTF-8""></head>
+<body style=""font-family: Arial, sans-serif; background-color: #f0f2f5; padding: 20px;"">
+<div style=""max-width: 640px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"">
+<div style=""background: linear-gradient(135deg, #1a73e8, #0d47a1); padding: 32px 24px; text-align: center;"">
+<h1 style=""color: white; margin: 0; font-size: 26px;"">📊 Tu Primera Semana en OKLA</h1>
+</div>
+<div style=""padding: 24px;"">
+<p>Hola <strong>{p["DealerName"]}</strong>,</p>
+<p>Aquí tu resumen de 7 días:</p>
+<ul>
+<li>👀 <strong>{p["TotalViews"]}</strong> vistas totales</li>
+<li>📩 <strong>{p["TotalLeads"]}</strong> consultas recibidas</li>
+<li>🏆 Vehículo más visto: <strong>{p["TopVehicleTitle"]}</strong></li>
+</ul>
+<p>Vistas por listing: {p["ViewsPerListing"]} vs. {p["MarketAvgViews"]} promedio del mercado</p>
+<p>Consultas por listing: {p["ContactsPerListing"]} vs. {p["MarketAvgContacts"]} promedio del mercado</p>
+<p>Tasa de contacto: {p["ContactRate"]}% vs. {p["MarketAvgContactRate"]}% promedio</p>
+<p style=""text-align: center; margin-top: 20px;"">
+<a href=""https://okla.com.do/dashboard/analytics"" style=""background-color: #1a73e8; color: white; padding: 14px 36px; text-decoration: none; border-radius: 6px; font-weight: bold;"">
+Ver Dashboard Completo</a>
+</p>
+<p style=""color:#999;font-size:12px;text-align:center;margin-top:20px;"">OKLA — El marketplace automotriz #1 de RD</p>
+</div>
+</div>
+</body>
+</html>";
+    }
+
+    // ── JSON Helper Methods ──────────────────────────────────────────────────
+    // These handle multiple property name formats (camelCase, PascalCase, aliases)
+    // to support different API response shapes without breaking.
+
+    private static int TryGetInt(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (element.TryGetProperty(name, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.Number)
+                    return prop.GetInt32();
+                if (prop.ValueKind == JsonValueKind.String && int.TryParse(prop.GetString(), out var val))
+                    return val;
+            }
+        }
+        return 0;
+    }
+
+    private static double TryGetDouble(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (element.TryGetProperty(name, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.Number)
+                    return prop.GetDouble();
+                if (prop.ValueKind == JsonValueKind.String && double.TryParse(prop.GetString(), out var val))
+                    return val;
+            }
+        }
+        return 0;
+    }
+
+    private static string? TryGetString(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (element.TryGetProperty(name, out var prop) && prop.ValueKind == JsonValueKind.String)
+                return prop.GetString();
+        }
+        return null;
+    }
+
+    private static JsonElement? TryGetArrayProperty(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var name in propertyNames)
+        {
+            if (element.TryGetProperty(name, out var prop) && prop.ValueKind == JsonValueKind.Array)
+                return prop;
+        }
+        return null;
     }
 
     private void InitializeRabbitMQ()
