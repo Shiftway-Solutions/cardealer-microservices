@@ -16,8 +16,6 @@
  *   SITE_URL — Production site URL (default: https://okla.com.do)
  */
 
-export {}; // Module scope — prevents duplicate global 'main' declaration (TS2393)
-
 const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 const BASE_SITE_URL = process.env.SITE_URL || 'https://okla.com.do';
 const REVALIDATION_SECRET = process.env.REVALIDATION_SECRET || '';

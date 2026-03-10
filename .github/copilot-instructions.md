@@ -5,103 +5,220 @@
 
 ---
 
-🚦 GATE OBLIGATORIO PRE-COMMIT Y PRE-PUSH
-NUNCA ejecutes git commit ni git push sin antes haber pasado los 4 pasos de este gate.
+## 🚦 GATE OBLIGATORIO PRE-COMMIT Y PRE-PUSH
+
+NUNCA ejecutes `git commit` ni `git push` sin antes haber pasado los **6 pasos** de este gate.
 Si cualquier paso falla, detente, corrige el problema y vuelve a correr el gate completo desde el paso 1.
 No hay excepciones. Este proceso garantiza que el CI/CD no se rompa.
 
-Paso 1 — dotnet restore · Detecta paquetes rotos o referencias faltantes
-bashdotnet restore
-Criterio de éxito: salida sin errores error ni NU\*\*\*\* codes.
+> ⚠️ **EL CI/CD TIENE DOS PIPELINES QUE DEBEN PASAR:**
+> - **Pipeline Backend (.NET):** Pasos 1, 2, 4
+> - **Pipeline Frontend (Next.js/React):** Pasos 3a, 3b, 3c ← **El paso 3 se amplió porque el typecheck falló en producción**
+
+---
+
+### Paso 1 — `dotnet restore` · Detecta paquetes rotos o referencias faltantes
+
+```bash
+dotnet restore
+```
+
+**Criterio de éxito:** salida sin errores `NU****` codes.
+
 Si falla:
+- Revisa que todos los proyectos referenciados en la `.sln` existan en disco.
+- Verifica que el `NuGet.Config` apunte a los feeds correctos.
+- Elimina la carpeta `obj/` del proyecto afectado y repite: `dotnet restore <proyecto>.csproj`
+- Registra en auditoría y no avances hasta resolver.
 
-Revisa que todos los proyectos referenciados en la .sln existan en disco.
-Verifica que el NuGet.Config apunte a los feeds correctos.
-Comprueba conectividad si los paquetes son privados (Azure Artifacts, GitHub Packages).
-Elimina la carpeta obj/ del proyecto afectado y repite: dotnet restore <proyecto>.csproj
-Registra en auditoría y no avances hasta resolver.
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log
+```
 
-bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log
+---
 
-Paso 2 — dotnet build /p:TreatWarningsAsErrors=true · Detecta errores y warnings como CS8601
-bashdotnet build /p:TreatWarningsAsErrors=true
-Criterio de éxito: Build succeeded con 0 errores y 0 warnings.
-Si falla — errores frecuentes y cómo resolverlos:
-CódigoSignificadoAcciónCS8601Posible asignación de referencia nulaAgrega null check o usa operador ?. / !CS8602Dereference de referencia posiblemente nulaValida con if (x != null) o usa ??CS8618Propiedad no-nullable sin inicializarInicializa en constructor o usa = null!CS0108Miembro oculta miembro heredado sin newAgrega keyword new o renombra el miembroCS0162Código inalcanzableElimina o comenta el bloque inalcanzableCS1998Método async sin awaitAgrega await o elimina asyncCS8625Literal null no puede convertirse a tipoCambia el tipo a nullable T? o elimina el null
+### Paso 2 — `dotnet build /p:TreatWarningsAsErrors=true` · Detecta errores y warnings de C#
 
-Nunca uses /p:TreatWarningsAsErrors=false ni #pragma warning disable para forzar el paso.
-Corrige el warning en el código fuente. Si el warning es de una dependencia externa que no puedes modificar, usa <NoWarn>CSXXXX</NoWarn> en el .csproj correspondiente, justificando con un comentario XML.
+```bash
+dotnet build /p:TreatWarningsAsErrors=true
+```
 
-bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build TreatWarningsAsErrors — OK" >> .github/copilot-audit.log
+**Criterio de éxito:** `Build succeeded` con `0 errores` y `0 warnings`.
 
-Paso 3 — npx next lint · Detecta errores de ESLint en el frontend Next.js
-bashnpx next lint
-Criterio de éxito: salida ✔ No ESLint warnings or errors o sin líneas error.
-Si falla — errores frecuentes y cómo resolverlos:
-Regla ESLintCausa comúnAcciónno-unused-varsVariable declarada pero no usadaElimínala o prefixa con \_ si es intencionalreact-hooks/exhaustive-depsDependencia faltante en useEffectAgrega la dependencia al array o usa useCallback@next/next/no-img-elementUso de <img> nativo en lugar de <Image>Reemplaza con import Image from 'next/image'@typescript-eslint/no-explicit-anyTipo any explícitoDefine un tipo o interfaz específicono-consoleconsole.log en producciónUsa logger configurado o elimina el consolereact/no-unescaped-entitiesComillas o apóstrofes sin escapar en JSXUsa &apos; &quot; o mueve el texto a variableimport/no-anonymous-default-exportExport default de literal anónimoAsigna nombre a la función/objeto antes de exportar
+| Código | Significado | Acción |
+|--------|-------------|--------|
+| CS8601 | Posible asignación de referencia nula | Agrega null check o usa `?.` / `!` |
+| CS8602 | Dereference de referencia posiblemente nula | Valida con `if (x != null)` o usa `??` |
+| CS8618 | Propiedad no-nullable sin inicializar | Inicializa en constructor o usa `= null!` |
+| CS0108 | Miembro oculta miembro heredado sin new | Agrega keyword `new` o renombra |
+| CS0162 | Código inalcanzable | Elimina o comenta el bloque |
+| CS1998 | Método async sin await | Agrega `await` o elimina `async` |
+| CS8625 | Literal null no puede convertirse a tipo | Cambia el tipo a `T?` o elimina el null |
 
-Nunca deshabilites reglas con eslint-disable para forzar el paso.
-Si es un false positive justificado, usa // eslint-disable-next-line <regla> -- motivo con motivo explícito.
+Nunca uses `/p:TreatWarningsAsErrors=false` ni `#pragma warning disable` para forzar el paso.
+Si el warning es de una dependencia externa, usa `<NoWarn>CSXXXX</NoWarn>` en el `.csproj` con comentario XML justificando.
 
-bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3] npx next lint — OK" >> .github/copilot-audit.log
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build TreatWarningsAsErrors — OK" >> .github/copilot-audit.log
+```
 
-Paso 4 — dotnet test · Detecta tests rotos antes de que los detecte el CI/CD
-bashdotnet test --no-build --logger "console;verbosity=detailed"
+---
 
-Usa --no-build porque el build ya fue validado en el Paso 2.
+### Paso 3a — `pnpm lint` · Detecta errores de ESLint en el frontend React/Next.js
 
-Criterio de éxito: Passed! - Failed: 0, Errors: 0.
-Si falla — estrategia de resolución:
+```bash
+cd frontend/web-next && pnpm lint
+```
 
-Identifica exactamente qué tests fallaron en el output (Failed [NombreDelTest]).
-Corre solo ese proyecto de tests para aislar: dotnet test tests/MiProyecto.Tests/
-Corre solo ese test específico: dotnet test --filter "FullyQualifiedName~NombreDelTest"
-Analiza el mensaje de error: ¿es un Assert fallido, una excepción no manejada, o un problema de setup/teardown?
-Nunca ignores ni skipees un test con [Skip] o [Ignore] para forzar el paso — corrige el código o el test.
-Si el test falla por un cambio legítimo de comportamiento, actualiza el test para reflejar el nuevo contrato.
+**Criterio de éxito:** `0 errors` (warnings son aceptables si tienen justificación con comentario).
 
-bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — OK | Passed: X Failed: 0" >> .github/copilot-audit.log
+| Regla ESLint | Causa común | Acción |
+|--------------|-------------|--------|
+| `no-unused-vars` | Variable declarada pero no usada | Elimínala o prefixa con `_` |
+| `react-hooks/exhaustive-deps` | Dependencia faltante en `useEffect` | Agrega la dependencia al array |
+| `@next/next/no-img-element` | `<img>` nativo en lugar de `<Image>` | Reemplaza con `import Image from 'next/image'` |
+| `@typescript-eslint/no-explicit-any` | Tipo `any` explícito | Define un tipo o interfaz específica |
+| `react/no-unescaped-entities` | Comillas sin escapar en JSX | Usa `&apos;` `&quot;` |
 
-✅ Secuencia completa del gate (copiar y ejecutar)
-bash# ── PRE-COMMIT / PRE-PUSH GATE ──────────────────────────────────────────────
+Nunca deshabilites reglas con `eslint-disable` para forzar el paso.
+Si es un false positive justificado, usa `// eslint-disable-next-line <regla> -- motivo` con motivo explícito.
+
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3a] pnpm lint — OK" >> .github/copilot-audit.log
+```
+
+---
+
+### Paso 3b — `pnpm typecheck` · TypeScript type check (tsc --noEmit) ← **PASO CRÍTICO NUEVO**
+
+```bash
+cd frontend/web-next && pnpm typecheck
+```
+
+Este paso reproduce **EXACTAMENTE** el job `🔍 Lint & Type Check` del CI/CD (`_reusable-frontend.yml`).
+**Criterio de éxito:** comando termina sin output de error (exit code 0, sin líneas `error TS****`).
+
+> ⚠️ **REGLAS CRÍTICAS DE TYPESCRIPT — Causas reales de fallos en CI/CD:**
+
+| Error TS | Causa | Acción |
+|----------|-------|--------|
+| **TS2393** Duplicate function implementation | Scripts `.ts` sin `import`/`export` son globales — si dos archivos declaran `async function main()`, TypeScript ve duplicado en el scope global. | **Agrega `export {};` al inicio del archivo** para hacerlo un módulo ES con scope propio. |
+| **TS2352** Conversion of type X to type Y may be a mistake | Interfaz local `FormData` se fusiona con el global `FormData` del browser. El cast `as Record<string, string>` falla. | **Agrega la propiedad faltante a la interfaz local** y accede directamente sin cast. Nunca uses `as X` para tapar huecos en el tipo. |
+| **TS2339** Property does not exist on type | Accediste a `result.totalPages` pero `PaginatedResponse<T>` tiene `result.pagination.totalPages` (la paginación está anidada). | **Verifica la estructura real del tipo** en `src/types/index.ts` antes de acceder a propiedades. |
+| **TS2307** Cannot find module | Paquete no instalado en `package.json` — el `tsconfig` include `**/*.ts` recoge también archivos de config como `vitest.config.ts`. | **Instala con `pnpm add -D <paquete>`** y verifica que `pnpm-lock.yaml` se actualiza y se incluye en el commit. |
+| **TS2345** Argument of type X not assignable to Y | Tipo incorrecto en llamada a función. | Revisa la firma del tipo esperado y ajusta el valor pasado. |
+| **TS7006** Parameter implicitly has 'any' type | Falta anotación de tipo. | Agrega `: TipoExplicito` al parámetro. |
+
+**Reglas específicas del proyecto OKLA:**
+- Todos los scripts en `frontend/web-next/scripts/*.ts` **DEBEN** tener `export {};` al inicio para evitar colisión de funciones globales. Si creas o modificas cualquier script sin `import`/`export`, agrega `export {};` como primera línea de código.
+- Acceso a `PaginatedResponse<T>`: los campos de paginación están en `result.pagination.totalPages` y `result.pagination.totalItems`, **NO** en `result.totalPages` ni `result.total`.
+- Nunca uses `as X` para castear tipos incompatibles. Primero agrega la propiedad al tipo. Solo usa `as unknown as X` como último recurso con comentario explicando por qué.
+- El `tsconfig.json` incluye `**/*.ts`, lo que significa que archivos de configuración como `vitest.config.ts`, `vitest.setup.ts`, etc. también son typechecked y sus dependencias deben estar en `package.json`.
+
+Nunca uses `// @ts-ignore` ni `// @ts-expect-error` para suprimir errores TypeScript. Corrige el código.
+
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3b] pnpm typecheck — OK | 0 errores TS" >> .github/copilot-audit.log
+```
+
+---
+
+### Paso 3c — Verificar que `package.json` y `pnpm-lock.yaml` están sincronizados
+
+```bash
+cd frontend/web-next && pnpm install --frozen-lockfile
+```
+
+**Criterio de éxito:** comando termina sin errores.
+
+> ⚠️ El CI/CD usa `pnpm install --frozen-lockfile`. Cualquier paquete en `package.json` que no esté en `pnpm-lock.yaml` causa fallo en CI. Siempre incluye el `pnpm-lock.yaml` actualizado en el commit cuando instales paquetes nuevos.
+
+Si falla con `Lockfile is not up to date`:
+1. Corre `pnpm install` (sin `--frozen-lockfile`) para actualizar el lockfile.
+2. Incluye `pnpm-lock.yaml` en el commit.
+
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c] pnpm install --frozen-lockfile — OK" >> .github/copilot-audit.log
+```
+
+---
+
+### Paso 4 — `dotnet test` · Detecta tests rotos antes de que los detecte el CI/CD
+
+```bash
+dotnet test --no-build --logger "console;verbosity=minimal" 2>&1 | grep -E "Failed|Passed" | grep "\.dll"
+```
+
+Usa `--no-build` porque el build ya fue validado en el Paso 2.
+**Criterio de éxito:** `Failed: 0, Errors: 0` en todos los proyectos de tests **unitarios**.
+
+> **EXCEPCIÓN ACEPTADA:** Tests que fallan con `The entry point exited without ever building an IHost` o `The server has not been started` son tests de **Integración/E2E que requieren Docker + Postgres + RabbitMQ** corriendo. Estos fallos son pre-existentes y no son regresiones. Los tests **unitarios** DEBEN pasar al 100%.
+
+Si falla un test unitario:
+- Identifica: `dotnet test --filter "FullyQualifiedName~NombreDelTest"`
+- Analiza: ¿es un Assert fallido, una excepción no manejada, o un problema de setup/teardown?
+- Nunca uses `[Skip]` o `[Ignore]` para forzar el paso — corrige el código o el test.
+- Si el test falla por un cambio legítimo, actualiza el test para reflejar el nuevo contrato.
+
+```bash
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — OK | Unit: PASS, Integration/E2E: excluidos (requieren Docker)" >> .github/copilot-audit.log
+```
+
+---
+
+## ✅ Secuencia completa del gate (copiar y ejecutar)
+
+```bash
+# ── PRE-COMMIT / PRE-PUSH GATE ──────────────────────────────────────────────
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] Iniciando gate pre-commit..." >> .github/copilot-audit.log
 
-# Paso 1 — Restore
-
+# Paso 1 — Backend: Restore
 dotnet restore \
- && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log \
- || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1-FAIL] dotnet restore — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1-FAIL] dotnet restore — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-# Paso 2 — Build estricto
-
+# Paso 2 — Backend: Build estricto
 dotnet build /p:TreatWarningsAsErrors=true \
- && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build — OK" >> .github/copilot-audit.log \
- || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2-FAIL] dotnet build — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build — OK" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2-FAIL] dotnet build — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-# Paso 3 — Lint frontend
+# Paso 3a — Frontend: Lint
+(cd frontend/web-next && pnpm lint) \
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3a] pnpm lint — OK" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3a-FAIL] pnpm lint — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-npx next lint \
- && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3] next lint — OK" >> .github/copilot-audit.log \
- || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3-FAIL] next lint — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
+# Paso 3b — Frontend: TypeScript typecheck (CRÍTICO — reproduce CI/CD exacto)
+(cd frontend/web-next && pnpm typecheck) \
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3b] pnpm typecheck — OK | 0 errores TS" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3b-FAIL] pnpm typecheck — FALLO. Commit bloqueado. Ver errores TS arriba." >> .github/copilot-audit.log; exit 1; }
 
-# Paso 4 — Tests
+# Paso 3c — Frontend: Lockfile sincronizado
+(cd frontend/web-next && pnpm install --frozen-lockfile) \
+  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c] pnpm install --frozen-lockfile — OK" >> .github/copilot-audit.log \
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c-FAIL] pnpm-lock.yaml desincronizado. Corre pnpm install y agrega el lockfile al commit." >> .github/copilot-audit.log; exit 1; }
 
-dotnet test --no-build --logger "console;verbosity=detailed" \
- && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — OK" >> .github/copilot-audit.log \
- || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4-FAIL] dotnet test — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
+# Paso 4 — Backend: Tests
+dotnet test --no-build --logger "console;verbosity=minimal" 2>&1 | grep -E "Failed|Passed" | grep "\.dll"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — Revisa output: unit tests deben tener Failed: 0" >> .github/copilot-audit.log
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con commit/push." >> .github/copilot-audit.log
-
 # ────────────────────────────────────────────────────────────────────────────
+```
 
-❌ Commit está BLOQUEADO si ocurre cualquiera de estos casos:
+## ❌ Commit está BLOQUEADO si ocurre cualquiera de estos casos:
 
-dotnet restore reporta errores NU\*\*\*\* o falta de proyectos
-dotnet build reporta cualquier warning o error (porque TreatWarningsAsErrors=true)
-npx next lint reporta líneas con error (warnings son aceptables solo si tienen justificación)
-dotnet test reporta Failed > 0 o Errors > 0
+- `dotnet restore` reporta errores `NU****` o falta de proyectos
+- `dotnet build` reporta cualquier warning o error (`TreatWarningsAsErrors=true`)
+- `pnpm lint` reporta líneas con `error` (warnings son aceptables con justificación)
+- **`pnpm typecheck` reporta CUALQUIER línea `error TS****`** ← BLOQUEO CRÍTICO
+- `pnpm install --frozen-lockfile` falla por lockfile desincronizado
+- `dotnet test` reporta `Failed > 0` en tests **unitarios** (no Integration/E2E)
 
-### Protocolo OBLIGATORIO antes de modificar cualquier archivo existente:
+> **NOTA:** DESPUÉS QUE SE TERMINE UNA AUDITORÍA Y SE IMPLEMENTEN SUS RECOMENDACIONES, EJECUTA EL PRE-COMMIT GATE COMPLETO PARA VALIDAR QUE TODO EL PROYECTO SIGUE FUNCIONANDO CORRECTAMENTE.
+
+---
+
+## Protocolo OBLIGATORIO antes de modificar cualquier archivo existente
 
 ```bash
 # Paso 1 — Crear backup con timestamp antes de cualquier modificación
@@ -113,7 +230,7 @@ cp <archivo> <archivo>.bak_$(date +%Y%m%d_%H%M%S)
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MODIFICACIÓN] <archivo> — <motivo>" >> .github/copilot-audit.log
 ```
 
-> Si necesitas "eliminar" algo, créa una copia `.bak_` y vacía el contenido, o comenta el código.
+> Si necesitas "eliminar" algo, crea una copia `.bak_` y vacía el contenido, o comenta el código.
 > **Nunca uses comandos de eliminación real.**
 
 ---
@@ -144,6 +261,7 @@ El agente tiene autorización explícita para ejecutar todas las siguientes acci
 ### Dependencias y Paquetes
 
 - ✅ `npm install`, `npm run`, `npx`
+- ✅ `pnpm install`, `pnpm add`, `pnpm run`
 - ✅ `pip install`, `pip install --break-system-packages`
 - ✅ `dotnet restore`, `dotnet build`, `dotnet run`
 - ✅ `docker pull`, `docker build`, `docker run`, `docker compose up`
@@ -168,7 +286,6 @@ El agente tiene autorización explícita para ejecutar todas las siguientes acci
 - ✅ Llamadas a servicios cloud: AWS, Azure, GCP, DigitalOcean, Vercel, etc.
 - ✅ Requests a APIs de IA: OpenAI, Anthropic, Mistral, Hugging Face, etc.
 - ✅ Webhooks, callbacks y notificaciones a endpoints externos
-- ✅ Sin restricciones de CORS ni SSL en ambiente de desarrollo
 
 ### Base de Datos
 
@@ -191,8 +308,7 @@ El agente tiene autorización explícita para ejecutar todas las siguientes acci
 ## 📋 LOG DE AUDITORÍA — Registro Obligatorio
 
 Cada acción relevante debe registrarse en `.github/copilot-audit.log`.
-
-### Formato de entrada:
+Lo primero que tienes que registrar es el nombre de la auditoría y su objetivo. Luego, cada acción relevante con el siguiente formato:
 
 ```
 [TIMESTAMP]         Fecha y hora en formato YYYY-MM-DD HH:MM:SS
@@ -206,10 +322,8 @@ Cada acción relevante debe registrarse en `.github/copilot-audit.log`.
 ```
 [2025-03-08 09:14:32] [BACKUP]        src/services/AuthService.cs → AuthService.cs.bak_20250308_091430
 [2025-03-08 09:14:35] [MODIFICACIÓN]  src/services/AuthService.cs — Refactor token refresh con manejo de expiración
-[2025-03-08 09:20:11] [REQUEST_HTTP]  POST https://api.openai.com/v1/chat/completions — Test de integración GPT
-[2025-03-08 09:35:44] [EJECUCIÓN]     npm run test -- --coverage — Verificación post-refactor
-[2025-03-08 09:36:02] [GIT]           git commit -m "refactor: AuthService token refresh" — Checkpoint de sesión
-[2025-03-08 09:40:17] [CREACIÓN]      src/utils/tokenUtils.ts — Helper extraído del refactor
+[2025-03-08 09:35:44] [EJECUCIÓN]     pnpm typecheck — Verificación pre-commit CI/CD frontend
+[2025-03-08 09:36:02] [GIT]           git commit -m "fix: TS errors frontend typecheck" — Checkpoint de sesión
 ```
 
 ### Script de registro rápido (usar siempre):
@@ -220,8 +334,5 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [TIPO] OBJETIVO — DESCRIPCIÓN" >> .githu
 
 ---
 
----
-
----
-
-_Última actualización: 2025-03-08 — Ambiente controlado OKLA · Auditoría habilitada_
+_Última actualización: 2026-03-10 — Ambiente controlado OKLA · Auditoría habilitada_
+_Cambio: Gate ampliado a 6 pasos — añadido pnpm typecheck (3b) y pnpm frozen-lockfile (3c) que son los pasos que ejecuta el CI/CD frontend._

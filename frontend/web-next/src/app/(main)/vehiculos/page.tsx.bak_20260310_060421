@@ -101,8 +101,7 @@ export default async function VehiculosPage() {
   try {
     const result = await searchVehicles({ page: 1, pageSize: 10 });
     vehicles = result.items;
-    totalPages =
-      result.pagination?.totalPages ?? Math.ceil((result.pagination?.totalItems ?? 0) / 10);
+    totalPages = result.totalPages ?? Math.ceil((result.total ?? 0) / 10);
   } catch {
     // API unavailable at build time — JSON-LD omitted, page still renders
   }

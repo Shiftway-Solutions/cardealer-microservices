@@ -1,2 +1,2 @@
 Ejecuta el día de hoy por favor el prompt 5. Como si no tuvieras registro y realiza una auditoría de Reporte automático de primeros 7 días: Auditar que todo dealer nuevo recibe automáticamente al día 7 un email con: número de vistas por listing, número de consultas recibidas, vehículo más visto y comparativa vs. el promedio del mercado OKLA, incluso si los números son bajos y ejecuta correcciones y ejecuta inmediatamente sus recomendaciones. No olvides monitorear .prompts/prompt_6.md.
-<!-- monitor: 2026-03-10 05:42:34 -->
+<!-- monitor: 2026-03-10 06:19:34 -->
