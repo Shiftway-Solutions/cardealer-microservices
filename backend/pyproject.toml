@@ -1,11 +1,13 @@
 [tool.black]
 line-length = 120
 target-version = ["py311"]
+extend-exclude = 'bak_'
 
 [tool.isort]
 profile = "black"
 line_length = 120
 known_first_party = ["mask_refinement"]
+skip_glob = ["*.bak_*", "**/*.bak_*"]
 
 [tool.bandit]
 exclude_dirs = [".venv", "node_modules", "tests", "__pycache__"]

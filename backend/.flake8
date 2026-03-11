@@ -14,8 +14,8 @@ exclude =
     *.egg-info,
     node_modules,
     migrations,
-    # ML model weights and data
-    models,
+    # Backup files created during audits
+    *.bak_*,
     datasets,
     # Output directories
     output*,
