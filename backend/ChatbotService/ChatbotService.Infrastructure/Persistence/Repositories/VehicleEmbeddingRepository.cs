@@ -66,7 +66,7 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
             var countSql = "SELECT COUNT(*) FROM vehicle_embeddings";
             await using var countCmd = new NpgsqlCommand(countSql, conn);
             var count = (long)(await countCmd.ExecuteScalarAsync(ct) ?? 0);
-            
+
             if (count >= 100) // IVFFlat necesita al menos algunos registros
             {
                 var lists = Math.Max(1, (int)Math.Sqrt(count));
@@ -76,10 +76,10 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
                         ON vehicle_embeddings 
                         USING ivfflat (embedding vector_cosine_ops) 
                         WITH (lists = {lists});";
-                
+
                 await using var ivfCmd = new NpgsqlCommand(ivfSql, conn);
                 await ivfCmd.ExecuteNonQueryAsync(ct);
-                
+
                 _logger.LogInformation("Created IVFFlat index with {Lists} lists on {Count} embeddings",
                     lists, count);
             }
@@ -198,13 +198,13 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
 
         var results = new List<VehicleSearchResult>();
         await using var reader = await cmd.ExecuteReaderAsync(ct);
-        
+
         while (await reader.ReadAsync(ct))
         {
             var vehicleId = reader.GetGuid(0);
             var metadataJson = reader.GetString(2);
             var similarity = reader.GetFloat(3);
-            
+
             var metadata = JsonSerializer.Deserialize<VehicleEmbeddingMetadata>(metadataJson,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -271,7 +271,7 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
 
         // Eliminar embeddings existentes del dealer y reinsertar
         await using var tx = await conn.BeginTransactionAsync(ct);
-        
+
         try
         {
             var deleteSql = "DELETE FROM vehicle_embeddings WHERE dealer_id = @dealerId";
@@ -342,7 +342,7 @@ public class VehicleEmbeddingRepository : IVehicleEmbeddingRepository
         var sql = "SELECT COUNT(*) FROM vehicle_embeddings WHERE dealer_id = @dealerId";
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("dealerId", dealerId);
-        
+
         return Convert.ToInt32(await cmd.ExecuteScalarAsync(ct) ?? 0);
     }
 }

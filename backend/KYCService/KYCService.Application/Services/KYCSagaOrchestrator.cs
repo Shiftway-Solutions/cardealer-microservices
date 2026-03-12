@@ -15,37 +15,37 @@ public interface IKYCSagaOrchestrator
     /// Start a new KYC submission saga
     /// </summary>
     Task<KYCSagaState> StartSagaAsync(Guid userId, int totalSteps, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Record a completed step
     /// </summary>
     Task RecordStepCompletedAsync(Guid correlationId, int step, string stepName, object? stepData, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Record profile creation for rollback tracking
     /// </summary>
     Task RecordProfileCreatedAsync(Guid correlationId, Guid profileId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Record document creation for rollback tracking
     /// </summary>
     Task RecordDocumentCreatedAsync(Guid correlationId, Guid documentId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Mark saga as completed successfully
     /// </summary>
     Task CompleteSagaAsync(Guid correlationId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Mark saga as failed and trigger rollback
     /// </summary>
     Task FailSagaAsync(Guid correlationId, int failedAtStep, string errorMessage, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Execute rollback for a failed saga
     /// </summary>
     Task<bool> RollbackSagaAsync(Guid correlationId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Get saga state
     /// </summary>
@@ -100,8 +100,8 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
         };
 
         await _sagaRepository.CreateAsync(saga, cancellationToken);
-        
-        _logger.LogInformation("Started KYC saga {CorrelationId} for user {UserId}", 
+
+        _logger.LogInformation("Started KYC saga {CorrelationId} for user {UserId}",
             saga.CorrelationId, userId);
 
         // Log to centralized audit service (fire and forget)
@@ -143,8 +143,8 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
         saga.CompletedStepsData = JsonSerializer.Serialize(completedSteps);
 
         await _sagaRepository.UpdateAsync(saga, cancellationToken);
-        
-        _logger.LogInformation("Saga {CorrelationId} completed step {Step}: {StepName}", 
+
+        _logger.LogInformation("Saga {CorrelationId} completed step {Step}: {StepName}",
             correlationId, step, stepName);
     }
 
@@ -155,7 +155,7 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
 
         saga.CreatedProfileId = profileId;
         await _sagaRepository.UpdateAsync(saga, cancellationToken);
-        
+
         _logger.LogInformation("Saga {CorrelationId} recorded profile {ProfileId}", correlationId, profileId);
     }
 
@@ -166,7 +166,7 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
 
         saga.CreatedDocumentIds.Add(documentId);
         await _sagaRepository.UpdateAsync(saga, cancellationToken);
-        
+
         _logger.LogInformation("Saga {CorrelationId} recorded document {DocumentId}", correlationId, documentId);
     }
 
@@ -222,7 +222,7 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
                 { "totalSteps", saga.TotalSteps }
             });
 
-        _logger.LogWarning("Saga {CorrelationId} failed at step {Step}: {Error}", 
+        _logger.LogWarning("Saga {CorrelationId} failed at step {Step}: {Error}",
             correlationId, failedAtStep, errorMessage);
 
         // Trigger automatic rollback
@@ -310,7 +310,7 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
                     { "rollbackErrors", rollbackErrors.Count }
                 });
 
-            _logger.LogInformation("Rollback for saga {CorrelationId} completed with {ErrorCount} errors", 
+            _logger.LogInformation("Rollback for saga {CorrelationId} completed with {ErrorCount} errors",
                 correlationId, rollbackErrors.Count);
 
             return rollbackErrors.Count == 0;
@@ -318,7 +318,7 @@ public class KYCSagaOrchestrator : IKYCSagaOrchestrator
         catch (Exception ex)
         {
             _logger.LogError(ex, "Critical error during rollback of saga {CorrelationId}", correlationId);
-            
+
             saga.Status = SagaStatus.PartiallyRolledBack;
             saga.ErrorMessage = $"Critical rollback failure: {ex.Message}";
             saga.RolledBackAt = DateTime.UtcNow;

@@ -52,7 +52,7 @@ public class SendInvitationCommandHandler : IRequestHandler<SendInvitationComman
 
     public async Task<DealerEmployeeInvitationDto> Handle(SendInvitationCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Sending invitation to {Email} for dealer {DealerId}", 
+        _logger.LogInformation("Sending invitation to {Email} for dealer {DealerId}",
             request.Email, request.DealerId);
 
         // Verify dealer exists

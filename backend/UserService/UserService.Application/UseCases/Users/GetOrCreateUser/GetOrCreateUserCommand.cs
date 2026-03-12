@@ -64,7 +64,7 @@ namespace UserService.Application.UseCases.Users.GetOrCreateUser
             }
 
             // Create new user profile (OAuth user sync)
-            _logger.LogInformation("Creating UserService profile for OAuth user {UserId} ({Email})", 
+            _logger.LogInformation("Creating UserService profile for OAuth user {UserId} ({Email})",
                 request.UserId, request.Email);
 
             user = new User

@@ -43,8 +43,8 @@ public class PrivacyController : ControllerBase
     private Guid GetUserId()
     {
         // El JWT de AuthService usa ClaimTypes.NameIdentifier como claim principal
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier) 
-                       ?? User.FindFirst("sub") 
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                       ?? User.FindFirst("sub")
                        ?? User.FindFirst("userId");
         return userIdClaim != null ? Guid.Parse(userIdClaim.Value) : Guid.Empty;
     }

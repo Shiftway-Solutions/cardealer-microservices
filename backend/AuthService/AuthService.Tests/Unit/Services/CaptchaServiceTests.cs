@@ -18,7 +18,7 @@ public class CaptchaServiceTests
 {
     private readonly Mock<ILogger<CaptchaService>> _loggerMock;
     private readonly Mock<IConfiguration> _configurationMock;
-    
+
     public CaptchaServiceTests()
     {
         _loggerMock = new Mock<ILogger<CaptchaService>>();
@@ -35,8 +35,8 @@ public class CaptchaServiceTests
         _configurationMock.Setup(c => c["ReCaptcha:Enabled"]).Returns(enabled.ToString());
         _configurationMock.Setup(c => c["ReCaptcha:MinScore"]).Returns(minScore.ToString());
 
-        var httpClient = httpHandler != null 
-            ? new HttpClient(httpHandler) 
+        var httpClient = httpHandler != null
+            ? new HttpClient(httpHandler)
             : new HttpClient();
 
         return new CaptchaService(httpClient, _configurationMock.Object, _loggerMock.Object);
@@ -88,14 +88,14 @@ public class CaptchaServiceTests
     public async Task VerifyAsync_WithValidToken_ReturnsTrue()
     {
         // Arrange
-        var responseJson = JsonSerializer.Serialize(new 
-        { 
-            success = true, 
-            score = 0.9, 
+        var responseJson = JsonSerializer.Serialize(new
+        {
+            success = true,
+            score = 0.9,
             action = "login",
             hostname = "okla.com.do"
         });
-        
+
         var handler = CreateMockHttpHandler(HttpStatusCode.OK, responseJson);
         var service = CreateService(handler, secretKey: "test-secret-key", enabled: true);
 
@@ -111,13 +111,13 @@ public class CaptchaServiceTests
     public async Task VerifyAsync_WithLowScore_ReturnsFalse()
     {
         // Arrange
-        var responseJson = JsonSerializer.Serialize(new 
-        { 
-            success = true, 
+        var responseJson = JsonSerializer.Serialize(new
+        {
+            success = true,
             score = 0.2, // Below 0.5 threshold
             action = "login"
         });
-        
+
         var handler = CreateMockHttpHandler(HttpStatusCode.OK, responseJson);
         var service = CreateService(handler, secretKey: "test-secret-key", enabled: true, minScore: 0.5m);
 
@@ -133,12 +133,12 @@ public class CaptchaServiceTests
     public async Task VerifyAsync_WhenApiReturnsFailure_ReturnsFalse()
     {
         // Arrange
-        var responseJson = JsonSerializer.Serialize(new 
-        { 
-            success = false, 
+        var responseJson = JsonSerializer.Serialize(new
+        {
+            success = false,
             error_codes = new[] { "timeout-or-duplicate" }
         });
-        
+
         var handler = CreateMockHttpHandler(HttpStatusCode.OK, responseJson);
         var service = CreateService(handler, secretKey: "test-secret-key", enabled: true);
 

@@ -1,0 +1,50 @@
+/**
+ * useReportPurchase — Hook for OKLA Score™ report purchase state
+ *
+ * Manages whether a report has been purchased for a given vehicle,
+ * combining local cache (localStorage) with optional API verification.
+ */
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import {
+  isReportPurchasedLocally,
+  saveReportPurchaseLocally,
+} from '@/services/report-purchase';
+
+interface UseReportPurchaseReturn {
+  /** Whether the report for this vehicle has been purchased */
+  isPurchased: boolean;
+  /** Mark a report as purchased (called after successful payment) */
+  markPurchased: (purchaseId: string, buyerEmail: string) => void;
+}
+
+/**
+ * Check and track purchase state for a vehicle's OKLA Score report.
+ *
+ * @param vehicleId - The vehicle ID to check purchase state for
+ */
+export function useReportPurchase(vehicleId: string | undefined): UseReportPurchaseReturn {
+  const [isPurchased, setIsPurchased] = useState(() => {
+    if (!vehicleId) return false;
+    return isReportPurchasedLocally(vehicleId);
+  });
+
+  // Re-check when vehicleId changes
+  useEffect(() => {
+    if (!vehicleId) return;
+    setIsPurchased(isReportPurchasedLocally(vehicleId));
+  }, [vehicleId]);
+
+  const markPurchased = useCallback(
+    (purchaseId: string, buyerEmail: string) => {
+      if (!vehicleId) return;
+      saveReportPurchaseLocally(vehicleId, purchaseId, buyerEmail);
+      setIsPurchased(true);
+    },
+    [vehicleId]
+  );
+
+  return { isPurchased, markPurchased };
+}

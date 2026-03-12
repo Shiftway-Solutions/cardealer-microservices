@@ -39,12 +39,12 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
             {
                 var activeSessions = await _sessionRepository.GetActiveSessionsByUserIdAsync(
                     storedToken.UserId, cancellationToken);
-                
+
                 // Find and revoke session matching this token's IP/creation time
                 var matchingSession = activeSessions
-                    .FirstOrDefault(s => s.CreatedAt <= storedToken.CreatedAt.AddSeconds(5) 
+                    .FirstOrDefault(s => s.CreatedAt <= storedToken.CreatedAt.AddSeconds(5)
                                       && s.CreatedAt >= storedToken.CreatedAt.AddSeconds(-5));
-                
+
                 if (matchingSession != null)
                 {
                     matchingSession.Revoke("User logged out");

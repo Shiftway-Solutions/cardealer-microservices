@@ -23,7 +23,7 @@ namespace AuthService.Application.Features.Auth.Commands.RequestSessionRevocatio
 /// 6. Enviar email con código
 /// 7. Almacenar código hasheado en Redis
 /// </summary>
-public class RequestSessionRevocationCommandHandler 
+public class RequestSessionRevocationCommandHandler
     : IRequestHandler<RequestSessionRevocationCommand, RequestSessionRevocationResponse>
 {
     private readonly IUserSessionRepository _sessionRepository;
@@ -230,7 +230,7 @@ public class RequestSessionRevocationCommandHandler
         if (parts.Length != 2) return "***@***";
         var name = parts[0];
         var domain = parts[1];
-        var maskedName = name.Length > 2 
+        var maskedName = name.Length > 2
             ? name[0] + new string('*', name.Length - 2) + name[^1]
             : "**";
         return $"{maskedName}@{domain}";

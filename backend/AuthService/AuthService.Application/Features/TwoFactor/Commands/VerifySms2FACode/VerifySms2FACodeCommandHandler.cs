@@ -97,7 +97,7 @@ public class VerifySms2FACodeCommandHandler : IRequestHandler<VerifySms2FACodeCo
         // 5. Get stored code from Redis
         var cacheKey = $"sms_2fa_code:{userId}";
         var storedCode = await _cache.GetStringAsync(cacheKey, cancellationToken);
-        
+
         if (string.IsNullOrEmpty(storedCode))
         {
             _logger.LogWarning("No SMS code found or expired for user {UserId}", userId);
@@ -108,19 +108,19 @@ public class VerifySms2FACodeCommandHandler : IRequestHandler<VerifySms2FACodeCo
         var codeBytes = Encoding.UTF8.GetBytes(request.Code.PadRight(6, '0'));
         var storedBytes = Encoding.UTF8.GetBytes(storedCode.PadRight(6, '0'));
         var isValidCode = CryptographicOperations.FixedTimeEquals(codeBytes, storedBytes);
-        
+
         if (!isValidCode)
         {
             // Track failed attempt and send security alert if threshold reached (US-18.2)
             await TrackFailedAttemptAsync(userId, user.Email!, cancellationToken);
-            
+
             _logger.LogWarning("Invalid SMS 2FA code for user {UserId}", userId);
             throw new UnauthorizedException("Invalid verification code.");
         }
 
         // 7. Code is valid - remove from cache
         await _cache.RemoveAsync(cacheKey, cancellationToken);
-        
+
         // Clear any failed attempt counter
         var failedAttemptsKey = $"sms_2fa_failed:{userId}";
         await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
@@ -156,7 +156,7 @@ public class VerifySms2FACodeCommandHandler : IRequestHandler<VerifySms2FACodeCo
     {
         var failedAttemptsKey = $"sms_2fa_failed:{userId}";
         var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
-        
+
         int attempts = 1;
         if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
         {
@@ -214,7 +214,7 @@ public class VerifySms2FACodeCommandHandler : IRequestHandler<VerifySms2FACodeCo
                 _logger.LogError(ex, "Failed to send lockout notification for user {UserId}", userId);
             }
 
-            _logger.LogWarning("User {UserId} locked out from SMS 2FA after {Attempts} failed attempts", 
+            _logger.LogWarning("User {UserId} locked out from SMS 2FA after {Attempts} failed attempts",
                 userId, MAX_FAILED_ATTEMPTS);
         }
         else

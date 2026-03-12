@@ -55,7 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IQuickResponseRepository, QuickResponseRepository>();
         services.AddScoped<IChatbotVehicleRepository, ChatbotVehicleRepository>();
         services.AddScoped<IUnansweredQuestionRepository, UnansweredQuestionRepository>();
-        
+
         // pgvector Repository for RAG
         services.AddScoped<IVehicleEmbeddingRepository>(sp =>
         {
@@ -76,10 +76,10 @@ public static class DependencyInjection
         // ═══════════════════════════════════════════════════════════
         // DUAL-MODE: Strategy Pattern + RAG + Embeddings
         // ═══════════════════════════════════════════════════════════
-        
+
         // Embedding service (sentence-transformers via LlmServer)
         services.AddScoped<IEmbeddingService, EmbeddingService>();
-        
+
         // Vector search service (pgvector-based RAG)
         services.AddScoped<IVectorSearchService, VectorSearchService>();
 
@@ -164,7 +164,7 @@ public static class DependencyInjection
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-            .WaitAndRetryAsync(3, retryAttempt => 
+            .WaitAndRetryAsync(3, retryAttempt =>
                 TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
     }
 

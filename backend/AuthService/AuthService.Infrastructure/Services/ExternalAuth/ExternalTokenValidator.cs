@@ -97,7 +97,7 @@ public class ExternalTokenValidator : IExternalTokenValidator
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Facebook token validation failed: {StatusCode} - {Error}", 
+                _logger.LogWarning("Facebook token validation failed: {StatusCode} - {Error}",
                     response.StatusCode, errorContent);
                 return new ExternalTokenValidationResult(false, string.Empty, string.Empty, string.Empty);
             }
@@ -139,7 +139,7 @@ public class ExternalTokenValidator : IExternalTokenValidator
         {
             // Apple uses JWT ID tokens that we need to validate
             var handler = new JwtSecurityTokenHandler();
-            
+
             if (!handler.CanReadToken(idToken))
             {
                 _logger.LogWarning("Invalid Apple ID token format");
@@ -204,7 +204,7 @@ public class ExternalTokenValidator : IExternalTokenValidator
             // Extract claims from the token
             var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? string.Empty;
             var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? string.Empty;
-            
+
             // Apple doesn't always provide name in the token, it's only in the first authentication
             // The name comes from the authorization response, not the ID token
             var name = string.Empty;

@@ -27,7 +27,7 @@ public class NotificationLog
     }
 
     // Factory methods
-    public static NotificationLog CreateSent(Guid notificationId, string? providerMessageId = null, 
+    public static NotificationLog CreateSent(Guid notificationId, string? providerMessageId = null,
         string? providerResponse = null, decimal? cost = null)
     {
         return new NotificationLog
@@ -41,7 +41,7 @@ public class NotificationLog
         };
     }
 
-    public static NotificationLog CreateFailed(Guid notificationId, string errorMessage, 
+    public static NotificationLog CreateFailed(Guid notificationId, string errorMessage,
         string? providerResponse = null)
     {
         return new NotificationLog
@@ -65,7 +65,7 @@ public class NotificationLog
         };
     }
 
-    public static NotificationLog CreateOpened(Guid notificationId, string? ipAddress = null, 
+    public static NotificationLog CreateOpened(Guid notificationId, string? ipAddress = null,
         string? userAgent = null)
     {
         return new NotificationLog
@@ -78,7 +78,7 @@ public class NotificationLog
         };
     }
 
-    public static NotificationLog CreateClicked(Guid notificationId, string linkUrl, 
+    public static NotificationLog CreateClicked(Guid notificationId, string linkUrl,
         string? ipAddress = null, string? userAgent = null)
     {
         return new NotificationLog

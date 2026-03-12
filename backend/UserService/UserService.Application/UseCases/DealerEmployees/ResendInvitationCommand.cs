@@ -33,7 +33,7 @@ public class ResendInvitationCommandHandler : IRequestHandler<ResendInvitationCo
 
     public async Task<DealerEmployeeInvitationDto> Handle(ResendInvitationCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Resending invitation {InvitationId} for dealer {DealerId}", 
+        _logger.LogInformation("Resending invitation {InvitationId} for dealer {DealerId}",
             request.InvitationId, request.DealerId);
 
         // Verify dealer exists

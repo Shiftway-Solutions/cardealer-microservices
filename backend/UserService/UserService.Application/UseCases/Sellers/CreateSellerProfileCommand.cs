@@ -49,10 +49,10 @@ public class CreateSellerProfileCommandHandler : IRequestHandler<CreateSellerPro
             FullName = request.FullName,
             DateOfBirth = request.DateOfBirth,
             Nationality = request.Nationality,
-            
+
             // FASE 3: Phone and Email removed - use User entity properties instead
             WhatsApp = request.WhatsApp,
-            
+
             // Location
             Address = request.Address,
             City = request.City,
@@ -61,10 +61,10 @@ public class CreateSellerProfileCommandHandler : IRequestHandler<CreateSellerPro
             Country = request.Country,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
-            
+
             // Specialties
             Specialties = request.Specialties ?? Array.Empty<string>(),
-            
+
             // Defaults
             VerificationStatus = SellerVerificationStatus.NotSubmitted,
             IsActive = true,
@@ -72,11 +72,11 @@ public class CreateSellerProfileCommandHandler : IRequestHandler<CreateSellerPro
             ShowPhone = request.ShowPhone,
             ShowLocation = request.ShowLocation,
             PreferredContactMethod = request.PreferredContactMethod,
-            
+
             // Limits
             MaxActiveListings = 3, // Default without verification
             CanSellHighValue = false,
-            
+
             // Metrics
             AverageRating = 0,
             TotalReviews = 0,
@@ -84,7 +84,7 @@ public class CreateSellerProfileCommandHandler : IRequestHandler<CreateSellerPro
             ActiveListings = 0,
             TotalSales = 0,
             ResponseTimeMinutes = 0,
-            
+
             CreatedAt = DateTime.UtcNow
         };
 

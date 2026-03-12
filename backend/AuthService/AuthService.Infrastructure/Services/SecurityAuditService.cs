@@ -36,7 +36,7 @@ public class SecurityAuditService : ISecurityAuditService
         _logger = logger;
     }
 
-    public Task LogLoginSuccessAsync(string userId, string email, string ipAddress, 
+    public Task LogLoginSuccessAsync(string userId, string email, string ipAddress,
         string? userAgent = null, string? deviceFingerprint = null, bool usedTwoFactor = false)
     {
         _logger.LogInformation(
@@ -53,7 +53,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogLoginFailureAsync(string email, string ipAddress, string? userAgent = null, 
+    public Task LogLoginFailureAsync(string email, string ipAddress, string? userAgent = null,
         string? reason = null, int attemptCount = 1)
     {
         _logger.LogWarning(
@@ -83,7 +83,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogTwoFactorFailureAsync(string userId, string method, string ipAddress, 
+    public Task LogTwoFactorFailureAsync(string userId, string method, string ipAddress,
         string? userAgent = null, int attemptCount = 1)
     {
         _logger.LogWarning(
@@ -99,7 +99,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogPasswordChangeAsync(string userId, string email, string ipAddress, 
+    public Task LogPasswordChangeAsync(string userId, string email, string ipAddress,
         bool wasForced = false, string? reason = null)
     {
         _logger.LogInformation(
@@ -115,7 +115,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogAccountLockoutAsync(string userId, string email, string ipAddress, 
+    public Task LogAccountLockoutAsync(string userId, string email, string ipAddress,
         TimeSpan lockoutDuration, int failedAttempts)
     {
         _logger.LogWarning(
@@ -131,7 +131,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogNewDeviceLoginAsync(string userId, string email, string deviceName, 
+    public Task LogNewDeviceLoginAsync(string userId, string email, string deviceName,
         string ipAddress, string? location = null)
     {
         _logger.LogInformation(
@@ -173,7 +173,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogTwoFactorStatusChangeAsync(string userId, string email, string method, 
+    public Task LogTwoFactorStatusChangeAsync(string userId, string email, string method,
         bool enabled, string ipAddress)
     {
         _logger.LogInformation(
@@ -203,7 +203,7 @@ public class SecurityAuditService : ISecurityAuditService
         return Task.CompletedTask;
     }
 
-    public Task LogSuspiciousActivityAsync(string userId, string email, string activityType, 
+    public Task LogSuspiciousActivityAsync(string userId, string email, string activityType,
         string description, string ipAddress, string? userAgent = null)
     {
         _logger.LogError(

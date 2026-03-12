@@ -103,6 +103,20 @@ const formatPrice = (price: number, currency?: string) => {
   return _fp(price, currency || 'DOP');
 };
 
+/** Calculate and format time elapsed since a given ISO date string */
+const formatTimeInQueue = (submittedAt: string): string => {
+  const now = Date.now();
+  const submitted = new Date(submittedAt).getTime();
+  const diffMs = now - submitted;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 60) return `${diffMin}min en cola`;
+  const hours = Math.floor(diffMin / 60);
+  const mins = diffMin % 60;
+  if (hours < 24) return `${hours}h ${mins}min en cola`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ${hours % 24}h en cola`;
+};
+
 const rejectionReasons = [
   'Fotos de baja calidad o incompletas',
   'Información del vehículo incorrecta o incompleta',
@@ -196,6 +210,8 @@ function ModerationItemCard({
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [overrideJustification, setOverrideJustification] = useState('');
 
   const handleRejectClick = () => {
     setShowRejectModal(true);
@@ -209,7 +225,8 @@ function ModerationItemCard({
     setCustomReason('');
   };
 
-  const mainImage = item.images?.[0] || '/placeholder-vehicle.jpg';
+  const mainImage =
+    item.images?.[selectedImageIdx] || item.images?.[0] || '/placeholder-vehicle.jpg';
 
   return (
     <>
@@ -260,7 +277,12 @@ function ModerationItemCard({
                   {item.images.map((img, idx) => (
                     <div
                       key={idx}
-                      className="bg-muted ring-primary relative h-16 w-20 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg hover:ring-2"
+                      onClick={() => setSelectedImageIdx(idx)}
+                      className={`bg-muted relative h-16 w-20 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg ring-2 ${
+                        idx === selectedImageIdx
+                          ? 'ring-primary'
+                          : 'hover:ring-primary/50 ring-transparent'
+                      }`}
                     >
                       <Image
                         src={img}
@@ -281,6 +303,56 @@ function ModerationItemCard({
                     <p className="font-medium text-amber-800">Marcado para revisión</p>
                     <p className="text-sm text-amber-700">{item.flagReason}</p>
                   </div>
+                </div>
+              )}
+
+              {/* AI ModerationAgent Results */}
+              {(item.aiScore !== undefined || item.aiDecision) && (
+                <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                  <p className="flex items-center gap-2 font-medium text-blue-800">
+                    <Star className="h-4 w-4" />
+                    Resultado ModerationAgent
+                  </p>
+                  <div className="flex gap-4 text-sm">
+                    {item.aiScore !== undefined && (
+                      <span className="text-blue-700">
+                        Score: <strong>{item.aiScore}</strong>
+                      </span>
+                    )}
+                    {item.aiDecision && (
+                      <Badge
+                        className={
+                          item.aiDecision === 'approve'
+                            ? 'bg-green-100 text-green-700'
+                            : item.aiDecision === 'reject'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-amber-100 text-amber-700'
+                        }
+                      >
+                        IA:{' '}
+                        {item.aiDecision === 'approve'
+                          ? 'Aprobar'
+                          : item.aiDecision === 'reject'
+                            ? 'Rechazar'
+                            : 'Revisión manual'}
+                      </Badge>
+                    )}
+                  </div>
+                  {item.aiPhotoScores && item.aiPhotoScores.length > 0 && (
+                    <div className="mt-1 space-y-1">
+                      <p className="text-xs font-medium text-blue-600">Score por foto:</p>
+                      {item.aiPhotoScores.map((ps, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                          <span className="text-blue-700">
+                            Foto {i + 1}: {ps.score}
+                          </span>
+                          {ps.rejectionReason && (
+                            <span className="text-red-600">— {ps.rejectionReason}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -323,13 +395,52 @@ function ModerationItemCard({
               </div>
             </div>
 
+            {/* VIN */}
+            {item.vin && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-muted-foreground text-xs font-medium">VIN</p>
+                <p className="font-mono text-sm font-bold">{item.vin}</p>
+              </div>
+            )}
+
+            {/* OKLA Score */}
+            {item.oklaScore !== undefined && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-muted-foreground text-xs font-medium">OKLA Score</p>
+                <p
+                  className={`text-lg font-bold ${item.oklaScore < 400 ? 'text-red-600' : item.oklaScore < 700 ? 'text-amber-600' : 'text-green-600'}`}
+                >
+                  {item.oklaScore}
+                </p>
+              </div>
+            )}
+
             {/* Metadata */}
             <div className="text-muted-foreground flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 {formatDateTime(item.submittedAt)}
               </span>
+              <span className="flex items-center gap-1 font-medium text-amber-600">
+                <Clock className="h-4 w-4" />
+                {formatTimeInQueue(item.submittedAt)}
+              </span>
             </div>
+
+            {/* AI Override justification — visible when AI has a decision */}
+            {item.aiDecision && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs font-medium">
+                  Justificación de sobrescritura IA (opcional)
+                </p>
+                <Textarea
+                  placeholder="Si tu decisión difiere de la IA, documenta aquí el motivo..."
+                  value={overrideJustification}
+                  onChange={e => setOverrideJustification(e.target.value)}
+                  className="min-h-[60px] text-sm"
+                />
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
@@ -442,12 +553,24 @@ function ModerationItemCard({
 function ModerationTab() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [page] = useState(1);
+  const [vinSearch, setVinSearch] = useState('');
+  const [oklaScoreFilter, setOklaScoreFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+
+  const moderationFilters = {
+    page,
+    pageSize: 10,
+    status: 'pending' as const,
+    ...(vinSearch ? { search: vinSearch } : {}),
+    ...(oklaScoreFilter === 'low' ? { maxOklaScore: 400 } : {}),
+    ...(priorityFilter !== 'all' ? { priority: priorityFilter } : {}),
+  };
 
   const {
     data: queueData,
     isLoading: isLoadingQueue,
     refetch: refetchQueue,
-  } = useModerationQueue({ page, pageSize: 10, status: 'pending' });
+  } = useModerationQueue(moderationFilters);
 
   const { data: modStats, isLoading: isLoadingStats } = useModerationStats();
 
@@ -513,6 +636,68 @@ function ModerationTab() {
 
   return (
     <div className="space-y-6">
+      {/* Moderation Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-1 gap-2">
+              <Input
+                placeholder="Buscar por VIN..."
+                value={vinSearch}
+                onChange={e => setVinSearch(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setCurrentIndex(0);
+                    refetchQueue();
+                  }
+                }}
+                className="max-w-xs font-mono"
+              />
+              <Button
+                onClick={() => {
+                  setCurrentIndex(0);
+                  refetchQueue();
+                }}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            <Select
+              value={oklaScoreFilter}
+              onValueChange={v => {
+                setOklaScoreFilter(v);
+                setCurrentIndex(0);
+              }}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="OKLA Score" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los scores</SelectItem>
+                <SelectItem value="low">Score &lt; 400 (baja calidad)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={priorityFilter}
+              onValueChange={v => {
+                setPriorityFilter(v);
+                setCurrentIndex(0);
+              }}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Prioridad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="urgent">Urgente</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Moderation Stats */}
       {isLoadingStats ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

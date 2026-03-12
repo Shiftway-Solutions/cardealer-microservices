@@ -17,7 +17,7 @@ public interface IVehiclesSaleServiceClient
         int page = 1,
         int pageSize = 12,
         string? status = null);
-    
+
     /// <summary>
     /// Obtiene las estadísticas de listados de un vendedor
     /// </summary>

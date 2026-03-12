@@ -167,6 +167,72 @@ public class ImageSharpProcessor : IImageProcessor
         }
     }
 
+    /// <summary>
+    /// Creates a WebP variant with optional resize and max file size enforcement.
+    /// When maxWidth/maxHeight are 0, the original dimensions are preserved.
+    /// Quality is reduced iteratively (min 30) until the output fits within maxSizeBytes.
+    /// </summary>
+    public async Task<Stream> CreateWebpVariantAsync(
+        Stream imageStream, int maxWidth, int maxHeight,
+        int quality, long maxSizeBytes, string resizeMode = "Max")
+    {
+        try
+        {
+            imageStream.Position = 0;
+            using var image = await Image.LoadAsync(imageStream);
+
+            image.Mutate(x => x.AutoOrient());
+
+            // Resize only when dimensions are specified (> 0)
+            if (maxWidth > 0 && maxHeight > 0)
+            {
+                var resizeOptions = new ResizeOptions
+                {
+                    Size = new Size(maxWidth, maxHeight),
+                    Mode = GetResizeMode(resizeMode)
+                };
+                image.Mutate(x => x.Resize(resizeOptions));
+            }
+
+            // Encode to WebP, iteratively reducing quality to meet size cap
+            var currentQuality = quality;
+            const int minQuality = 30;
+            const int qualityStep = 5;
+
+            while (currentQuality >= minQuality)
+            {
+                var outputStream = new MemoryStream();
+                var encoder = new WebpEncoder { Quality = currentQuality };
+                await image.SaveAsync(outputStream, encoder);
+
+                if (maxSizeBytes <= 0 || outputStream.Length <= maxSizeBytes)
+                {
+                    outputStream.Position = 0;
+                    return outputStream;
+                }
+
+                outputStream.Dispose();
+                currentQuality -= qualityStep;
+            }
+
+            // Final attempt at minimum quality
+            var finalStream = new MemoryStream();
+            await image.SaveAsync(finalStream, new WebpEncoder { Quality = minQuality });
+            finalStream.Position = 0;
+
+            _logger.LogWarning(
+                "WebP variant exceeds max size {MaxSize} bytes even at quality {Quality}. Actual: {Actual} bytes",
+                maxSizeBytes, minQuality, finalStream.Length);
+
+            return finalStream;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "WebP variant creation failed (maxWidth={Width}, maxHeight={Height})", maxWidth, maxHeight);
+            throw;
+        }
+    }
+
     private async Task<ProcessedVariant> ProcessVariantAsync(Image image, ImageVariantConfig config)
     {
         var resizeOptions = new ResizeOptions

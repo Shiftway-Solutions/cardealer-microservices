@@ -17,14 +17,14 @@ public record GetUserDataSummaryQuery(Guid UserId) : IRequest<UserDataSummaryDto
 public class GetUserDataSummaryQueryHandler : IRequestHandler<GetUserDataSummaryQuery, UserDataSummaryDto>
 {
     // TODO: Inyectar repositorios necesarios
-    
+
     public async Task<UserDataSummaryDto> Handle(GetUserDataSummaryQuery request, CancellationToken cancellationToken)
     {
         // TODO: Implementar query real a la base de datos
         // Por ahora retornamos datos de ejemplo
-        
+
         await Task.CompletedTask;
-        
+
         return new UserDataSummaryDto(
             Profile: new ProfileSummaryDto(
                 FullName: "Usuario Demo",

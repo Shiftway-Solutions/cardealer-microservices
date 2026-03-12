@@ -92,13 +92,13 @@ public class GetAdminUserQueryHandler : IRequestHandler<GetAdminUserQuery, Admin
 
         // Get recent actions
         var recentActions = await _actionLogRepository.GetRecentByAdminIdAsync(request.UserId, 10);
-        
+
         // Get action counts for this month
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
         var monthlyActions = await _actionLogRepository.GetCountByAdminIdAsync(request.UserId, startOfMonth, DateTime.UtcNow);
 
         var nameParts = admin.FullName.Split(' ', 2);
-        
+
         return new AdminUserDetailDto
         {
             Id = admin.Id,

@@ -57,16 +57,16 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         // Create user - Generate a valid username for Identity (no spaces allowed)
         // UserName is used for Identity, DisplayName for UI purposes
         var displayName = request.GetDisplayName();
-        var userName = !string.IsNullOrWhiteSpace(request.UserName) 
+        var userName = !string.IsNullOrWhiteSpace(request.UserName)
             ? request.UserName.Trim().Replace(" ", "")
             : request.Email.Split('@')[0]; // Use email prefix as username
-        
+
         var user = new ApplicationUser(userName, request.Email, passwordHash);
-        
+
         // Store FirstName, LastName on the entity
         user.FirstName = request.FirstName?.Trim();
         user.LastName = request.LastName?.Trim();
-        
+
         // Set AccountType and UserIntent from request (default: Buyer / Browse)
         // Buyer, Seller, and Dealer can register directly.
         // Admin and PlatformEmployee require special onboarding flows.
@@ -83,12 +83,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
             : user.AccountType == Domain.Enums.AccountType.Seller
                 ? Domain.Enums.UserIntent.Sell
                 : Domain.Enums.UserIntent.Browse;
-        
+
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
             user.PhoneNumber = request.Phone;
         }
-        
+
         await _userRepository.AddAsync(user, cancellationToken);
 
         // Generate tokens
@@ -123,7 +123,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         // Parse FirstName and LastName from request or UserName
         var firstName = request.FirstName?.Trim() ?? string.Empty;
         var lastName = request.LastName?.Trim() ?? string.Empty;
-        
+
         // If FirstName/LastName not provided, try to parse from UserName
         if (string.IsNullOrWhiteSpace(firstName) && !string.IsNullOrWhiteSpace(request.UserName))
         {

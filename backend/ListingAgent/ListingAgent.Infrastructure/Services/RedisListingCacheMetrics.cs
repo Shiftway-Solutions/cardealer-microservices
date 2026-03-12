@@ -20,7 +20,7 @@ public sealed class RedisListingCacheMetrics : IListingCacheMetrics
     private readonly IConnectionMultiplexer? _redis;
     private readonly ILogger<RedisListingCacheMetrics> _logger;
 
-    private const string HitsKey   = "okla:listing:cache:hits";
+    private const string HitsKey = "okla:listing:cache:hits";
     private const string MissesKey = "okla:listing:cache:misses";
 
     // In-memory fallback when Redis is unavailable
@@ -80,29 +80,29 @@ public sealed class RedisListingCacheMetrics : IListingCacheMetrics
             try
             {
                 var db = _redis.GetDatabase();
-                var hitsVal   = await db.StringGetAsync(HitsKey);
+                var hitsVal = await db.StringGetAsync(HitsKey);
                 var missesVal = await db.StringGetAsync(MissesKey);
-                hits   = hitsVal.IsNullOrEmpty   ? 0 : (long)hitsVal;
+                hits = hitsVal.IsNullOrEmpty ? 0 : (long)hitsVal;
                 misses = missesVal.IsNullOrEmpty ? 0 : (long)missesVal;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "[ListingCacheMetrics] Redis GET stats failed — using in-memory fallback");
-                hits   = Interlocked.Read(ref _memHits);
+                hits = Interlocked.Read(ref _memHits);
                 misses = Interlocked.Read(ref _memMisses);
             }
         }
         else
         {
-            hits   = Interlocked.Read(ref _memHits);
+            hits = Interlocked.Read(ref _memHits);
             misses = Interlocked.Read(ref _memMisses);
         }
 
         return new ListingCacheStats
         {
-            CacheHits     = hits,
-            CacheMisses   = misses,
-            MeasuredAt    = DateTimeOffset.UtcNow
+            CacheHits = hits,
+            CacheMisses = misses,
+            MeasuredAt = DateTimeOffset.UtcNow
         };
     }
 }

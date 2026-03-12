@@ -9,7 +9,7 @@ public class InventoryAgingRepository : IInventoryAgingRepository
 {
     private readonly DealerAnalyticsDbContext _context;
     private readonly ILogger<InventoryAgingRepository> _logger;
-    
+
     public InventoryAgingRepository(
         DealerAnalyticsDbContext context,
         ILogger<InventoryAgingRepository> logger)
@@ -17,19 +17,19 @@ public class InventoryAgingRepository : IInventoryAgingRepository
         _context = context;
         _logger = logger;
     }
-    
+
     public async Task<InventoryAging?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _context.InventoryAgings.FindAsync(new object[] { id }, ct);
     }
-    
+
     public async Task<InventoryAging?> GetByDateAsync(Guid dealerId, DateTime date, CancellationToken ct = default)
     {
         return await _context.InventoryAgings
             .Where(i => i.DealerId == dealerId && i.Date.Date == date.Date)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<IEnumerable<InventoryAging>> GetHistoryAsync(Guid dealerId, int days, CancellationToken ct = default)
     {
         var fromDate = DateTime.UtcNow.AddDays(-days);
@@ -38,21 +38,21 @@ public class InventoryAgingRepository : IInventoryAgingRepository
             .OrderBy(i => i.Date)
             .ToListAsync(ct);
     }
-    
+
     public async Task<InventoryAging> CreateAsync(InventoryAging aging, CancellationToken ct = default)
     {
         _context.InventoryAgings.Add(aging);
         await _context.SaveChangesAsync(ct);
         return aging;
     }
-    
+
     public async Task<InventoryAging> UpdateAsync(InventoryAging aging, CancellationToken ct = default)
     {
         _context.InventoryAgings.Update(aging);
         await _context.SaveChangesAsync(ct);
         return aging;
     }
-    
+
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var aging = await GetByIdAsync(id, ct);
@@ -62,7 +62,7 @@ public class InventoryAgingRepository : IInventoryAgingRepository
             await _context.SaveChangesAsync(ct);
         }
     }
-    
+
     public async Task<InventoryAging?> GetLatestAsync(Guid dealerId, CancellationToken ct = default)
     {
         return await _context.InventoryAgings
@@ -70,13 +70,13 @@ public class InventoryAgingRepository : IInventoryAgingRepository
             .OrderByDescending(i => i.Date)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<List<AgingBucket>> GetAgingBucketsAsync(Guid dealerId, CancellationToken ct = default)
     {
         var latest = await GetLatestAsync(dealerId, ct);
         return latest?.GetBuckets() ?? new List<AgingBucket>();
     }
-    
+
     public async Task<Dictionary<string, int>> GetAgingDistributionAsync(Guid dealerId, CancellationToken ct = default)
     {
         var latest = await GetLatestAsync(dealerId, ct);
@@ -84,7 +84,7 @@ public class InventoryAgingRepository : IInventoryAgingRepository
         {
             return new Dictionary<string, int>();
         }
-        
+
         return new Dictionary<string, int>
         {
             ["0_to_15"] = latest.Vehicles0To15Days,
@@ -95,25 +95,25 @@ public class InventoryAgingRepository : IInventoryAgingRepository
             ["over_90"] = latest.VehiclesOver90Days
         };
     }
-    
+
     public async Task<InventoryAging> CalculateCurrentAsync(Guid dealerId, CancellationToken ct = default)
     {
         var latest = await GetLatestAsync(dealerId, ct);
         return latest ?? new InventoryAging { DealerId = dealerId, Date = DateTime.UtcNow };
     }
-    
+
     public async Task<decimal> GetAtRiskValueAsync(Guid dealerId, int daysThreshold = 60, CancellationToken ct = default)
     {
         var latest = await GetLatestAsync(dealerId, ct);
         return latest?.AtRiskValue ?? 0;
     }
-    
+
     public async Task<int> GetAtRiskCountAsync(Guid dealerId, int daysThreshold = 60, CancellationToken ct = default)
     {
         var latest = await GetLatestAsync(dealerId, ct);
         return latest?.AtRiskCount ?? 0;
     }
-    
+
     public async Task<Dictionary<DateTime, double>> GetAverageDaysOnMarketTrendAsync(
         Guid dealerId, int days, CancellationToken ct = default)
     {

@@ -94,7 +94,7 @@ public class SuspiciousTransactionReportRepository : ISuspiciousTransactionRepor
         var year = DateTime.UtcNow.Year;
         var count = await _context.SuspiciousTransactionReports
             .CountAsync(r => r.CreatedAt.Year == year, cancellationToken);
-        
+
         return $"STR-{year}-{(count + 1):D5}";
     }
 
@@ -153,7 +153,7 @@ public class WatchlistRepository : IWatchlistRepository
         }
 
         var searchLower = searchTerm.ToLower();
-        query = query.Where(e => 
+        query = query.Where(e =>
             e.FullName.ToLower().Contains(searchLower) ||
             (e.DocumentNumber != null && e.DocumentNumber.Contains(searchTerm)) ||
             e.Aliases.Any(a => a.ToLower().Contains(searchLower))
@@ -165,7 +165,7 @@ public class WatchlistRepository : IWatchlistRepository
     public async Task<WatchlistEntry?> FindMatchAsync(string fullName, string? documentNumber, DateTime? dateOfBirth, CancellationToken cancellationToken = default)
     {
         var nameLower = fullName.ToLower();
-        
+
         // Buscar coincidencia exacta por documento
         if (!string.IsNullOrEmpty(documentNumber))
         {
@@ -238,7 +238,7 @@ public class WatchlistRepository : IWatchlistRepository
             }
 
             // Coincidencia por fecha de nacimiento
-            if (dateOfBirth.HasValue && entry.DateOfBirth.HasValue && 
+            if (dateOfBirth.HasValue && entry.DateOfBirth.HasValue &&
                 entry.DateOfBirth.Value.Date == dateOfBirth.Value.Date)
             {
                 matchedFields.Add("DateOfBirth");

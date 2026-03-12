@@ -28,10 +28,10 @@ public class PricingController : ControllerBase
     public async Task<ActionResult<PriceAnalysisDto>> AnalyzePrice([FromBody] CreatePriceAnalysisRequest request)
     {
         _logger.LogInformation("Analyzing price for vehicle {VehicleId}", request.VehicleId);
-        
+
         var command = new AnalyzeVehiclePriceCommand(request);
         var result = await _mediator.Send(command);
-        
+
         return Ok(result);
     }
 
@@ -43,10 +43,10 @@ public class PricingController : ControllerBase
     {
         var query = new GetLatestPriceAnalysisQuery(vehicleId);
         var result = await _mediator.Send(query);
-        
+
         if (result == null)
             return NotFound(new { message = "No price analysis found for this vehicle" });
-        
+
         return Ok(result);
     }
 
@@ -58,10 +58,10 @@ public class PricingController : ControllerBase
     {
         var query = new GetPriceAnalysisByIdQuery(id);
         var result = await _mediator.Send(query);
-        
+
         if (result == null)
             return NotFound(new { message = "Price analysis not found" });
-        
+
         return Ok(result);
     }
 }

@@ -84,19 +84,19 @@ public class ReviewSummary : BaseEntity<Guid>
     public void RecalculateMetrics(IEnumerable<Review> reviews)
     {
         var reviewList = reviews.Where(r => r.IsApproved).ToList();
-        
+
         TotalReviews = reviewList.Count;
-        
+
         if (TotalReviews > 0)
         {
             AverageRating = (decimal)reviewList.Average(r => r.Rating);
-            
+
             FiveStarReviews = reviewList.Count(r => r.Rating == 5);
             FourStarReviews = reviewList.Count(r => r.Rating == 4);
             ThreeStarReviews = reviewList.Count(r => r.Rating == 3);
             TwoStarReviews = reviewList.Count(r => r.Rating == 2);
             OneStarReviews = reviewList.Count(r => r.Rating == 1);
-            
+
             PositivePercentage = (decimal)(FiveStarReviews + FourStarReviews) / TotalReviews * 100;
             VerifiedPurchaseReviews = reviewList.Count(r => r.IsVerifiedPurchase);
             LastReviewDate = reviewList.Max(r => r.CreatedAt);
@@ -110,7 +110,7 @@ public class ReviewSummary : BaseEntity<Guid>
             VerifiedPurchaseReviews = 0;
             LastReviewDate = null;
         }
-        
+
         UpdatedAt = DateTime.UtcNow;
     }
 }

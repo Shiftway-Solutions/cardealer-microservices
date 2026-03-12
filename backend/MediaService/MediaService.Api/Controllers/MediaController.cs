@@ -45,7 +45,7 @@ public class MediaController : ControllerBase
         ["image/gif"] = new[] { new byte[] { 0x47, 0x49, 0x46, 0x38 } },
         ["image/webp"] = new[] { new byte[] { 0x52, 0x49, 0x46, 0x46 } },
         ["application/pdf"] = new[] { new byte[] { 0x25, 0x50, 0x44, 0x46 } },
-        ["video/mp4"] = new[] { 
+        ["video/mp4"] = new[] {
             new byte[] { 0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70 },
             new byte[] { 0x00, 0x00, 0x00, 0x1C, 0x66, 0x74, 0x79, 0x70 },
             new byte[] { 0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70 }
@@ -108,7 +108,7 @@ public class MediaController : ControllerBase
     [HttpPost("upload")]
     [RequestSizeLimit(104_857_600)] // 100MB hard limit at Kestrel level (reduced from 500MB)
     public async Task<ActionResult<object>> Upload(
-        [FromForm] IFormFile file, 
+        [FromForm] IFormFile file,
         [FromForm] string? folder = "uploads",
         [FromForm] string? type = "file")
     {
@@ -542,7 +542,7 @@ public class MediaController : ControllerBase
         var headerBytes = new byte[16];
         using var stream = file.OpenReadStream();
         var bytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
-        
+
         if (bytesRead == 0) return false;
 
         return expectedSignatures.Any(signature =>

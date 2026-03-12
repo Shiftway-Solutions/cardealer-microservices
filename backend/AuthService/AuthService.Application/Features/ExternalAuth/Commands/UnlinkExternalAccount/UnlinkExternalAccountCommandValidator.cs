@@ -10,7 +10,7 @@ namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkExternalA
 /// </summary>
 public class UnlinkExternalAccountCommandValidator : AbstractValidator<UnlinkExternalAccountCommand>
 {
-    private static readonly string[] SupportedProviders = 
+    private static readonly string[] SupportedProviders =
         Enum.GetNames<ExternalAuthProvider>();
 
     public UnlinkExternalAccountCommandValidator()

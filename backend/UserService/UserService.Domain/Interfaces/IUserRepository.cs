@@ -16,7 +16,7 @@ namespace UserService.Domain.Interfaces
         Task<bool> ExistsAsync(Guid id);
         Task<bool> EmailExistsAsync(string email);
         Task<int> CountAsync();
-        
+
         // Admin management methods (simplified)
         Task<IEnumerable<User>> GetAllWithFiltersAsync(
             string? search = null,

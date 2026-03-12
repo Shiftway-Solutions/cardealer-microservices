@@ -206,7 +206,7 @@ export interface SellerPlanFeatures {
 export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
   [SellerPlan.GRATIS]: {
     maxListings: 1,
-    maxImages: 10,
+    maxImages: 15,
     listingDuration: 30,
     analyticsAccess: false,
     searchPriority: false,

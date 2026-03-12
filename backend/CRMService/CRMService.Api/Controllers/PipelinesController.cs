@@ -16,7 +16,7 @@ public class PipelinesController : ControllerBase
     private readonly ILogger<PipelinesController> _logger;
 
     public PipelinesController(
-        IPipelineRepository pipelineRepository, 
+        IPipelineRepository pipelineRepository,
         IDealRepository dealRepository,
         ILogger<PipelinesController> logger)
     {
@@ -139,7 +139,7 @@ public class PipelinesController : ControllerBase
         var deals = await _dealRepository.GetByPipelineAsync(id, cancellationToken);
         var dealDtos = deals.Select(DealDto.FromEntity).ToList();
 
-        var stats = pipeline.Stages.OrderBy(s => s.Order).Select(stage => 
+        var stats = pipeline.Stages.OrderBy(s => s.Order).Select(stage =>
         {
             var stageDeals = dealDtos.Where(d => d.StageId == stage.Id).ToList();
             return new PipelineStageStatsDto

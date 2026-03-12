@@ -40,7 +40,7 @@ public class HealthMonitoringService : IHealthMonitoringService
             {
                 var canConnect = await _context.Database.CanConnectAsync(ct);
                 dbSw.Stop();
-                
+
                 report.DatabaseStatus = new DatabaseHealthStatus
                 {
                     IsConnected = canConnect,

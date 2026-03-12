@@ -12,7 +12,7 @@ namespace AuthService.Application.Features.Auth.Commands.Register;
 /// </summary>
 public record RegisterCommand(
     string? UserName,
-    string Email, 
+    string Email,
     string Password,
     string? FirstName = null,
     string? LastName = null,
@@ -26,10 +26,10 @@ public record RegisterCommand(
     /// Gets the display name for the user.
     /// Uses FirstName + LastName if provided, otherwise falls back to UserName or Email prefix.
     /// </summary>
-    public string GetDisplayName() => 
+    public string GetDisplayName() =>
         !string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName)
             ? $"{FirstName.Trim()} {LastName.Trim()}"
-            : !string.IsNullOrWhiteSpace(UserName) 
-                ? UserName 
+            : !string.IsNullOrWhiteSpace(UserName)
+                ? UserName
                 : Email.Split('@')[0];
 }

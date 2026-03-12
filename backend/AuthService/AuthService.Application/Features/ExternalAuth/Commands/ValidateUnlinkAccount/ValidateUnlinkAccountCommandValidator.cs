@@ -29,7 +29,7 @@ public class ValidateUnlinkAccountCommandValidator : AbstractValidator<ValidateU
 
     private static bool BeValidProvider(string provider)
     {
-        return !string.IsNullOrEmpty(provider) && 
+        return !string.IsNullOrEmpty(provider) &&
                ValidProviders.Any(p => p.Equals(provider, StringComparison.OrdinalIgnoreCase));
     }
 }

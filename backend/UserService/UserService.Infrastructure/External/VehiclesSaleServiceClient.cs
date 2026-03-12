@@ -132,14 +132,14 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
     private static string NormalizeStatus(string? raw) => raw?.ToLowerInvariant() switch
     {
         "pendingreview" => "pending",
-        "pending"       => "pending",
-        "active"        => "active",
-        "rejected"      => "rejected",
-        "sold"          => "sold",
-        "archived"      => "paused",
-        "draft"         => "draft",
-        "reserved"      => "sold",
-        _               => "pending"
+        "pending" => "pending",
+        "active" => "active",
+        "rejected" => "rejected",
+        "sold" => "sold",
+        "archived" => "paused",
+        "draft" => "draft",
+        "reserved" => "sold",
+        _ => "pending"
     };
 
     /// <summary>

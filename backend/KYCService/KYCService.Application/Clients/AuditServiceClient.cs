@@ -14,7 +14,7 @@ public interface IAuditServiceClient
     /// Log an audit event to the centralized audit service
     /// </summary>
     Task<bool> LogAsync(AuditLogRequest request, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Log a KYC-specific audit event
     /// </summary>
@@ -81,7 +81,7 @@ public class AuditServiceClient : IAuditServiceClient
         try
         {
             request.ServiceName = ServiceName;
-            
+
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -89,13 +89,13 @@ public class AuditServiceClient : IAuditServiceClient
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("Audit log sent successfully: {Action} on {Resource}", 
+                _logger.LogDebug("Audit log sent successfully: {Action} on {Resource}",
                     request.Action, request.Resource);
                 return true;
             }
 
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogWarning("Failed to send audit log: {StatusCode} - {Error}", 
+            _logger.LogWarning("Failed to send audit log: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
             return false;
         }
@@ -153,14 +153,14 @@ public static class KYCAuditActions
     public const string ProfileApproved = "Profile.Approved";
     public const string ProfileRejected = "Profile.Rejected";
     public const string ProfileSuspended = "Profile.Suspended";
-    
+
     // Document actions
     public const string DocumentUploaded = "Document.Uploaded";
     public const string DocumentDeleted = "Document.Deleted";
     public const string DocumentVerified = "Document.Verified";
     public const string DocumentRejected = "Document.Rejected";
     public const string DocumentExpired = "Document.Expired";
-    
+
     // Identity verification
     public const string IdentityVerificationStarted = "Identity.VerificationStarted";
     public const string IdentityVerificationCompleted = "Identity.VerificationCompleted";
@@ -169,13 +169,13 @@ public static class KYCAuditActions
     public const string FaceComparisonFailed = "Identity.FaceComparisonFailed";
     public const string LivenessCheckPassed = "Identity.LivenessCheckPassed";
     public const string LivenessCheckFailed = "Identity.LivenessCheckFailed";
-    
+
     // Security events
     public const string RateLimitExceeded = "Security.RateLimitExceeded";
     public const string DuplicateRequestBlocked = "Security.DuplicateRequestBlocked";
     public const string UnauthorizedAccess = "Security.UnauthorizedAccess";
     public const string SuspiciousActivity = "Security.SuspiciousActivity";
-    
+
     // Risk assessment
     public const string RiskAssessmentCompleted = "Risk.AssessmentCompleted";
     public const string HighRiskDetected = "Risk.HighRiskDetected";

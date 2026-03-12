@@ -87,10 +87,10 @@ public class VehicleSearchResult
     public string? Description { get; set; }
     public bool IsOnSale { get; set; }
     public decimal? OriginalPrice { get; set; }
-    
+
     /// <summary>Similitud coseno (0-1, mayor = más relevante)</summary>
     public float SimilarityScore { get; set; }
-    
+
     /// <summary>Texto formateado para inyectar en el prompt del LLM</summary>
     public string ToPromptText()
     {
@@ -124,22 +124,22 @@ public class WhatsAppInboundMessage
 {
     /// <summary>Número de teléfono del remitente (e.g., "18091234567")</summary>
     public string From { get; set; } = string.Empty;
-    
+
     /// <summary>Nombre del perfil de WhatsApp del remitente</summary>
     public string ProfileName { get; set; } = string.Empty;
-    
+
     /// <summary>ID del mensaje en WhatsApp</summary>
     public string MessageId { get; set; } = string.Empty;
-    
+
     /// <summary>Tipo de mensaje: text, image, document, location, etc.</summary>
     public string MessageType { get; set; } = "text";
-    
+
     /// <summary>Contenido del mensaje (cuerpo de texto)</summary>
     public string Body { get; set; } = string.Empty;
-    
+
     /// <summary>URL del media (para tipo image/document/video)</summary>
     public string? MediaUrl { get; set; }
-    
+
     /// <summary>Timestamp del mensaje</summary>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
@@ -170,16 +170,16 @@ public class VehicleEmbedding
     public Guid Id { get; set; }
     public Guid VehicleId { get; set; }
     public Guid DealerId { get; set; }
-    
+
     /// <summary>Texto original del que se generó el embedding</summary>
     public string Content { get; set; } = string.Empty;
-    
+
     /// <summary>Vector de embedding (384 dims para all-MiniLM-L6-v2)</summary>
     public float[] Embedding { get; set; } = Array.Empty<float>();
-    
+
     /// <summary>Metadata para filtros estructurados</summary>
     public VehicleEmbeddingMetadata Metadata { get; set; } = new();
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

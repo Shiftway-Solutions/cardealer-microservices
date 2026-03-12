@@ -17,7 +17,7 @@ public class Favorite : ITenantEntity
 
     // Metadata
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     // Opcional: Notas personales del usuario
     public string? Notes { get; set; }
 

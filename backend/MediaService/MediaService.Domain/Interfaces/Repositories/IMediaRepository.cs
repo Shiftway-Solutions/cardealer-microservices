@@ -96,6 +96,125 @@ public interface IMediaRepository
     /// Gets orphaned media assets not associated with any vehicle, older than the cutoff date
     /// </summary>
     Task<IList<MediaAsset>> GetOrphansOlderThanAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all processed images with a CDN URL for health scanning.
+    /// Returns batches for memory-efficient scanning.
+    /// </summary>
+    Task<IList<ImageMedia>> GetImagesForHealthScanAsync(int batchSize, int offset, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the total count of processed images that have a CDN URL.
+    /// </summary>
+    Task<int> GetProcessedImageCountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of images currently marked as broken.
+    /// </summary>
+    Task<int> GetBrokenImageCountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the top N dealers with the most broken images.
+    /// Returns tuples of (DealerId, BrokenCount).
+    /// </summary>
+    Task<IList<(Guid DealerId, int BrokenCount)>> GetTopDealersWithBrokenImagesAsync(int topN, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bulk-updates images as broken or healthy after a health scan batch.
+    /// </summary>
+    Task BulkUpdateImageHealthStatusAsync(IEnumerable<ImageMedia> images, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets per-owner (listing) broken image statistics for alerting.
+    /// Groups processed images by OwnerId and counts total/broken per group.
+    /// </summary>
+    Task<IList<OwnerBrokenImageStats>> GetBrokenImageStatsByOwnerAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets processed images that have fewer variants than expected.
+    /// Returns batches of images with their current variant count for nightly validation.
+    /// </summary>
+    Task<IList<ImageVariantStatus>> GetImagesWithMissingVariantsAsync(
+        string[] expectedVariantNames,
+        int batchSize,
+        int offset,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the top N listings (OwnerId) with the most broken images, sorted by broken count descending.
+    /// Returns listing-level aggregated stats for the admin image health dashboard.
+    /// </summary>
+    Task<IList<ListingBrokenImageSummary>> GetTopListingsWithBrokenImagesAsync(
+        int topN,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the aggregated image health summary for the admin dashboard.
+    /// Single efficient query returning total images, broken count, last scan time, and storage bytes.
+    /// </summary>
+    Task<ImageHealthSummary> GetImageHealthSummaryAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the date and time of the last health scan across all images.
+    /// </summary>
+    Task<DateTime?> GetLastHealthScanTimeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all storage keys (MediaAsset.StorageKey + MediaVariant.StorageKey) in batches.
+    /// Used by the orphan cleanup job to compare against S3 objects.
+    /// </summary>
+    Task<IList<string>> GetAllStorageKeysAsync(int batchSize, int offset, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Per-owner (listing) broken image statistics for alerting.
+/// </summary>
+public class OwnerBrokenImageStats
+{
+    public string OwnerId { get; set; } = string.Empty;
+    public Guid DealerId { get; set; }
+    public int TotalImages { get; set; }
+    public int BrokenCount { get; set; }
+    public List<int> BrokenStatusCodes { get; set; } = new();
+}
+
+/// <summary>
+/// Status of an image's variant generation for nightly validation.
+/// </summary>
+public class ImageVariantStatus
+{
+    public string MediaId { get; set; } = string.Empty;
+    public string StorageKey { get; set; } = string.Empty;
+    public string OwnerId { get; set; } = string.Empty;
+    public List<string> ExistingVariantNames { get; set; } = new();
+    public List<string> MissingVariantNames { get; set; } = new();
+}
+
+/// <summary>
+/// Listing-level broken image summary for admin dashboard top-20 table.
+/// </summary>
+public class ListingBrokenImageSummary
+{
+    public string OwnerId { get; set; } = string.Empty;
+    public Guid DealerId { get; set; }
+    public int TotalImages { get; set; }
+    public int BrokenCount { get; set; }
+    public double BrokenPercentage { get; set; }
+    public DateTime? LastDetectedAt { get; set; }
+}
+
+/// <summary>
+/// Aggregated image health summary for the admin dashboard header cards.
+/// </summary>
+public class ImageHealthSummary
+{
+    public int TotalActiveImages { get; set; }
+    public int BrokenImages { get; set; }
+    public int HealthyImages { get; set; }
+    public double HealthPercentage { get; set; }
+    public long TotalStorageBytes { get; set; }
+    public DateTime? LastScanTime { get; set; }
+    public int ImagesWithMissingVariants { get; set; }
 }
 
 /// <summary>

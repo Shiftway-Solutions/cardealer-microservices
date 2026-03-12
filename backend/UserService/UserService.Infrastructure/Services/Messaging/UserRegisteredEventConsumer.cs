@@ -197,11 +197,11 @@ public class UserRegisteredEventConsumer : BackgroundService
         }
 
         // Use FirstName/LastName if provided, otherwise parse from FullName (backwards compatibility)
-        var firstName = !string.IsNullOrWhiteSpace(@event.FirstName) 
-            ? @event.FirstName 
+        var firstName = !string.IsNullOrWhiteSpace(@event.FirstName)
+            ? @event.FirstName
             : ParseFirstName(@event.FullName);
-        var lastName = !string.IsNullOrWhiteSpace(@event.LastName) 
-            ? @event.LastName 
+        var lastName = !string.IsNullOrWhiteSpace(@event.LastName)
+            ? @event.LastName
             : ParseLastName(@event.FullName);
 
         // Determine AccountType from event Metadata (set by AdminManagementController for staff)

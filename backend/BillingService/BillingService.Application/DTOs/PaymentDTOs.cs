@@ -57,16 +57,16 @@ public record AddPaymentMethodRequest
 {
     public string Type { get; init; } = "card";
     public bool SetAsDefault { get; init; } = false;
-    
+
     // Card details (for direct card entry, not recommended for production)
     public string? CardNumber { get; init; }
     public int? ExpMonth { get; init; }
     public int? ExpYear { get; init; }
     public string? Cvv { get; init; }
-    
+
     // Token from payment processor (Azul/Stripe)
     public string? Token { get; init; }
-    
+
     // Bank account details
     public string? AccountNumber { get; init; }
     public string? RoutingNumber { get; init; }

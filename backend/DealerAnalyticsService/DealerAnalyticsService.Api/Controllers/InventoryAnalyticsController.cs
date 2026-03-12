@@ -17,13 +17,13 @@ public class InventoryAnalyticsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<InventoryAnalyticsController> _logger;
-    
+
     public InventoryAnalyticsController(IMediator mediator, ILogger<InventoryAnalyticsController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener estadísticas del inventario
     /// </summary>
@@ -48,7 +48,7 @@ public class InventoryAnalyticsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving inventory stats" });
         }
     }
-    
+
     /// <summary>
     /// Obtener análisis de antigüedad del inventario
     /// </summary>
@@ -71,7 +71,7 @@ public class InventoryAnalyticsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving inventory aging" });
         }
     }
-    
+
     /// <summary>
     /// Obtener métricas de rotación de inventario
     /// </summary>
@@ -89,7 +89,7 @@ public class InventoryAnalyticsController : ControllerBase
         {
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             var query = new GetInventoryTurnoverQuery(dealerId, start, end);
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -100,7 +100,7 @@ public class InventoryAnalyticsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving inventory turnover" });
         }
     }
-    
+
     /// <summary>
     /// Obtener performance por vehículo
     /// </summary>
@@ -127,7 +127,7 @@ public class InventoryAnalyticsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving vehicle performance" });
         }
     }
-    
+
     /// <summary>
     /// Obtener vehículos con bajo rendimiento que necesitan atención
     /// </summary>

@@ -41,7 +41,8 @@ public class CreateAuditCommandValidator : AbstractValidator<CreateAuditCommand>
             .Must(correlationId => string.IsNullOrEmpty(correlationId) || ValidationPatterns.IsValidCorrelationId(correlationId))
             .WithMessage("CorrelationId contains invalid characters");
 
-        When(x => !x.Success, () => {
+        When(x => !x.Success, () =>
+        {
             RuleFor(x => x.ErrorMessage)
                 .NotEmpty().WithMessage("ErrorMessage is required when Success is false")
                 .MaximumLength(1000).WithMessage("ErrorMessage must not exceed 1000 characters");

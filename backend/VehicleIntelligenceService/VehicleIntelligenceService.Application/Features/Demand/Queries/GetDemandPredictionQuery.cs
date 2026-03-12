@@ -19,12 +19,12 @@ public class GetDemandPredictionHandler : IRequestHandler<GetDemandPredictionQue
     public async Task<DemandPredictionDto?> Handle(GetDemandPredictionQuery request, CancellationToken cancellationToken)
     {
         var prediction = await _repository.GetLatestByMakeModelYearAsync(
-            request.Make, 
-            request.Model, 
-            request.Year, 
+            request.Make,
+            request.Model,
+            request.Year,
             cancellationToken
         );
-        
+
         if (prediction == null)
             return null;
 

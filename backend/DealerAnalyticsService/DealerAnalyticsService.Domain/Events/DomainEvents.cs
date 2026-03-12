@@ -18,7 +18,7 @@ public record DealerSnapshotCreatedEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.snapshot.created";
-    
+
     public Guid DealerId { get; init; }
     public Guid SnapshotId { get; init; }
     public DateOnly Date { get; init; }
@@ -37,7 +37,7 @@ public record DealerAlertTriggeredEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.alert.triggered";
-    
+
     public Guid DealerId { get; init; }
     public Guid AlertId { get; init; }
     public string AlertType { get; init; } = string.Empty;
@@ -55,7 +55,7 @@ public record DealerTierChangedEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.tier.changed";
-    
+
     public Guid DealerId { get; init; }
     public string PreviousTier { get; init; } = string.Empty;
     public string NewTier { get; init; } = string.Empty;
@@ -71,7 +71,7 @@ public record LeadFunnelAnalyzedEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.funnel.analyzed";
-    
+
     public Guid DealerId { get; init; }
     public DateTime PeriodStart { get; init; }
     public DateTime PeriodEnd { get; init; }
@@ -90,7 +90,7 @@ public record InventoryAgingAnalyzedEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.inventory.aging.analyzed";
-    
+
     public Guid DealerId { get; init; }
     public int TotalVehicles { get; init; }
     public int AtRiskVehicles { get; init; }
@@ -106,7 +106,7 @@ public record AnalyticsReportGeneratedEvent : IDomainEvent
     public Guid EventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
     public string EventType => "dealer.analytics.report.generated";
-    
+
     public Guid DealerId { get; init; }
     public string ReportType { get; init; } = string.Empty; // daily, weekly, monthly
     public DateTime PeriodStart { get; init; }

@@ -22,8 +22,8 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
     /// Obtener reviews de un vendedor con paginación
     /// </summary>
     public async Task<(IEnumerable<Review> Reviews, int TotalCount)> GetBySellerIdAsync(
-        Guid sellerId, 
-        int page = 1, 
+        Guid sellerId,
+        int page = 1,
         int pageSize = 20,
         bool onlyApproved = true)
     {
@@ -227,11 +227,11 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
         {
             query = statusFilter switch
             {
-                "approved"  => query.Where(r => r.IsApproved && !r.IsFlagged),
-                "pending"   => query.Where(r => !r.IsApproved && r.ModeratedById == null),
-                "rejected"  => query.Where(r => !r.IsApproved && r.ModeratedById != null),
-                "reported"  => query.Where(r => r.IsFlagged),
-                _           => query
+                "approved" => query.Where(r => r.IsApproved && !r.IsFlagged),
+                "pending" => query.Where(r => !r.IsApproved && r.ModeratedById == null),
+                "rejected" => query.Where(r => !r.IsApproved && r.ModeratedById != null),
+                "reported" => query.Where(r => r.IsFlagged),
+                _ => query
             };
         }
 
@@ -263,23 +263,23 @@ public class ReviewRepository : Repository<Review, Guid>, IReviewRepository
     /// </summary>
     public async Task<AdminReviewStats> GetAdminStatsAsync()
     {
-        var total     = await _context.Reviews.CountAsync();
-        var approved  = await _context.Reviews.CountAsync(r => r.IsApproved && !r.IsFlagged);
-        var pending   = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById == null);
-        var rejected  = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById != null);
-        var flagged   = await _context.Reviews.CountAsync(r => r.IsFlagged);
+        var total = await _context.Reviews.CountAsync();
+        var approved = await _context.Reviews.CountAsync(r => r.IsApproved && !r.IsFlagged);
+        var pending = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById == null);
+        var rejected = await _context.Reviews.CountAsync(r => !r.IsApproved && r.ModeratedById != null);
+        var flagged = await _context.Reviews.CountAsync(r => r.IsFlagged);
         var avgRating = total > 0
             ? (decimal)await _context.Reviews.AverageAsync(r => (double)r.Rating)
             : 0m;
 
         return new AdminReviewStats
         {
-            TotalReviews    = total,
+            TotalReviews = total,
             ApprovedReviews = approved,
-            PendingReviews  = pending,
+            PendingReviews = pending,
             RejectedReviews = rejected,
-            FlaggedReviews  = flagged,
-            AverageRating   = Math.Round(avgRating, 2)
+            FlaggedReviews = flagged,
+            AverageRating = Math.Round(avgRating, 2)
         };
     }
 

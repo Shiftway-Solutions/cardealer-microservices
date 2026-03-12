@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Lock, X } from 'lucide-react';
 import { useChatbot } from '@/hooks/useChatbot';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,6 +37,8 @@ export function ChatWidget({ dealerId }: ChatWidgetProps) {
   });
 
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const pathname = usePathname();
+  const redirectParam = `?redirect=${encodeURIComponent(pathname)}`;
 
   return (
     <>
@@ -68,22 +71,22 @@ export function ChatWidget({ dealerId }: ChatWidgetProps) {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                Asistente para usuarios registrados
+                Inicia sesión para guardar esta conversación
               </h3>
               <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
-                Inicia sesión o regístrate gratis para chatear con el asistente IA.
+                Regístrate gratis para que tu historial de chat quede guardado.
               </p>
             </div>
             <div className="flex w-full flex-col gap-2">
               <Link
-                href="/login"
+                href={`/login${redirectParam}`}
                 className="block w-full rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-primary/90"
                 onClick={chat.close}
               >
                 Iniciar sesión
               </Link>
               <Link
-                href="/registro"
+                href={`/registro${redirectParam}`}
                 className="block w-full rounded-xl border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
                 onClick={chat.close}
               >

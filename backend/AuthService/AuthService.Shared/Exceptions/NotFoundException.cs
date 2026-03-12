@@ -6,12 +6,12 @@ namespace AuthService.Shared.Exceptions;
 /// </summary>
 public class NotFoundException : AuthServiceException
 {
-    public NotFoundException(string message = "Resource not found") 
+    public NotFoundException(string message = "Resource not found")
         : base(message, 404, "NOT_FOUND")
     {
     }
 
-    public NotFoundException(string message, Exception innerException) 
+    public NotFoundException(string message, Exception innerException)
         : base(message, 404, "NOT_FOUND", innerException)
     {
     }

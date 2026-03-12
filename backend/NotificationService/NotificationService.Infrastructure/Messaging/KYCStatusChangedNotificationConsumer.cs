@@ -26,10 +26,10 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
     private IModel? _channel;
 
     private const string ExchangeName = "cardealer.events";
-    private const string QueueName    = "notificationservice.kyc.status_changed";
-    private const string RoutingKey   = "kyc.profile.status_changed";
+    private const string QueueName = "notificationservice.kyc.status_changed";
+    private const string RoutingKey = "kyc.profile.status_changed";
     private const string DlqQueueName = "notificationservice.kyc.status_changed.dlq";
-    private const string DlxExchange  = "cardealer.events.dlx";
+    private const string DlxExchange = "cardealer.events.dlx";
 
     public KYCStatusChangedNotificationConsumer(
         IServiceProvider serviceProvider,
@@ -64,7 +64,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
 
             consumer.Received += async (_, ea) =>
             {
-                var body    = ea.Body.ToArray();
+                var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
                 try
@@ -135,7 +135,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
             };
 
             _connection = factory.CreateConnection();
-            _channel    = _connection.CreateModel();
+            _channel = _connection.CreateModel();
 
             // Main exchange (Topic, durable)
             _channel.ExchangeDeclare(
@@ -169,7 +169,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
                 autoDelete: false,
                 arguments: new Dictionary<string, object>
                 {
-                    ["x-dead-letter-exchange"]    = DlxExchange,
+                    ["x-dead-letter-exchange"] = DlxExchange,
                     ["x-dead-letter-routing-key"] = RoutingKey
                 });
 
@@ -189,7 +189,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
     // ─── Business Logic ──────────────────────────────────────────────────────────
 
     // TODO: Migrate to fetch Email/FullName via UserService using UserId (Ley 172-13 compliance)
-    #pragma warning disable CS0618 // Obsolete Email/FullName — migration in progress
+#pragma warning disable CS0618 // Obsolete Email/FullName — migration in progress
     private async Task HandleKYCStatusChangedAsync(
         KYCProfileStatusChangedEvent kycEvent,
         CancellationToken cancellationToken)
@@ -207,7 +207,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
         {
             "Approved" => BuildApprovedEmail(kycEvent),
             "Rejected" => BuildRejectedEmail(kycEvent),
-            _          => BuildGenericStatusEmail(kycEvent)
+            _ => BuildGenericStatusEmail(kycEvent)
         };
 
         // Send email notification
@@ -224,7 +224,7 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
                 {
                     "Approved" => ("✅ Verificación aprobada", "Tu identidad ha sido verificada exitosamente.", "✅"),
                     "Rejected" => ("⚠️ Verificación no aprobada", $"Tu verificación requiere atención.{(string.IsNullOrWhiteSpace(kycEvent.Reason) ? "" : $" Motivo: {kycEvent.Reason}")}", "⚠️"),
-                    _          => ("Verificación actualizada", $"El estado de tu verificación cambió a: {kycEvent.NewStatus}.", "🔔")
+                    _ => ("Verificación actualizada", $"El estado de tu verificación cambió a: {kycEvent.NewStatus}.", "🔔")
                 };
 
                 await userNotifService.CreateAsync(
@@ -384,15 +384,15 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
         return (subject, body);
     }
 
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
 
     // ─── Cleanup ─────────────────────────────────────────────────────────────────
 
     public override void Dispose()
     {
-        try { _channel?.Close();    } catch { /* ignored */ }
+        try { _channel?.Close(); } catch { /* ignored */ }
         try { _connection?.Close(); } catch { /* ignored */ }
-        try { _channel?.Dispose();  } catch { /* ignored */ }
+        try { _channel?.Dispose(); } catch { /* ignored */ }
         try { _connection?.Dispose(); } catch { /* ignored */ }
         base.Dispose();
     }

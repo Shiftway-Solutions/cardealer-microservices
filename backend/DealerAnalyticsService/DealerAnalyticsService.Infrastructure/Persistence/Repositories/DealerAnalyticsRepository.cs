@@ -7,18 +7,18 @@ namespace DealerAnalyticsService.Infrastructure.Persistence.Repositories;
 public class DealerAnalyticsRepository : IDealerAnalyticsRepository
 {
     private readonly DealerAnalyticsDbContext _context;
-    
+
     public DealerAnalyticsRepository(DealerAnalyticsDbContext context)
     {
         _context = context;
     }
-    
+
     public async Task<DealerAnalytic?> GetDealerAnalyticsAsync(Guid dealerId, DateTime date)
     {
         return await _context.DealerAnalytics
             .FirstOrDefaultAsync(x => x.DealerId == dealerId && x.Date.Date == date.Date);
     }
-    
+
     public async Task<IEnumerable<DealerAnalytic>> GetDealerAnalyticsRangeAsync(Guid dealerId, DateTime fromDate, DateTime toDate)
     {
         return await _context.DealerAnalytics
@@ -26,17 +26,17 @@ public class DealerAnalyticsRepository : IDealerAnalyticsRepository
             .OrderBy(x => x.Date)
             .ToListAsync();
     }
-    
+
     public async Task<DealerAnalytic> CreateOrUpdateAnalyticsAsync(DealerAnalytic analytics)
     {
         var existing = await GetDealerAnalyticsAsync(analytics.DealerId, analytics.Date);
-        
+
         if (existing == null)
         {
             analytics.Id = Guid.NewGuid();
             analytics.CreatedAt = DateTime.UtcNow;
             analytics.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.DealerAnalytics.Add(analytics);
         }
         else
@@ -59,14 +59,14 @@ public class DealerAnalyticsRepository : IDealerAnalyticsRepository
             existing.AverageDaysOnMarket = analytics.AverageDaysOnMarket;
             existing.SoldVehicles = analytics.SoldVehicles;
             existing.UpdatedAt = DateTime.UtcNow;
-            
+
             analytics = existing;
         }
-        
+
         await _context.SaveChangesAsync();
         return analytics;
     }
-    
+
     public async Task DeleteDealerAnalyticsAsync(Guid dealerId, DateTime date)
     {
         var analytics = await GetDealerAnalyticsAsync(dealerId, date);
@@ -76,11 +76,11 @@ public class DealerAnalyticsRepository : IDealerAnalyticsRepository
             await _context.SaveChangesAsync();
         }
     }
-    
+
     public async Task<DealerAnalytic> GetDealerAnalyticsSummaryAsync(Guid dealerId, DateTime fromDate, DateTime toDate)
     {
         var analytics = await GetDealerAnalyticsRangeAsync(dealerId, fromDate, toDate);
-        
+
         if (!analytics.Any())
         {
             return new DealerAnalytic
@@ -92,7 +92,7 @@ public class DealerAnalyticsRepository : IDealerAnalyticsRepository
                 UpdatedAt = DateTime.UtcNow
             };
         }
-        
+
         // Agregar todos los datos del rango de fechas
         var summary = new DealerAnalytic
         {
@@ -116,23 +116,23 @@ public class DealerAnalyticsRepository : IDealerAnalyticsRepository
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        
+
         // Calcular métricas derivadas
-        summary.ConversionRate = summary.TotalViews > 0 ? 
+        summary.ConversionRate = summary.TotalViews > 0 ?
             (decimal)summary.ActualSales / summary.TotalViews * 100 : 0;
-        
-        summary.RevenuePerView = summary.TotalViews > 0 ? 
+
+        summary.RevenuePerView = summary.TotalViews > 0 ?
             summary.TotalRevenue / summary.TotalViews : 0;
-        
+
         return summary;
     }
-    
+
     public async Task<decimal> GetDealerConversionRateAsync(Guid dealerId, DateTime fromDate, DateTime toDate)
     {
         var summary = await GetDealerAnalyticsSummaryAsync(dealerId, fromDate, toDate);
         return summary.ConversionRate;
     }
-    
+
     public async Task<decimal> GetDealerRevenueAsync(Guid dealerId, DateTime fromDate, DateTime toDate)
     {
         var summary = await GetDealerAnalyticsSummaryAsync(dealerId, fromDate, toDate);

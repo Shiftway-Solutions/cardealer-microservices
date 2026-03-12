@@ -37,6 +37,8 @@ import {
   ChevronRight,
   RefreshCw,
   AlertCircle,
+  Lock,
+  Crown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -50,6 +52,14 @@ import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import type { VehicleStatus } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 
 // Default vehicle image
 const DEFAULT_VEHICLE_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=200';
@@ -105,6 +115,7 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>('all');
   const [selectedVehicles, setSelectedVehicles] = React.useState<string[]>([]);
   const [page, setPage] = React.useState(1);
+  const [showListingLimitModal, setShowListingLimitModal] = React.useState(false);
   const pageSize = 10;
 
   // Get current dealer
@@ -143,6 +154,10 @@ export default function InventoryPage() {
   const totalPages = vehiclesData?.pagination?.totalPages || 1;
   const activeCount = stats?.activeListings || 0;
   const maxListings = stats?.totalListings || 50; // Default to 50 if not available
+
+  const { currentPlan } = usePlanAccess();
+  const dealerMaxListings = dealer?.maxActiveListings ?? 3;
+  const isAtListingLimit = dealerMaxListings !== -1 && activeCount >= dealerMaxListings;
 
   const toggleSelect = (id: string) => {
     setSelectedVehicles(prev => (prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]));
@@ -256,14 +271,51 @@ export default function InventoryPage() {
               Importar
             </Link>
           </Button>
-          <Button className="bg-primary hover:bg-primary/90" asChild>
-            <Link href="/publicar">
+          {isAtListingLimit ? (
+            <Button
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setShowListingLimitModal(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Agregar Vehículo
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <Button className="bg-primary hover:bg-primary/90" asChild>
+              <Link href="/publicar">
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Vehículo
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Listing limit upgrade modal */}
+      <Dialog open={showListingLimitModal} onOpenChange={setShowListingLimitModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-amber-500" />
+              Límite de publicaciones alcanzado
+            </DialogTitle>
+            <DialogDescription>
+              Has alcanzado el máximo de {dealerMaxListings} vehículos activos en tu plan{' '}
+              {currentPlan}. Elimina un vehículo existente o actualiza tu plan para publicar más.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <Link href="/cuenta/upgrade?plan=visible&type=dealer">
+              <Button className="w-full gap-2">
+                <Crown className="h-4 w-4" />
+                Upgrade de plan
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => setShowListingLimitModal(false)}>
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <Card>

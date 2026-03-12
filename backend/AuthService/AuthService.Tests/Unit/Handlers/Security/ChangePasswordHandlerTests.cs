@@ -32,7 +32,7 @@ public class ChangePasswordHandlerTests
         _sessionRepositoryMock = new Mock<IUserSessionRepository>();
         _notificationServiceMock = new Mock<IAuthNotificationService>();
         _loggerMock = new Mock<ILogger<ChangePasswordCommandHandler>>();
-        
+
         _handler = new ChangePasswordCommandHandler(
             _userRepositoryMock.Object,
             _passwordHasherMock.Object,
@@ -55,7 +55,7 @@ public class ChangePasswordHandlerTests
             ConfirmPassword: "NewPassword456!",
             IpAddress: "192.168.1.100",
             UserAgent: "TestBrowser/1.0");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, "OldPassword123!"))
@@ -83,7 +83,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "WrongPassword!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, "WrongPassword!"))
@@ -108,7 +108,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "SamePassword123!",
             NewPassword: "SamePassword123!",
             ConfirmPassword: "SamePassword123!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, It.IsAny<string>()))
@@ -132,7 +132,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "OldPassword123!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
 
@@ -155,7 +155,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "OldPassword123!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -178,7 +178,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "OldPassword123!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, "OldPassword123!"))
@@ -210,7 +210,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "OldPassword123!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, "OldPassword123!"))
@@ -241,7 +241,7 @@ public class ChangePasswordHandlerTests
             CurrentPassword: "OldPassword123!",
             NewPassword: "NewPassword456!",
             ConfirmPassword: "NewPassword456!");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _userRepositoryMock.Setup(x => x.VerifyPasswordAsync(user, "OldPassword123!"))

@@ -19,9 +19,9 @@ COPY ["RoleService/RoleService.Application/RoleService.Application.csproj", "Rol
 COPY ["RoleService/RoleService.Domain/RoleService.Domain.csproj", "RoleService/RoleService.Domain/"]
 COPY ["RoleService/RoleService.Infrastructure/RoleService.Infrastructure.csproj", "RoleService/RoleService.Infrastructure/"]
 COPY ["RoleService/RoleService.Shared/RoleService.Shared.csproj", "RoleService/RoleService.Shared/"]
-COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
-COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
-COPY ["ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "ServiceDiscovery/ServiceDiscovery.Domain/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Domain/"]
 
 RUN dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
 

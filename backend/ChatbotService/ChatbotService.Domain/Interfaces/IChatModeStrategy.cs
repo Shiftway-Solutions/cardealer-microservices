@@ -13,7 +13,7 @@ public interface IChatModeStrategy
 {
     /// <summary>Modo que implementa esta estrategia</summary>
     ChatMode Mode { get; }
-    
+
     /// <summary>
     /// Construye el system prompt completo para el LLM, incluyendo
     /// el contexto RAG apropiado para el modo.
@@ -23,7 +23,7 @@ public interface IChatModeStrategy
         ChatbotConfiguration config,
         string userMessage,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Obtiene las function definitions disponibles para este modo.
     /// SingleVehicle: ninguna (contexto fijo).
@@ -32,7 +32,7 @@ public interface IChatModeStrategy
     Task<List<FunctionDefinition>> GetAvailableFunctionsAsync(
         ChatSession session,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Ejecuta un function call solicitado por el LLM.
     /// </summary>
@@ -40,7 +40,7 @@ public interface IChatModeStrategy
         ChatSession session,
         FunctionCall functionCall,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Valida que la respuesta del LLM esté "grounded" en datos reales.
     /// Previene hallucinations sobre vehículos que no existen.
@@ -73,7 +73,7 @@ public interface IVectorSearchService
         VehicleSearchFilters? filters = null,
         int topK = 5,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Genera y almacena embedding para un vehículo
     /// </summary>
@@ -81,12 +81,12 @@ public interface IVectorSearchService
         ChatbotVehicle vehicle,
         Guid dealerId,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Elimina embedding de un vehículo
     /// </summary>
     Task DeleteVehicleEmbeddingAsync(Guid vehicleId, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Re-genera todos los embeddings para un dealer (bulk sync)
     /// </summary>
@@ -94,7 +94,7 @@ public interface IVectorSearchService
         Guid dealerId,
         IEnumerable<ChatbotVehicle> vehicles,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Genera embedding para un texto (usa el modelo de embeddings local)
     /// </summary>
@@ -111,17 +111,17 @@ public interface IWhatsAppService
     /// Verifica el webhook de Meta (challenge de verificación inicial)
     /// </summary>
     bool VerifyWebhook(string mode, string token, string challenge);
-    
+
     /// <summary>
     /// Parsea un payload de webhook entrante de Meta
     /// </summary>
     WhatsAppInboundMessage? ParseInboundMessage(System.Text.Json.JsonElement payload);
-    
+
     /// <summary>
     /// Envía un mensaje de texto al usuario por WhatsApp
     /// </summary>
     Task<bool> SendTextMessageAsync(string toPhone, string message, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Envía un mensaje con botones interactivos (quick replies)
     /// </summary>
@@ -131,17 +131,17 @@ public interface IWhatsAppService
         string bodyText,
         List<(string Id, string Title)> buttons,
         CancellationToken ct = default);
-    
+
     /// <summary>
     /// Marca un mensaje como leído
     /// </summary>
     Task MarkAsReadAsync(string messageId, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Valida si un número de teléfono es de RD (país soportado)
     /// </summary>
     bool IsAllowedCountry(string phoneNumber);
-    
+
     /// <summary>
     /// Rate limiting por número de teléfono
     /// </summary>
@@ -157,7 +157,7 @@ public interface IEmbeddingService
     /// Genera embedding para un texto
     /// </summary>
     Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Genera embeddings en batch
     /// </summary>

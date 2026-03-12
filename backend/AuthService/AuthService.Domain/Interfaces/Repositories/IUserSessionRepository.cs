@@ -17,7 +17,7 @@ public interface IUserSessionRepository
     Task RevokeSessionAsync(Guid sessionId, string reason = "User requested", CancellationToken cancellationToken = default);
     Task RevokeAllUserSessionsAsync(string userId, Guid? exceptSessionId = null, string reason = "User requested", CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Gets an existing active session matching the device fingerprint for a user.
     /// The fingerprint is derived from Browser + OS + DeviceType (NOT IP address),

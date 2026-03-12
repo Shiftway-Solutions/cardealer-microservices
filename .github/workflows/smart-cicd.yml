@@ -34,6 +34,7 @@ jobs:
   detect-changes:
     name: 🔍 Detect Changes
     runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 5
     outputs:
       # Core services
       authservice: ${{ steps.filter.outputs.authservice }}
@@ -662,6 +663,34 @@ jobs:
       run-docker-push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
+  python-lint-aiprocessing:
+    name: 🐍 Python Lint (AI Workers)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.aiprocessingservice == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: � Install lint tools
+        run: |
+          python3 -m venv /tmp/lint-venv
+          /tmp/lint-venv/bin/pip install --quiet -r backend/requirements-lint.txt
+          echo "/tmp/lint-venv/bin" >> $GITHUB_PATH
+
+      - name: 🔍 flake8 (PEP8)
+        working-directory: backend
+        run: flake8 AIProcessingService/workers
+
+      - name: 🎨 black --check (formatting)
+        working-directory: backend
+        run: black --check --diff AIProcessingService/workers
+
+      - name: 📦 isort --check (import order)
+        working-directory: backend
+        run: isort --check-only --diff AIProcessingService/workers
+
   vehicleintelligenceservice:
     name: 🚘 VehicleIntelligenceService
     needs: detect-changes
@@ -932,12 +961,93 @@ jobs:
     secrets: inherit
 
   # ============================================
+  # STAGE 3: INTEGRATION TESTS
+  # ============================================
+  # Runs after all service CI jobs pass. Validates cross-service communication
+  # using Docker Compose with PostgreSQL, Redis, and RabbitMQ.
+  # A failure here blocks deployment to staging.
+  # ============================================
+  integration-tests:
+    name: 🔗 Integration Tests
+    needs:
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - gateway
+      - frontend-web
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Start infrastructure (Docker Compose)
+        run: |
+          echo "🚀 Starting infrastructure services..."
+          docker compose -f compose.docker.yaml up -d postgres redis rabbitmq
+          echo "⏳ Waiting for PostgreSQL to be healthy..."
+          for i in $(seq 1 30); do
+            if docker compose -f compose.docker.yaml exec -T postgres pg_isready -U postgres 2>/dev/null; then
+              echo "✅ PostgreSQL is ready"
+              break
+            fi
+            echo "  Attempt $i/30..."
+            sleep 5
+          done
+          echo "⏳ Waiting for Redis..."
+          sleep 5
+          echo "⏳ Waiting for RabbitMQ..."
+          sleep 10
+
+      - name: 🔗 Run integration tests (Core services)
+        run: |
+          # Run integration/E2E tests for services that have them
+          INTEGRATION_FAILURES=""
+
+          for SERVICE in AuthService ErrorService Gateway; do
+            TEST_DIR="backend/$SERVICE/$SERVICE.Tests"
+            if [ -d "$TEST_DIR" ]; then
+              echo "🧪 Running integration tests for $SERVICE..."
+              cd "backend/$SERVICE"
+              dotnet test --filter "Category=Integration|Category=E2E" \
+                --configuration Release \
+                --logger "console;verbosity=minimal" \
+                --blame-hang --blame-hang-timeout 3min \
+                2>&1 || {
+                  echo "⚠️ $SERVICE integration tests failed"
+                  INTEGRATION_FAILURES="$INTEGRATION_FAILURES $SERVICE"
+                }
+              cd ../..
+            fi
+          done
+
+          if [ -n "$INTEGRATION_FAILURES" ]; then
+            echo "::error::Integration test failures:$INTEGRATION_FAILURES"
+            exit 1
+          fi
+          echo "✅ All integration tests passed"
+
+      - name: 🧹 Cleanup infrastructure
+        if: always()
+        run: |
+          docker compose -f compose.docker.yaml down -v 2>/dev/null || true
+
+  # ============================================
   # DEPLOY TO DIGITAL OCEAN (Only on main)
   # ============================================
   deploy-staging:
     name: 🚀 Deploy to Staging
-    continue-on-error: true
+    # REMOVED continue-on-error: true — a staging deploy failure MUST block the pipeline
+    # and be visible as a real failure. Silencing it hides regressions from reaching production.
     needs:
+      # Integration tests gate (runs after all service CI jobs)
+      - integration-tests
       # Core
       - authservice
       - userservice
@@ -969,6 +1079,7 @@ jobs:
       - paymentservice
       # AI/ML
       - aiprocessingservice
+      - python-lint-aiprocessing
       - vehicleintelligenceservice
       - recommendationservice
       - leadscoringservice
@@ -1099,6 +1210,7 @@ jobs:
     name: 📊 Pipeline Summary
     needs:
       - detect-changes
+      - integration-tests
       # Core
       - authservice
       - userservice
@@ -1130,6 +1242,7 @@ jobs:
       - paymentservice
       # AI/ML
       - aiprocessingservice
+      - python-lint-aiprocessing
       - vehicleintelligenceservice
       - recommendationservice
       - leadscoringservice
@@ -1216,6 +1329,7 @@ jobs:
           echo "| InventoryManagementService | ${{ needs.inventorymanagementservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| PaymentService | ${{ needs.paymentservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AIProcessingService | ${{ needs.aiprocessingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Lint (AI Workers) | ${{ needs.python-lint-aiprocessing.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| VehicleIntelligenceService | ${{ needs.vehicleintelligenceservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| RecommendationService | ${{ needs.recommendationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| LeadScoringService | ${{ needs.leadscoringservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
@@ -1238,21 +1352,19 @@ jobs:
           echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pipeline Gates" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 Integration Tests | ${{ needs.integration-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: 🔔 Notify on failure (Slack)
-        if: env.PIPELINE_STATUS == 'failure' && env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@v3
-        with:
-          status: failure
-          fields: repo,message,commit,author,action,ref,workflow
-          text: |
-            ❌ CI/CD Pipeline FAILED
-            Failed services: ${{ env.FAILED_LIST }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.PIPELINE_STATUS == 'failure'
+        uses: ./.github/actions/slack-notify-failure
         continue-on-error: true
+        with:
+          stage-name: "Pipeline Summary — Failed: ${{ env.FAILED_LIST }}"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: 🚨 Create GitHub Issue on critical failure
         if: env.PIPELINE_STATUS == 'failure' && github.ref == 'refs/heads/main'

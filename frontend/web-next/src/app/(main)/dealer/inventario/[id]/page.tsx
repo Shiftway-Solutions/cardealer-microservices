@@ -51,9 +51,11 @@ import {
   Loader2,
   RefreshCw,
   Camera,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 import {
   useVehicle,
   useUpdateVehicle,
@@ -137,6 +139,7 @@ export default function DealerEditVehiclePage() {
   const updateMutation = useUpdateVehicle();
   const deleteMutation = useDeleteVehicle();
   const uploadMutation = useUploadImages();
+  const { canAccess, minimumPlanFor } = usePlanAccess();
 
   // Catalog hooks
   const { data: makes } = useMakes();
@@ -799,9 +802,20 @@ export default function DealerEditVehiclePage() {
               <p className="mb-4 text-sm text-yellow-200">
                 Aumenta la visibilidad de esta publicación y consigue más leads.
               </p>
-              <Button className="w-full bg-yellow-600 hover:bg-yellow-700">
-                Ver opciones de boost
-              </Button>
+              {canAccess('featuredListings') ? (
+                <Link href={`/dealer/inventario/${vehicleId}/boost`}>
+                  <Button className="w-full bg-yellow-600 hover:bg-yellow-700">
+                    Ver opciones de boost
+                  </Button>
+                </Link>
+              ) : (
+                <div title={`Disponible desde plan ${minimumPlanFor('featuredListings')}`}>
+                  <Button className="w-full cursor-not-allowed bg-yellow-600/50" disabled>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Disponible desde plan {minimumPlanFor('featuredListings')}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

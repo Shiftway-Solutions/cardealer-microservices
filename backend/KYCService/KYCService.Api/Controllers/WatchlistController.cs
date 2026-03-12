@@ -66,7 +66,7 @@ public class WatchlistController : ControllerBase
     public async Task<ActionResult<WatchlistEntryDto>> Add([FromBody] AddWatchlistEntryCommand command)
     {
         var result = await _mediator.Send(command);
-        _logger.LogInformation("Watchlist entry added: {FullName} to {ListType}", 
+        _logger.LogInformation("Watchlist entry added: {FullName} to {ListType}",
             command.FullName, command.ListType);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -79,7 +79,7 @@ public class WatchlistController : ControllerBase
     public async Task<ActionResult<ScreeningResultDto>> Screen([FromBody] ScreenWatchlistCommand command)
     {
         var result = await _mediator.Send(command);
-        
+
         if (result.HasMatches)
         {
             _logger.LogWarning("Watchlist screening found {Count} matches for {Name}",

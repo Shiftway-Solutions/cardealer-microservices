@@ -8,7 +8,7 @@ public record EmailAddress
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException("Email address cannot be empty");
-        
+
         if (!IsValidEmail(value))
             throw new ArgumentException("Invalid email address format");
 

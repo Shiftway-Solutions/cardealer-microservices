@@ -39,22 +39,22 @@ public class ProcessingCallbackRequest
 {
     [System.Text.Json.Serialization.JsonPropertyName("job_id")]
     public string JobId { get; set; } = string.Empty;
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("success")]
     public bool Success { get; set; }
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("processed_url")]
     public string? ProcessedImageUrl { get; set; }
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("mask_url")]
     public string? MaskUrl { get; set; }
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("processing_time_ms")]
     public int? ProcessingTimeMs { get; set; }
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("error_message")]
     public string? Error { get; set; }
-    
+
     [System.Text.Json.Serialization.JsonPropertyName("metadata")]
     public Dictionary<string, object>? Metadata { get; set; }
 }

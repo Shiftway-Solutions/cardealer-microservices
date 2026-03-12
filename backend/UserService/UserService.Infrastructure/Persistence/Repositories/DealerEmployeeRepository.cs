@@ -85,8 +85,8 @@ public class DealerEmployeeRepository : IDealerEmployeeRepository
     public async Task<DealerEmployeeInvitation?> GetPendingInvitationByEmailAsync(Guid dealerId, string email)
     {
         return await _context.DealerEmployeeInvitations
-            .FirstOrDefaultAsync(i => i.DealerId == dealerId 
-                && i.Email.ToLower() == email.ToLower() 
+            .FirstOrDefaultAsync(i => i.DealerId == dealerId
+                && i.Email.ToLower() == email.ToLower()
                 && i.Status == InvitationStatus.Pending);
     }
 

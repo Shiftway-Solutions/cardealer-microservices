@@ -92,7 +92,7 @@ public class AmazonRekognitionService : IDisposable
     public async Task<FaceDetectionResult> DetectFacesAsync(byte[] imageData, CancellationToken ct = default)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        
+
         try
         {
             _logger.LogDebug("Detecting faces in image ({Size} bytes)", imageData.Length);
@@ -197,7 +197,7 @@ public class AmazonRekognitionService : IDisposable
         CancellationToken ct = default)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        
+
         try
         {
             _logger.LogDebug("Comparing faces: source={SourceSize} bytes, target={TargetSize} bytes",
@@ -463,7 +463,7 @@ public class AmazonRekognitionService : IDisposable
         CancellationToken ct = default)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        
+
         try
         {
             var detectResult = await DetectFacesAsync(selfieImage, ct);

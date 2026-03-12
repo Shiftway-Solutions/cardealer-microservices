@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Eye,
   EyeOff,
@@ -38,6 +38,8 @@ import { cn } from '@/lib/utils';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '';
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -139,7 +141,8 @@ export default function RegisterPage() {
       });
 
       // Redirect to verification page with email pre-filled for resend
-      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}`);
+      const redirectSuffix = redirectTo ? `&redirect=${encodeURIComponent(redirectTo)}` : '';
+      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}${redirectSuffix}`);
     } catch (err) {
       // SECURITY: Handle specific error types
       const error = err as { message?: string; status?: number; code?: string };

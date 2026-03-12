@@ -29,7 +29,7 @@ public class NotificationPreferencesController : ControllerBase
         var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var dealerId = User.FindFirst("dealerId")?.Value;
 
-        _logger.LogInformation("Getting notification preferences for dealer {DealerId}, user {UserId}", 
+        _logger.LogInformation("Getting notification preferences for dealer {DealerId}, user {UserId}",
             dealerId, userId);
 
         // Return default preferences - in production these would come from the database
@@ -49,13 +49,13 @@ public class NotificationPreferencesController : ControllerBase
         var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var dealerId = User.FindFirst("dealerId")?.Value;
 
-        _logger.LogInformation("Updating notification preference {Type} for dealer {DealerId}, user {UserId}", 
+        _logger.LogInformation("Updating notification preference {Type} for dealer {DealerId}, user {UserId}",
             type, dealerId, userId);
 
         // Find the preference and update it
         var preferences = GetDefaultPreferences();
         var preference = preferences.FirstOrDefault(p => p.Type == type);
-        
+
         if (preference == null)
         {
             return NotFound(new { Message = $"Preference type '{type}' not found" });
@@ -82,7 +82,7 @@ public class NotificationPreferencesController : ControllerBase
         var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var dealerId = User.FindFirst("dealerId")?.Value;
 
-        _logger.LogInformation("Bulk updating {Count} notification preferences for dealer {DealerId}", 
+        _logger.LogInformation("Bulk updating {Count} notification preferences for dealer {DealerId}",
             requests.Count, dealerId);
 
         var preferences = GetDefaultPreferences();

@@ -183,18 +183,20 @@ public class GenerateRecommendationsQueryHandler : IRequestHandler<GenerateRecom
 
             aiResponse ??= CreateFallbackResponse();
 
+            var candidatos = request.Request.Candidatos ?? [];
+
             // 8. Enforce business rules post-processing
-            EnforceBusinessRules(aiResponse, config, request.Request.Candidatos);
+            EnforceBusinessRules(aiResponse, config, candidatos);
 
             // 8b. Deduplication: remove duplicate vehiculo_id entries
             DeduplicateRecommendations(aiResponse);
 
             // 8c. Enforce excluded brands from user profile
-            EnforceExcludedBrands(aiResponse, request.Request.Candidatos,
+            EnforceExcludedBrands(aiResponse, candidatos,
                 request.Request.Perfil.MarcasExcluidas);
 
             // 8d. Anti-hallucination guardrail: strip any vehiculo_ids not present in candidates
-            ValidateAndFilterCandidateIds(aiResponse, request.Request.Candidatos);
+            ValidateAndFilterCandidateIds(aiResponse, candidatos);
 
             // ══════════════════════════════════════════════════════════
             // SAFETY LAYER: Output Content Validation (post-LLM)

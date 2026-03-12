@@ -9,7 +9,7 @@ public class NotificationQueueConfiguration : IEntityTypeConfiguration<Notificat
     public void Configure(EntityTypeBuilder<NotificationQueue> builder)
     {
         builder.HasKey(q => q.Id);
-        
+
         builder.Property(q => q.QueuedAt)
             .IsRequired();
 

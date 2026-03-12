@@ -25,7 +25,7 @@ public class RemoveEmployeeCommandHandler : IRequestHandler<RemoveEmployeeComman
 
     public async Task<Unit> Handle(RemoveEmployeeCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Removing employee {EmployeeId} from dealer {DealerId}", 
+        _logger.LogInformation("Removing employee {EmployeeId} from dealer {DealerId}",
             request.EmployeeId, request.DealerId);
 
         var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId);

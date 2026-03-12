@@ -39,7 +39,7 @@ public class UnlinkActiveProviderCommandValidator : AbstractValidator<UnlinkActi
 
     private static bool BeValidProvider(string provider)
     {
-        return !string.IsNullOrEmpty(provider) && 
+        return !string.IsNullOrEmpty(provider) &&
                ValidProviders.Any(p => p.Equals(provider, StringComparison.OrdinalIgnoreCase));
     }
 }

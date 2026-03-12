@@ -25,10 +25,10 @@ public class SetPasswordForOAuthUserTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -44,10 +44,10 @@ public class SetPasswordForOAuthUserTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "UserId");
@@ -64,10 +64,10 @@ public class SetPasswordForOAuthUserTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Email");
@@ -84,10 +84,10 @@ public class SetPasswordForOAuthUserTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
     }
@@ -102,10 +102,10 @@ public class SetPasswordForOAuthUserTests
         // Arrange
         var validator = new ValidatePasswordSetupTokenCommandValidator();
         var command = new ValidatePasswordSetupTokenCommand("valid-token-12345678901234567890");
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -116,10 +116,10 @@ public class SetPasswordForOAuthUserTests
         // Arrange
         var validator = new ValidatePasswordSetupTokenCommandValidator();
         var command = new ValidatePasswordSetupTokenCommand("short");
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Token");
@@ -131,10 +131,10 @@ public class SetPasswordForOAuthUserTests
         // Arrange
         var validator = new ValidatePasswordSetupTokenCommandValidator();
         var command = new ValidatePasswordSetupTokenCommand("");
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
     }
@@ -153,10 +153,10 @@ public class SetPasswordForOAuthUserTests
             NewPassword: "SecureP@ssw0rd!",
             ConfirmPassword: "SecureP@ssw0rd!"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -171,10 +171,10 @@ public class SetPasswordForOAuthUserTests
             NewPassword: "SecureP@ssw0rd!",
             ConfirmPassword: "SecureP@ssw0rd!"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Token");
@@ -190,10 +190,10 @@ public class SetPasswordForOAuthUserTests
             NewPassword: "SecureP@ssw0rd!",
             ConfirmPassword: "DifferentP@ssw0rd!"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ConfirmPassword");
@@ -218,10 +218,10 @@ public class SetPasswordForOAuthUserTests
             NewPassword: password,
             ConfirmPassword: password
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().Be(shouldBeValid, because: scenario);
     }

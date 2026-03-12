@@ -57,7 +57,7 @@ public class UpdateAccountTypeHandler : IRequestHandler<UpdateAccountTypeCommand
         // 1. Validate AccountType string
         if (!Enum.TryParse<AccountType>(request.AccountType, ignoreCase: true, out var newAccountType))
         {
-            return new UpdateAccountTypeResult(false, 
+            return new UpdateAccountTypeResult(false,
                 Error: $"Invalid AccountType: '{request.AccountType}'. Valid values: {string.Join(", ", Enum.GetNames<AccountType>())}");
         }
 

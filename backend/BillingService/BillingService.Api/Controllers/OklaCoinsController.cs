@@ -222,7 +222,8 @@ public class OklaCoinsController : BillingBaseController
             return BadRequest(new { error = "No tienes una billetera de OKLA Coins. Compra un paquete primero." });
 
         if (!wallet.HasSufficientBalance(request.Amount))
-            return BadRequest(new { 
+            return BadRequest(new
+            {
                 error = $"Balance insuficiente. Tienes {wallet.Balance} coins pero necesitas {request.Amount}.",
                 currentBalance = wallet.Balance,
                 required = request.Amount

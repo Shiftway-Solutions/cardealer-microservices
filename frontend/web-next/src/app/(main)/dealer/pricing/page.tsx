@@ -24,6 +24,7 @@ import {
   ArrowRight,
   Search,
   RefreshCw,
+  Clock,
 } from 'lucide-react';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
@@ -148,6 +149,7 @@ function calculateSuggestedPrice(vehicle: { price: number; createdAt?: string })
 function DealerPricingContent() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedVehicleId, setSelectedVehicleId] = React.useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = React.useState<Date>(new Date());
 
   // Fetch dealer data
   const { data: dealer, isLoading: dealerLoading } = useCurrentDealer();
@@ -157,10 +159,16 @@ function DealerPricingContent() {
     data: vehiclesData,
     isLoading: vehiclesLoading,
     refetch: refetchVehicles,
+    dataUpdatedAt,
   } = useVehiclesByDealer(dealer?.id || '');
 
   // Fetch market demand by category
   const { data: demandData } = useDemandByCategory();
+
+  // Track last update time from query cache
+  React.useEffect(() => {
+    if (dataUpdatedAt) setLastUpdated(new Date(dataUpdatedAt));
+  }, [dataUpdatedAt]);
 
   // Price analysis mutation
   const createPriceAnalysis = useCreatePriceAnalysis();
@@ -284,6 +292,17 @@ function DealerPricingContent() {
             <VideoHelpButton sectionKey="pricing" variant="icon" />
           </div>
           <p className="text-muted-foreground">Recomendaciones de precio basadas en IA</p>
+          <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
+            <Clock className="h-3 w-3" />
+            <span>
+              Última actualización:{' '}
+              {lastUpdated.toLocaleString('es-DO', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </span>
+            <span className="ml-1 opacity-60">• Se actualiza cada 24h</span>
+          </div>
         </div>
         <Button className="bg-primary hover:bg-primary/90" onClick={() => refetchVehicles()}>
           <RefreshCw className="mr-2 h-4 w-4" />

@@ -16,7 +16,7 @@ public class SingleVehicleStrategy : IChatModeStrategy
 {
     private readonly IChatbotVehicleRepository _vehicleRepository;
     private readonly ILogger<SingleVehicleStrategy> _logger;
-    
+
     public ChatMode Mode => ChatMode.SingleVehicle;
 
     public SingleVehicleStrategy(

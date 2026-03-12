@@ -9,7 +9,7 @@ public static class NotificationConstants
     public const int MaxSmsMessageLength = 160;
     public const int MaxPushTitleLength = 100;
     public const int MaxPushBodyLength = 200;
-    
+
     public static class Templates
     {
         public const string WelcomeEmail = "WelcomeEmail";

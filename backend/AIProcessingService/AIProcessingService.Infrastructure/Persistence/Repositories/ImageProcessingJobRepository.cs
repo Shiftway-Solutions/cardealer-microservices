@@ -94,7 +94,7 @@ public class ImageProcessingJobRepository : IImageProcessingJobRepository
     public async Task<Dictionary<JobStatus, int>> GetStatusCountsAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        
+
         return await _context.ImageProcessingJobs
             .Where(j => j.CreatedAt >= today)
             .GroupBy(j => j.Status)
@@ -105,10 +105,10 @@ public class ImageProcessingJobRepository : IImageProcessingJobRepository
     public async Task<double> GetAverageProcessingTimeAsync(ProcessingType type, int hours = 24, CancellationToken ct = default)
     {
         var since = DateTime.UtcNow.AddHours(-hours);
-        
+
         var avgTime = await _context.ImageProcessingJobs
-            .Where(j => j.Type == type && 
-                       j.Status == JobStatus.Completed && 
+            .Where(j => j.Type == type &&
+                       j.Status == JobStatus.Completed &&
                        j.CompletedAt >= since)
             .AverageAsync(j => (double?)j.ProcessingTimeMs, ct);
 

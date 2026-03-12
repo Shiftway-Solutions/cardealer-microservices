@@ -107,7 +107,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
                 { "x-dead-letter-exchange", DeadLetterExchange },
                 { "x-dead-letter-routing-key", RoutingKey }
             };
-            
+
             _channel.QueueDeclare(
                 queue: QueueName,
                 durable: true,
@@ -130,7 +130,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
             consumer.Received += async (model, ea) =>
             {
                 var retryCount = GetRetryCount(ea.BasicProperties);
-                
+
                 try
                 {
                     var body = ea.Body.ToArray();
@@ -146,7 +146,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
                             _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false); // Goes to DLQ
                             return;
                         }
-                        
+
                         _logger.LogInformation(
                             "Received UserRegisteredEvent: UserId={UserId}, Email={Email}, RetryCount={RetryCount}",
                             userRegisteredEvent.UserId,
@@ -166,7 +166,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error processing UserRegisteredEvent. Attempt {RetryCount}/{MaxRetries}", 
+                    _logger.LogError(ex, "Error processing UserRegisteredEvent. Attempt {RetryCount}/{MaxRetries}",
                         retryCount + 1, MaxRetryAttempts);
 
                     if (retryCount >= MaxRetryAttempts - 1)
@@ -181,7 +181,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
                         var delayMs = (int)Math.Pow(2, retryCount + 1) * 1000; // Exponential backoff: 2s, 4s, 8s
                         _logger.LogInformation("Waiting {Delay}ms before retry...", delayMs);
                         await Task.Delay(delayMs, stoppingToken);
-                        
+
                         // Requeue for retry
                         _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
                     }
@@ -210,7 +210,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
         // ✅ IMPORTANTE: Ya NO enviamos email de bienvenida aquí
         // El email de bienvenida se envía DESPUÉS de que el usuario verifica su email
         // Este handler solo loguea el evento para analytics/métricas
-        
+
         _logger.LogInformation(
             "UserRegistered event processed - User: {Email}, UserId: {UserId}, AccountType: {AccountType}, RegisteredAt: {RegisteredAt}",
             eventData.Email,
@@ -224,7 +224,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var adminAlertService = scope.ServiceProvider.GetRequiredService<IAdminAlertService>();
-            
+
             await adminAlertService.SendAlertAsync(
                 alertType: "new_user_registered",
                 title: "Nuevo usuario registrado",
@@ -283,7 +283,7 @@ public class UserRegisteredNotificationConsumer : BackgroundService
         {
             if (deathHeader is List<object> deaths && deaths.Count > 0)
             {
-                if (deaths[0] is Dictionary<string, object> death && 
+                if (deaths[0] is Dictionary<string, object> death &&
                     death.TryGetValue("count", out var count))
                 {
                     return Convert.ToInt32(count);

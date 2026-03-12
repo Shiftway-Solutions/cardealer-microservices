@@ -26,7 +26,7 @@ public class CancelInvitationCommandHandler : IRequestHandler<CancelInvitationCo
 
     public async Task<Unit> Handle(CancelInvitationCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Cancelling invitation {InvitationId} for dealer {DealerId}", 
+        _logger.LogInformation("Cancelling invitation {InvitationId} for dealer {DealerId}",
             request.InvitationId, request.DealerId);
 
         var invitation = await _employeeRepository.GetInvitationByIdAsync(request.DealerId, request.InvitationId);

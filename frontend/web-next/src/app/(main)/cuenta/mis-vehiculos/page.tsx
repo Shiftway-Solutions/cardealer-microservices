@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Car,
   Star,
+  CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,11 +67,13 @@ function VehicleCard({
   onPause,
   onActivate,
   onDelete,
+  onMarkSold,
 }: {
   vehicle: UserVehicleDto;
   onPause: (id: string) => void;
   onActivate: (id: string) => void;
   onDelete: (id: string) => void;
+  onMarkSold: (id: string) => void;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -181,6 +184,12 @@ function VehicleCard({
                       <Star className="mr-2 h-4 w-4" />
                       Promocionar
                     </Link>
+                  </DropdownMenuItem>
+                )}
+                {vehicle.status === 'active' && (
+                  <DropdownMenuItem onClick={() => onMarkSold(vehicle.id)}>
+                    <CheckCircle className="mr-2 h-4 w-4 text-blue-600" />
+                    Marcar como vendido
                   </DropdownMenuItem>
                 )}
                 {vehicle.status === 'active' && (
@@ -360,6 +369,23 @@ export default function MyVehiclesPage() {
     }
   };
 
+  const handleMarkSold = async (id: string) => {
+    queryClient.setQueryData(
+      ['user-vehicles'],
+      (old: { vehicles: UserVehicleDto[] } | undefined) => ({
+        ...old,
+        vehicles: old?.vehicles?.map(v => (v.id === id ? { ...v, status: 'sold' } : v)) ?? [],
+      })
+    );
+    try {
+      await vehicleService.markSold(id);
+      toast.success('¡Felicidades! Tu vehículo ha sido marcado como vendido y archivado.');
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ['user-vehicles'] });
+      toast.error('Error al marcar el vehículo como vendido');
+    }
+  };
+
   const tabs: { value: VehicleStatus; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'active', label: 'Activos' },
@@ -454,6 +480,7 @@ export default function MyVehiclesPage() {
               onPause={handlePause}
               onActivate={handleActivate}
               onDelete={handleDelete}
+              onMarkSold={handleMarkSold}
             />
           ))}
         </div>

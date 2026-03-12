@@ -92,3 +92,36 @@ updates:
     commit-message:
       prefix: "chore"
     open-pull-requests-limit: 3
+
+  # ============================================
+  # pip — Python AI/ML services
+  # ============================================
+  - package-ecosystem: "pip"
+    directory: "/backend/AIProcessingService/workers"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+    open-pull-requests-limit: 5
+    ignore:
+      # Ignore major version bumps for ML frameworks (manual upgrade)
+      - dependency-name: "torch"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "torchvision"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "pip"
+    directory: "/backend/ChatbotService/LlmServer"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+    open-pull-requests-limit: 5

@@ -19,7 +19,7 @@ public static class DependencyInjection
 
         // Register MediatR validation pipeline behavior
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        
+
         return services;
     }
 }

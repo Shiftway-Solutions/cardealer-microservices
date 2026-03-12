@@ -25,7 +25,7 @@ namespace UserService.Api.Controllers
         private readonly IVehiclesSaleServiceClient _vehiclesClient;
 
         public UsersController(
-            IMediator mediator, 
+            IMediator mediator,
             ILogger<UsersController> logger,
             IVehiclesSaleServiceClient vehiclesClient)
         {
@@ -50,19 +50,19 @@ namespace UserService.Api.Controllers
             }
 
             // Extract additional user info from JWT claims for OAuth sync
-            var email = User.FindFirst(ClaimTypes.Email)?.Value 
-                ?? User.FindFirst("email")?.Value 
+            var email = User.FindFirst(ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value
                 ?? string.Empty;
-            var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value 
-                ?? User.FindFirst("given_name")?.Value 
-                ?? User.FindFirst("firstName")?.Value 
+            var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value
+                ?? User.FindFirst("given_name")?.Value
+                ?? User.FindFirst("firstName")?.Value
                 ?? string.Empty;
-            var lastName = User.FindFirst(ClaimTypes.Surname)?.Value 
-                ?? User.FindFirst("family_name")?.Value 
-                ?? User.FindFirst("lastName")?.Value 
+            var lastName = User.FindFirst(ClaimTypes.Surname)?.Value
+                ?? User.FindFirst("family_name")?.Value
+                ?? User.FindFirst("lastName")?.Value
                 ?? string.Empty;
-            var avatarUrl = User.FindFirst("picture")?.Value 
-                ?? User.FindFirst("avatar")?.Value 
+            var avatarUrl = User.FindFirst("picture")?.Value
+                ?? User.FindFirst("avatar")?.Value
                 ?? User.FindFirst("avatarUrl")?.Value;
 
             try
@@ -99,19 +99,19 @@ namespace UserService.Api.Controllers
             }
 
             // Extract email from JWT to find the real user (handles OAuth ID mismatch)
-            var email = User.FindFirst(ClaimTypes.Email)?.Value 
-                ?? User.FindFirst("email")?.Value 
+            var email = User.FindFirst(ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value
                 ?? string.Empty;
-            var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value 
-                ?? User.FindFirst("given_name")?.Value 
-                ?? User.FindFirst("firstName")?.Value 
+            var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value
+                ?? User.FindFirst("given_name")?.Value
+                ?? User.FindFirst("firstName")?.Value
                 ?? string.Empty;
-            var lastName = User.FindFirst(ClaimTypes.Surname)?.Value 
-                ?? User.FindFirst("family_name")?.Value 
-                ?? User.FindFirst("lastName")?.Value 
+            var lastName = User.FindFirst(ClaimTypes.Surname)?.Value
+                ?? User.FindFirst("family_name")?.Value
+                ?? User.FindFirst("lastName")?.Value
                 ?? string.Empty;
-            var avatarUrl = User.FindFirst("picture")?.Value 
-                ?? User.FindFirst("avatar")?.Value 
+            var avatarUrl = User.FindFirst("picture")?.Value
+                ?? User.FindFirst("avatar")?.Value
                 ?? User.FindFirst("avatarUrl")?.Value;
 
             try
@@ -125,7 +125,7 @@ namespace UserService.Api.Controllers
                     avatarUrl
                 );
                 var existingUser = await _mediator.Send(getOrCreateCommand);
-                
+
                 // Now update using the actual user ID from the database
                 var command = new UserService.Application.UseCases.Users.UpdateProfile.UpdateProfileCommand(
                     existingUser.Id, // Use the real ID from DB, not the token ID
@@ -214,11 +214,11 @@ namespace UserService.Api.Controllers
 
             try
             {
-                _logger.LogInformation("Getting vehicles for user {UserId}, page={Page}, limit={Limit}, status={Status}", 
+                _logger.LogInformation("Getting vehicles for user {UserId}, page={Page}, limit={Limit}, status={Status}",
                     userId, page, limit, status);
-                
+
                 var result = await _vehiclesClient.GetSellerListingsAsync(userId, page, limit, status);
-                
+
                 return Ok(new UserVehiclesResponse
                 {
                     Vehicles = result.Listings.Select(l => new UserVehicleDto

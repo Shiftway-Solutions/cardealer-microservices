@@ -8,14 +8,14 @@ namespace UserService.Domain.Events;
 public class SellerProfileCreatedEvent : EventBase
 {
     public override string EventType => "seller.profile.created";
-    
+
     public Guid SellerId { get; set; }
     public Guid UserId { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string City { get; set; } = string.Empty;
     public string SellerType { get; set; } = string.Empty;
-    
+
     public static SellerProfileCreatedEvent Create(
         Guid sellerId,
         Guid userId,
@@ -42,11 +42,11 @@ public class SellerProfileCreatedEvent : EventBase
 public class SellerProfileUpdatedEvent : EventBase
 {
     public override string EventType => "seller.profile.updated";
-    
+
     public Guid SellerId { get; set; }
     public Guid UserId { get; set; }
     public List<string> UpdatedFields { get; set; } = new();
-    
+
     public static SellerProfileUpdatedEvent Create(
         Guid sellerId,
         Guid userId,
@@ -67,13 +67,13 @@ public class SellerProfileUpdatedEvent : EventBase
 public class SellerPreferencesUpdatedEvent : EventBase
 {
     public override string EventType => "seller.preferences.updated";
-    
+
     public Guid SellerId { get; set; }
     public Guid UserId { get; set; }
     public string PreferredContactMethod { get; set; } = string.Empty;
     public bool AllowPhoneCalls { get; set; }
     public bool AllowWhatsApp { get; set; }
-    
+
     public static SellerPreferencesUpdatedEvent Create(
         Guid sellerId,
         Guid userId,
@@ -98,12 +98,12 @@ public class SellerPreferencesUpdatedEvent : EventBase
 public class SellerBadgeEarnedEvent : EventBase
 {
     public override string EventType => "seller.badge.earned";
-    
+
     public Guid SellerId { get; set; }
     public string Badge { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;
     public DateTime? ExpiresAt { get; set; }
-    
+
     public static SellerBadgeEarnedEvent Create(
         Guid sellerId,
         string badge,
@@ -126,11 +126,11 @@ public class SellerBadgeEarnedEvent : EventBase
 public class SellerBadgeLostEvent : EventBase
 {
     public override string EventType => "seller.badge.lost";
-    
+
     public Guid SellerId { get; set; }
     public string Badge { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;
-    
+
     public static SellerBadgeLostEvent Create(
         Guid sellerId,
         string badge,
@@ -151,13 +151,13 @@ public class SellerBadgeLostEvent : EventBase
 public class SellerVerifiedEvent : EventBase
 {
     public override string EventType => "seller.verified";
-    
+
     public Guid SellerId { get; set; }
     public Guid UserId { get; set; }
     public Guid VerifiedByUserId { get; set; }
     public string Notes { get; set; } = string.Empty;
     public DateTime VerifiedAt { get; set; }
-    
+
     public static SellerVerifiedEvent Create(
         Guid sellerId,
         Guid userId,

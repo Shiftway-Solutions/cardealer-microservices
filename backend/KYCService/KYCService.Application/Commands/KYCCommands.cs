@@ -11,7 +11,7 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
 {
     public Guid UserId { get; init; }
     public EntityType EntityType { get; init; } = EntityType.Individual;
-    
+
     // Información Personal
     public string FullName { get; init; } = string.Empty;
     public string? MiddleName { get; init; }
@@ -20,18 +20,18 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
     public string? PlaceOfBirth { get; init; }
     public string? Nationality { get; init; }
     public string? Gender { get; init; }
-    
+
     // Documentos
     public DocumentType PrimaryDocumentType { get; init; }
     public string? PrimaryDocumentNumber { get; init; }
     public DateTime? PrimaryDocumentExpiry { get; init; }
     public string? PrimaryDocumentCountry { get; init; }
-    
+
     // Contacto
     public string? Email { get; init; }
     public string? Phone { get; init; }
     public string? MobilePhone { get; init; }
-    
+
     // Dirección
     public string? Address { get; init; }
     public string? Sector { get; init; }
@@ -39,39 +39,39 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
     public string? Province { get; init; }
     public string? PostalCode { get; init; }
     public string? Country { get; init; } = "DO";
-    
+
     // Información Económica
     public string? Occupation { get; init; }
     public string? EmployerName { get; init; }
     public string? SourceOfFunds { get; init; }
     public string? ExpectedTransactionVolume { get; init; }
     public decimal? EstimatedAnnualIncome { get; init; }
-    
+
     // PEP
     public bool IsPEP { get; init; }
     public string? PEPPosition { get; init; }
     public string? PEPRelationship { get; init; }
-    
+
     // Empresa (si EntityType = Business)
     public string? BusinessName { get; init; }
     public string? RNC { get; init; }
     public string? BusinessType { get; init; }
     public DateTime? IncorporationDate { get; init; }
     public string? LegalRepresentative { get; init; }
-    
+
     // Consentimiento (Ley 172-13 Art. 5)
     /// <summary>
     /// El usuario debe aceptar explícitamente el procesamiento de datos personales.
     /// Obligatorio por Ley 172-13 Art. 5. Sin consentimiento, no se puede crear el perfil.
     /// </summary>
     public bool DataProcessingConsent { get; init; }
-    
+
     /// <summary>
     /// Consentimiento separado para procesamiento de datos biométricos
     /// (foto de cédula, selfie, face matching).
     /// </summary>
     public bool BiometricProcessingConsent { get; init; }
-    
+
     /// <summary>
     /// Versión del aviso de privacidad aceptado (e.g., "v2.0-2026-01")
     /// </summary>
@@ -84,7 +84,7 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
 public record UpdateKYCProfileCommand : IRequest<KYCProfileDto>
 {
     public Guid Id { get; init; }
-    
+
     public string? FullName { get; init; }
     public string? Email { get; init; }
     public string? Phone { get; init; }

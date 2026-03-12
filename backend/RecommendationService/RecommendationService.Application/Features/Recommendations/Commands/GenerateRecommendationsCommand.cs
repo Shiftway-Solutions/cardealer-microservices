@@ -31,19 +31,19 @@ public class GenerateRecommendationsCommandHandler : IRequestHandler<GenerateRec
     {
         // Obtener preferencias del usuario
         var preferences = await _preferenceRepository.GetByUserIdAsync(request.UserId);
-        
+
         // Obtener interacciones recientes
         var recentInteractions = await _interactionRepository.GetRecentByUserIdAsync(request.UserId, days: 30);
 
         // Aquí iría el algoritmo de recomendación real
         // Por ahora generamos recomendaciones mock
         var recommendations = new List<Recommendation>();
-        
+
         // En producción, esto haría:
         // 1. Query a VehiclesSaleService para obtener vehículos matching preferencias
         // 2. Aplicar collaborative filtering basado en usuarios similares
         // 3. Ranking por score (combinación de match con preferencias + popularidad + recency)
-        
+
         var result = new List<RecommendationDto>();
         foreach (var rec in recommendations)
         {

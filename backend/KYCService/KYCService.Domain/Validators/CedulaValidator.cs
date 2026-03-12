@@ -227,7 +227,7 @@ public static class CedulaValidator
     {
         var today = DateTime.Today;
         var age = today.Year - dateOfBirth.Year;
-        
+
         // Ajustar si aún no ha cumplido años este año
         if (dateOfBirth.Date > today.AddYears(-age))
             age--;
@@ -251,13 +251,13 @@ public class CedulaValidationResult
     public bool FormatValid { get; set; }
     public bool MunicipioValid { get; set; }
     public bool ChecksumValid { get; set; }
-    
+
     public string CleanedNumber { get; set; } = string.Empty;
     public string FormattedNumber { get; set; } = string.Empty;
-    
+
     public int Municipio { get; set; }
     public int ExpectedCheckDigit { get; set; }
     public int ActualCheckDigit { get; set; }
-    
+
     public List<string> Errors { get; set; } = new();
 }

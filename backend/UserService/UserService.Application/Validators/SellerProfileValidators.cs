@@ -24,7 +24,7 @@ public class CreateSellerProfileRequestValidator : AbstractValidator<CreateSelle
             .NoXss();
 
         // FASE 3: Phone and Email removed - use User entity properties instead
-        
+
         RuleFor(x => x.Address)
             .MaximumLength(500)
             .WithMessage("Address no puede exceder 500 caracteres")

@@ -68,7 +68,7 @@ public class SellerProfileController : ControllerBase
         await _sellerProfileRepository.UpdateLastActiveAsync(sellerId);
 
         var badges = await _sellerProfileRepository.GetBadgesAsync(sellerId);
-        
+
         var response = MapToPublicProfile(profile, badges);
         return Ok(response);
     }
@@ -94,7 +94,7 @@ public class SellerProfileController : ControllerBase
 
         // Obtener listados reales desde VehiclesSaleService
         var listingsResult = await _vehiclesClient.GetSellerListingsAsync(sellerId, page, pageSize, status);
-        
+
         var response = new SellerListingsResponse
         {
             Listings = listingsResult.Listings.Select(l => new SellerListingDto
@@ -145,7 +145,7 @@ public class SellerProfileController : ControllerBase
 
         // Obtener reseñas reales desde ReviewService
         var reviewsResult = await _reviewClient.GetSellerReviewsAsync(sellerId, page, pageSize, rating);
-        
+
         var response = new SellerReviewsResponse
         {
             Reviews = reviewsResult.Reviews.Select(r => new SellerReviewDto
@@ -386,7 +386,7 @@ public class SellerProfileController : ControllerBase
         // FASE 3: Phone removed - use User entity properties instead
         if (request.WhatsApp != null) updatedFields.Add("WhatsApp");
         if (request.Website != null) updatedFields.Add("Website");
-        
+
         await _eventPublisher.PublishAsync(SellerProfileUpdatedEvent.Create(
             profile.Id,
             profile.UserId,
@@ -426,7 +426,8 @@ public class SellerProfileController : ControllerBase
 
         await _sellerProfileRepository.UpdateAsync(profile);
 
-        return Ok(new { 
+        return Ok(new
+        {
             message = request.IsCoverPhoto ? "Foto de portada actualizada" : "Foto de perfil actualizada",
             photoUrl = request.PhotoUrl
         });
@@ -454,7 +455,7 @@ public class SellerProfileController : ControllerBase
         }
 
         var preferences = await _sellerProfileRepository.GetContactPreferencesAsync(profile.Id);
-        
+
         if (preferences == null)
         {
             preferences = new ContactPreferences
@@ -468,11 +469,11 @@ public class SellerProfileController : ControllerBase
         if (request.AllowWhatsApp.HasValue) preferences.AllowWhatsApp = request.AllowWhatsApp.Value;
         if (request.AllowEmail.HasValue) preferences.AllowEmail = request.AllowEmail.Value;
         if (request.AllowInAppChat.HasValue) preferences.AllowInAppChat = request.AllowInAppChat.Value;
-        if (request.ContactHoursStart != null) 
+        if (request.ContactHoursStart != null)
             preferences.ContactHoursStart = TimeSpan.Parse(request.ContactHoursStart);
-        if (request.ContactHoursEnd != null) 
+        if (request.ContactHoursEnd != null)
             preferences.ContactHoursEnd = TimeSpan.Parse(request.ContactHoursEnd);
-        if (request.ContactDays != null) 
+        if (request.ContactDays != null)
             preferences.ContactDays = string.Join(",", request.ContactDays);
         if (request.ShowPhoneNumber.HasValue) preferences.ShowPhoneNumber = request.ShowPhoneNumber.Value;
         if (request.ShowWhatsAppNumber.HasValue) preferences.ShowWhatsAppNumber = request.ShowWhatsAppNumber.Value;
@@ -670,7 +671,8 @@ public class SellerProfileController : ControllerBase
             badge.ExpiresAt
         ));
 
-        return Ok(new { 
+        return Ok(new
+        {
             message = $"Badge {request.Badge} asignado exitosamente",
             badge = new SellerBadgeDto
             {
@@ -770,9 +772,9 @@ public class SellerProfileController : ControllerBase
 
     private Guid? GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                          ?? User.FindFirst("sub")?.Value;
-        
+
         if (Guid.TryParse(userIdClaim, out var userId))
         {
             return userId;

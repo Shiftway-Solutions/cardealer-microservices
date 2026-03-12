@@ -26,13 +26,13 @@ public class RequestUnlinkCodeCommandHandler : IRequestHandler<RequestUnlinkCode
     private readonly IUserRepository _userRepository;
     private readonly IDistributedCache _cache;
     private readonly ILogger<RequestUnlinkCodeCommandHandler> _logger;
-    
+
     // Redis key prefixes
     private const string CODE_PREFIX = "unlink_code:";
     private const string RATE_LIMIT_PREFIX = "unlink_rate:";
     private const string LOCKOUT_PREFIX = "unlink_lockout:";
     private const string ATTEMPTS_PREFIX = "unlink_attempts:";
-    
+
     // Configuration
     private static readonly TimeSpan CODE_TTL = TimeSpan.FromMinutes(10);
     private const int MAX_REQUESTS_PER_HOUR = 3;
@@ -95,7 +95,7 @@ public class RequestUnlinkCodeCommandHandler : IRequestHandler<RequestUnlinkCode
                 _logger.LogWarning(
                     "Rate limit exceeded for unlink code request. UserId: {UserId}, Provider: {Provider}, IP: {IpAddress}",
                     request.UserId, request.Provider, request.IpAddress);
-                    
+
                 throw new BadRequestException(
                     "Too many verification code requests. Please try again in 1 hour.");
             }
@@ -190,7 +190,7 @@ public class RequestUnlinkCodeCommandHandler : IRequestHandler<RequestUnlinkCode
         var localPart = parts[0];
         var domain = parts[1];
 
-        var maskedLocal = localPart.Length <= 2 
+        var maskedLocal = localPart.Length <= 2
             ? new string('*', localPart.Length)
             : localPart[0] + new string('*', localPart.Length - 2) + localPart[^1];
 

@@ -32,7 +32,7 @@ public class ProfileView
     public bool IsDuplicateView(string ipAddress, int withinMinutes = 30)
     {
         if (ViewerIpAddress != ipAddress) return false;
-        
+
         var timeDiff = DateTime.UtcNow - ViewedAt;
         return timeDiff.TotalMinutes < withinMinutes;
     }

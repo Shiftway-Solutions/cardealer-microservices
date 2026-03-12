@@ -285,6 +285,43 @@ export async function getChatbotHealth(): Promise<{
 }
 
 // =============================================================================
+// ChatBot Configuration (Dealer management)
+// =============================================================================
+
+export interface ChatbotConfigurationDto {
+  id: string;
+  dealerId: string;
+  name: string;
+  isActive: boolean;
+  plan: string;
+  freeInteractionsPerMonth: number;
+  costPerInteraction: number;
+  maxInteractionsPerSession: number;
+  maxInteractionsPerUserPerDay: number;
+  maxInteractionsPerUserPerMonth: number;
+  botName: string;
+  botAvatarUrl: string;
+  welcomeMessage: string;
+  enableWebChat: boolean;
+  enableWhatsApp: boolean;
+  enableFacebook: boolean;
+  enableAutoInventorySync: boolean;
+  enableAutoReports: boolean;
+  enableAutoLearning: boolean;
+  enableHealthMonitoring: boolean;
+}
+
+/**
+ * Get chatbot configuration for a dealer
+ */
+export async function getChatbotConfigByDealer(dealerId: string): Promise<ChatbotConfigurationDto> {
+  const response = await apiClient.get<ChatbotConfigurationDto>(
+    `/api/configuration/dealer/${encodeURIComponent(dealerId)}`
+  );
+  return response.data;
+}
+
+// =============================================================================
 // Transform helpers
 // =============================================================================
 

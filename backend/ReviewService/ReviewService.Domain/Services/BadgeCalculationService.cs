@@ -93,9 +93,9 @@ public class BadgeCalculationService : IBadgeCalculationService
     private async Task<bool> IsEligibleForTopRatedAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 10) return false;
-        
+
         var averageRating = reviews.Average(r => r.Rating);
         return averageRating >= 4.8;
     }
@@ -103,28 +103,28 @@ public class BadgeCalculationService : IBadgeCalculationService
     private async Task<bool> IsEligibleForTrustedDealerAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 5) return false;
-        
+
         // 6+ meses en plataforma (basado en primera review)
         var firstReview = reviews.OrderBy(r => r.CreatedAt).First();
         var monthsActive = (DateTime.UtcNow - firstReview.CreatedAt).TotalDays / 30;
-        
+
         if (monthsActive < 6) return false;
-        
+
         // 95%+ reviews positivas (4+ estrellas)
         var positiveReviews = reviews.Count(r => r.Rating >= 4);
         var positivePercentage = (double)positiveReviews / reviews.Count * 100;
-        
+
         return positivePercentage >= 95;
     }
 
     private async Task<bool> IsEligibleForFiveStarSellerAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 5) return false;
-        
+
         // Todas las reviews deben ser 5 estrellas
         return reviews.All(r => r.Rating == 5);
     }
@@ -133,13 +133,13 @@ public class BadgeCalculationService : IBadgeCalculationService
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
         var reviewsWithResponses = reviews.Where(r => r.Response != null).ToList();
-        
+
         if (reviewsWithResponses.Count < 3) return false;
-        
+
         // 80%+ de responses en menos de 24 horas
-        var quickResponses = reviewsWithResponses.Count(r => 
+        var quickResponses = reviewsWithResponses.Count(r =>
             r.Response!.CreatedAt <= r.CreatedAt.AddHours(24));
-        
+
         var quickResponsePercentage = (double)quickResponses / reviewsWithResponses.Count * 100;
         return quickResponsePercentage >= 80;
     }
@@ -147,27 +147,27 @@ public class BadgeCalculationService : IBadgeCalculationService
     private async Task<bool> IsEligibleForVerifiedProfessionalAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 8) return false;
-        
+
         var averageRating = reviews.Average(r => r.Rating);
         return averageRating >= 4.5;
-        
+
         // TODO: Integrar con dealer verification service
     }
 
     private async Task<bool> IsEligibleForCustomerChoiceAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 5) return false;
-        
+
         // 80%+ reviews mencionan "recomendado" o "recommend"
-        var recommendedCount = reviews.Count(r => 
+        var recommendedCount = reviews.Count(r =>
             !string.IsNullOrEmpty(r.Content) &&
             (r.Content.Contains("recomendado", StringComparison.OrdinalIgnoreCase) ||
              r.Content.Contains("recommend", StringComparison.OrdinalIgnoreCase)));
-        
+
         var recommendedPercentage = (double)recommendedCount / reviews.Count * 100;
         return recommendedPercentage >= 80;
     }
@@ -178,12 +178,12 @@ public class BadgeCalculationService : IBadgeCalculationService
         var last3Months = DateTime.UtcNow.AddMonths(-3);
         var recentReviews = allReviews.Where(r => r.CreatedAt >= last3Months).ToList();
         var olderReviews = allReviews.Where(r => r.CreatedAt < last3Months).ToList();
-        
+
         if (recentReviews.Count < 3 || olderReviews.Count < 3) return false;
-        
+
         var recentAverage = recentReviews.Average(r => r.Rating);
         var olderAverage = olderReviews.Average(r => r.Rating);
-        
+
         // Mejora de al menos 0.5 puntos en rating
         return recentAverage - olderAverage >= 0.5;
     }
@@ -199,18 +199,18 @@ public class BadgeCalculationService : IBadgeCalculationService
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
         var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
         var relevantReviews = reviews.Where(r => r.CreatedAt >= sixMonthsAgo).ToList();
-        
+
         if (relevantReviews.Count < 10) return false;
-        
+
         // Agrupar por mes y verificar que el rating promedio mensual no varíe más de 0.3
         var monthlyAverages = relevantReviews
             .GroupBy(r => new { Year = r.CreatedAt.Year, Month = r.CreatedAt.Month })
             .Where(g => g.Count() >= 2)
             .Select(g => g.Average(r => r.Rating))
             .ToList();
-        
+
         if (monthlyAverages.Count < 3) return false;
-        
+
         var maxVariation = monthlyAverages.Max() - monthlyAverages.Min();
         return maxVariation <= 0.3;
     }
@@ -218,9 +218,9 @@ public class BadgeCalculationService : IBadgeCalculationService
     private async Task<bool> IsEligibleForCommunityFavoriteAsync(Guid sellerId, CancellationToken cancellationToken)
     {
         var reviews = await GetSellerReviewsAsync(sellerId, cancellationToken);
-        
+
         if (reviews.Count < 5) return false;
-        
+
         // Promedio de helpful votes por review >= 3
         var averageHelpfulVotes = reviews.Average(r => r.HelpfulVotes);
         return averageHelpfulVotes >= 3;

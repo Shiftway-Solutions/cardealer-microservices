@@ -1,0 +1,82 @@
+groups:
+  - name: cdn-image-performance
+    rules:
+      # ───────────────────────────────────────────────────────────────
+      # CDN Image Performance Alerts
+      # Monitors image loading performance and availability
+      # ───────────────────────────────────────────────────────────────
+
+      # ALERT: Image LCP (Largest Contentful Paint) exceeds 3 seconds
+      # This is Google's threshold for "good" LCP. Images should load
+      # within 2.5s for good UX, 4s is poor.
+      - alert: ImageLCPExceeds3Seconds
+        expr: histogram_quantile(0.95, rate(http_image_request_duration_seconds_bucket{service="mediaservice"}[5m])) > 3
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          component: cdn
+        annotations:
+          summary: "Image LCP P95 > 3s — CDN may be degraded"
+          description: |
+            Image loading P95 latency is {{ $value | humanizeDuration }} which exceeds the 3-second LCP threshold.
+            This degrades user experience on listing pages, especially for mobile users in Dominican Republic.
+
+            Possible causes:
+            - CDN cache miss or cache invalidation
+            - DO Spaces origin server slow response
+            - Large unoptimized images
+
+            Action: Check DO Spaces dashboard and CDN cache hit ratio.
+
+      # ALERT: High image error rate (> 20% of requests failing)
+      - alert: ImageErrorRateHigh
+        expr: rate(http_image_request_errors_total{service="mediaservice"}[5m]) / rate(http_image_requests_total{service="mediaservice"}[5m]) > 0.20
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+          component: cdn
+        annotations:
+          summary: "🚨 >20% of CDN image requests failing"
+          description: |
+            Image error rate is {{ $value | humanizePercentage }} which exceeds the 20% threshold.
+            Listings are displaying broken images to users.
+
+            Immediate actions:
+            1. Check DO Spaces health status
+            2. Verify CDN configuration
+            3. Check for CORS/CSP policy changes
+            4. Verify image processing pipeline (MediaService) is healthy
+
+      # ALERT: CDN response time P99 degradation
+      - alert: CDNResponseTimeDegraded
+        expr: histogram_quantile(0.99, rate(http_image_request_duration_seconds_bucket{service="mediaservice"}[15m])) > 5
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+          component: cdn
+        annotations:
+          summary: "CDN image P99 latency > 5s — gradual degradation detected"
+          description: |
+            CDN image response time P99 is {{ $value | humanizeDuration }}.
+            This may indicate gradual CDN degradation that will worsen.
+
+            Check the performance dashboard for trends.
+
+      # ALERT: MediaService image processing backlog
+      - alert: ImageProcessingBacklogHigh
+        expr: rabbitmq_queue_messages{queue="process.media.queue"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+          component: media
+        annotations:
+          summary: "Image processing queue has >100 pending messages"
+          description: |
+            The media processing queue has {{ $value }} messages pending.
+            New image uploads may not be processed in time, causing missing variants.
+
+            Check MediaService Workers and RabbitMQ health.

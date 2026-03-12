@@ -14,7 +14,7 @@ public class RateLimitConfig
     /// Maximum requests per window
     /// </summary>
     public int MaxRequests { get; set; } = 10;
-    
+
     /// <summary>
     /// Window duration in seconds
     /// </summary>
@@ -64,7 +64,7 @@ public class RateLimitMiddleware
     public async Task InvokeAsync(HttpContext context, IRateLimitRepository repository, IAuditServiceClient auditClient)
     {
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
-        
+
         // Admins and compliance officers bypass rate limiting to allow document review workflows
         var accountType = context.User.FindFirst("account_type")?.Value;
         if (accountType == "4" || accountType == "5") // Admin = 4, PlatformEmployee = 5
@@ -91,15 +91,15 @@ public class RateLimitMiddleware
 
         // Get or create rate limit entry
         var entry = await repository.IncrementAsync(
-            rateLimitKey, 
-            path, 
+            rateLimitKey,
+            path,
             TimeSpan.FromSeconds(config.WindowSeconds));
 
         // Check if limit exceeded
         if (entry.RequestCount > config.MaxRequests)
         {
             _logger.LogWarning(
-                "Rate limit exceeded for {Key} on {Path}. Count: {Count}/{Max}", 
+                "Rate limit exceeded for {Key} on {Path}. Count: {Count}/{Max}",
                 rateLimitKey, path, entry.RequestCount, config.MaxRequests);
 
             // Log security event to centralized AuditService
@@ -108,7 +108,7 @@ public class RateLimitMiddleware
             // Return 429 Too Many Requests
             context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             context.Response.ContentType = "application/json";
-            
+
             var retryAfter = (int)(entry.WindowEnd - DateTime.UtcNow).TotalSeconds;
             context.Response.Headers.Append("Retry-After", retryAfter.ToString());
             context.Response.Headers.Append("X-RateLimit-Limit", config.MaxRequests.ToString());
@@ -162,10 +162,10 @@ public class RateLimitMiddleware
     private string? GetRateLimitKey(HttpContext context)
     {
         // Try to get user ID first
-        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? context.User.FindFirst("sub")?.Value
                        ?? context.User.FindFirst("user_id")?.Value;
-        
+
         if (!string.IsNullOrEmpty(userIdClaim))
         {
             return $"user:{userIdClaim}";
@@ -190,7 +190,7 @@ public class RateLimitMiddleware
         int maxAllowed)
     {
         // Extract user ID if available
-        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? context.User.FindFirst("sub")?.Value
                        ?? "anonymous";
 

@@ -571,7 +571,7 @@ public class ValidatePlatformInvitationQueryHandler : IRequestHandler<ValidatePl
     public async Task<ValidatePlatformInvitationResult?> Handle(ValidatePlatformInvitationQuery request, CancellationToken cancellationToken)
     {
         var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);
-        
+
         if (invitation == null)
             return null;
 
@@ -615,7 +615,7 @@ public class AcceptPlatformInvitationCommandHandler : IRequestHandler<AcceptPlat
 
         // Get invitation by token
         var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);
-        
+
         if (invitation == null)
         {
             return new AcceptPlatformInvitationResult
@@ -730,14 +730,14 @@ public class GetSecurityStatusQueryHandler : IRequestHandler<GetSecurityStatusQu
         _logger.LogInformation("Checking platform security status");
 
         var securityStatus = await _authServiceClient.GetSecurityStatusAsync();
-        
+
         var recommendations = new List<string>();
-        
+
         if (securityStatus.DefaultAdminExists)
         {
             recommendations.Add("⚠️ El usuario admin por defecto (admin@okla.local) aún existe. Se recomienda eliminarlo después de crear admins reales.");
         }
-        
+
         if (securityStatus.RealSuperAdminCount == 0)
         {
             recommendations.Add("🔴 CRÍTICO: No hay SuperAdmins reales. Invite a un SuperAdmin antes de eliminar el admin por defecto.");
@@ -785,7 +785,7 @@ public class DeleteDefaultAdminCommandHandler : IRequestHandler<DeleteDefaultAdm
 
         // First check security status
         var securityStatus = await _authServiceClient.GetSecurityStatusAsync();
-        
+
         if (!securityStatus.DefaultAdminExists)
         {
             return new DeleteDefaultAdminResult
@@ -806,7 +806,7 @@ public class DeleteDefaultAdminCommandHandler : IRequestHandler<DeleteDefaultAdm
 
         // Delete the default admin
         var result = await _authServiceClient.DeleteDefaultAdminAsync(request.RequestedBy);
-        
+
         if (result.Success)
         {
             _logger.LogWarning("Default admin account successfully deleted by {RequestedBy}", request.RequestedBy);

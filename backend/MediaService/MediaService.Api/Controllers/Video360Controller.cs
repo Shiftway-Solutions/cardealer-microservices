@@ -53,7 +53,7 @@ public class Video360Controller : ControllerBase
         // SECURITY: Validate title for XSS/SQL injection patterns
         if (!string.IsNullOrEmpty(title) && DangerousPatternRegex.IsMatch(title))
         {
-            _logger.LogWarning("Blocked 360° video upload with dangerous title pattern from user {UserId}", 
+            _logger.LogWarning("Blocked 360° video upload with dangerous title pattern from user {UserId}",
                 User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown");
             return BadRequest(new { error = "Title contains invalid characters." });
         }

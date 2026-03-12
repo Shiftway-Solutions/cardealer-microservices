@@ -429,7 +429,7 @@ def main():
                 prompt = random.choice(opciones)
                 mensaje = generar_mensaje(prompt, tipo_auditoria=tipo_actual)
                 escribir_en_archivo(archivo_destino, mensaje)
-                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] READ detectado → Prompt {prompt} | Auditoría: {tipo_actual}")
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] READ detectado → Prompt 6| Auditoría: {tipo_actual}")
                 print(f"Mensaje: {mensaje[:120]}...\n")
                 ultimo_prompt = prompt
 

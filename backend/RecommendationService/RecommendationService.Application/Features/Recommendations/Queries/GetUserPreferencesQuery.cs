@@ -21,7 +21,7 @@ public class GetUserPreferencesQueryHandler : IRequestHandler<GetUserPreferences
     public async Task<UserPreferenceDto?> Handle(GetUserPreferencesQuery request, CancellationToken cancellationToken)
     {
         var preferences = await _repository.GetByUserIdAsync(request.UserId);
-        
+
         if (preferences == null)
             return null;
 

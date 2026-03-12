@@ -71,7 +71,7 @@ public class PlatformUserService : IPlatformUserService
 
             ForwardAuthorizationHeader();
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<UserServiceResponse>(cancellationToken: cancellationToken);
@@ -111,7 +111,7 @@ public class PlatformUserService : IPlatformUserService
 
             ForwardAuthorizationHeader();
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<PlatformUserStatsDto>(cancellationToken: cancellationToken);
@@ -144,7 +144,7 @@ public class PlatformUserService : IPlatformUserService
 
             ForwardAuthorizationHeader();
             var response = await _httpClient.GetAsync(url, cancellationToken);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<UserServiceDetailDto>(cancellationToken: cancellationToken);
@@ -180,13 +180,13 @@ public class PlatformUserService : IPlatformUserService
         ForwardAuthorizationHeader();
         var payload = new { Status = status, Reason = reason };
         var response = await _httpClient.PatchAsJsonAsync(url, payload, cancellationToken);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("UserService returned {StatusCode} when updating user {UserId} status", response.StatusCode, userId);
             response.EnsureSuccessStatusCode();
         }
-        
+
         _logger.LogInformation("Successfully updated user {UserId} status to {Status}", userId, status);
     }
 
@@ -197,13 +197,13 @@ public class PlatformUserService : IPlatformUserService
 
         ForwardAuthorizationHeader();
         var response = await _httpClient.PostAsync(url, null, cancellationToken);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("UserService returned {StatusCode} when verifying user {UserId}", response.StatusCode, userId);
             response.EnsureSuccessStatusCode();
         }
-        
+
         _logger.LogInformation("Successfully verified user {UserId}", userId);
     }
 
@@ -214,13 +214,13 @@ public class PlatformUserService : IPlatformUserService
 
         ForwardAuthorizationHeader();
         var response = await _httpClient.DeleteAsync(url, cancellationToken);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("UserService returned {StatusCode} when deleting user {UserId}", response.StatusCode, userId);
             response.EnsureSuccessStatusCode();
         }
-        
+
         _logger.LogInformation("Successfully deleted user {UserId}", userId);
     }
 
@@ -316,19 +316,19 @@ public class PlatformUserService : IPlatformUserService
 
         // Apply filters
         var filtered = allUsers.AsEnumerable();
-        
+
         if (!string.IsNullOrEmpty(search))
         {
-            filtered = filtered.Where(u => 
-                u.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || 
+            filtered = filtered.Where(u =>
+                u.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 u.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
-        
+
         if (!string.IsNullOrEmpty(type))
         {
             filtered = filtered.Where(u => u.Type == type);
         }
-        
+
         if (!string.IsNullOrEmpty(status))
         {
             filtered = filtered.Where(u => u.Status == status);

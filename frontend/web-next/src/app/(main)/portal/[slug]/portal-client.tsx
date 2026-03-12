@@ -67,6 +67,7 @@ import { cn } from '@/lib/utils';
 import { useChatbot } from '@/hooks/useChatbot';
 import { BotMessageContent } from '@/components/chat/BotMessageContent';
 import type { DealerDto } from '@/services/dealers';
+import { DEALER_PLAN_LIMITS, type DealerPlan } from '@/lib/plan-config';
 
 // ============================================================
 // TYPES
@@ -959,12 +960,14 @@ export function DealerPortalClient({ slug, initialDealer }: DealerPortalClientPr
         </div>
       </section>
 
-      {/* Chatbot FAB */}
-      <DealerChatbot
-        dealerName={dealer.businessName}
-        dealerId={dealer.id}
-        dealerEmail={dealer.email}
-      />
+      {/* Chatbot FAB — only for plans with ChatAgent access */}
+      {(DEALER_PLAN_LIMITS[dealer.currentPlan as DealerPlan]?.chatAgentWeb ?? 0) !== 0 && (
+        <DealerChatbot
+          dealerName={dealer.businessName}
+          dealerId={dealer.id}
+          dealerEmail={dealer.email}
+        />
+      )}
     </div>
   );
 }

@@ -10,12 +10,12 @@ public class SavedSearch
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// JSON-serialized search criteria.
     /// </summary>
     public string CriteriaJson { get; set; } = "{}";
-    
+
     public bool NotifyOnNewResults { get; set; } = true;
     public bool NotifyByEmail { get; set; } = true;
     public bool NotifyByPush { get; set; } = true;

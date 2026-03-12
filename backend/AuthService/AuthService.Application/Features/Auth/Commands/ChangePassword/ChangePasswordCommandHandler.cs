@@ -50,7 +50,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
     }
 
     public async Task<ChangePasswordResponse> Handle(
-        ChangePasswordCommand request, 
+        ChangePasswordCommand request,
         CancellationToken cancellationToken)
     {
         var userId = request.UserId;
@@ -162,8 +162,8 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             _logger.LogInformation(
                 "AUTH-SEC-001: Password changed successfully for user {UserId}. " +
                 "IP: {IpAddress}, UserAgent: {UserAgent}",
-                userId, 
-                request.IpAddress ?? "unknown", 
+                userId,
+                request.IpAddress ?? "unknown",
                 request.UserAgent ?? "unknown");
 
             return new ChangePasswordResponse(

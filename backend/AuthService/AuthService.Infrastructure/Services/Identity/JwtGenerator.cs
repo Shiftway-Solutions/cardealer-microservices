@@ -80,7 +80,7 @@ public class JwtGenerator : IJwtGenerator
         {
             claims.Add(new Claim("SessionId", sessionId));
         }
-        
+
         // Add role claims based on AccountType for [Authorize(Roles = "...")] compatibility
         // AccountType: Guest=0, Buyer=1, Dealer=2, DealerEmployee=3, Admin=4, PlatformEmployee=5, Seller=6
         switch (user.AccountType)

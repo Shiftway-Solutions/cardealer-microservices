@@ -11,7 +11,7 @@ public record PhoneNumber
 
         // Basic validation - in production you might want more sophisticated validation
         var cleaned = new string(value.Where(char.IsDigit).ToArray());
-        
+
         if (cleaned.Length < 10)
             throw new ArgumentException("Phone number too short");
 

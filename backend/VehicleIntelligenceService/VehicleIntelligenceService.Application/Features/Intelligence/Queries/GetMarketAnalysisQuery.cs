@@ -3,7 +3,7 @@ using VehicleIntelligenceService.Application.DTOs;
 
 namespace VehicleIntelligenceService.Application.Features.Intelligence.Queries;
 
-public record GetMarketAnalysisQuery(string Make, string Model, int Year) 
+public record GetMarketAnalysisQuery(string Make, string Model, int Year)
     : IRequest<MarketAnalysisDto?>;
 
 public class GetMarketAnalysisHandler : IRequestHandler<GetMarketAnalysisQuery, MarketAnalysisDto?>

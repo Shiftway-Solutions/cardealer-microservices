@@ -13,6 +13,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ArrowLeft,
   Mail,
@@ -26,24 +44,32 @@ import {
   Ban,
   CheckCircle,
   AlertTriangle,
-  MoreVertical,
   FileText,
   Eye,
   TrendingUp,
   Loader2,
+  RefreshCw,
+  MessageSquare,
+  HeadphonesIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   useAdminDealerDetail,
   useDealerVehiclesAdmin,
   useDealerDocumentsAdmin,
   useDealerBillingAdmin,
 } from '@/hooks/use-admin-extended';
+import { adminChangeDealerPlan } from '@/services/admin';
 
 export default function DealerDetailPage() {
   const params = useParams();
   const dealerId = params?.id as string;
   const [activeTab, setActiveTab] = useState('overview');
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [planJustification, setPlanJustification] = useState('');
+  const [changePlanLoading, setChangePlanLoading] = useState(false);
 
   const { data: dealerData, isLoading } = useAdminDealerDetail(dealerId);
   const { data: vehicles = [] } = useDealerVehiclesAdmin(dealerId);
@@ -74,16 +100,102 @@ export default function DealerDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-yellow-600 text-yellow-600">
+          <Dialog open={changePlanOpen} onOpenChange={setChangePlanOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Cambiar Plan
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cambiar plan de {dealerData.name}</DialogTitle>
+                <DialogDescription>
+                  Plan actual: <strong>{dealerData.plan.toUpperCase()}</strong>. Selecciona el nuevo
+                  plan e indica el motivo del cambio.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Nuevo plan</Label>
+                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="libre">LIBRE</SelectItem>
+                      <SelectItem value="visible">VISIBLE</SelectItem>
+                      <SelectItem value="pro">PRO</SelectItem>
+                      <SelectItem value="elite">ÉLITE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Justificación (obligatoria)</Label>
+                  <Textarea
+                    placeholder="Motivo del cambio de plan..."
+                    value={planJustification}
+                    onChange={e => setPlanJustification(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setChangePlanOpen(false);
+                    setSelectedPlan('');
+                    setPlanJustification('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  disabled={
+                    !selectedPlan ||
+                    !planJustification.trim() ||
+                    selectedPlan === dealerData.plan ||
+                    changePlanLoading
+                  }
+                  onClick={async () => {
+                    setChangePlanLoading(true);
+                    try {
+                      await adminChangeDealerPlan(dealerId, selectedPlan, planJustification);
+                      toast.success(`Plan cambiado a ${selectedPlan.toUpperCase()} exitosamente`);
+                      setChangePlanOpen(false);
+                      setSelectedPlan('');
+                      setPlanJustification('');
+                    } catch {
+                      toast.error(
+                        'Error al cambiar el plan. El endpoint puede no estar disponible aún.'
+                      );
+                    } finally {
+                      setChangePlanLoading(false);
+                    }
+                  }}
+                >
+                  {changePlanLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Confirmar cambio
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button
+            variant="outline"
+            className="border-yellow-600 text-yellow-600"
+            onClick={() =>
+              toast.info(
+                'Funcionalidad de advertencia pendiente de integración con NotificationService'
+              )
+            }
+          >
             <AlertTriangle className="mr-2 h-4 w-4" />
             Advertir
           </Button>
           <Button variant="outline" className="border-red-600 text-red-600">
             <Ban className="mr-2 h-4 w-4" />
             Suspender
-          </Button>
-          <Button variant="outline" size="icon">
-            <MoreVertical className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -161,8 +273,8 @@ export default function DealerDetailPage() {
         <Card className="border-slate-700 bg-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/95 p-2">
-                <Car className="h-5 w-5 text-primary/80" />
+              <div className="bg-primary/95 rounded-lg p-2">
+                <Car className="text-primary/80 h-5 w-5" />
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Vehículos Activos</p>
@@ -226,6 +338,14 @@ export default function DealerDetailPage() {
           <TabsTrigger value="vehicles">Vehículos</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="billing">Facturación</TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageSquare className="mr-1 h-3.5 w-3.5" />
+            ChatAgent
+          </TabsTrigger>
+          <TabsTrigger value="support">
+            <HeadphonesIcon className="mr-1 h-3.5 w-3.5" />
+            Soporte
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -272,7 +392,7 @@ export default function DealerDetailPage() {
                     <span className="font-medium text-white">Plan {dealerData.plan}</span>
                     <Badge className="bg-primary">Activo</Badge>
                   </div>
-                  <p className="text-2xl font-bold text-primary/80">
+                  <p className="text-primary/80 text-2xl font-bold">
                     RD$ {dealerData.stats.monthlyRevenue.toLocaleString()}/mes
                   </p>
                 </div>
@@ -310,7 +430,7 @@ export default function DealerDetailPage() {
                       </div>
                       <div>
                         <p className="font-medium text-white">{vehicle.title}</p>
-                        <p className="text-sm text-primary/80">
+                        <p className="text-primary/80 text-sm">
                           RD$ {vehicle.price.toLocaleString()}
                         </p>
                       </div>
@@ -410,6 +530,57 @@ export default function DealerDetailPage() {
                     Sin registros de facturación
                   </p>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="messages" className="mt-6">
+          <Card className="border-slate-700 bg-slate-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <MessageSquare className="h-5 w-5" />
+                Conversaciones del ChatAgent
+              </CardTitle>
+              <CardDescription>
+                Historial de conversaciones del ChatAgent de este dealer en el mes actual
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <MessageSquare className="text-muted-foreground mb-3 h-10 w-10" />
+                <p className="text-muted-foreground font-medium">
+                  Integración pendiente con ContactService
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Las métricas de conversaciones del ChatAgent estarán disponibles cuando se
+                  complete la integración con el endpoint de sesiones por dealer.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="support" className="mt-6">
+          <Card className="border-slate-700 bg-slate-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <HeadphonesIcon className="h-5 w-5" />
+                Tickets de Soporte
+              </CardTitle>
+              <CardDescription>
+                Historial de tickets de soporte abiertos por este dealer
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <HeadphonesIcon className="text-muted-foreground mb-3 h-10 w-10" />
+                <p className="text-muted-foreground font-medium">
+                  Sistema de tickets no implementado aún
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  El módulo de soporte se integrará en una fase posterior del roadmap.
+                </p>
               </div>
             </CardContent>
           </Card>

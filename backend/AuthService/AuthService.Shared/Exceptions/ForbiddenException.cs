@@ -6,12 +6,12 @@ namespace AuthService.Shared.Exceptions;
 /// </summary>
 public class ForbiddenException : AuthServiceException
 {
-    public ForbiddenException(string message = "Access forbidden") 
+    public ForbiddenException(string message = "Access forbidden")
         : base(message, 403, "FORBIDDEN")
     {
     }
 
-    public ForbiddenException(string message, Exception innerException) 
+    public ForbiddenException(string message, Exception innerException)
         : base(message, 403, "FORBIDDEN", innerException)
     {
     }

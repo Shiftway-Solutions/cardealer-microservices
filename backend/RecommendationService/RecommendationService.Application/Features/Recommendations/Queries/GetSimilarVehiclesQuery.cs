@@ -24,7 +24,7 @@ public class GetSimilarVehiclesQueryHandler : IRequestHandler<GetSimilarVehicles
     public async Task<List<RecommendationDto>> Handle(GetSimilarVehiclesQuery request, CancellationToken cancellationToken)
     {
         var recommendations = await _repository.GetSimilarVehiclesAsync(request.VehicleId, request.Limit);
-        
+
         return recommendations.Select(MapToDto).ToList();
     }
 

@@ -126,7 +126,7 @@ public class InventorySyncService : IInventorySyncService
                 }
 
                 result.TotalVehiclesProcessed++;
-                
+
                 if (!result.VehiclesByMake.ContainsKey(vehicle.Make))
                     result.VehiclesByMake[vehicle.Make] = 0;
                 result.VehiclesByMake[vehicle.Make]++;
@@ -199,7 +199,7 @@ public class InventorySyncService : IInventorySyncService
             sw.Stop();
             result.Success = true;
             result.Duration = sw.Elapsed;
-            
+
             _logger.LogInformation("Inventory sync completed: {Processed} processed, {Added} added, {Updated} updated, {Removed} removed in {Duration}ms",
                 result.TotalVehiclesProcessed, result.NewVehiclesAdded, result.VehiclesUpdated, result.VehiclesRemoved, sw.ElapsedMilliseconds);
         }

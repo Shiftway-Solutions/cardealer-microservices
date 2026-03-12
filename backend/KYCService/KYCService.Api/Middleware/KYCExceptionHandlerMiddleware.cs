@@ -102,7 +102,7 @@ public class KYCExceptionHandlerMiddleware
                     Field = e.PropertyName,
                     Message = e.ErrorMessage
                 }).ToList();
-                _logger.LogWarning(ex, "Validation failed: {Errors}", 
+                _logger.LogWarning(ex, "Validation failed: {Errors}",
                     string.Join(", ", ex.Errors.Select(e => $"{e.PropertyName}: {e.ErrorMessage}")));
                 break;
 

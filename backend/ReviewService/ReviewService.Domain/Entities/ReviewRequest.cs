@@ -89,7 +89,7 @@ public class ReviewRequest : BaseEntity<Guid>
     public string? Metadata { get; set; }
 
     // Navigation properties
-    
+
     /// <summary>
     /// Review creada (si aplica)
     /// </summary>

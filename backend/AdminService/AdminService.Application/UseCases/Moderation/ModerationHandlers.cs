@@ -72,7 +72,7 @@ public class GetModerationItemHandler : IRequestHandler<GetModerationItemQuery, 
     public async Task<ModerationItemDto?> Handle(GetModerationItemQuery request, CancellationToken cancellationToken)
     {
         var item = await _repository.GetByIdAsync(request.Id, cancellationToken);
-        
+
         if (item is null)
         {
             _logger.LogWarning("Moderation item not found: {Id}", request.Id);
@@ -119,7 +119,7 @@ public class GetModerationStatsHandler : IRequestHandler<GetModerationStatsQuery
     public async Task<ModerationStatsDto> Handle(GetModerationStatsQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting moderation statistics");
-        
+
         var stats = await _repository.GetStatsAsync(cancellationToken);
 
         return new ModerationStatsDto(
@@ -161,11 +161,11 @@ public class ProcessModerationActionHandler : IRequestHandler<ProcessModerationA
         }
 
         var success = await _repository.ProcessActionAsync(
-            request.ItemId, 
-            request.Action, 
-            request.ReviewerId, 
-            request.Reason, 
-            request.Notes, 
+            request.ItemId,
+            request.Action,
+            request.ReviewerId,
+            request.Reason,
+            request.Notes,
             cancellationToken);
 
         if (!success)

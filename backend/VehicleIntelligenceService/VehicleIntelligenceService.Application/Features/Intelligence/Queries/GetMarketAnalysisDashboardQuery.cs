@@ -12,7 +12,7 @@ public record GetMarketAnalysisDashboardQuery(
     string? BodyType = null)
     : IRequest<List<MarketAnalysisDto>>;
 
-public class GetMarketAnalysisDashboardHandler 
+public class GetMarketAnalysisDashboardHandler
     : IRequestHandler<GetMarketAnalysisDashboardQuery, List<MarketAnalysisDto>>
 {
     public Task<List<MarketAnalysisDto>> Handle(GetMarketAnalysisDashboardQuery request, CancellationToken cancellationToken)

@@ -10,8 +10,9 @@
 
 import { useRef, useEffect } from 'react';
 import { useChatbot } from '@/hooks/useChatbot';
+import { useAuth } from '@/hooks/use-auth';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import { X, Bot } from 'lucide-react';
+import { X, Bot, Info } from 'lucide-react';
 import type { Vehicle } from '@/types';
 
 interface VehicleChatWidgetProps {
@@ -28,6 +29,7 @@ export function VehicleChatWidget({
   onOpenChange,
 }: VehicleChatWidgetProps) {
   // No dealerId — global OKLA support mode (not dealer-specific)
+  const { isAuthenticated } = useAuth();
   const chat = useChatbot({
     maxRetries: 2,
     onLeadGenerated: _leadId => {
@@ -94,6 +96,13 @@ export function VehicleChatWidget({
       </button>
 
       {/* Chat panel — reuses the existing ChatPanel */}
+      {/* Auth warning banner for unauthenticated users (non-blocking — chat still works) */}
+      {chat.isOpen && !isAuthenticated && (
+        <div className="fixed right-4 bottom-[calc(100vh-120px)] z-[9999] flex w-[380px] items-center gap-2 rounded-t-xl border border-b-0 border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700 max-sm:right-0 max-sm:w-full dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>Inicia sesión para guardar esta conversación</span>
+        </div>
+      )}
       <ChatPanel
         messages={chat.messages}
         isOpen={chat.isOpen}

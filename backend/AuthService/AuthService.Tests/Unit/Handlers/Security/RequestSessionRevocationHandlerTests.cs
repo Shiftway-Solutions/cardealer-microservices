@@ -32,7 +32,7 @@ public class RequestSessionRevocationHandlerTests
         _cacheMock = new Mock<IDistributedCache>();
         _notificationServiceMock = new Mock<INotificationService>();
         _loggerMock = new Mock<ILogger<RequestSessionRevocationCommandHandler>>();
-        
+
         _handler = new RequestSessionRevocationCommandHandler(
             _sessionRepositoryMock.Object,
             _userRepositoryMock.Object,
@@ -50,13 +50,13 @@ public class RequestSessionRevocationHandlerTests
         var currentSessionId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId);
         var session = CreateTestSession(sessionId, userId);
-        
+
         var command = new RequestSessionRevocationCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             CurrentSessionId: currentSessionId,
             IpAddress: "192.168.1.100");
-        
+
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -83,7 +83,7 @@ public class RequestSessionRevocationHandlerTests
         var command = new RequestSessionRevocationCommand(
             UserId: userId,
             SessionId: sessionId.ToString());
-        
+
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
@@ -103,11 +103,11 @@ public class RequestSessionRevocationHandlerTests
         var otherUserId = Guid.NewGuid().ToString();
         var sessionId = Guid.NewGuid();
         var session = CreateTestSession(sessionId, otherUserId);
-        
+
         var command = new RequestSessionRevocationCommand(
             UserId: userId,
             SessionId: sessionId.ToString());
-        
+
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
 
@@ -126,12 +126,12 @@ public class RequestSessionRevocationHandlerTests
         var userId = Guid.NewGuid().ToString();
         var sessionId = Guid.NewGuid();
         var session = CreateTestSession(sessionId, userId);
-        
+
         var command = new RequestSessionRevocationCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             CurrentSessionId: sessionId.ToString());
-        
+
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
 
@@ -149,11 +149,11 @@ public class RequestSessionRevocationHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var sessionId = Guid.NewGuid();
-        
+
         var command = new RequestSessionRevocationCommand(
             UserId: userId,
             SessionId: sessionId.ToString());
-        
+
         var rateLimitValue = Encoding.UTF8.GetBytes("3");
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_rate")), It.IsAny<CancellationToken>()))
             .ReturnsAsync(rateLimitValue);

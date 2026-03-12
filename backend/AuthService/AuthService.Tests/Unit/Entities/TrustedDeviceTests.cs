@@ -59,7 +59,7 @@ public class TrustedDeviceTests
         var device = new TrustedDevice("user-123", "hash-abc", "Chrome on Mac");
         var initialCount = device.LoginCount;
         var initialTime = device.LastUsedAt;
-        
+
         // Wait a bit to ensure time difference
         System.Threading.Thread.Sleep(10);
 

@@ -47,8 +47,9 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new() { 
-            Title = "ComparisonService API", 
+        c.SwaggerDoc("v1", new()
+        {
+            Title = "ComparisonService API",
             Version = "v1",
             Description = "Comparador de vehículos - Compara hasta 3 vehículos lado a lado"
         });

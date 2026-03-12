@@ -80,7 +80,7 @@ public static class ServiceCollectionExtensions
         // JWT Authentication - keys from secrets
         var (jwtKey, jwtIssuer, jwtAudience) = AuthSecretsConfiguration.GetJwtSettings(configuration);
         var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
-        
+
         // Override with secrets
         jwtSettings.Key = jwtKey;
         jwtSettings.Issuer = jwtIssuer;
@@ -185,7 +185,7 @@ public static class ServiceCollectionExtensions
             .AddPolicyHandler(GetRetryPolicy())
             .AddPolicyHandler(GetCircuitBreakerPolicy());
         services.Configure<NotificationServiceSettings>(configuration.GetSection("NotificationService"));
-        
+
         // Register INotificationService interface (for SMS 2FA)
         services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationServiceClient>());
 
@@ -202,7 +202,7 @@ public static class ServiceCollectionExtensions
         {
             var baseSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
             var (key, issuer, audience) = AuthSecretsConfiguration.GetJwtSettings(configuration);
-            
+
             options.Key = key;
             options.Issuer = issuer;
             options.Audience = audience;

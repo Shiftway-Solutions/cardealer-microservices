@@ -29,7 +29,7 @@ public class GetDealerEmployeeQueryHandler : IRequestHandler<GetDealerEmployeeQu
 
     public async Task<DealerEmployeeDto> Handle(GetDealerEmployeeQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Getting employee {EmployeeId} for dealer {DealerId}", 
+        _logger.LogInformation("Getting employee {EmployeeId} for dealer {DealerId}",
             request.EmployeeId, request.DealerId);
 
         var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId);

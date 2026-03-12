@@ -12,6 +12,9 @@ ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
 # Copy shared projects
 COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj _Shared/CarDealer.Shared/
 COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj _Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj _Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj _Shared/CarDealer.Shared.Audit/
+COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj _Shared/CarDealer.Shared.ErrorHandling/
 # Copy service projects
 COPY RecommendationService/RecommendationService.Domain/RecommendationService.Domain.csproj RecommendationService/RecommendationService.Domain/
 COPY RecommendationService/RecommendationService.Application/RecommendationService.Application.csproj RecommendationService/RecommendationService.Application/
@@ -26,6 +29,9 @@ RUN dotnet restore
 WORKDIR /src
 COPY _Shared/CarDealer.Shared/ _Shared/CarDealer.Shared/
 COPY _Shared/CarDealer.Contracts/ _Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared.Logging/ _Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.Audit/ _Shared/CarDealer.Shared.Audit/
+COPY _Shared/CarDealer.Shared.ErrorHandling/ _Shared/CarDealer.Shared.ErrorHandling/
 COPY RecommendationService/ RecommendationService/
 
 # Build the application

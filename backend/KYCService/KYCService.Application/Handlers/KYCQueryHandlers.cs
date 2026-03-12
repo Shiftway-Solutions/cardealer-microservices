@@ -457,7 +457,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
         if (!string.IsNullOrWhiteSpace(document.StorageKey))
         {
             var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(document.StorageKey, cancellationToken);
-            
+
             if (freshUrl != null)
             {
                 return new DocumentUrlDto
@@ -467,8 +467,8 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
                     ExpiresAt = freshUrl.ExpiresAt
                 };
             }
-            
-            _logger.LogWarning("Failed to get fresh URL from MediaService for document {DocumentId}, falling back to stored URL", 
+
+            _logger.LogWarning("Failed to get fresh URL from MediaService for document {DocumentId}, falling back to stored URL",
                 request.DocumentId);
         }
 
@@ -479,7 +479,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
             if (!string.IsNullOrWhiteSpace(extractedKey))
             {
                 var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(extractedKey, cancellationToken);
-                
+
                 if (freshUrl != null)
                 {
                     return new DocumentUrlDto
@@ -490,7 +490,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
                     };
                 }
             }
-            
+
             // Último recurso: retornar la URL almacenada (puede estar expirada)
             _logger.LogWarning("Using stored URL for document {DocumentId} - may be expired", request.DocumentId);
             return new DocumentUrlDto
@@ -506,7 +506,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
         {
             _logger.LogWarning("Document {DocumentId} has StorageKey but no FileUrl - attempting to get fresh URL", request.DocumentId);
             var freshUrl = await _mediaServiceClient.GetFreshUrlAsync(document.StorageKey, cancellationToken);
-            
+
             if (freshUrl != null)
             {
                 return new DocumentUrlDto
@@ -516,8 +516,8 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
                     ExpiresAt = freshUrl.ExpiresAt
                 };
             }
-            
-            _logger.LogError("Failed to get fresh URL for document {DocumentId} with StorageKey {StorageKey}", 
+
+            _logger.LogError("Failed to get fresh URL for document {DocumentId} with StorageKey {StorageKey}",
                 request.DocumentId, document.StorageKey);
         }
 
@@ -535,7 +535,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
         {
             var uri = new Uri(url);
             var path = uri.AbsolutePath.TrimStart('/');
-            
+
             // El path ya es el storageKey
             if (!string.IsNullOrWhiteSpace(path))
             {
@@ -546,7 +546,7 @@ public class GetKYCDocumentUrlHandler : IRequestHandler<GetKYCDocumentUrlQuery, 
         {
             // Ignorar errores de parsing
         }
-        
+
         return null;
     }
 }

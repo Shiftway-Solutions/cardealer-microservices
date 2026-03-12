@@ -25,7 +25,7 @@ public class VehicleIntelligenceDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.VehicleId);
             entity.HasIndex(e => e.AnalysisDate);
-            
+
             entity.Property(e => e.CurrentPrice).HasColumnType("decimal(18,2)");
             entity.Property(e => e.SuggestedPrice).HasColumnType("decimal(18,2)");
             entity.Property(e => e.SuggestedPriceMin).HasColumnType("decimal(18,2)");
@@ -40,10 +40,10 @@ public class VehicleIntelligenceDbContext : DbContext
             entity.ToTable("price_recommendations");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.PriceAnalysisId);
-            
+
             entity.Property(e => e.Type).HasConversion<string>();
             entity.Property(e => e.SuggestedValue).HasColumnType("decimal(18,2)");
-            
+
             entity.HasOne(e => e.PriceAnalysis)
                   .WithMany()
                   .HasForeignKey(e => e.PriceAnalysisId)
@@ -56,7 +56,7 @@ public class VehicleIntelligenceDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.Make, e.Model, e.Year });
             entity.HasIndex(e => e.PredictionDate);
-            
+
             entity.Property(e => e.CurrentDemand).HasConversion<string>();
             entity.Property(e => e.Trend).HasConversion<string>();
             entity.Property(e => e.PredictedDemand30Days).HasConversion<string>();
@@ -73,10 +73,10 @@ public class VehicleIntelligenceDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.PriceAnalysisId);
             entity.HasIndex(e => new { e.Make, e.Model, e.Year });
-            
+
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
             entity.Property(e => e.SimilarityScore).HasColumnType("decimal(5,2)");
-            
+
             entity.HasOne(e => e.PriceAnalysis)
                   .WithMany()
                   .HasForeignKey(e => e.PriceAnalysisId)

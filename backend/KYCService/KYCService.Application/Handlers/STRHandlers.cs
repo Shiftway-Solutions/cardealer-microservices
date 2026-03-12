@@ -21,7 +21,7 @@ public class CreateSTRHandler : IRequestHandler<CreateSuspiciousTransactionRepor
     public async Task<SuspiciousTransactionReportDto> Handle(CreateSuspiciousTransactionReportCommand request, CancellationToken cancellationToken)
     {
         var reportNumber = await _repository.GenerateReportNumberAsync(cancellationToken);
-        
+
         var report = new SuspiciousTransactionReport
         {
             Id = Guid.NewGuid(),

@@ -15,12 +15,12 @@ public class FraudDetectionLogRepository : Repository<FraudDetectionLog, Guid>, 
     }
 
     public async Task<FraudDetectionLog> LogCheckAsync(
-        Guid reviewId, 
-        FraudCheckType checkType, 
-        FraudCheckResult result, 
-        int confidenceScore, 
-        string details, 
-        string? metadata = null, 
+        Guid reviewId,
+        FraudCheckType checkType,
+        FraudCheckResult result,
+        int confidenceScore,
+        string details,
+        string? metadata = null,
         CancellationToken cancellationToken = default)
     {
         var log = new FraudDetectionLog
@@ -50,10 +50,10 @@ public class FraudDetectionLogRepository : Repository<FraudDetectionLog, Guid>, 
     }
 
     public async Task<List<FraudDetectionLog>> GetByCheckTypeAsync(
-        FraudCheckType checkType, 
-        FraudCheckResult? result = null, 
-        DateTime? fromDate = null, 
-        DateTime? toDate = null, 
+        FraudCheckType checkType,
+        FraudCheckResult? result = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.FraudDetectionLogs.Where(x => x.CheckType == checkType);
@@ -77,7 +77,7 @@ public class FraudDetectionLogRepository : Repository<FraudDetectionLog, Guid>, 
         var cutoffTime = DateTime.UtcNow.AddHours(-timeWindow);
 
         return await _context.FraudDetectionLogs
-            .Where(x => x.CheckedAt >= cutoffTime && 
+            .Where(x => x.CheckedAt >= cutoffTime &&
                        (x.Result == FraudCheckResult.Failed || x.Result == FraudCheckResult.Suspicious))
             .GroupBy(x => x.ReviewId)
             .Where(g => g.Count() >= minFailedChecks)
@@ -86,8 +86,8 @@ public class FraudDetectionLogRepository : Repository<FraudDetectionLog, Guid>, 
     }
 
     public async Task<Dictionary<FraudCheckType, Dictionary<FraudCheckResult, int>>> GetStatsAsync(
-        DateTime? fromDate = null, 
-        DateTime? toDate = null, 
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.FraudDetectionLogs.AsQueryable();
@@ -124,8 +124,8 @@ public class FraudDetectionLogRepository : Repository<FraudDetectionLog, Guid>, 
 
         // Buscar en metadata donde esté almacenada la IP (formato JSON)
         return await _context.FraudDetectionLogs
-            .Where(x => x.CheckedAt >= cutoffTime && 
-                       x.Metadata != null && 
+            .Where(x => x.CheckedAt >= cutoffTime &&
+                       x.Metadata != null &&
                        x.Metadata.Contains(ipAddress))
             .OrderByDescending(x => x.CheckedAt)
             .ToListAsync(cancellationToken);

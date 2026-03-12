@@ -16,7 +16,7 @@ public class VoteHelpfulCommandHandler : IRequestHandler<VoteHelpfulCommand, Res
     private readonly ILogger<VoteHelpfulCommandHandler> _logger;
 
     public VoteHelpfulCommandHandler(
-        IReviewRepository reviewRepository, 
+        IReviewRepository reviewRepository,
         IReviewHelpfulVoteRepository voteRepository,
         ILogger<VoteHelpfulCommandHandler> logger)
     {
@@ -58,8 +58,8 @@ public class VoteHelpfulCommandHandler : IRequestHandler<VoteHelpfulCommand, Res
                     existingVote.IsHelpful = request.IsHelpful;
                     existingVote.UpdatedAt = DateTime.UtcNow;
                     await _voteRepository.UpdateAsync(existingVote);
-                    
-                    _logger.LogInformation("User {UserId} changed vote on review {ReviewId} to {IsHelpful}", 
+
+                    _logger.LogInformation("User {UserId} changed vote on review {ReviewId} to {IsHelpful}",
                         request.UserId, request.ReviewId, request.IsHelpful);
                 }
                 else
@@ -71,8 +71,8 @@ public class VoteHelpfulCommandHandler : IRequestHandler<VoteHelpfulCommand, Res
                     {
                         review.HelpfulVotes = Math.Max(0, review.HelpfulVotes - 1);
                     }
-                    
-                    _logger.LogInformation("User {UserId} removed vote from review {ReviewId}", 
+
+                    _logger.LogInformation("User {UserId} removed vote from review {ReviewId}",
                         request.UserId, request.ReviewId);
                 }
             }
@@ -92,14 +92,14 @@ public class VoteHelpfulCommandHandler : IRequestHandler<VoteHelpfulCommand, Res
                 };
 
                 await _voteRepository.AddAsync(newVote);
-                
+
                 review.TotalVotes++;
                 if (request.IsHelpful)
                 {
                     review.HelpfulVotes++;
                 }
-                
-                _logger.LogInformation("User {UserId} voted {IsHelpful} on review {ReviewId}", 
+
+                _logger.LogInformation("User {UserId} voted {IsHelpful} on review {ReviewId}",
                     request.UserId, request.IsHelpful, request.ReviewId);
             }
 
@@ -107,8 +107,8 @@ public class VoteHelpfulCommandHandler : IRequestHandler<VoteHelpfulCommand, Res
             await _reviewRepository.UpdateAsync(review);
 
             // Calcular porcentaje
-            var percentage = review.TotalVotes > 0 
-                ? Math.Round((decimal)review.HelpfulVotes / review.TotalVotes * 100, 1) 
+            var percentage = review.TotalVotes > 0
+                ? Math.Round((decimal)review.HelpfulVotes / review.TotalVotes * 100, 1)
                 : 0;
 
             return Result<VoteResultDto>.Success(new VoteResultDto

@@ -59,7 +59,7 @@ public class FirebaseCredentialProvider
     {
         // Primero intentar obtener JSON completo
         var json = _secretProvider.GetSecret(SecretKeys.FirebaseServiceAccountJson);
-        
+
         if (!string.IsNullOrEmpty(json))
         {
             // Si parece base64, decodificar
@@ -134,7 +134,7 @@ public class FirebaseCredentialProvider
         {
             var tempPath = Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid()}.json");
             File.WriteAllText(tempPath, json);
-            
+
             _logger?.LogDebug("Firebase credentials written to temporary file: {Path}", tempPath);
             return tempPath;
         }

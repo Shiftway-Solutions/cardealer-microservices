@@ -9,7 +9,7 @@ public record RecoveryCodeLoginRequest(
     /// Temporary token received from initial login attempt
     /// </summary>
     string TempToken,
-    
+
     /// <summary>
     /// One of the 8-character alphanumeric recovery codes (e.g., "H29S41MV")
     /// Each code can only be used ONCE

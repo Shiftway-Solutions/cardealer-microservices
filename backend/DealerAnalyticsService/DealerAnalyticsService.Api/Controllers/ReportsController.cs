@@ -17,13 +17,13 @@ public class ReportsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ReportsController> _logger;
-    
+
     public ReportsController(IMediator mediator, ILogger<ReportsController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener reporte diario
     /// </summary>
@@ -49,7 +49,7 @@ public class ReportsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving daily report" });
         }
     }
-    
+
     /// <summary>
     /// Obtener reporte semanal
     /// </summary>
@@ -75,7 +75,7 @@ public class ReportsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving weekly report" });
         }
     }
-    
+
     /// <summary>
     /// Obtener reporte mensual
     /// </summary>
@@ -94,10 +94,10 @@ public class ReportsController : ControllerBase
             var now = DateTime.UtcNow;
             var reportYear = year ?? now.Year;
             var reportMonth = month ?? (now.Month == 1 ? 12 : now.Month - 1);
-            
+
             if (month == null && year == null && now.Month == 1)
                 reportYear--;
-            
+
             var query = new GetMonthlyReportQuery(dealerId, reportYear, reportMonth);
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -108,7 +108,7 @@ public class ReportsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving monthly report" });
         }
     }
-    
+
     /// <summary>
     /// Generar reporte personalizado
     /// </summary>
@@ -124,9 +124,9 @@ public class ReportsController : ControllerBase
         try
         {
             var query = new GetCustomReportQuery(
-                dealerId, 
-                request.FromDate, 
-                request.ToDate, 
+                dealerId,
+                request.FromDate,
+                request.ToDate,
                 request.IncludeSections);
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -137,7 +137,7 @@ public class ReportsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving custom report" });
         }
     }
-    
+
     /// <summary>
     /// Exportar reporte en formato específico (PDF, Excel, CSV)
     /// </summary>
@@ -159,13 +159,13 @@ public class ReportsController : ControllerBase
             {
                 return BadRequest(new { Message = "Invalid format. Use: pdf, excel, or csv" });
             }
-            
+
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             var query = new ExportReportQuery(dealerId, start, end, format.ToLower());
             var result = await _mediator.Send(query);
-            
+
             return File(result.Content, result.ContentType, result.FileName);
         }
         catch (Exception ex)
@@ -174,7 +174,7 @@ public class ReportsController : ControllerBase
             return StatusCode(500, new { Message = "Error exporting report" });
         }
     }
-    
+
     private static DateTime GetStartOfWeek(DateTime date)
     {
         var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;

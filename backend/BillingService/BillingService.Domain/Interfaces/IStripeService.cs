@@ -153,6 +153,22 @@ public interface IStripeService
         CancellationToken cancellationToken = default);
 
     // ========================================
+    // PAYMENT INTENT OPERATIONS
+    // ========================================
+
+    /// <summary>
+    /// Creates a one-time Stripe PaymentIntent (e.g. for report purchases).
+    /// Returns the PaymentIntent ID and client secret for frontend confirmation.
+    /// </summary>
+    Task<StripePaymentIntentResult> CreatePaymentIntentAsync(
+        long amountCents,
+        string currency,
+        string? description = null,
+        Dictionary<string, string>? metadata = null,
+        string? receiptEmail = null,
+        CancellationToken cancellationToken = default);
+
+    // ========================================
     // CHECKOUT & BILLING PORTAL
     // ========================================
 
@@ -192,6 +208,14 @@ public interface IStripeService
 // ========================================
 // RESULT DTOs
 // ========================================
+
+public record StripePaymentIntentResult(
+    string PaymentIntentId,
+    string? ClientSecret,
+    string Status,
+    long AmountCents,
+    string Currency
+);
 
 public record StripeCustomerResult(
     string Id,

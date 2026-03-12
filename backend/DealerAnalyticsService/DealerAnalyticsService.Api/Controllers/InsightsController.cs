@@ -16,7 +16,7 @@ public class InsightsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IDealerInsightRepository _insightRepository;
     private readonly ILogger<InsightsController> _logger;
-    
+
     public InsightsController(
         IMediator mediator,
         IDealerInsightRepository insightRepository,
@@ -26,7 +26,7 @@ public class InsightsController : ControllerBase
         _insightRepository = insightRepository;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener insights para un dealer
     /// </summary>
@@ -44,7 +44,7 @@ public class InsightsController : ControllerBase
         try
         {
             var insights = await _insightRepository.GetDealerInsightsAsync(dealerId, onlyUnread);
-            
+
             var dtos = insights.Select(insight => new DealerInsightDto
             {
                 Id = insight.Id,
@@ -63,7 +63,7 @@ public class InsightsController : ControllerBase
                 UpdatedAt = insight.UpdatedAt,
                 ExpiresAt = insight.ExpiresAt
             }).ToList();
-            
+
             return Ok(dtos);
         }
         catch (Exception ex)
@@ -72,7 +72,7 @@ public class InsightsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving insights" });
         }
     }
-    
+
     /// <summary>
     /// Generar nuevos insights para un dealer
     /// </summary>
@@ -88,7 +88,7 @@ public class InsightsController : ControllerBase
         {
             var command = new GenerateInsightsCommand(dealerId);
             var result = await _mediator.Send(command);
-            
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -97,7 +97,7 @@ public class InsightsController : ControllerBase
             return StatusCode(500, new { Message = "Error generating insights" });
         }
     }
-    
+
     /// <summary>
     /// Marcar insights como leídos
     /// </summary>
@@ -123,7 +123,7 @@ public class InsightsController : ControllerBase
             return StatusCode(500, new { Message = "Error marking insights as read" });
         }
     }
-    
+
     /// <summary>
     /// Marcar insight como implementado
     /// </summary>
@@ -143,7 +143,7 @@ public class InsightsController : ControllerBase
             return StatusCode(500, new { Message = "Error marking insight as acted upon" });
         }
     }
-    
+
     /// <summary>
     /// Obtener resumen de insights para dashboard
     /// </summary>
@@ -158,7 +158,7 @@ public class InsightsController : ControllerBase
         try
         {
             var insights = await _insightRepository.GetDealerInsightsAsync(dealerId);
-            
+
             var summary = new
             {
                 Total = insights.Count(),
@@ -182,7 +182,7 @@ public class InsightsController : ControllerBase
                 AvgPotentialImpact = insights.Any() ? insights.Average(i => i.PotentialImpact) : 0,
                 AvgConfidence = insights.Any() ? insights.Average(i => i.Confidence) : 0
             };
-            
+
             return Ok(summary);
         }
         catch (Exception ex)

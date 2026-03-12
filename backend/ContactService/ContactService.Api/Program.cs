@@ -69,16 +69,16 @@ try
     builder.Services.AddSwaggerGen();
     builder.Services.AddHttpContextAccessor(); // Required for TenantContext
 
-// Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // Database
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Multi-tenancy
-builder.Services.AddScoped<ITenantContext, TenantContext>();
+    // Multi-tenancy
+    builder.Services.AddScoped<ITenantContext, TenantContext>();
 
-// Repositories
-builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
-builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+    // Repositories
+    builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
+    builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
 
     // RabbitMQ Event Publisher — publishes LeadCreatedEvent for dealer notifications (email + WhatsApp)
     builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
@@ -94,77 +94,77 @@ builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>(
     // ── LEY 172-13: User data deletion consumer (cascade anonymization) ──
     builder.Services.AddHostedService<UserDataDeletionConsumer>();
 
-var gatewayUrl = builder.Configuration["Gateway:Url"] ?? "http://gateway:8080";
+    var gatewayUrl = builder.Configuration["Gateway:Url"] ?? "http://gateway:8080";
 
-builder.Services.AddResilientHttpClient<INotificationServiceClient, NotificationServiceClient>(
-    builder.Configuration,
-    clientName: "NotificationService",
-    configureClient: client =>
+    builder.Services.AddResilientHttpClient<INotificationServiceClient, NotificationServiceClient>(
+        builder.Configuration,
+        clientName: "NotificationService",
+        configureClient: client =>
+        {
+            client.BaseAddress = new Uri(gatewayUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+    // ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+    var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+            };
+        });
+
+    // CORS — configurable origins from appsettings
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? (builder.Environment.IsDevelopment()
+            ? new[] { "http://localhost:3000", "http://localhost:5173" }
+            : new[] { "https://okla.com.do" });
+
+    builder.Services.AddCors(options =>
     {
-        client.BaseAddress = new Uri(gatewayUrl);
-        client.Timeout = TimeSpan.FromSeconds(30);
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  // Security: Restrict to specific HTTP methods and headers (OWASP)
+                  .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                  .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+                  .AllowCredentials();
+        });
     });
 
-// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
-var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    // ============= RATE LIMITING =============
+    builder.Services.AddRateLimiter(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddFixedWindowLimiter("fixed", opt =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+            opt.PermitLimit = 60;
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 5;
+        });
+        options.OnRejected = async (context, ct) =>
+        {
+            Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
+                context.HttpContext.Connection.RemoteIpAddress,
+                context.HttpContext.Request.Path);
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", ct);
         };
     });
 
-// CORS — configurable origins from appsettings
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? (builder.Environment.IsDevelopment()
-        ? new[] { "http://localhost:3000", "http://localhost:5173" }
-        : new[] { "https://okla.com.do" });
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-              // Security: Restrict to specific HTTP methods and headers (OWASP)
-              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
-              .AllowCredentials();
-    });
-});
-
-// ============= RATE LIMITING =============
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.PermitLimit = 60;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 5;
-    });
-    options.OnRejected = async (context, ct) =>
-    {
-        Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
-            context.HttpContext.Connection.RemoteIpAddress,
-            context.HttpContext.Request.Path);
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", ct);
-    };
-});
-
-// Health Checks
-builder.Services.AddHealthChecks();
+    // Health Checks
+    builder.Services.AddHealthChecks();
 
     // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
     builder.Services.AddResponseCompression(options =>
@@ -279,4 +279,3 @@ finally
 
 // Make Program class accessible for integration tests
 public partial class Program { }
- 

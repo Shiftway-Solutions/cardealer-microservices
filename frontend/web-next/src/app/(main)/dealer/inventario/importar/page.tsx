@@ -6,11 +6,12 @@
 
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft,
   Upload,
@@ -35,6 +36,7 @@ import { PlanGate } from '@/components/plan/plan-gate';
 function DealerImportContent() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
@@ -43,6 +45,25 @@ function DealerImportContent() {
   const importMutation = useImportVehicles(dealerId);
   const templateMutation = useDownloadImportTemplate();
   const { data: importHistory, isLoading: isHistoryLoading } = useImportHistory(dealerId);
+
+  // Simulated progress — ramps up fast initially, slows near 90%
+  useEffect(() => {
+    if (!importMutation.isPending) {
+      if (importProgress > 0) setImportProgress(100);
+      const timer = setTimeout(() => setImportProgress(0), 600);
+      return () => clearTimeout(timer);
+    }
+    setImportProgress(5);
+    const interval = setInterval(() => {
+      setImportProgress(prev => {
+        if (prev >= 90) return prev + 0.5;
+        if (prev >= 70) return prev + 1;
+        if (prev >= 40) return prev + 3;
+        return prev + 5;
+      });
+    }, 300);
+    return () => clearInterval(interval);
+  }, [importMutation.isPending]); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: only react to pending state
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -275,6 +296,15 @@ function DealerImportContent() {
                     'Iniciar Importación'
                   )}
                 </Button>
+
+                {importMutation.isPending && (
+                  <div className="mx-auto w-full max-w-sm space-y-2">
+                    <Progress value={importProgress} className="h-3" />
+                    <p className="text-muted-foreground text-center text-sm">
+                      Procesando... {Math.round(importProgress)}%
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <>

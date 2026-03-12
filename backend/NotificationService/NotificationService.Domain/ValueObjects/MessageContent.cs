@@ -20,7 +20,7 @@ public record MessageContent
 
     public override string ToString() => Value;
 
-    public int WordCount => Value.Split(new[] { ' ', '\t', '\n', '\r' }, 
+    public int WordCount => Value.Split(new[] { ' ', '\t', '\n', '\r' },
         StringSplitOptions.RemoveEmptyEntries).Length;
 
     public bool ContainsHtml => Value.Contains('<') && Value.Contains('>');

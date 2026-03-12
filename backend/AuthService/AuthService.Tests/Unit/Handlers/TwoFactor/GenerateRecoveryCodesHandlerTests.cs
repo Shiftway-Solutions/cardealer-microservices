@@ -28,7 +28,7 @@ public class GenerateRecoveryCodesHandlerTests
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
         _notificationServiceMock = new Mock<IAuthNotificationService>();
-        
+
         _handler = new GenerateRecoveryCodesCommandHandler(
             _userRepositoryMock.Object,
             _passwordHasherMock.Object,
@@ -44,7 +44,7 @@ public class GenerateRecoveryCodesHandlerTests
         var user = CreateUserWithTwoFactor(userId, "hashedPassword");
         var command = new GenerateRecoveryCodesCommand(userId, "correctPassword");
         var expectedCodes = new List<string> { "ABC123", "DEF456", "GHI789" };
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("correctPassword", "hashedPassword"))
@@ -68,7 +68,7 @@ public class GenerateRecoveryCodesHandlerTests
         var user = CreateUserWithTwoFactor(userId, "hashedPassword");
         var command = new GenerateRecoveryCodesCommand(userId, "correctPassword");
         var expectedCodes = new List<string> { "ABC123", "DEF456" };
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("correctPassword", "hashedPassword"))
@@ -92,7 +92,7 @@ public class GenerateRecoveryCodesHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateUserWithTwoFactor(userId, "hashedPassword");
         var command = new GenerateRecoveryCodesCommand(userId, "wrongPassword");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("wrongPassword", "hashedPassword"))
@@ -113,7 +113,7 @@ public class GenerateRecoveryCodesHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId, "hashedPassword"); // No 2FA
         var command = new GenerateRecoveryCodesCommand(userId, "password");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("password", "hashedPassword"))
@@ -133,7 +133,7 @@ public class GenerateRecoveryCodesHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var command = new GenerateRecoveryCodesCommand(userId, "password");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
 
@@ -158,15 +158,15 @@ public class GenerateRecoveryCodesHandlerTests
     private static ApplicationUser CreateUserWithTwoFactor(string userId, string passwordHash)
     {
         var user = CreateTestUser(userId, passwordHash);
-        
+
         // Create and enable TwoFactorAuth
         var twoFactorAuth = new TwoFactorAuth(userId, TwoFactorAuthType.Authenticator);
         twoFactorAuth.Enable("SECRET", new List<string> { "OLD_RECOVERY" });
-        
+
         // Use reflection to set the private TwoFactorAuth property
         var property = typeof(ApplicationUser).GetProperty("TwoFactorAuth");
         property?.SetValue(user, twoFactorAuth);
-        
+
         return user;
     }
 

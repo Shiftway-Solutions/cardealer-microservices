@@ -23,11 +23,11 @@ public class RequestPasswordSetupCommandHandler : IRequestHandler<RequestPasswor
     private readonly IUserRepository _userRepository;
     private readonly IDistributedCache _cache;
     private readonly ILogger<RequestPasswordSetupCommandHandler> _logger;
-    
+
     // Redis key prefixes
     private const string TOKEN_PREFIX = "password_setup:token:";
     private const string RATE_LIMIT_PREFIX = "password_setup:rate:";
-    
+
     // Configuration
     private static readonly TimeSpan TOKEN_TTL = TimeSpan.FromHours(1);
     private const int MAX_REQUESTS_PER_HOUR = 3;
@@ -74,7 +74,7 @@ public class RequestPasswordSetupCommandHandler : IRequestHandler<RequestPasswor
                 _logger.LogWarning(
                     "Rate limit exceeded for password setup request. UserId: {UserId}, IP: {IpAddress}",
                     request.UserId, request.IpAddress);
-                    
+
                 throw new BadRequestException(
                     "Too many password setup requests. Please try again in 1 hour.");
             }

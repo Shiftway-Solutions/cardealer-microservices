@@ -39,15 +39,15 @@ public class VerifySellerProfileCommandHandler : IRequestHandler<VerifySellerPro
             profile.VerifiedByUserId = request.VerifiedByUserId;
             profile.VerificationNotes = request.Notes;
             profile.RejectionReason = null;
-            
+
             // Upgrade limits for verified sellers
             profile.MaxActiveListings = 10;
             profile.CanSellHighValue = true;
-            
+
             // Set verification expiry (1 year)
             profile.VerificationExpiresAt = DateTime.UtcNow.AddYears(1);
-            
-            _logger.LogInformation("Seller profile {ProfileId} verified by user {VerifiedByUserId}", 
+
+            _logger.LogInformation("Seller profile {ProfileId} verified by user {VerifiedByUserId}",
                 profile.Id, request.VerifiedByUserId);
         }
         else
@@ -57,12 +57,12 @@ public class VerifySellerProfileCommandHandler : IRequestHandler<VerifySellerPro
             profile.VerifiedAt = null;
             profile.VerifiedByUserId = null;
             profile.VerificationExpiresAt = null;
-            
+
             // Keep default limits
             profile.MaxActiveListings = 3;
             profile.CanSellHighValue = false;
-            
-            _logger.LogInformation("Seller profile {ProfileId} rejected. Reason: {Reason}", 
+
+            _logger.LogInformation("Seller profile {ProfileId} rejected. Reason: {Reason}",
                 profile.Id, request.Notes);
         }
 

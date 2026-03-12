@@ -79,7 +79,7 @@ public class Spin360JobRepository : ISpin360JobRepository
     public async Task<int> GetActiveJobsCountAsync(CancellationToken ct = default)
     {
         return await _context.Spin360Jobs
-            .CountAsync(j => j.Status != Spin360Status.Completed && 
+            .CountAsync(j => j.Status != Spin360Status.Completed &&
                            j.Status != Spin360Status.Failed, ct);
     }
 }

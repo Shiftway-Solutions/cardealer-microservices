@@ -171,6 +171,7 @@ try
     builder.Services.AddScoped<IStripeCustomerRepository, StripeCustomerRepository>();
     builder.Services.AddScoped<IEarlyBirdRepository, EarlyBirdRepository>();
     builder.Services.AddScoped<IAzulTransactionRepository, AzulTransactionRepository>();
+    builder.Services.AddScoped<IReportPurchaseRepository, ReportPurchaseRepository>();
 
     // CONTRA #6 FIX: Payment Reconciliation — daily Stripe↔OKLA audit
     builder.Services.AddScoped<IReconciliationRepository, ReconciliationRepository>();
@@ -326,6 +327,9 @@ try
 
     // CONTRA #6 FIX: Daily payment reconciliation job (runs at 03:00 UTC)
     builder.Services.AddHostedService<DailyReconciliationJob>();
+
+    // Link guest report purchases to newly registered users (listens for auth.user.registered)
+    builder.Services.AddHostedService<ReportPurchaseLinkingConsumer>();
 
     var app = builder.Build();
 

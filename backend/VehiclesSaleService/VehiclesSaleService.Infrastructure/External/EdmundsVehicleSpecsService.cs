@@ -74,7 +74,7 @@ public class EdmundsVehicleSpecsService : IVehicleSpecsService
             // Step 1: Get styles for the make/model/year
             var stylesUrl = $"{_baseUrl}/api/vehicle/v3/{Encode(make)}/{Encode(model)}/{year}/styles" +
                            $"?fmt=json&api_key={_apiKey}";
-            
+
             var stylesResponse = await _httpClient.GetAsync(stylesUrl, ct);
             if (!stylesResponse.IsSuccessStatusCode)
             {

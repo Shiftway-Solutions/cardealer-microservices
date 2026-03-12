@@ -73,7 +73,7 @@ public class HttpRateLimitClient : IRateLimitClient
     public async Task<RateLimitResult> CheckAsync(HttpContext context, CancellationToken cancellationToken = default)
     {
         var path = context.Request.Path.Value ?? "/";
-        
+
         // Check if path is excluded
         if (IsExcludedPath(path))
         {
@@ -130,14 +130,14 @@ public class HttpRateLimitClient : IRateLimitClient
         }
 
         var roles = context.User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-        
+
         if (roles.Contains("Admin"))
             return "admin";
         if (roles.Contains("Premium") || roles.Contains("Enterprise"))
             return "premium";
         if (roles.Contains("Dealer"))
             return "dealer";
-        
+
         return "authenticated";
     }
 

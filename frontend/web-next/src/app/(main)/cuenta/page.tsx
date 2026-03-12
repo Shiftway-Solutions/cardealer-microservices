@@ -46,6 +46,8 @@ import {
   Sparkles,
   MapPin,
   Crown,
+  Lock,
+  Download,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
@@ -64,10 +66,22 @@ import { getAppointmentTypeLabel } from '@/services/appointments';
 import { useSellerByUserId, useSellerStats } from '@/hooks/use-seller';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useAlertStats } from '@/hooks/use-alerts';
-import { PlanBadge } from '@/components/plan/plan-gate';
+import { PlanBadge, PlanUsageBar } from '@/components/plan/plan-gate';
 import { UpgradeBanner } from '@/components/shared/upgrade-banner';
 import { MissedOpportunityBanner } from '@/components/dealer/missed-opportunity-banner';
 import { BenchmarkComparisonCard } from '@/components/dealer/benchmark-comparison-card';
+import { ChatbotUpgradeBanner } from '@/components/dealer/chatbot-upgrade-banner';
+import { NoSaleConversionModal } from '@/components/dealer/no-sale-conversion-modal';
+import { usePlanAccess } from '@/hooks/use-plan-access';
+import { useExportReport } from '@/hooks/use-dealer-analytics';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -254,6 +268,13 @@ function DealerDashboard() {
     4
   );
   const { canSell, isLoading: kycLoading } = useCanSell();
+  const { canAccess, currentPlan, minimumPlanFor } = usePlanAccess();
+  const [showListingLimitModal, setShowListingLimitModal] = React.useState(false);
+  const exportMutation = useExportReport(dealer?.id ?? '');
+
+  const maxListings = dealer?.maxActiveListings ?? 3;
+  const activeListings = dealer?.currentActiveListings ?? 0;
+  const isAtListingLimit = maxListings !== -1 && activeListings >= maxListings;
 
   return (
     <div className="space-y-6">
@@ -272,14 +293,77 @@ function DealerDashboard() {
           <p className="text-muted-foreground">Panel de control del concesionario</p>
         </div>
         {!kycLoading && canSell && (
-          <Link href="/dealer/inventario/nuevo">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nuevo Vehículo
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {canAccess('analytics') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={exportMutation.isPending}
+                onClick={() => exportMutation.mutate('csv')}
+              >
+                {exportMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Exportar datos
+              </Button>
+            )}
+            {currentPlan === 'libre' && (
+              <Link href="/cuenta/upgrade?plan=visible&type=dealer">
+                <Button
+                  variant="outline"
+                  className="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Crown className="h-4 w-4 text-purple-500" />
+                  Activar plan VISIBLE — desde RD$1,699/mes
+                </Button>
+              </Link>
+            )}
+            {isAtListingLimit ? (
+              <Button className="gap-2" onClick={() => setShowListingLimitModal(true)}>
+                <Plus className="h-4 w-4" />
+                Nuevo Vehículo
+              </Button>
+            ) : (
+              <Link href="/dealer/inventario/nuevo">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Nuevo Vehículo
+                </Button>
+              </Link>
+            )}
+          </div>
         )}
       </div>
+
+      {/* Listing limit upgrade modal */}
+      <Dialog open={showListingLimitModal} onOpenChange={setShowListingLimitModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-amber-500" />
+              Límite de publicaciones alcanzado
+            </DialogTitle>
+            <DialogDescription>
+              Has alcanzado el máximo de {maxListings} vehículos activos en tu plan {currentPlan}.
+              Elimina un vehículo existente o actualiza tu plan para publicar más.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <Link href="/cuenta/upgrade?plan=visible&type=dealer">
+              <Button className="w-full gap-2">
+                <Crown className="h-4 w-4" />
+                Upgrade de plan
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => setShowListingLimitModal(false)}>
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Verification banner — shown while unverified */}
       <DealerVerificationBanner />
@@ -294,8 +378,28 @@ function DealerDashboard() {
       {/* Missed opportunity banner — dynamic LIBRE-plan urgency counter */}
       <MissedOpportunityBanner />
 
+      {/* ChatBot upgrade banner — shown after first inquiry for LIBRE dealers */}
+      <ChatbotUpgradeBanner />
+
       {/* Benchmark comparison — shows LIBRE dealers how VISIBLE dealers perform */}
       <BenchmarkComparisonCard />
+
+      {/* 45-day no-sale modal — triggers for LIBRE dealers with no revenue */}
+      <NoSaleConversionModal />
+
+      {/* Listings usage progress bar — active listings vs plan limit */}
+      {!dealerLoading && dealer && (
+        <Card>
+          <CardContent className="pt-6">
+            <PlanUsageBar
+              current={stats?.activeListings ?? 0}
+              max={dealer.maxActiveListings === -1 ? 999999 : dealer.maxActiveListings}
+              label="Vehículos Activos"
+              showUnlimited
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {dealerLoading ? (
         <div className="grid gap-4 sm:grid-cols-3">
@@ -312,7 +416,7 @@ function DealerDashboard() {
             color="blue"
           />
           <MetricCard
-            title="Vistas de la Semana"
+            title="Vistas (últimos 7 días)"
             value={stats?.viewsThisMonth ?? 0}
             icon={Eye}
             color="green"
@@ -324,6 +428,56 @@ function DealerDashboard() {
             color="purple"
           />
         </div>
+      )}
+
+      {/* Limited stats section for LIBRE plan — only 7 days, no history */}
+      {!dealerLoading && currentPlan === 'libre' && (
+        <Card className="border-dashed border-gray-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4" />
+              Estadísticas (últimos 7 días)
+            </CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex cursor-help items-center gap-1.5 text-xs text-amber-600">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Historial limitado</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[220px]">
+                  <p className="text-xs">
+                    Desde el plan <b>VISIBLE</b> puedes ver historial de 30, 60 y 90 días con
+                    gráficos de tendencia.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold">
+                  {(stats?.viewsThisMonth ?? 0).toLocaleString()}
+                </p>
+                <p className="text-muted-foreground text-xs">Vistas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats?.inquiriesThisMonth ?? 0}</p>
+                <p className="text-muted-foreground text-xs">Consultas</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats?.activeListings ?? 0}</p>
+                <p className="text-muted-foreground text-xs">Publicaciones</p>
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-3 text-center text-xs">
+              Solo se muestran los últimos 7 días. Mejora tu plan para acceder a historial completo
+              y tendencias.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -453,12 +607,21 @@ function DealerDashboard() {
               label="Inventario"
               color="blue"
             />
-            <QuickActionTile href="/dealer/leads" icon={Users} label="Ver Leads" color="purple" />
+            <QuickActionTile
+              href="/dealer/leads"
+              icon={Users}
+              label="Ver Leads"
+              color="purple"
+              locked={!canAccess('leadManagement')}
+              lockedTooltip={`Requiere plan ${minimumPlanFor('leadManagement')}`}
+            />
             <QuickActionTile
               href="/dealer/analytics"
               icon={TrendingUp}
               label="Analytics"
               color="green"
+              locked={!canAccess('analytics')}
+              lockedTooltip={`Requiere plan ${minimumPlanFor('analytics')}`}
             />
             <QuickActionTile href="/dealer/citas" icon={Calendar} label="Citas" color="yellow" />
             <QuickActionTile
@@ -993,17 +1156,21 @@ function MetricCard({
   );
 }
 
-/** QuickActionTile: compact tile (Dealer/Seller dashboards) */
+/** QuickActionTile: compact tile (Dealer/Seller dashboards) with optional lock icon */
 function QuickActionTile({
   href,
   icon: Icon,
   label,
   color,
+  locked,
+  lockedTooltip,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
   color: 'blue' | 'green' | 'purple' | 'yellow';
+  locked?: boolean;
+  lockedTooltip?: string;
 }) {
   const colorClasses = {
     blue: 'bg-blue-100 text-blue-600',
@@ -1011,10 +1178,13 @@ function QuickActionTile({
     purple: 'bg-purple-100 text-purple-600',
     yellow: 'bg-yellow-100 text-yellow-600',
   };
-  return (
+
+  const tile = (
     <Link
       href={href}
-      className="border-border hover:border-primary hover:bg-primary/5 flex flex-col items-center gap-2 rounded-xl border p-4 transition-all"
+      className={`border-border hover:border-primary hover:bg-primary/5 relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-all ${
+        locked ? 'opacity-60' : ''
+      }`}
     >
       <div
         className={`flex h-11 w-11 items-center justify-center rounded-xl ${colorClasses[color]}`}
@@ -1022,8 +1192,28 @@ function QuickActionTile({
         <Icon className="h-5 w-5" />
       </div>
       <span className="text-foreground text-center text-sm font-medium">{label}</span>
+      {locked && (
+        <div className="absolute top-2 right-2">
+          <Lock className="h-3.5 w-3.5 text-amber-500" />
+        </div>
+      )}
     </Link>
   );
+
+  if (locked && lockedTooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{tile}</TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">{lockedTooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return tile;
 }
 
 function LeadStatusBadge({ status }: { status: string }) {

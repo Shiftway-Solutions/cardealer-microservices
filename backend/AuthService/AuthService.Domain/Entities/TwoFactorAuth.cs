@@ -178,7 +178,7 @@ public class TwoFactorAuth
     {
         if (PrimaryMethod != TwoFactorAuthType.Authenticator)
             throw new InvalidOperationException("Cannot reset authenticator for non-authenticator 2FA");
-        
+
         Secret = newSecret ?? throw new ArgumentNullException(nameof(newSecret));
         RecoveryCodes = newRecoveryCodes ?? throw new ArgumentNullException(nameof(newRecoveryCodes));
         UpdatedAt = DateTime.UtcNow;

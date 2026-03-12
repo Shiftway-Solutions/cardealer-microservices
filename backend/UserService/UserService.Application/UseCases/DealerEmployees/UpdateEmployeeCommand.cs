@@ -32,7 +32,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
 
     public async Task<Unit> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Updating employee {EmployeeId} for dealer {DealerId}", 
+        _logger.LogInformation("Updating employee {EmployeeId} for dealer {DealerId}",
             request.EmployeeId, request.DealerId);
 
         var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId);
@@ -61,7 +61,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
             if (Enum.TryParse<EmployeeStatus>(request.Status, out var status))
             {
                 employee.Status = status;
-                
+
                 if (status == EmployeeStatus.Active && employee.ActivationDate == null)
                 {
                     employee.ActivationDate = DateTime.UtcNow;

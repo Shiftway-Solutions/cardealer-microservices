@@ -136,11 +136,11 @@ public class TwoFactorService : ITwoFactorService
     public async Task<bool> VerifyRecoveryCodeAsync(string userId, string code)
     {
         var cacheKey = $"recovery_codes_{userId}";
-        
+
         // Try Redis first
         var storedCodesJson = await _cache.GetStringAsync(cacheKey);
         List<string>? storedCodes = null;
-        
+
         if (storedCodesJson != null)
         {
             storedCodes = JsonSerializer.Deserialize<List<string>>(storedCodesJson);
@@ -168,18 +168,18 @@ public class TwoFactorService : ITwoFactorService
                 return false;
             }
         }
-        
+
         if (storedCodes == null || !storedCodes.Any())
             return false;
-        
+
         // Normalize the code (uppercase, no spaces, no dashes)
         var normalizedCode = code.Replace(" ", "").Replace("-", "").ToUpperInvariant();
         var normalizedCodeBytes = Encoding.UTF8.GetBytes(normalizedCode.PadRight(8, '0'));
-        
+
         // Use constant-time comparison to prevent timing attacks
         string? matchedCode = null;
         bool found = false;
-        
+
         foreach (var storedCode in storedCodes)
         {
             var storedCodeBytes = Encoding.UTF8.GetBytes(storedCode.PadRight(8, '0'));
@@ -189,16 +189,16 @@ public class TwoFactorService : ITwoFactorService
                 found = true;
             }
         }
-        
+
         if (found && matchedCode != null)
         {
             storedCodes.Remove(matchedCode);
-            
+
             // Update Redis
             await _cache.SetStringAsync(cacheKey,
                 JsonSerializer.Serialize(storedCodes),
                 new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(365) });
-            
+
             // Update PostgreSQL (US-18.1: dual persistence)
             try
             {
@@ -213,7 +213,7 @@ public class TwoFactorService : ITwoFactorService
             {
                 _logger.LogWarning(ex, "Failed to update recovery codes in PostgreSQL after code use for user {UserId}", userId);
             }
-            
+
             return true;
         }
 
@@ -232,7 +232,7 @@ public class TwoFactorService : ITwoFactorService
             var storedCodes = JsonSerializer.Deserialize<List<string>>(storedCodesJson);
             return storedCodes?.Count ?? 0;
         }
-        
+
         // Fallback to PostgreSQL
         try
         {
@@ -335,7 +335,7 @@ public class TwoFactorService : ITwoFactorService
         var bytes = new byte[length];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
-        
+
         var result = new char[length];
         for (int i = 0; i < length; i++)
         {

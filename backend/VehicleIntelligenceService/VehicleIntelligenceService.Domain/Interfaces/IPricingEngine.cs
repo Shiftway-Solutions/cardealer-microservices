@@ -11,12 +11,12 @@ public interface IPricingEngine
     /// Calcula el precio sugerido para un vehículo
     /// </summary>
     Task<PriceAnalysis> AnalyzePriceAsync(VehiclePricingInput input, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Predice el nivel de demanda para un vehículo
     /// </summary>
     Task<DemandPrediction> PredictDemandAsync(DemandPredictionInput input, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Obtiene comparables del mercado
     /// </summary>

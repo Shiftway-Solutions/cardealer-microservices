@@ -19,7 +19,7 @@ public class GetJobStatusQueryHandler : IRequestHandler<GetJobStatusQuery, JobSt
     public async Task<JobStatusResponse?> Handle(GetJobStatusQuery request, CancellationToken cancellationToken)
     {
         var job = await _repository.GetByIdAsync(request.JobId, cancellationToken);
-        
+
         if (job == null) return null;
 
         return new JobStatusResponse(
@@ -49,7 +49,7 @@ public class GetJobStatusQueryHandler : IRequestHandler<GetJobStatusQuery, JobSt
     private static ProcessingResultDto? MapResult(ProcessingResult? result, string? processedImageUrl)
     {
         // Return result if we have either a processed URL or result data
-        if (result == null && string.IsNullOrEmpty(processedImageUrl)) 
+        if (result == null && string.IsNullOrEmpty(processedImageUrl))
             return null;
 
         return new ProcessingResultDto(
@@ -77,7 +77,7 @@ public class GetSpin360StatusQueryHandler : IRequestHandler<GetSpin360StatusQuer
     public async Task<Spin360StatusResponse?> Handle(GetSpin360StatusQuery request, CancellationToken cancellationToken)
     {
         var job = await _repository.GetByIdAsync(request.JobId, cancellationToken);
-        
+
         if (job == null) return null;
 
         return new Spin360StatusResponse(
@@ -127,7 +127,7 @@ public class GetVehicleSpin360QueryHandler : IRequestHandler<GetVehicleSpin360Qu
     public async Task<Spin360StatusResponse?> Handle(GetVehicleSpin360Query request, CancellationToken cancellationToken)
     {
         var job = await _repository.GetByVehicleIdAsync(request.VehicleId, cancellationToken);
-        
+
         if (job == null) return null;
 
         return new Spin360StatusResponse(
@@ -170,9 +170,9 @@ public class GetAvailableBackgroundsQueryHandler : IRequestHandler<GetAvailableB
     public Task<AvailableBackgroundsResponse> Handle(GetAvailableBackgroundsQuery request, CancellationToken cancellationToken)
     {
         var hasPremiumAccess = request.AccountType == "Dealer" && request.HasActiveSubscription;
-        
-        var backgrounds = hasPremiumAccess 
-            ? SystemBackgrounds.All 
+
+        var backgrounds = hasPremiumAccess
+            ? SystemBackgrounds.All
             : SystemBackgrounds.FreeBackgrounds;
 
         var backgroundDtos = backgrounds.Select(b => new BackgroundDto(
@@ -253,7 +253,7 @@ public class GetQueueStatsQueryHandler : IRequestHandler<GetQueueStatsQuery, Que
             Domain.Entities.ProcessingType.FullPipeline, 24, cancellationToken);
 
         return new QueueStatsResponse(
-            PendingJobs: statusCounts.GetValueOrDefault(JobStatus.Pending, 0) + 
+            PendingJobs: statusCounts.GetValueOrDefault(JobStatus.Pending, 0) +
                         statusCounts.GetValueOrDefault(JobStatus.Queued, 0),
             ProcessingJobs: statusCounts.GetValueOrDefault(JobStatus.Processing, 0),
             CompletedToday: statusCounts.GetValueOrDefault(JobStatus.Completed, 0),

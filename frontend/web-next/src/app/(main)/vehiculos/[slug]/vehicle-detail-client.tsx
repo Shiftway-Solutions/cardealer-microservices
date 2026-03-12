@@ -19,6 +19,8 @@ import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { ReviewsSection } from '@/components/reviews';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { NativeBannerAd } from '@/components/advertising/native-ads';
+import { ReportPurchaseModal } from '@/components/okla-score/report-purchase-modal';
+import { useReportPurchase } from '@/hooks/use-report-purchase';
 import { formatPrice } from '@/lib/format';
 import { trackContactDealer, trackVehicleView } from '@/lib/retargeting-pixels';
 import type { Vehicle } from '@/types';
@@ -140,6 +142,22 @@ function MobileStickyCtaBar({ vehicle }: { vehicle: Vehicle }) {
 
 export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const title = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  const [showPurchaseModal, setShowPurchaseModal] = React.useState(false);
+  const { isPurchased, markPurchased } = useReportPurchase(vehicle.id);
+
+  // Open purchase modal for OKLA Score report
+  const handlePurchaseReportClick = React.useCallback(() => {
+    if (isPurchased) return; // Already purchased — report is unlocked
+    setShowPurchaseModal(true);
+  }, [isPurchased]);
+
+  // Called after successful payment
+  const handlePurchaseComplete = React.useCallback(
+    (purchaseId: string, buyerEmail: string) => {
+      markPurchased(purchaseId, buyerEmail);
+    },
+    [markPurchased]
+  );
 
   // REMARKETING FIX: Fire vehicle view pixels (FB ViewContent + Google view_item + TikTok ViewContent).
   // This creates remarketing audiences of "users who viewed this vehicle" on all platforms.
@@ -185,7 +203,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Mobile: Header (hidden on desktop) */}
             <div className="lg:hidden">
-              <VehicleHeader vehicle={vehicle} />
+              <VehicleHeader vehicle={vehicle} onPurchaseReportClick={handlePurchaseReportClick} />
             </div>
 
             {/* Mobile: Seller Card */}
@@ -201,7 +219,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           <div className="hidden lg:block">
             <div className="sticky top-[112px] space-y-4 lg:top-[120px]">
               {/* Header with price */}
-              <VehicleHeader vehicle={vehicle} />
+              <VehicleHeader vehicle={vehicle} onPurchaseReportClick={handlePurchaseReportClick} />
 
               {/* Seller info */}
               <SellerCard vehicle={vehicle} />
@@ -280,6 +298,15 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
       {/* ── Sticky Mobile CTA Bar ────────────────────────────────────────── */}
       <MobileStickyCtaBar vehicle={vehicle} />
+
+      {/* ── OKLA Score Report Purchase Modal ─────────────────────────────── */}
+      <ReportPurchaseModal
+        open={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        vehicleId={vehicle.id}
+        vehicleTitle={title}
+        onPurchaseComplete={handlePurchaseComplete}
+      />
     </div>
   );
 }

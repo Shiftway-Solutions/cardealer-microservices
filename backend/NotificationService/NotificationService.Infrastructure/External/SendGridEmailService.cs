@@ -20,7 +20,7 @@ public class SendGridEmailService : IEmailProvider
     {
         _logger = logger;
         var sendGridSettings = settings.Value.SendGrid;
-        
+
         // Verificar si está configurado
         if (string.IsNullOrWhiteSpace(sendGridSettings?.ApiKey))
         {
@@ -28,7 +28,7 @@ public class SendGridEmailService : IEmailProvider
             _isConfigured = false;
             return;
         }
-        
+
         _client = new SendGridClient(sendGridSettings.ApiKey);
         _fromAddress = new EmailAddress(sendGridSettings.FromEmail, sendGridSettings.FromName);
         _isConfigured = true;
@@ -49,7 +49,7 @@ public class SendGridEmailService : IEmailProvider
             _logger.LogInformation("[MOCK] Email would be sent to {To} with subject: {Subject}", to, subject);
             return (true, $"mock-{Guid.NewGuid()}", null);
         }
-        
+
         try
         {
             var toEmail = new EmailAddress(to);

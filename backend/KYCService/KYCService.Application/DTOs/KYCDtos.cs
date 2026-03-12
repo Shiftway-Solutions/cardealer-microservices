@@ -16,7 +16,7 @@ public record KYCProfileDto
     public string RiskLevelName => RiskLevel.ToString();
     public int RiskScore { get; init; }
     public List<string> RiskFactors { get; init; } = new();
-    
+
     // Información Personal
     public string FullName { get; init; } = string.Empty;
     public string? MiddleName { get; init; }
@@ -26,7 +26,7 @@ public record KYCProfileDto
     public string? Nationality { get; init; }
     public string? Gender { get; init; }
     public string? Occupation { get; init; }
-    
+
     // Documentos
     public DocumentType PrimaryDocumentType { get; init; }
     /// <summary>
@@ -36,11 +36,11 @@ public record KYCProfileDto
     /// </summary>
     public string? PrimaryDocumentNumber { get; init; }
     public DateTime? PrimaryDocumentExpiry { get; init; }
-    
+
     // Contacto
     public string? Email { get; init; }
     public string? Phone { get; init; }
-    
+
     // Dirección
     public string? Address { get; init; }
     public string? Sector { get; init; }
@@ -48,32 +48,32 @@ public record KYCProfileDto
     public string? Province { get; init; }
     public string? PostalCode { get; init; }
     public string? Country { get; init; }
-    
+
     // PEP
     public bool IsPEP { get; init; }
     public string? PEPPosition { get; init; }
-    
+
     // Empresa
     public string? BusinessName { get; init; }
     public string? RNC { get; init; }
-    
+
     // Verificaciones
     public bool IsIdentityVerified => IdentityVerifiedAt.HasValue;
     public bool IsAddressVerified => AddressVerifiedAt.HasValue;
     public DateTime? IdentityVerifiedAt { get; init; }
     public DateTime? AddressVerifiedAt { get; init; }
-    
+
     // Fechas
     public DateTime CreatedAt { get; init; }
     public DateTime? ApprovedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public DateTime? NextReviewAt { get; init; }
-    
+
     // Rechazo
     public string? RejectionReason { get; init; }
     public DateTime? RejectedAt { get; init; }
     public Guid? RejectedBy { get; init; }
-    
+
     // Documentos y verificaciones
     public List<KYCDocumentDto> Documents { get; init; } = new();
     public List<KYCVerificationDto> Verifications { get; init; } = new();

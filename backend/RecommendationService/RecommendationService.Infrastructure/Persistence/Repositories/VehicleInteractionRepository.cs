@@ -34,7 +34,7 @@ public class VehicleInteractionRepository : IVehicleInteractionRepository
     public async Task<List<VehicleInteraction>> GetRecentByUserIdAsync(Guid userId, int days = 30, int limit = 50)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-days);
-        
+
         return await _context.VehicleInteractions
             .Where(i => i.UserId == userId && i.CreatedAt >= cutoffDate)
             .OrderByDescending(i => i.CreatedAt)

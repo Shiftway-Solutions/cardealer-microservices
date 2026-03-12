@@ -24,9 +24,9 @@ public class ResendEmailService : IEmailProvider
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("Resend");
-        
+
         var resendSettings = settings.Value.Resend;
-        
+
         // Verificar si está configurado
         if (string.IsNullOrWhiteSpace(resendSettings?.ApiKey))
         {
@@ -34,8 +34,8 @@ public class ResendEmailService : IEmailProvider
             _isConfigured = false;
             return;
         }
-        
-        _httpClient.DefaultRequestHeaders.Authorization = 
+
+        _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", resendSettings.ApiKey);
         _fromEmail = resendSettings.FromEmail;
         _fromName = resendSettings.FromName;
@@ -57,11 +57,11 @@ public class ResendEmailService : IEmailProvider
             _logger.LogInformation("[MOCK] Email would be sent to {To} with subject: {Subject}", to, subject);
             return (true, $"mock-{Guid.NewGuid()}", null);
         }
-        
+
         try
         {
-            var fromAddress = string.IsNullOrEmpty(_fromName) 
-                ? _fromEmail 
+            var fromAddress = string.IsNullOrEmpty(_fromName)
+                ? _fromEmail
                 : $"{_fromName} <{_fromEmail}>";
 
             var payload = new
@@ -89,7 +89,7 @@ public class ResendEmailService : IEmailProvider
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Email sent successfully via Resend to {To}", to);
-                
+
                 // Parse response to get message ID
                 try
                 {
@@ -104,7 +104,7 @@ public class ResendEmailService : IEmailProvider
             }
             else
             {
-                _logger.LogWarning("Failed to send email via Resend to {To}. Status: {StatusCode}, Response: {Response}", 
+                _logger.LogWarning("Failed to send email via Resend to {To}. Status: {StatusCode}, Response: {Response}",
                     to, response.StatusCode, responseBody);
                 return (false, null, $"Resend API error: {response.StatusCode} - {responseBody}");
             }

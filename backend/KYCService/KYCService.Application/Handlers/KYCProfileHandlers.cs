@@ -30,20 +30,20 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
         if (existingProfile != null)
         {
             // If profile exists and is in certain states, don't allow creating another
-            var blockedStatuses = new[] { 
-                KYCStatus.Pending, 
-                KYCStatus.InProgress, 
-                KYCStatus.UnderReview, 
-                KYCStatus.Approved 
+            var blockedStatuses = new[] {
+                KYCStatus.Pending,
+                KYCStatus.InProgress,
+                KYCStatus.UnderReview,
+                KYCStatus.Approved
             };
-            
+
             if (blockedStatuses.Contains(existingProfile.Status))
             {
                 throw new DuplicateProfileException(
                     $"User {request.UserId} already has a KYC profile with status {existingProfile.Status}. " +
                     $"Profile ID: {existingProfile.Id}");
             }
-            
+
             // ============================================================================
             // RESUBMISSION: If previous profile was Rejected/Expired/Suspended,
             // update the existing profile instead of creating a new one
@@ -56,14 +56,14 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
                 {
                     var documentExists = await _repository.GetByDocumentNumberAsync(
                         request.PrimaryDocumentNumber, cancellationToken);
-                    
+
                     if (documentExists != null && documentExists.UserId != request.UserId)
                     {
                         throw new DuplicateDocumentException(
                             $"Document number {MaskDocumentNumber(request.PrimaryDocumentNumber)} is already registered to another user.");
                     }
                 }
-                
+
                 // Update existing profile for resubmission
                 existingProfile.Status = KYCStatus.Pending;
                 existingProfile.FullName = request.FullName;
@@ -115,7 +115,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
                 {
                     existingProfile.RiskFactors.Add("PEP Status");
                 }
-                
+
                 var updated = await _repository.UpdateAsync(existingProfile, cancellationToken);
                 return MapToDto(updated);
             }
@@ -128,7 +128,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
         {
             var documentExists = await _repository.GetByDocumentNumberAsync(
                 request.PrimaryDocumentNumber, cancellationToken);
-            
+
             if (documentExists != null && documentExists.UserId != request.UserId)
             {
                 throw new DuplicateDocumentException(
@@ -203,7 +203,7 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
     private static DateTime? ToUtc(DateTime? dateTime)
     {
         if (dateTime == null) return null;
-        
+
         var dt = dateTime.Value;
         return dt.Kind switch
         {
@@ -420,13 +420,13 @@ public class ApproveKYCProfileHandler : IRequestHandler<ApproveKYCProfileCommand
         // Consumers should fetch user data from their own stores using UserId.
         await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
         {
-            ProfileId    = profile.Id,
-            UserId       = profile.UserId,
+            ProfileId = profile.Id,
+            UserId = profile.UserId,
             PreviousStatus = previousStatus,
-            NewStatus    = "Approved",
-            Reason       = request.Notes,
-            ChangedBy    = request.ApprovedBy,
-            ChangedAt    = DateTime.UtcNow,
+            NewStatus = "Approved",
+            Reason = request.Notes,
+            ChangedBy = request.ApprovedBy,
+            ChangedAt = DateTime.UtcNow,
             ValidityDays = request.ValidityDays
         }, cancellationToken);
 
@@ -488,13 +488,13 @@ public class RejectKYCProfileHandler : IRequestHandler<RejectKYCProfileCommand, 
         // NOTE: Email/FullName removed per Ley 172-13 Art. 27 (Data Minimization).
         await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
         {
-            ProfileId      = profile.Id,
-            UserId         = profile.UserId,
+            ProfileId = profile.Id,
+            UserId = profile.UserId,
             PreviousStatus = previousStatus,
-            NewStatus      = "Rejected",
-            Reason         = request.RejectionReason,
-            ChangedBy      = request.RejectedBy,
-            ChangedAt      = DateTime.UtcNow
+            NewStatus = "Rejected",
+            Reason = request.RejectionReason,
+            ChangedBy = request.RejectedBy,
+            ChangedAt = DateTime.UtcNow
         }, cancellationToken);
 
         return MapToDto(updated);
@@ -523,7 +523,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
     private readonly ILogger<UploadKYCDocumentHandler> _logger;
 
     public UploadKYCDocumentHandler(
-        IKYCDocumentRepository repository, 
+        IKYCDocumentRepository repository,
         IKYCProfileRepository profileRepository,
         ILogger<UploadKYCDocumentHandler> logger)
     {
@@ -534,7 +534,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
 
     public async Task<KYCDocumentDto> Handle(UploadKYCDocumentCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting document upload for KYC Profile {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}", 
+        _logger.LogInformation("Starting document upload for KYC Profile {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}",
             request.KYCProfileId, request.Type, request.DocumentName);
 
         // Verificar que el perfil existe
@@ -567,9 +567,9 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
         };
 
         _logger.LogInformation("Creating document with ID {DocumentId}, StorageKey: {StorageKey}", documentId, request.StorageKey);
-        
+
         var created = await _repository.CreateAsync(document, cancellationToken);
-        
+
         _logger.LogInformation("Document created successfully: {DocumentId}", created.Id);
 
         // Actualizar estado del perfil si está pendiente

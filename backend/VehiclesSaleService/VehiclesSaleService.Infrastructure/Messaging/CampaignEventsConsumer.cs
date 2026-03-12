@@ -28,16 +28,16 @@ public class CampaignEventsConsumer : BackgroundService
     private IModel? _channel;
 
     private const string ExchangeName = "cardealer.events";
-    private const string QueueName    = "vehiclessaleservice.campaign-events";
+    private const string QueueName = "vehiclessaleservice.campaign-events";
 
     public CampaignEventsConsumer(
         IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
         ILogger<CampaignEventsConsumer> logger)
     {
-        _scopeFactory   = scopeFactory;
-        _configuration  = configuration;
-        _logger         = logger;
+        _scopeFactory = scopeFactory;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -58,18 +58,18 @@ public class CampaignEventsConsumer : BackgroundService
             {
                 var factory = new ConnectionFactory
                 {
-                    HostName    = _configuration["RabbitMQ:Host"] ?? "rabbitmq",
-                    Port        = _configuration.GetValue<int>("RabbitMQ:Port", 5672),
-                    UserName    = _configuration["RabbitMQ:Username"]
+                    HostName = _configuration["RabbitMQ:Host"] ?? "rabbitmq",
+                    Port = _configuration.GetValue<int>("RabbitMQ:Port", 5672),
+                    UserName = _configuration["RabbitMQ:Username"]
                                   ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
-                    Password    = _configuration["RabbitMQ:Password"]
+                    Password = _configuration["RabbitMQ:Password"]
                                   ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
                     VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
                     DispatchConsumersAsync = true
                 };
 
                 _connection = factory.CreateConnection();
-                _channel    = _connection.CreateModel();
+                _channel = _connection.CreateModel();
 
                 // Idempotent declarations — safe to run multiple times.
                 _channel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, durable: true);
@@ -114,13 +114,13 @@ public class CampaignEventsConsumer : BackgroundService
 
     private async Task HandleMessageAsync(object sender, BasicDeliverEventArgs ea)
     {
-        var body       = Encoding.UTF8.GetString(ea.Body.Span);
+        var body = Encoding.UTF8.GetString(ea.Body.Span);
         var routingKey = ea.RoutingKey;
 
         try
         {
-            using var scope       = _scopeFactory.CreateScope();
-            var vehicleRepo       = scope.ServiceProvider.GetRequiredService<IVehicleRepository>();
+            using var scope = _scopeFactory.CreateScope();
+            var vehicleRepo = scope.ServiceProvider.GetRequiredService<IVehicleRepository>();
 
             switch (routingKey)
             {
@@ -232,7 +232,7 @@ public class CampaignEventsConsumer : BackgroundService
 
     public override void Dispose()
     {
-        try { _channel?.Close();    } catch { /* ignore */ }
+        try { _channel?.Close(); } catch { /* ignore */ }
         try { _connection?.Close(); } catch { /* ignore */ }
         _channel?.Dispose();
         _connection?.Dispose();

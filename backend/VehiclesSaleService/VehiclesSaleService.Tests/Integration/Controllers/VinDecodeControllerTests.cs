@@ -137,7 +137,7 @@ public class VinDecodeControllerTests
 
     // Note: These tests make real HTTP calls to NHTSA API
     // They may fail if NHTSA service is unavailable
-    
+
     [Fact]
     public async Task DecodeVin_ValidHondaAccordVin_ReturnsVehicleInfo()
     {
@@ -209,11 +209,11 @@ public class VinDecodeControllerTests
     public void MapFuelType_ReturnsCorrectMapping(string? input, string expected)
     {
         // Use reflection to test private method
-        var method = typeof(CatalogController).GetMethod("MapFuelType", 
+        var method = typeof(CatalogController).GetMethod("MapFuelType",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+
         var result = method?.Invoke(null, new object?[] { input }) as string;
-        
+
         result.Should().Be(expected);
     }
 
@@ -230,11 +230,11 @@ public class VinDecodeControllerTests
     [InlineData(null, "automatic")]
     public void MapTransmission_ReturnsCorrectMapping(string? input, string expected)
     {
-        var method = typeof(CatalogController).GetMethod("MapTransmission", 
+        var method = typeof(CatalogController).GetMethod("MapTransmission",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+
         var result = method?.Invoke(null, new object?[] { input }) as string;
-        
+
         result.Should().Be(expected);
     }
 
@@ -251,11 +251,11 @@ public class VinDecodeControllerTests
     [InlineData(null, "FWD")]
     public void MapDriveType_ReturnsCorrectMapping(string? input, string expected)
     {
-        var method = typeof(CatalogController).GetMethod("MapDriveType", 
+        var method = typeof(CatalogController).GetMethod("MapDriveType",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+
         var result = method?.Invoke(null, new object?[] { input }) as string;
-        
+
         result.Should().Be(expected);
     }
 
@@ -277,11 +277,11 @@ public class VinDecodeControllerTests
     [InlineData(null, "sedan")]
     public void MapBodyStyle_ReturnsCorrectMapping(string? input, string expected)
     {
-        var method = typeof(CatalogController).GetMethod("MapBodyStyle", 
+        var method = typeof(CatalogController).GetMethod("MapBodyStyle",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+
         var result = method?.Invoke(null, new object?[] { input }) as string;
-        
+
         result.Should().Be(expected);
     }
 
@@ -299,11 +299,11 @@ public class VinDecodeControllerTests
     [InlineData(null, "Car")]
     public void MapVehicleType_ReturnsCorrectMapping(string? input, string expected)
     {
-        var method = typeof(CatalogController).GetMethod("MapVehicleType", 
+        var method = typeof(CatalogController).GetMethod("MapVehicleType",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+
         var result = method?.Invoke(null, new object?[] { input }) as string;
-        
+
         result.Should().Be(expected);
     }
 

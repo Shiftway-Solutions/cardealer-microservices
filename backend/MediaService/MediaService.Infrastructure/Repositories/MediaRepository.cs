@@ -273,4 +273,223 @@ public class MediaRepository : IMediaRepository
             .Take(500)
             .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public async Task<IList<ImageMedia>> GetImagesForHealthScanAsync(int batchSize, int offset, CancellationToken cancellationToken = default)
+    {
+        return await _context.ImageMedia
+            .Where(x => x.Status == Domain.Enums.MediaStatus.Processed && x.CdnUrl != null)
+            .OrderBy(x => x.CreatedAt)
+            .Skip(offset)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> GetProcessedImageCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.ImageMedia
+            .AsNoTracking()
+            .CountAsync(x => x.Status == Domain.Enums.MediaStatus.Processed && x.CdnUrl != null, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> GetBrokenImageCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.ImageMedia
+            .AsNoTracking()
+            .CountAsync(x => x.BrokenImage, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<(Guid DealerId, int BrokenCount)>> GetTopDealersWithBrokenImagesAsync(int topN, CancellationToken cancellationToken = default)
+    {
+        var results = await _context.ImageMedia
+            .AsNoTracking()
+            .Where(x => x.BrokenImage)
+            .GroupBy(x => x.DealerId)
+            .Select(g => new { DealerId = g.Key, BrokenCount = g.Count() })
+            .OrderByDescending(x => x.BrokenCount)
+            .Take(topN)
+            .ToListAsync(cancellationToken);
+
+        return results.Select(r => (r.DealerId, r.BrokenCount)).ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task BulkUpdateImageHealthStatusAsync(IEnumerable<ImageMedia> images, CancellationToken cancellationToken = default)
+    {
+        _context.ImageMedia.UpdateRange(images);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<OwnerBrokenImageStats>> GetBrokenImageStatsByOwnerAsync(CancellationToken cancellationToken = default)
+    {
+        var results = await _context.ImageMedia
+            .AsNoTracking()
+            .Where(x => x.Status == Domain.Enums.MediaStatus.Processed && x.CdnUrl != null)
+            .GroupBy(x => new { x.OwnerId, x.DealerId })
+            .Select(g => new
+            {
+                g.Key.OwnerId,
+                g.Key.DealerId,
+                TotalImages = g.Count(),
+                BrokenCount = g.Count(x => x.BrokenImage),
+                BrokenStatusCodes = g
+                    .Where(x => x.BrokenImage && x.BrokenImageHttpStatus != null)
+                    .Select(x => x.BrokenImageHttpStatus!.Value)
+                    .Distinct()
+                    .ToList()
+            })
+            .Where(x => x.BrokenCount > 0)
+            .ToListAsync(cancellationToken);
+
+        return results.Select(r => new OwnerBrokenImageStats
+        {
+            OwnerId = r.OwnerId,
+            DealerId = r.DealerId,
+            TotalImages = r.TotalImages,
+            BrokenCount = r.BrokenCount,
+            BrokenStatusCodes = r.BrokenStatusCodes
+        }).ToList();
+    }
+
+    public async Task<IList<ImageVariantStatus>> GetImagesWithMissingVariantsAsync(
+        string[] expectedVariantNames,
+        int batchSize,
+        int offset,
+        CancellationToken cancellationToken = default)
+    {
+        var images = await _context.Set<ImageMedia>()
+            .AsNoTracking()
+            .Include(x => x.Variants)
+            .Where(x => x.Status == Domain.Enums.MediaStatus.Processed)
+            .OrderBy(x => x.Id)
+            .Skip(offset)
+            .Take(batchSize)
+            .Select(x => new
+            {
+                x.Id,
+                x.StorageKey,
+                x.OwnerId,
+                ExistingVariantNames = x.Variants.Select(v => v.Name).ToList()
+            })
+            .ToListAsync(cancellationToken);
+
+        return images.Select(img =>
+        {
+            var missing = expectedVariantNames
+                .Where(expected => !img.ExistingVariantNames.Contains(expected))
+                .ToList();
+
+            return new ImageVariantStatus
+            {
+                MediaId = img.Id,
+                StorageKey = img.StorageKey,
+                OwnerId = img.OwnerId,
+                ExistingVariantNames = img.ExistingVariantNames,
+                MissingVariantNames = missing
+            };
+        })
+        .Where(x => x.MissingVariantNames.Count > 0)
+        .ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<ListingBrokenImageSummary>> GetTopListingsWithBrokenImagesAsync(
+        int topN, CancellationToken cancellationToken = default)
+    {
+        return await _context.ImageMedia
+            .AsNoTracking()
+            .Where(x => x.Status == Domain.Enums.MediaStatus.Processed && x.CdnUrl != null)
+            .GroupBy(x => new { x.OwnerId, x.DealerId })
+            .Select(g => new ListingBrokenImageSummary
+            {
+                OwnerId = g.Key.OwnerId,
+                DealerId = g.Key.DealerId,
+                TotalImages = g.Count(),
+                BrokenCount = g.Count(x => x.BrokenImage),
+                BrokenPercentage = g.Count() > 0
+                    ? Math.Round((double)g.Count(x => x.BrokenImage) / g.Count() * 100, 1)
+                    : 0,
+                LastDetectedAt = g.Max(x => x.BrokenImageDetectedAt)
+            })
+            .Where(x => x.BrokenCount > 0)
+            .OrderByDescending(x => x.BrokenCount)
+            .Take(topN)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<ImageHealthSummary> GetImageHealthSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var stats = await _context.ImageMedia
+            .AsNoTracking()
+            .Where(x => x.Status == Domain.Enums.MediaStatus.Processed && x.CdnUrl != null)
+            .GroupBy(x => 1)
+            .Select(g => new
+            {
+                TotalActiveImages = g.Count(),
+                BrokenImages = g.Count(x => x.BrokenImage),
+                TotalStorageBytes = g.Sum(x => x.SizeBytes),
+                LastScanTime = g.Max(x => x.LastHealthCheckAt)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var totalActive = stats?.TotalActiveImages ?? 0;
+        var broken = stats?.BrokenImages ?? 0;
+
+        return new ImageHealthSummary
+        {
+            TotalActiveImages = totalActive,
+            BrokenImages = broken,
+            HealthyImages = totalActive - broken,
+            HealthPercentage = totalActive > 0
+                ? Math.Round((double)(totalActive - broken) / totalActive * 100, 2)
+                : 100,
+            TotalStorageBytes = stats?.TotalStorageBytes ?? 0,
+            LastScanTime = stats?.LastScanTime
+        };
+    }
+
+    /// <inheritdoc/>
+    public async Task<DateTime?> GetLastHealthScanTimeAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.ImageMedia
+            .AsNoTracking()
+            .Where(x => x.LastHealthCheckAt != null)
+            .MaxAsync(x => x.LastHealthCheckAt, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IList<string>> GetAllStorageKeysAsync(int batchSize, int offset, CancellationToken cancellationToken = default)
+    {
+        // Get MediaAsset storage keys
+        var assetKeys = await _context.MediaAssets
+            .AsNoTracking()
+            .OrderBy(x => x.Id)
+            .Skip(offset)
+            .Take(batchSize)
+            .Select(x => x.StorageKey)
+            .ToListAsync(cancellationToken);
+
+        if (assetKeys.Count == 0)
+            return assetKeys;
+
+        // Also get variant storage keys for the same batch range
+        var variantKeys = await _context.Set<MediaService.Domain.Entities.MediaVariant>()
+            .AsNoTracking()
+            .Where(v => v.StorageKey != null && v.StorageKey != string.Empty)
+            .OrderBy(v => v.Id)
+            .Skip(offset)
+            .Take(batchSize)
+            .Select(v => v.StorageKey)
+            .ToListAsync(cancellationToken);
+
+        var allKeys = new List<string>(assetKeys.Count + variantKeys.Count);
+        allKeys.AddRange(assetKeys);
+        allKeys.AddRange(variantKeys);
+        return allKeys;
+    }
 }

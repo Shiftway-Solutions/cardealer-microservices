@@ -111,10 +111,10 @@ public class JCEService : IJCEService
     public async Task<JCECitizenData?> GetCitizenDataAsync(string cedula, CancellationToken cancellationToken = default)
     {
         var cleanCedula = CedulaValidator.CleanCedula(cedula);
-        
+
         // Primero intentar validación completa
         var validationResult = await ValidateCedulaAsync(cedula, cancellationToken);
-        
+
         return validationResult.CitizenData;
     }
 
@@ -199,7 +199,7 @@ public class JCEService : IJCEService
         if (response.IsSuccessStatusCode)
         {
             var jceResponse = await response.Content.ReadFromJsonAsync<JCEApiResponse>(cancellationToken: cancellationToken);
-            
+
             return new JCEValidationResult
             {
                 IsValid = jceResponse?.Success ?? false,
@@ -220,7 +220,7 @@ public class JCEService : IJCEService
     {
         // NOTA: Esto es solo para desarrollo/testing
         // En producción, usar API oficial o servicio autorizado
-        
+
         _logger.LogWarning("Using web scraping mode - This should NOT be used in production");
 
         // Simular consulta al portal de la JCE

@@ -24,8 +24,8 @@ public static class ResilienceStrategyFactory
             {
                 MaxRetryAttempts = options.MaxRetries,
                 Delay = TimeSpan.FromSeconds(options.DelaySeconds),
-                BackoffType = options.UseExponentialBackoff 
-                    ? DelayBackoffType.Exponential 
+                BackoffType = options.UseExponentialBackoff
+                    ? DelayBackoffType.Exponential
                     : DelayBackoffType.Constant,
                 UseJitter = options.UseJitter,
                 ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
@@ -134,8 +134,8 @@ public static class ResilienceStrategyFactory
         {
             MaxRetryAttempts = options.Retry.MaxRetries,
             Delay = TimeSpan.FromSeconds(options.Retry.DelaySeconds),
-            BackoffType = options.Retry.UseExponentialBackoff 
-                ? DelayBackoffType.Exponential 
+            BackoffType = options.Retry.UseExponentialBackoff
+                ? DelayBackoffType.Exponential
                 : DelayBackoffType.Constant,
             UseJitter = options.Retry.UseJitter,
             ShouldHandle = new PredicateBuilder<HttpResponseMessage>()

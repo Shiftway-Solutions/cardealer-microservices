@@ -31,7 +31,7 @@ public class RevokeAllSessionsHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _notificationServiceMock = new Mock<IAuthNotificationService>();
         _loggerMock = new Mock<ILogger<RevokeAllSessionsCommandHandler>>();
-        
+
         _handler = new RevokeAllSessionsCommandHandler(
             _sessionRepositoryMock.Object,
             _refreshTokenRepositoryMock.Object,
@@ -51,7 +51,7 @@ public class RevokeAllSessionsHandlerTests
             UserId: userId,
             KeepCurrentSession: false,
             IpAddress: "192.168.1.100");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _sessionRepositoryMock.Setup(x => x.GetActiveSessionsByUserIdAsync(
@@ -80,7 +80,7 @@ public class RevokeAllSessionsHandlerTests
             CurrentSessionId: currentSessionId.ToString(),
             KeepCurrentSession: true,
             IpAddress: "192.168.1.100");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _sessionRepositoryMock.Setup(x => x.GetActiveSessionsByUserIdAsync(
@@ -108,7 +108,7 @@ public class RevokeAllSessionsHandlerTests
             KeepCurrentSession: false,
             RevokeRefreshTokens: true,
             IpAddress: "192.168.1.100");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _sessionRepositoryMock.Setup(x => x.GetActiveSessionsByUserIdAsync(
@@ -137,7 +137,7 @@ public class RevokeAllSessionsHandlerTests
         var command = new RevokeAllSessionsCommand(
             UserId: userId,
             KeepCurrentSession: false);
-        
+
         // No user found - but handler doesn't validate user, only uses for email at the end
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
@@ -166,7 +166,7 @@ public class RevokeAllSessionsHandlerTests
             UserId: userId,
             KeepCurrentSession: false,
             IpAddress: "192.168.1.100");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _sessionRepositoryMock.Setup(x => x.GetActiveSessionsByUserIdAsync(
@@ -194,7 +194,7 @@ public class RevokeAllSessionsHandlerTests
             UserId: userId,
             KeepCurrentSession: false,
             IpAddress: "192.168.1.100");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _sessionRepositoryMock.Setup(x => x.GetActiveSessionsByUserIdAsync(
@@ -252,7 +252,7 @@ public class RevokeAllSessionsHandlerTests
         // Use reflection to set Id since it's read-only
         typeof(UserSession).GetProperty("Id")!.SetValue(currentSession, currentSessionId);
         sessions.Add(currentSession);
-        
+
         // Add remaining sessions
         for (int i = 1; i < count; i++)
         {

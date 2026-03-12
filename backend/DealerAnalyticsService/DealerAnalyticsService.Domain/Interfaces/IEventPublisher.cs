@@ -11,7 +11,7 @@ public interface IEventPublisher
     /// Publishes a domain event to the message broker
     /// </summary>
     Task PublishAsync<T>(T domainEvent, CancellationToken cancellationToken = default) where T : IDomainEvent;
-    
+
     /// <summary>
     /// Publishes multiple domain events
     /// </summary>

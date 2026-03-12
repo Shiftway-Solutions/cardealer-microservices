@@ -24,7 +24,7 @@ public class AdminUsersController : ControllerBase
     private readonly IUserRepository _userRepository;
 
     public AdminUsersController(
-        IMediator mediator, 
+        IMediator mediator,
         ILogger<AdminUsersController> logger,
         IUserRepository userRepository)
     {
@@ -125,10 +125,10 @@ public class AdminUsersController : ControllerBase
         {
             // Use CountWithFiltersAsync which already excludes Admin/PlatformEmployee accounts
             var total = await _userRepository.CountWithFiltersAsync(null, null, null, null);
-            
+
             int active = 0;
             int newThisMonth = 0;
-            
+
             try
             {
                 // Count only active platform users (excludes admin/staff)
@@ -139,7 +139,7 @@ public class AdminUsersController : ControllerBase
                 _logger.LogWarning(ex, "CountWithFiltersAsync for active failed, using total as active");
                 active = total;
             }
-            
+
             try
             {
                 var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
@@ -245,8 +245,8 @@ public class AdminUsersController : ControllerBase
     {
         _logger.LogInformation("Admin: Updating AccountType for user {UserId} to {AccountType}", userId, request.AccountType);
 
-        var performedBy = User.FindFirst("sub")?.Value 
-            ?? User.FindFirst("email")?.Value 
+        var performedBy = User.FindFirst("sub")?.Value
+            ?? User.FindFirst("email")?.Value
             ?? "system";
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 

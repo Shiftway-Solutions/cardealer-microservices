@@ -219,17 +219,17 @@ public class KYCProfilesController : ControllerBase
     [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<PaginatedResult<KYCProfileSummaryDto>>> GetExpiring(
         [FromQuery] int daysUntilExpiry = 30,
-        [FromQuery] int page = 1, 
+        [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
         // SECURITY: Clamp pagination
         pageSize = Math.Clamp(pageSize, 1, 100);
         page = Math.Max(page, 1);
-        var result = await _mediator.Send(new GetExpiringKYCProfilesQuery 
-        { 
-            DaysUntilExpiry = daysUntilExpiry, 
-            Page = page, 
-            PageSize = pageSize 
+        var result = await _mediator.Send(new GetExpiringKYCProfilesQuery
+        {
+            DaysUntilExpiry = daysUntilExpiry,
+            Page = page,
+            PageSize = pageSize
         });
         return Ok(result);
     }

@@ -240,8 +240,8 @@ public class TwoFactorController : ControllerBase
             var result = await _mediator.Send(command);
 
             _logger.LogInformation(
-                "Recovery code login completed for user {UserId}. Remaining codes: {RemainingCodes}", 
-                result.UserId, 
+                "Recovery code login completed for user {UserId}. Remaining codes: {RemainingCodes}",
+                result.UserId,
                 result.RemainingRecoveryCodes
             );
 
@@ -250,7 +250,7 @@ public class TwoFactorController : ControllerBase
             {
                 AuthCookieHelper.SetAuthCookies(Response, result.AccessToken, result.RefreshToken, result.ExpiresAt);
             }
-            
+
             return Ok(ApiResponse<RecoveryCodeLoginResponse>.Ok(result));
         }
         catch (Exception ex)
@@ -293,10 +293,10 @@ public class TwoFactorController : ControllerBase
             var result = await _mediator.Send(command);
 
             _logger.LogInformation(
-                "Account recovery successful for user {UserId}. New 2FA setup created.", 
+                "Account recovery successful for user {UserId}. New 2FA setup created.",
                 result.UserId
             );
-            
+
             return Ok(ApiResponse<RecoveryAccountWithAllCodesResponse>.Ok(result));
         }
         catch (Exception ex)
@@ -328,11 +328,11 @@ public class TwoFactorController : ControllerBase
             var result = await _mediator.Send(command);
 
             _logger.LogInformation(
-                "SMS 2FA code sent to user {UserId}, phone {MaskedPhone}", 
-                result.UserId, 
+                "SMS 2FA code sent to user {UserId}, phone {MaskedPhone}",
+                result.UserId,
                 result.MaskedPhoneNumber
             );
-            
+
             return Ok(ApiResponse<SendSms2FACodeResponse>.Ok(result));
         }
         catch (Exception ex)
@@ -370,13 +370,13 @@ public class TwoFactorController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying SMS 2FA code");
-            
+
             if (ex.Message.Contains("Too many failed attempts"))
             {
-                return StatusCode(StatusCodes.Status429TooManyRequests, 
+                return StatusCode(StatusCodes.Status429TooManyRequests,
                     ApiResponse<VerifySms2FACodeResponse>.Fail("Too many failed attempts. Please try again later."));
             }
-            
+
             return BadRequest(ApiResponse<VerifySms2FACodeResponse>.Fail("SMS verification failed."));
         }
     }

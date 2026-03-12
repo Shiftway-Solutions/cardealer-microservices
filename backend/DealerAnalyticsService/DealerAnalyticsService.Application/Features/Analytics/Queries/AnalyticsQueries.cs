@@ -81,15 +81,15 @@ public class GetDashboardAnalyticsHandler : IRequestHandler<GetDashboardAnalytic
 
         var contactMethodBreakdown = new List<ContactMethodStats>
         {
-            new(Domain.Entities.ContactType.Phone, "Teléfono", totalPhoneClicks, 
+            new(Domain.Entities.ContactType.Phone, "Teléfono", totalPhoneClicks,
                 totalContacts > 0 ? (totalPhoneClicks / (double)totalContacts) * 100 : 0, 0, 0),
-            new(Domain.Entities.ContactType.Email, "Email", totalEmailClicks, 
+            new(Domain.Entities.ContactType.Email, "Email", totalEmailClicks,
                 totalContacts > 0 ? (totalEmailClicks / (double)totalContacts) * 100 : 0, 0, 0),
-            new(Domain.Entities.ContactType.WhatsApp, "WhatsApp", totalWhatsAppClicks, 
+            new(Domain.Entities.ContactType.WhatsApp, "WhatsApp", totalWhatsAppClicks,
                 totalContacts > 0 ? (totalWhatsAppClicks / (double)totalContacts) * 100 : 0, 0, 0),
-            new(Domain.Entities.ContactType.Website, "Sitio Web", totalWebsiteClicks, 
+            new(Domain.Entities.ContactType.Website, "Sitio Web", totalWebsiteClicks,
                 totalContacts > 0 ? (totalWebsiteClicks / (double)totalContacts) * 100 : 0, 0, 0),
-            new(Domain.Entities.ContactType.SocialMedia, "Redes Sociales", totalSocialMediaClicks, 
+            new(Domain.Entities.ContactType.SocialMedia, "Redes Sociales", totalSocialMediaClicks,
                 totalContacts > 0 ? (totalSocialMediaClicks / (double)totalContacts) * 100 : 0, 0, 0),
         };
 
@@ -116,7 +116,7 @@ public class GetDashboardAnalyticsHandler : IRequestHandler<GetDashboardAnalytic
         // Live stats
         var liveViewers = await _repository.GetLiveViewersCountAsync(request.DealerId, 5, ct);
         var mostRecentView = await _repository.GetMostRecentViewAsync(request.DealerId, ct);
-        
+
         var today = DateTime.UtcNow.Date;
         var todaySummary = dailySummaries.FirstOrDefault(s => s.Date.Date == today);
 
@@ -171,7 +171,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
 
         // Parse device type from user agent
         var deviceType = ParseDeviceType(req.ViewerUserAgent);
-        
+
         var view = new Domain.Entities.ProfileView
         {
             DealerId = req.DealerId,
@@ -198,7 +198,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
                 if (deviceType == "mobile") summary.MobileViews++;
                 else if (deviceType == "desktop") summary.DesktopViews++;
                 else if (deviceType == "tablet") summary.TabletViews++;
-                
+
                 if (view.IsBounce()) summary.BounceCount++;
                 if (view.IsEngagedVisit()) summary.EngagedVisits++;
 
@@ -226,7 +226,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
     private string ParseDeviceType(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "desktop";
-        
+
         var ua = userAgent.ToLower();
         if (ua.Contains("mobile") || ua.Contains("android") || ua.Contains("iphone")) return "mobile";
         if (ua.Contains("tablet") || ua.Contains("ipad")) return "tablet";
@@ -236,7 +236,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
     private string? ParseBrowser(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return null;
-        
+
         var ua = userAgent.ToLower();
         if (ua.Contains("chrome")) return "Chrome";
         if (ua.Contains("firefox")) return "Firefox";
@@ -248,7 +248,7 @@ public class TrackProfileViewHandler : IRequestHandler<TrackProfileViewCommand, 
     private string? ParseOS(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return null;
-        
+
         var ua = userAgent.ToLower();
         if (ua.Contains("windows")) return "Windows";
         if (ua.Contains("mac")) return "macOS";
@@ -302,7 +302,7 @@ public class TrackContactEventHandler : IRequestHandler<TrackContactEventCommand
             {
                 var summary = await _repository.GetOrCreateDailySummaryAsync(req.DealerId, DateTime.UtcNow.Date, ct);
                 summary.TotalContacts++;
-                
+
                 switch (req.ContactType)
                 {
                     case Domain.Entities.ContactType.Phone:

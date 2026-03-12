@@ -31,7 +31,7 @@ public class DuplicateDocumentException : KYCException
 public class ProfileNotFoundException : KYCException
 {
     public ProfileNotFoundException(string message) : base(message) { }
-    public ProfileNotFoundException(Guid profileId) 
+    public ProfileNotFoundException(Guid profileId)
         : base($"KYC Profile with ID {profileId} was not found.") { }
 }
 

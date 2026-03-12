@@ -33,10 +33,10 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
     private readonly IUserRepository _userRepository;
-    
+
     public AuthController(
-        IMediator mediator, 
-        IConfiguration configuration, 
+        IMediator mediator,
+        IConfiguration configuration,
         ILogger<AuthController> logger,
         IUserRepository userRepository)
     {
@@ -59,7 +59,7 @@ public class AuthController : ControllerBase
         try
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("GetCurrentUser called without valid user ID in claims");
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
             }
 
             var user = await _userRepository.GetByIdAsync(userId);
-            
+
             if (user == null)
             {
                 _logger.LogWarning("User {UserId} not found in database", userId);
@@ -120,7 +120,7 @@ public class AuthController : ControllerBase
         try
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(ApiResponse.Fail("User not authenticated"));
@@ -181,25 +181,25 @@ public class AuthController : ControllerBase
         try
         {
             _logger.LogInformation("Initiating OAuth login flow for provider: {Provider}", provider);
-            
+
             // Validate provider
             var validProviders = new[] { "google", "apple" };
             if (!validProviders.Contains(provider.ToLowerInvariant()))
             {
                 return BadRequest(ApiResponse.Fail($"Invalid OAuth provider: {provider}. Supported: google, apple"));
             }
-            
+
             // Get the frontend callback URL from configuration
             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
             var redirectUri = $"{frontendUrl}/auth/callback/{provider}";
-            
+
             _logger.LogDebug("Using redirect URI: {RedirectUri}", redirectUri);
-            
+
             var command = new ExternalLoginCommand(provider, redirectUri);
             var result = await _mediator.Send(command);
-            
+
             _logger.LogInformation("OAuth authorization URL generated for provider {Provider}, redirecting...", provider);
-            
+
             // Redirect the browser to the OAuth provider's authorization page
             return Redirect(result.AuthorizationUrl);
         }
@@ -224,7 +224,7 @@ public class AuthController : ControllerBase
         try
         {
             _logger.LogInformation("Processing OAuth callback for provider: {Provider}", provider);
-            
+
             // Validate provider
             var validProviders = new[] { "google", "apple" };
             if (!validProviders.Contains(provider.ToLowerInvariant()))
@@ -240,10 +240,10 @@ public class AuthController : ControllerBase
             // ExternalAuthCallbackCommand(Provider, Code, IdToken, RedirectUri, State)
             var command = new ExternalAuthCallbackCommand(provider, request.Code, null, request.RedirectUri, null);
             var result = await _mediator.Send(command);
-            
-            _logger.LogInformation("OAuth callback successful for provider {Provider}, user {UserId}", 
+
+            _logger.LogInformation("OAuth callback successful for provider {Provider}, user {UserId}",
                 provider, result.UserId);
-            
+
             // Security (CWE-922): Set tokens as HttpOnly cookies for OAuth login
             if (!string.IsNullOrEmpty(result.AccessToken))
             {
@@ -278,10 +278,10 @@ public class AuthController : ControllerBase
         // Map string userIntent from frontend ("sell", "buy", "buy_and_sell") to domain enum
         var userIntent = request.UserIntent?.ToLowerInvariant() switch
         {
-            "sell"         => Domain.Enums.UserIntent.Sell,
-            "buy"          => Domain.Enums.UserIntent.Buy,
+            "sell" => Domain.Enums.UserIntent.Sell,
+            "buy" => Domain.Enums.UserIntent.Buy,
             "buy_and_sell" => Domain.Enums.UserIntent.BuyAndSell,
-            _              => Domain.Enums.UserIntent.Browse   // default: Browse
+            _ => Domain.Enums.UserIntent.Browse   // default: Browse
         };
 
         var command = new RegisterCommand(
@@ -334,7 +334,7 @@ public class AuthController : ControllerBase
             request.Token?.Length ?? 0,
             request.NewPassword?.Length ?? 0,
             request.ConfirmPassword?.Length ?? 0);
-        
+
         if (string.IsNullOrEmpty(request.Token))
         {
             logger.LogWarning("ResetPassword failed: Token is null or empty");
@@ -345,7 +345,7 @@ public class AuthController : ControllerBase
             logger.LogWarning("ResetPassword failed: NewPassword is null or empty");
             return BadRequest(ApiResponse.Fail("New password is required"));
         }
-        
+
         var command = new ResetPasswordCommand(request.Token, request.NewPassword, request.ConfirmPassword ?? string.Empty);
         var result = await _mediator.Send(command);
         return Ok(ApiResponse<ResetPasswordResponse>.Ok(result));
@@ -485,10 +485,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RequestPasswordSetup()
     {
         var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AuthController>>();
-        
+
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(email))
         {
             return Unauthorized(ApiResponse.Fail("User not authenticated"));
@@ -501,7 +501,7 @@ public class AuthController : ControllerBase
 
         var command = new RequestPasswordSetupCommand(userId, email, ipAddress, userAgent);
         var result = await _mediator.Send(command);
-        
+
         return Ok(ApiResponse<RequestPasswordSetupResponse>.Ok(result));
     }
 
@@ -516,7 +516,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ValidatePasswordSetupToken([FromQuery] string token)
     {
         var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AuthController>>();
-        
+
         if (string.IsNullOrEmpty(token))
         {
             return BadRequest(ApiResponse.Fail("Token is required"));
@@ -526,7 +526,7 @@ public class AuthController : ControllerBase
 
         var command = new ValidatePasswordSetupTokenCommand(token);
         var result = await _mediator.Send(command);
-        
+
         return Ok(ApiResponse<ValidatePasswordSetupTokenResponse>.Ok(result));
     }
 
@@ -541,7 +541,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> CompletePasswordSetup([FromBody] SetPasswordRequest request)
     {
         var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AuthController>>();
-        
+
         if (string.IsNullOrEmpty(request.Token))
         {
             return BadRequest(ApiResponse.Fail("Token is required"));
@@ -557,13 +557,13 @@ public class AuthController : ControllerBase
         logger.LogInformation("Completing password setup");
 
         var command = new SetPasswordForOAuthUserCommand(
-            request.Token, 
-            request.NewPassword, 
-            request.ConfirmPassword, 
-            ipAddress, 
+            request.Token,
+            request.NewPassword,
+            request.ConfirmPassword,
+            ipAddress,
             userAgent);
         var result = await _mediator.Send(command);
-        
+
         return Ok(ApiResponse<SetPasswordForOAuthUserResponse>.Ok(result));
     }
 
@@ -604,10 +604,10 @@ public class AuthController : ControllerBase
 
         // In K8s production: Gateway (HTTPS) → Ocelot (terminates TLS) → Internal HTTP to AuthService
         // Check both Request.IsHttps AND X-Forwarded-Proto header to detect original HTTPS from browser
-        var isHttps = Request.IsHttps || 
-                      (Request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) && 
+        var isHttps = Request.IsHttps ||
+                      (Request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) &&
                        proto.ToString().Equals("https", StringComparison.OrdinalIgnoreCase));
-        
+
         var secure = isProduction && isHttps;
 
         var accessCookieOptions = new CookieOptions

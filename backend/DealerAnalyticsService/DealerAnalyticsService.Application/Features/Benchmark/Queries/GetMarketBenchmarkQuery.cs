@@ -9,16 +9,16 @@ public record GetMarketBenchmarkQuery(DateTime Date) : IRequest<List<MarketBench
 public class GetMarketBenchmarkQueryHandler : IRequestHandler<GetMarketBenchmarkQuery, List<MarketBenchmarkDto>>
 {
     private readonly IMarketBenchmarkRepository _benchmarkRepository;
-    
+
     public GetMarketBenchmarkQueryHandler(IMarketBenchmarkRepository benchmarkRepository)
     {
         _benchmarkRepository = benchmarkRepository;
     }
-    
+
     public async Task<List<MarketBenchmarkDto>> Handle(GetMarketBenchmarkQuery request, CancellationToken cancellationToken)
     {
         var benchmarks = await _benchmarkRepository.GetBenchmarksAsync(request.Date);
-        
+
         return benchmarks.Select(b => new MarketBenchmarkDto
         {
             Id = b.Id,

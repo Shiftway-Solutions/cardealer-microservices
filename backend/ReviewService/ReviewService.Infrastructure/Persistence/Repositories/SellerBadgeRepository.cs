@@ -79,7 +79,7 @@ public class SellerBadgeRepository : Repository<SellerBadge, Guid>, ISellerBadge
     public async Task<List<SellerBadge>> GetExpiringBadgesAsync(int daysBeforeExpiry = 7, CancellationToken cancellationToken = default)
     {
         var expiryThreshold = DateTime.UtcNow.AddDays(daysBeforeExpiry);
-        
+
         return await _context.SellerBadges
             .Where(x => x.IsActive && x.ExpiresAt.HasValue && x.ExpiresAt <= expiryThreshold)
             .OrderBy(x => x.ExpiresAt)
@@ -95,7 +95,7 @@ public class SellerBadgeRepository : Repository<SellerBadge, Guid>, ISellerBadge
             .ToListAsync(cancellationToken);
 
         var result = new Dictionary<BadgeType, int>();
-        
+
         // Ensure all badge types are represented
         foreach (var badgeType in Enum.GetValues<BadgeType>())
         {

@@ -43,10 +43,10 @@ public class KYCDocumentsController : ControllerBase
     [HttpPost("profiles/{profileId:guid}/documents")]
     [Authorize]
     public async Task<ActionResult<KYCDocumentDto>> UploadDocument(
-        Guid profileId, 
+        Guid profileId,
         [FromBody] UploadKYCDocumentCommand command)
     {
-        _logger.LogInformation("=== CONTROLLER: UploadDocument START === ProfileId: {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}", 
+        _logger.LogInformation("=== CONTROLLER: UploadDocument START === ProfileId: {ProfileId}, DocumentType: {Type}, DocumentName: {DocumentName}",
             profileId, command.Type, command.DocumentName);
 
         if (profileId != command.KYCProfileId)
@@ -56,9 +56,9 @@ public class KYCDocumentsController : ControllerBase
         }
 
         _logger.LogInformation("Sending command to handler: StorageKey={StorageKey}, FileUrl={FileUrl}", command.StorageKey, command.FileUrl);
-        
+
         var result = await _mediator.Send(command);
-        
+
         _logger.LogInformation("=== CONTROLLER: UploadDocument SUCCESS === Document uploaded with ID: {DocumentId}", result.Id);
         return CreatedAtAction(nameof(GetDocuments), new { profileId }, result);
     }
@@ -69,14 +69,14 @@ public class KYCDocumentsController : ControllerBase
     [HttpPost("documents/{documentId:guid}/verify")]
     [Authorize(Policy = "AdminOrCompliance")]
     public async Task<ActionResult<KYCDocumentDto>> VerifyDocument(
-        Guid documentId, 
+        Guid documentId,
         [FromBody] VerifyKYCDocumentCommand command)
     {
         if (documentId != command.Id)
             return BadRequest("Document ID mismatch");
 
         var result = await _mediator.Send(command);
-        _logger.LogInformation("Document {DocumentId} verification: {Status}", 
+        _logger.LogInformation("Document {DocumentId} verification: {Status}",
             documentId, command.Approved ? "Approved" : "Rejected");
         return Ok(result);
     }

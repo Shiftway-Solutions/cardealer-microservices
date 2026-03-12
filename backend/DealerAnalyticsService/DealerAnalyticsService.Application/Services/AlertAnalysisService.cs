@@ -116,7 +116,7 @@ public class AlertAnalysisService : BackgroundService
                 if (previousSnapshot != null && previousSnapshot.TotalViews > 0)
                 {
                     var viewsChange = (currentSnapshot.TotalViews - previousSnapshot.TotalViews) / (double)previousSnapshot.TotalViews;
-                    
+
                     if (viewsChange < -ViewsDropThreshold)
                     {
                         var alert = DealerAlert.CreateViewsDroppingAlert(
@@ -170,7 +170,7 @@ public class AlertAnalysisService : BackgroundService
                 if (previousSnapshot != null && previousSnapshot.LeadConversionRate > 0)
                 {
                     var conversionChange = (currentSnapshot.LeadConversionRate - previousSnapshot.LeadConversionRate) / previousSnapshot.LeadConversionRate;
-                    
+
                     if (conversionChange < -ConversionDropThreshold)
                     {
                         var alert = DealerAlert.CreateConversionDropAlert(
@@ -210,8 +210,8 @@ public class AlertAnalysisService : BackgroundService
             10,
             cancellationToken);
 
-        var hasRecentAlert = recentAlerts.Items.Any(a => 
-            a.Type == alertType && 
+        var hasRecentAlert = recentAlerts.Items.Any(a =>
+            a.Type == alertType &&
             a.Status == AlertStatus.Active &&
             a.CreatedAt > DateTime.UtcNow.AddHours(-24));
 

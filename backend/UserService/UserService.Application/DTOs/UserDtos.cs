@@ -32,7 +32,7 @@ namespace UserService.Application.DTOs
         public List<UserBadgeDto> Badges { get; set; } = new();
         public string PreferredLocale { get; set; } = "es-DO";
         public string PreferredCurrency { get; set; } = "DOP";
-        
+
         // Legacy fields for backwards compatibility
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; }

@@ -38,7 +38,7 @@ public class InviteEmployeeCommandHandler : IRequestHandler<InviteEmployeeComman
 
     public async Task<DealerEmployeeDto> Handle(InviteEmployeeCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Inviting user {UserId} as employee for dealer {DealerId}", 
+        _logger.LogInformation("Inviting user {UserId} as employee for dealer {DealerId}",
             request.UserId, request.DealerId);
 
         // Verify dealer exists

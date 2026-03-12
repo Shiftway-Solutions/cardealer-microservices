@@ -372,18 +372,13 @@ jobs:
           kubectl get ingress -n okla >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: 🔔 Notify on Slack
-        if: always() && env.SLACK_WEBHOOK_URL != ''
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: |
-            Deployment to ${{ needs.prepare.outputs.environment }}
-            Version: ${{ needs.prepare.outputs.version }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: 🔔 Notify deployment on Slack
+        if: always()
+        uses: ./.github/actions/slack-notify-failure
         continue-on-error: true
+        with:
+          stage-name: "Deploy to ${{ needs.prepare.outputs.environment }} — v${{ needs.prepare.outputs.version }}"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # ============================================
   # Health Check
@@ -450,17 +445,151 @@ jobs:
     secrets: inherit
 
   # ============================================
-  # Rollback (Manual)
+  # Post-Deploy E2E Tests (Playwright — Staging)
+  # ============================================
+  # Stage 5: Full E2E test suite against staging environment.
+  # Runs AFTER smoke tests pass, BEFORE image integrity checks.
+  # A failure triggers automatic rollback.
+  # ============================================
+  e2e-tests:
+    name: 🎭 E2E Tests (Staging)
+    needs: [prepare, smoke-test]
+    if: success()
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 📦 Install dependencies
+        working-directory: frontend/web-next
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎭 Install Playwright browsers
+        working-directory: frontend/web-next
+        run: pnpm exec playwright install chromium
+
+      - name: 🎭 Run E2E test suite against staging
+        working-directory: frontend/web-next
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.do' || 'https://staging.okla.do' }}
+          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
+          CI: "true"
+        run: |
+          echo "🎭 Running E2E tests against $PLAYWRIGHT_BASE_URL..."
+          pnpm exec playwright test e2e/ \
+            --config=playwright.prod.config.ts \
+            --reporter=line \
+            --timeout=60000 \
+            --retries=1
+
+      - name: 📤 Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: frontend/web-next/test-results/
+          retention-days: 14
+
+      - name: 📊 E2E test summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "## ✅ E2E Tests — All passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ E2E Tests — FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "> **Automatic rollback will be triggered.**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================
+  # Post-Deploy Image Integrity Smoke Test (Playwright)
+  # ============================================
+  image-smoke-test:
+    name: 📸 Image Integrity Smoke Test
+    needs: [prepare, e2e-tests]
+    if: success()
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 📦 Install dependencies
+        working-directory: frontend/web-next
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎭 Install Playwright browsers
+        working-directory: frontend/web-next
+        run: pnpm exec playwright install chromium
+
+      - name: 📸 Run image integrity smoke test
+        working-directory: frontend/web-next
+        env:
+          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
+          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.do' || 'https://staging.okla.do' }}
+        run: |
+          echo "📸 Running image integrity smoke test against $API_BASE_URL..."
+          pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts \
+            --config=playwright.prod.config.ts \
+            --reporter=line \
+            --timeout=120000
+
+      - name: 📊 Image smoke test summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "## ✅ Image Integrity — All images validated" >> $GITHUB_STEP_SUMMARY
+            echo "All CDN images from recent listings passed HTTP 200, Content-Type, and size checks." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Image Integrity — FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "> More than 20% of listing images are broken/unreachable." >> $GITHUB_STEP_SUMMARY
+            echo "> **Automatic rollback will be triggered.**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-smoke-test-results
+          path: frontend/web-next/test-results/
+          retention-days: 7
+
+  # ============================================
+  # Rollback (on deploy or smoke test failure)
   # ============================================
   rollback:
     name: ⏪ Rollback
     runs-on: [self-hosted, macOS, ARM64]
     if: failure()
-    needs: [prepare, deploy]
+    needs: [prepare, deploy, smoke-test, e2e-tests, image-smoke-test]
     environment: ${{ needs.prepare.outputs.environment }}
 
     steps:
-      - name: 🔧 Authenticate doctl
+      - name: � Checkout
+        uses: actions/checkout@v4
+
+      - name: �🔧 Authenticate doctl
         run: |
           doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
@@ -481,4 +610,16 @@ jobs:
         run: |
           echo "## ⏪ Rollback Executed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Rolled back to previous version due to deployment failure." >> $GITHUB_STEP_SUMMARY
+          echo "Rolled back to previous version due to deployment failure, smoke test failure, or image integrity check failure." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Possible causes:" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment failed (pods not running)" >> $GITHUB_STEP_SUMMARY
+          echo "- k6 smoke test failed (API endpoints unreachable/slow)" >> $GITHUB_STEP_SUMMARY
+          echo "- Image integrity test failed (>20% of CDN images broken)" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔔 Notify rollback on Slack
+        uses: ./.github/actions/slack-notify-failure
+        continue-on-error: true
+        with:
+          stage-name: "⏪ ROLLBACK — ${{ needs.prepare.outputs.environment }}"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}

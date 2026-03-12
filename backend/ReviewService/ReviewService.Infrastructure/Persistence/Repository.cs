@@ -6,7 +6,7 @@ namespace ReviewService.Infrastructure.Persistence;
 /// <summary>
 /// Implementación base del repositorio genérico
 /// </summary>
-public class Repository<TEntity, TId> : IRepository<TEntity, TId> 
+public class Repository<TEntity, TId> : IRepository<TEntity, TId>
     where TEntity : BaseEntity<TId>
 {
     protected readonly ReviewDbContext _context;

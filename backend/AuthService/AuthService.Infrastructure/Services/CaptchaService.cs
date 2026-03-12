@@ -98,7 +98,7 @@ public class CaptchaService : ICaptchaService
             });
 
             var response = await _httpClient.PostAsync(RECAPTCHA_VERIFY_URL, content);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("reCAPTCHA API returned status {StatusCode}", response.StatusCode);
@@ -123,7 +123,7 @@ public class CaptchaService : ICaptchaService
 
             if (!result.Success)
             {
-                _logger.LogWarning("reCAPTCHA verification failed. Errors: {Errors}", 
+                _logger.LogWarning("reCAPTCHA verification failed. Errors: {Errors}",
                     string.Join(", ", result.ErrorCodes ?? Array.Empty<string>()));
                 return false;
             }
@@ -131,7 +131,7 @@ public class CaptchaService : ICaptchaService
             // Verify action matches (protection against replay attacks)
             if (!string.IsNullOrEmpty(expectedAction) && result.Action != expectedAction)
             {
-                _logger.LogWarning("reCAPTCHA action mismatch. Expected: {Expected}, Got: {Actual}", 
+                _logger.LogWarning("reCAPTCHA action mismatch. Expected: {Expected}, Got: {Actual}",
                     expectedAction, result.Action);
                 return false;
             }
@@ -139,12 +139,12 @@ public class CaptchaService : ICaptchaService
             // Verify score meets minimum threshold
             if (result.Score < _minScore)
             {
-                _logger.LogWarning("reCAPTCHA score {Score} is below minimum threshold {MinScore}", 
+                _logger.LogWarning("reCAPTCHA score {Score} is below minimum threshold {MinScore}",
                     result.Score, _minScore);
                 return false;
             }
 
-            _logger.LogInformation("reCAPTCHA verification successful. Score: {Score}, Action: {Action}", 
+            _logger.LogInformation("reCAPTCHA verification successful. Score: {Score}, Action: {Action}",
                 result.Score, result.Action);
             return true;
         }

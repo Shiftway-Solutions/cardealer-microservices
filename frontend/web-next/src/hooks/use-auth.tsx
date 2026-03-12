@@ -12,6 +12,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   authService,
   TwoFactorRequiredError,
@@ -57,6 +58,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [state, setState] = React.useState<AuthState>({
     user: initialUser,
@@ -175,6 +177,8 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     try {
       await authService.logout();
     } finally {
+      // Clear React Query cache to prevent cross-user data leakage
+      queryClient.clear();
       setState({
         user: null,
         isAuthenticated: false,

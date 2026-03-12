@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -141,6 +143,7 @@ export default function AdminDealersPage() {
     pageSize: 10,
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [suspendReason, setSuspendReason] = useState('');
 
   const { data: dealersData, isLoading } = useAdminDealers(filters);
   const { data: stats } = useDealerStatsAdmin();
@@ -339,6 +342,55 @@ export default function AdminDealersPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex flex-wrap items-end gap-4 border-t pt-3">
+            <div className="flex flex-col gap-1">
+              <Label className="text-muted-foreground text-xs">Registro desde</Label>
+              <Input
+                type="date"
+                className="w-40"
+                value={filters.registeredFrom || ''}
+                onChange={e =>
+                  setFilters(prev => ({
+                    ...prev,
+                    registeredFrom: e.target.value || undefined,
+                    page: 1,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-muted-foreground text-xs">Registro hasta</Label>
+              <Input
+                type="date"
+                className="w-40"
+                value={filters.registeredTo || ''}
+                onChange={e =>
+                  setFilters(prev => ({
+                    ...prev,
+                    registeredTo: e.target.value || undefined,
+                    page: 1,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-muted-foreground text-xs">Listings mínimos</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="0"
+                className="w-28"
+                value={filters.minListings ?? ''}
+                onChange={e =>
+                  setFilters(prev => ({
+                    ...prev,
+                    minListings: e.target.value ? Number(e.target.value) : undefined,
+                    page: 1,
+                  }))
+                }
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -352,6 +404,7 @@ export default function AdminDealersPage() {
               <TableHead>Plan</TableHead>
               <TableHead>Vehículos</TableHead>
               <TableHead>Rating</TableHead>
+              <TableHead>Registro</TableHead>
               <TableHead>MRR</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Acciones</TableHead>
@@ -401,6 +454,11 @@ export default function AdminDealersPage() {
                     <span className="text-muted-foreground">-</span>
                   )}
                 </TableCell>
+                <TableCell>
+                  <span className="text-muted-foreground text-sm">
+                    {new Date(dealer.createdAt).toLocaleDateString('es-DO')}
+                  </span>
+                </TableCell>
                 <TableCell>{formatMoney(dealer.mrr)}</TableCell>
                 <TableCell>{getStatusBadge(dealer.status)}</TableCell>
                 <TableCell>
@@ -436,14 +494,27 @@ export default function AdminDealersPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Suspender dealer?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              El dealer no podrá acceder a su cuenta ni gestionar vehículos.
+                              El dealer no podrá acceder a su cuenta ni gestionar vehículos. Indica
+                              el motivo de la suspensión.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
+                          <Textarea
+                            placeholder="Motivo de la suspensión (obligatorio)..."
+                            value={suspendReason}
+                            onChange={e => setSuspendReason(e.target.value)}
+                            className="min-h-[80px]"
+                          />
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel onClick={() => setSuspendReason('')}>
+                              Cancelar
+                            </AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleSuspend(dealer.id, 'Violación de términos')}
+                              onClick={() => {
+                                handleSuspend(dealer.id, suspendReason || 'Violación de términos');
+                                setSuspendReason('');
+                              }}
                               className="bg-red-600 hover:bg-red-700"
+                              disabled={!suspendReason.trim()}
                             >
                               Suspender
                             </AlertDialogAction>
@@ -472,7 +543,7 @@ export default function AdminDealersPage() {
             ))}
             {dealers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground py-12 text-center">
+                <TableCell colSpan={9} className="text-muted-foreground py-12 text-center">
                   <Building2 className="mx-auto mb-2 h-8 w-8" />
                   <p>No se encontraron dealers</p>
                 </TableCell>

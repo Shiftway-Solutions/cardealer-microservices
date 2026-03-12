@@ -413,12 +413,12 @@ public class AuditLog : EntityBase, IAggregateRoot
     {
         var summary = GetSummary();
         var severity = Severity.ToString().ToUpper();
-        
+
         if (!string.IsNullOrEmpty(ErrorMessage))
         {
             return $"{summary} | Severity: {severity} | Error: {ErrorMessage}";
         }
-        
+
         return $"{summary} | Severity: {severity}";
     }
 
@@ -427,7 +427,7 @@ public class AuditLog : EntityBase, IAggregateRoot
     /// </summary>
     public bool IsSecurityEvent()
     {
-        return Severity == AuditSeverity.Error || 
+        return Severity == AuditSeverity.Error ||
                Severity == AuditSeverity.Critical ||
                !Success;
     }

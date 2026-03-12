@@ -1,0 +1,253 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "CDN Image Performance — LCP, carousel load times, error rates, and variant completeness",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "🖼️ Image LCP (P95) — Target: < 3s",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_image_request_duration_seconds_bucket{service=\"mediaservice\"}[5m]))",
+          "legendFormat": "LCP P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "max": 10,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2.5 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "📉 Image Error Rate — Target: < 20%",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(http_image_request_errors_total{service=\"mediaservice\"}[5m]) / rate(http_image_requests_total{service=\"mediaservice\"}[5m]) * 100",
+          "legendFormat": "Error Rate %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "🎠 Carousel Load Time (P95)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_carousel_load_duration_seconds_bucket{service=\"mediaservice\"}[5m]))",
+          "legendFormat": "Carousel P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "max": 15,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 8 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "📸 Images Processing Queue",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages{queue=\"process.media.queue\"}",
+          "legendFormat": "Pending"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Image LCP Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(http_image_request_duration_seconds_bucket{service=\"mediaservice\"}[5m]))",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_image_request_duration_seconds_bucket{service=\"mediaservice\"}[5m]))",
+          "legendFormat": "P95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(http_image_request_duration_seconds_bucket{service=\"mediaservice\"}[5m]))",
+          "legendFormat": "P99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Image Error Rate Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_image_request_errors_total{service=\"mediaservice\"}[5m]) / rate(http_image_requests_total{service=\"mediaservice\"}[5m]) * 100",
+          "legendFormat": "Error Rate %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "CDN Response Time Distribution",
+      "type": "heatmap",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 18 },
+      "targets": [
+        {
+          "expr": "rate(http_image_request_duration_seconds_bucket{service=\"mediaservice\"}[5m])",
+          "legendFormat": "{{le}}",
+          "format": "heatmap"
+        }
+      ]
+    },
+    {
+      "title": "Image Variant Completeness",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 18 },
+      "description": "Track images with complete vs incomplete variants (thumb, small, medium, large, webp)",
+      "targets": [
+        {
+          "expr": "media_images_total{status=\"processed\"}",
+          "legendFormat": "Total Processed"
+        },
+        {
+          "expr": "media_images_missing_variants_total",
+          "legendFormat": "Missing Variants"
+        },
+        {
+          "expr": "media_images_requeued_total",
+          "legendFormat": "Re-queued for Processing"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "title": "Synthetic Monitor Results (GitHub Actions)",
+      "type": "text",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 28 },
+      "options": {
+        "mode": "markdown",
+        "content": "## 📸 Synthetic CDN Monitor\n\nThe **Synthetic CDN Monitor** GitHub Actions workflow runs every 30 minutes and measures:\n\n- **Image LCP** from a simulated 4G connection in Santo Domingo (100ms latency, 20Mbps)\n- **Carousel load time** for the most visited listing\n- **Image error rate** (broken CDN URLs)\n\n### Thresholds\n| Metric | Good | Warning | Critical |\n|--------|------|---------|----------|\n| Image LCP | < 2.5s | 2.5-3s | > 3s |\n| Error Rate | < 10% | 10-20% | > 20% |\n| Carousel Load | < 5s | 5-8s | > 8s |\n\n📍 Results: [GitHub Actions → Synthetic CDN Monitor](../../actions/workflows/synthetic-cdn-monitor.yml)"
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["cdn", "performance", "images", "media"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "America/Santo_Domingo",
+  "title": "CDN Image Performance",
+  "uid": "cdn-image-performance",
+  "version": 1
+}

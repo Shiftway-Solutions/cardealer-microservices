@@ -67,8 +67,8 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             // 🔐 SEGURIDAD: Revocar TODOS los refresh tokens del usuario
             // Esto cierra todas las sesiones activas (OWASP recomendación)
             await _refreshTokenRepository.RevokeAllForUserAsync(
-                user.Id.ToString(), 
-                "password_reset", 
+                user.Id.ToString(),
+                "password_reset",
                 cancellationToken);
             _logger.LogInformation("All refresh tokens revoked for user {UserId} due to password reset", user.Id);
 

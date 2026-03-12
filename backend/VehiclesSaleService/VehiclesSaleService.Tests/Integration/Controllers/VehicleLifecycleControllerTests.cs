@@ -45,7 +45,7 @@ public class VehicleLifecycleControllerTests : IDisposable
         var tenantContextMock = new Mock<ITenantContext>();
         tenantContextMock.Setup(t => t.CurrentDealerId).Returns((Guid?)null);
         tenantContextMock.Setup(t => t.HasDealerContext).Returns(false);
-        
+
         _context = new ApplicationDbContext(options, tenantContextMock.Object);
         _vehicleRepositoryMock = new Mock<IVehicleRepository>();
         _categoryRepositoryMock = new Mock<ICategoryRepository>();
@@ -223,8 +223,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.Vehicles.AddAsync(vehicle);
         await _context.SaveChangesAsync();
 
-        var request = new ApproveVehicleRequest 
-        { 
+        var request = new ApproveVehicleRequest
+        {
             ModeratorId = Guid.NewGuid(),
             Notes = "Looks good"
         };
@@ -266,8 +266,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.Vehicles.AddAsync(vehicle);
         await _context.SaveChangesAsync();
 
-        var request = new RejectVehicleRequest 
-        { 
+        var request = new RejectVehicleRequest
+        {
             ModeratorId = Guid.NewGuid(),
             Reason = "Photos are blurry",
             Notes = "Please retake photos"
@@ -438,8 +438,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.Feature(vehicleId, new FeatureVehicleRequest 
-        { 
+        var result = await _controller.Feature(vehicleId, new FeatureVehicleRequest
+        {
             IsFeatured = true,
             HomepageSections = HomepageSection.Destacados | HomepageSection.Carousel
         });
@@ -500,9 +500,9 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.RegisterView(vehicleId, new RegisterViewRequest 
-        { 
-            SessionId = "test-session" 
+        var result = await _controller.RegisterView(vehicleId, new RegisterViewRequest
+        {
+            SessionId = "test-session"
         });
 
         // Assert
@@ -570,8 +570,8 @@ public class VehicleLifecycleControllerTests : IDisposable
         };
 
         // Add images
-        vehicle.Images.Add(new VehicleImage 
-        { 
+        vehicle.Images.Add(new VehicleImage
+        {
             Id = Guid.NewGuid(),
             VehicleId = id,
             Url = "https://cdn.example.com/car1.jpg",

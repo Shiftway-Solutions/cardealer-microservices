@@ -74,7 +74,7 @@ namespace UserService.Domain.Entities
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public bool EmailConfirmed { get; set; } = false;
-        
+
         // Profile fields for seller public profile
         public string? ProfilePicture { get; set; }
         public string? City { get; set; }
@@ -102,7 +102,7 @@ namespace UserService.Domain.Entities
 
         /// <summary>User's preferred currency (e.g., "DOP", "USD").</summary>
         public string? PreferredCurrency { get; set; } = "DOP";
-        
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }

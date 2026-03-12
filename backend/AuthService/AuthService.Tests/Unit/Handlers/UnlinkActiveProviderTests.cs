@@ -23,10 +23,10 @@ public class UnlinkActiveProviderTests
             UserId: "user-123",
             Provider: "google"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -40,10 +40,10 @@ public class UnlinkActiveProviderTests
             UserId: "",
             Provider: "google"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "UserId");
@@ -58,10 +58,10 @@ public class UnlinkActiveProviderTests
             UserId: "user-123",
             Provider: ""
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Provider");
@@ -86,10 +86,10 @@ public class UnlinkActiveProviderTests
             UserId: "user-123",
             Provider: provider
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().Be(shouldBeValid);
     }
@@ -109,10 +109,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -128,10 +128,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "UserId");
@@ -148,10 +148,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Provider");
@@ -175,10 +175,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         if (shouldBeValid)
         {
@@ -202,10 +202,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeTrue();
     }
@@ -222,10 +222,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "UserId");
@@ -243,10 +243,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Provider");
@@ -273,10 +273,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().Be(shouldBeValid);
     }
@@ -301,10 +301,10 @@ public class UnlinkActiveProviderTests
             IpAddress: "127.0.0.1",
             UserAgent: "Mozilla/5.0"
         );
-        
+
         // Act
         var result = validator.Validate(command);
-        
+
         // Assert
         result.IsValid.Should().Be(shouldBeValid);
     }

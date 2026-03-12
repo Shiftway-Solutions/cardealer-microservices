@@ -1,9 +1,12 @@
-﻿using MediaService.Domain.Interfaces.Repositories;
+﻿using MediaService.Application.Interfaces;
+using MediaService.Domain.Interfaces.Repositories;
 using MediaService.Domain.Interfaces.Services;
+using MediaService.Infrastructure.BackgroundServices;
 using MediaService.Infrastructure.HealthChecks;
 using MediaService.Infrastructure.Middleware;
 using MediaService.Infrastructure.Persistence;
 using MediaService.Infrastructure.Repositories;
+using MediaService.Infrastructure.Services;
 using MediaService.Infrastructure.Services.Processing;
 using MediaService.Infrastructure.Services.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +92,23 @@ public static class ServiceCollectionExtensions
         // Servicios de infraestructura adicionales
         services.AddSingleton<IFileValidator, FileValidator>();
         services.AddScoped<IStorageHealthChecker, StorageHealthChecker>();
+
+        // ========== IMAGE URL HEALTH SCAN (every 6h + daily email at 8am RD) ==========
+        services.AddScoped<IImageHealthReportEmailService, SmtpImageHealthReportEmailService>();
+        services.AddHttpClient("ImageHealthScan", client =>
+        {
+            client.DefaultRequestHeaders.Add("User-Agent", "OKLA-MediaService-HealthScan/1.0");
+        });
+        services.AddHostedService<ImageUrlHealthScanJob>();
+
+        // ========== ACL VERIFICATION (weekly — DO Spaces public-read enforcement) ==========
+        services.AddHostedService<AclVerificationJob>();
+
+        // ========== IMAGE VARIANT VALIDATION (nightly — verify all sizes exist for every image) ==========
+        services.AddHostedService<ImageVariantValidationJob>();
+
+        // ========== ORPHAN IMAGE CLEANUP (monthly — detect S3 objects without DB reference) ==========
+        services.AddHostedService<OrphanImageCleanupJob>();
 
         return services;
     }

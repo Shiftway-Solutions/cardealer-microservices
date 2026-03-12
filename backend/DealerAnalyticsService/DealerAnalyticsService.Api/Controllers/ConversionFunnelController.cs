@@ -14,13 +14,13 @@ public class ConversionFunnelController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ConversionFunnelController> _logger;
-    
+
     public ConversionFunnelController(IMediator mediator, ILogger<ConversionFunnelController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener funnel de conversión para un dealer
     /// </summary>
@@ -41,10 +41,10 @@ public class ConversionFunnelController : ControllerBase
         {
             var endDate = toDate ?? DateTime.UtcNow;
             var startDate = fromDate ?? endDate.AddDays(-30);
-            
+
             var query = new GetConversionFunnelQuery(dealerId, startDate, endDate);
             var result = await _mediator.Send(query);
-            
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -53,7 +53,7 @@ public class ConversionFunnelController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving conversion funnel" });
         }
     }
-    
+
     /// <summary>
     /// Obtener funnel simplificado para gráficos
     /// </summary>
@@ -74,37 +74,37 @@ public class ConversionFunnelController : ControllerBase
         {
             var endDate = toDate ?? DateTime.UtcNow;
             var startDate = fromDate ?? endDate.AddDays(-30);
-            
+
             var query = new GetConversionFunnelQuery(dealerId, startDate, endDate);
             var result = await _mediator.Send(query);
-            
+
             var visualization = new
             {
                 Steps = new[]
                 {
-                    new { 
-                        Name = "Vistas", 
-                        Value = result.TotalViews, 
+                    new {
+                        Name = "Vistas",
+                        Value = result.TotalViews,
                         Percentage = 100m,
-                        Color = "#3B82F6" 
+                        Color = "#3B82F6"
                     },
-                    new { 
-                        Name = "Contactos", 
-                        Value = result.TotalContacts, 
+                    new {
+                        Name = "Contactos",
+                        Value = result.TotalContacts,
                         Percentage = result.ViewToContactRate,
-                        Color = "#10B981" 
+                        Color = "#10B981"
                     },
-                    new { 
-                        Name = "Test Drives", 
-                        Value = result.TestDriveRequests, 
+                    new {
+                        Name = "Test Drives",
+                        Value = result.TestDriveRequests,
                         Percentage = result.ContactToTestDriveRate,
-                        Color = "#F59E0B" 
+                        Color = "#F59E0B"
                     },
-                    new { 
-                        Name = "Ventas", 
-                        Value = result.ActualSales, 
+                    new {
+                        Name = "Ventas",
+                        Value = result.ActualSales,
                         Percentage = result.TestDriveToSaleRate,
-                        Color = "#EF4444" 
+                        Color = "#EF4444"
                     }
                 },
                 Overall = new
@@ -114,7 +114,7 @@ public class ConversionFunnelController : ControllerBase
                 },
                 Period = new { From = startDate, To = endDate }
             };
-            
+
             return Ok(visualization);
         }
         catch (Exception ex)

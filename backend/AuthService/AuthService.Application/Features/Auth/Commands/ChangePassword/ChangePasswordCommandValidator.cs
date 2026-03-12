@@ -77,8 +77,8 @@ public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCo
 
         for (int i = 0; i <= password.Length - 4; i++)
         {
-            if (password[i] == password[i + 1] && 
-                password[i] == password[i + 2] && 
+            if (password[i] == password[i + 1] &&
+                password[i] == password[i + 2] &&
                 password[i] == password[i + 3])
             {
                 return false;

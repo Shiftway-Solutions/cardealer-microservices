@@ -152,6 +152,9 @@ export interface DealerFilters {
   status?: string;
   plan?: string;
   verified?: boolean;
+  registeredFrom?: string;
+  registeredTo?: string;
+  minListings?: number;
   page?: number;
   pageSize?: number;
 }
@@ -349,6 +352,17 @@ export async function getDealerStats(): Promise<{
   return response.data;
 }
 
+export async function adminChangeDealerPlan(
+  dealerId: string,
+  plan: string,
+  justification: string
+): Promise<void> {
+  await apiClient.post(`/api/admin/dealers/${dealerId}/change-plan`, {
+    plan,
+    justification,
+  });
+}
+
 // ============================================================
 // REPORTS
 // ============================================================
@@ -399,6 +413,11 @@ export interface ModerationItem {
   description: string;
   price?: number;
   images: string[];
+  vin?: string;
+  oklaScore?: number;
+  aiScore?: number;
+  aiPhotoScores?: { url: string; score: number; rejectionReason?: string }[];
+  aiDecision?: 'approve' | 'reject' | 'review';
   sellerName: string;
   sellerType: 'seller' | 'dealer';
   sellerId: string;
@@ -416,6 +435,9 @@ export interface ModerationFilters {
   type?: string;
   priority?: string;
   status?: string;
+  search?: string;
+  minOklaScore?: number;
+  maxOklaScore?: number;
   page?: number;
   pageSize?: number;
 }
@@ -434,6 +456,7 @@ export interface ModerationActionRequest {
   action: 'approve' | 'reject' | 'escalate' | 'skip';
   reason?: string;
   notes?: string;
+  overrideJustification?: string;
 }
 
 export interface ModerationActionResponse {
@@ -493,6 +516,50 @@ export async function rejectModerationItem(
 }
 
 // ============================================================
+// FINANCIAL DASHBOARD
+// ============================================================
+
+export interface CancelledDealer {
+  id: string;
+  name: string;
+  previousPlan: string;
+  cancelledAt: string;
+  reason?: string;
+  mrrLost: number;
+}
+
+export interface TopChatAgentDealer {
+  dealerId: string;
+  dealerName: string;
+  plan: string;
+  conversationCount: number;
+  avgPerDay: number;
+}
+
+export async function getCancelledDealers(month?: string): Promise<CancelledDealer[]> {
+  const response = await apiClient.get<CancelledDealer[]>('/api/admin/dealers/cancelled', {
+    params: { month },
+  });
+  return response.data;
+}
+
+export async function getTopChatAgentDealers(limit: number = 10): Promise<TopChatAgentDealer[]> {
+  const response = await apiClient.get<TopChatAgentDealer[]>(
+    '/api/admin/dashboard/top-chatagent-dealers',
+    { params: { limit } }
+  );
+  return response.data;
+}
+
+export async function exportDashboardExcel(): Promise<Blob> {
+  const response = await apiClient.get('/api/admin/dashboard/export', {
+    params: { format: 'xlsx' },
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+// ============================================================
 // EXPORT
 // ============================================================
 
@@ -524,6 +591,7 @@ export const adminService = {
   reactivateDealer,
   deleteDealer,
   getDealerStats,
+  adminChangeDealerPlan,
   // Reports
   getReports,
   getReportById,
@@ -536,6 +604,10 @@ export const adminService = {
   processModerationAction,
   approveModerationItem,
   rejectModerationItem,
+  // Financial Dashboard
+  getCancelledDealers,
+  getTopChatAgentDealers,
+  exportDashboardExcel,
 };
 
 export default adminService;

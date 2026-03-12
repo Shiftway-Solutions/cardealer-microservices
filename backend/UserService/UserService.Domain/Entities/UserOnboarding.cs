@@ -11,20 +11,20 @@ public class UserOnboarding
     public DateTime? CompletedAt { get; private set; }
     public bool WasSkipped { get; private set; }
     public DateTime? SkippedAt { get; private set; }
-    
+
     // Steps del onboarding
     public bool StepProfileCompleted { get; private set; }
     public DateTime? StepProfileCompletedAt { get; private set; }
-    
+
     public bool StepPreferencesCompleted { get; private set; }
     public DateTime? StepPreferencesCompletedAt { get; private set; }
-    
+
     public bool StepFirstSearchCompleted { get; private set; }
     public DateTime? StepFirstSearchCompletedAt { get; private set; }
-    
+
     public bool StepTourCompleted { get; private set; }
     public DateTime? StepTourCompletedAt { get; private set; }
-    
+
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -115,9 +115,9 @@ public class UserOnboarding
     /// </summary>
     public bool AllStepsCompleted()
     {
-        return StepProfileCompleted 
-            && StepPreferencesCompleted 
-            && StepFirstSearchCompleted 
+        return StepProfileCompleted
+            && StepPreferencesCompleted
+            && StepFirstSearchCompleted
             && StepTourCompleted;
     }
 

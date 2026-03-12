@@ -54,10 +54,10 @@ public class AzulPaymentPageController : BillingBaseController
 
             // Generate unique session ID for this payment page session
             var sessionId = Guid.NewGuid().ToString("N");
-            
+
             // Get Azul payment page URL
             var paymentPageUrl = _azulService.GetPaymentPageUrl();
-            
+
             // For card tokenization (adding payment method), we create a special request
             // The amount is 0 for tokenization-only requests
             var tokenizationRequest = _azulService.CreatePaymentRequest(
@@ -68,7 +68,7 @@ public class AzulPaymentPageController : BillingBaseController
 
             // Build redirect URL with all necessary parameters
             var formFields = _azulService.GetPaymentFormFields(tokenizationRequest);
-            
+
             // Construct the full redirect URL with returnUrl parameters
             var redirectUrl = BuildAzulRedirectUrl(
                 paymentPageUrl,
@@ -118,21 +118,22 @@ public class AzulPaymentPageController : BillingBaseController
             // Process successful tokenization
             if (data.ResponseCode == "00" || data.ResponseCode == "ISO8583-000")
             {
-                _logger.LogInformation("Card tokenization successful. DataVaultToken: {Token}", 
+                _logger.LogInformation("Card tokenization successful. DataVaultToken: {Token}",
                     data.DataVaultToken?.Substring(0, 4) + "****");
-                
+
                 // Here you would save the token to the dealer's payment methods
                 // await _billingService.SavePaymentMethod(dealerId, data.DataVaultToken, ...);
-                
+
                 return Ok(new { Success = true, Message = "Card added successfully" });
             }
 
             _logger.LogWarning("Card tokenization failed. ResponseCode: {Code}, Message: {Msg}",
                 data.ResponseCode, data.ResponseMessage);
-            
-            return BadRequest(new { 
-                Success = false, 
-                Error = data.ResponseMessage ?? "Error adding card" 
+
+            return BadRequest(new
+            {
+                Success = false,
+                Error = data.ResponseMessage ?? "Error adding card"
             });
         }
         catch (Exception ex)

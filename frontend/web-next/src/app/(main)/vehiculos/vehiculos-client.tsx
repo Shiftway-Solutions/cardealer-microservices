@@ -82,6 +82,9 @@ import { useFavorites } from '@/hooks/use-favorites';
 import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
 import { useAuth } from '@/hooks/use-auth';
 import { useSponsoredSearch } from '@/hooks/use-ads';
+import { RecentSearchesDropdown } from '@/components/search/recent-searches-dropdown';
+import type { RecentSearch } from '@/stores/search-store';
+import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
 import {
   SponsoredVehicleCard,
   SidebarAdUnit,
@@ -352,6 +355,7 @@ export default function VehiculosClient() {
   // Initialise search bar text from ai_query param (homepage NL redirect) or empty
   const [searchInput, setSearchInput] = React.useState(() => urlSearchParams.get('ai_query') ?? '');
   const [isAiSearching, setIsAiSearching] = React.useState(false);
+  const [showRecentSearches, setShowRecentSearches] = React.useState(false);
   const [aiSearchInfo, setAiSearchInfo] = React.useState<{
     query: string;
     confidence: number;
@@ -399,6 +403,7 @@ export default function VehiculosClient() {
 
   // Favorites
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [showAuthPromptForFavorite, setShowAuthPromptForFavorite] = React.useState(false);
 
   // Sponsored search results (native ads)
   const { topSponsored, inlineSponsored } = useSponsoredSearch(filters.query);
@@ -541,6 +546,10 @@ export default function VehiculosClient() {
   };
 
   const handleFavoriteToggle = (vehicleId: string) => {
+    if (!isAuthenticated) {
+      setShowAuthPromptForFavorite(true);
+      return;
+    }
     toggleFavorite(vehicleId).catch(() => {});
   };
 
@@ -716,6 +725,7 @@ export default function VehiculosClient() {
               className="relative min-w-0 flex-1"
               onSubmit={e => {
                 e.preventDefault();
+                setShowRecentSearches(false);
                 if (searchInput.trim()) {
                   handleAiSearch(searchInput);
                 }
@@ -735,6 +745,7 @@ export default function VehiculosClient() {
                   // Clear AI info when user edits
                   if (aiSearchInfo) setAiSearchInfo(null);
                 }}
+                onFocus={() => setShowRecentSearches(true)}
                 className={cn('h-10 pr-10 pl-9 text-sm', isAiSearching && 'ring-primary/40 ring-2')}
                 aria-label="Buscar vehículos con IA"
                 disabled={isAiSearching}
@@ -752,6 +763,17 @@ export default function VehiculosClient() {
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
+              {/* Recent Searches Dropdown */}
+              <RecentSearchesDropdown
+                isOpen={showRecentSearches && !searchInput}
+                onSelect={(search: RecentSearch) => {
+                  if (search.filters) {
+                    setFilters({ ...search.filters, page: 1 });
+                  }
+                  setSearchInput(search.label);
+                }}
+                onClose={() => setShowRecentSearches(false)}
+              />
             </form>
 
             {/* Sort */}
@@ -1191,6 +1213,12 @@ export default function VehiculosClient() {
         onOpenChange={setSaveModalOpen}
         filters={filters}
         totalResults={totalResults}
+      />
+
+      {/* Auth Prompt for favorite action on listing cards */}
+      <AuthPromptDialog
+        open={showAuthPromptForFavorite}
+        onClose={() => setShowAuthPromptForFavorite(false)}
       />
     </div>
   );

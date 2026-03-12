@@ -52,8 +52,8 @@ public class StartIdentityVerificationHandler : IRequestHandler<StartIdentityVer
             UserAgent = request.UserAgent,
             Latitude = request.Location?.Latitude,
             Longitude = request.Location?.Longitude,
-            DeviceInfo = request.DeviceInfo != null 
-                ? System.Text.Json.JsonSerializer.Serialize(request.DeviceInfo) 
+            DeviceInfo = request.DeviceInfo != null
+                ? System.Text.Json.JsonSerializer.Serialize(request.DeviceInfo)
                 : null
         };
 
@@ -64,7 +64,7 @@ public class StartIdentityVerificationHandler : IRequestHandler<StartIdentityVer
         // TODO: Persistir sesión en base de datos
         // await _sessionRepository.AddAsync(session, cancellationToken);
 
-        _logger.LogInformation("Identity verification session {SessionId} created for user {UserId}", 
+        _logger.LogInformation("Identity verification session {SessionId} created for user {UserId}",
             session.Id, request.UserId);
 
         return new StartVerificationResponse
@@ -136,7 +136,7 @@ public class ProcessDocumentHandler : IRequestHandler<ProcessDocumentCommand, Do
 
     public async Task<DocumentProcessedResponse> Handle(ProcessDocumentCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing document {Side} for session {SessionId}", 
+        _logger.LogInformation("Processing document {Side} for session {SessionId}",
             request.Side, request.SessionId);
 
         // TODO: Obtener sesión de base de datos
@@ -177,7 +177,7 @@ public class ProcessDocumentHandler : IRequestHandler<ProcessDocumentCommand, Do
 
             if (!validation.IsValid)
             {
-                _logger.LogWarning("Document validation failed for session {SessionId}: {Errors}", 
+                _logger.LogWarning("Document validation failed for session {SessionId}: {Errors}",
                     request.SessionId, string.Join(", ", validation.Errors));
             }
         }
@@ -189,7 +189,7 @@ public class ProcessDocumentHandler : IRequestHandler<ProcessDocumentCommand, Do
             session.DocumentFrontProcessed = true;
             session.DocumentFrontCapturedAt = DateTime.UtcNow;
             session.Status = VerificationSessionStatus.DocumentFrontCaptured;
-            
+
             // Guardar datos OCR
             if (ocrResult.Success && ocrResult.ExtractedData != null)
             {
@@ -209,7 +209,7 @@ public class ProcessDocumentHandler : IRequestHandler<ProcessDocumentCommand, Do
             session.DocumentBackProcessed = true;
             session.DocumentBackCapturedAt = DateTime.UtcNow;
             session.Status = VerificationSessionStatus.AwaitingSelfie;
-            
+
             // Extraer datos adicionales del reverso si aplica
             if (ocrResult.Success && ocrResult.ExtractedData != null)
             {
@@ -358,14 +358,14 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
         // Note: In the session flow, document image data comes from the ProcessDocument step
         // For now, validate face quality in the selfie via Rekognition detect
         var faceDetection = await _faceComparisonService.DetectFacesAsync(request.SelfieImageData, cancellationToken);
-        var faceValid = faceDetection.Success && faceDetection.FaceCount == 1 
+        var faceValid = faceDetection.Success && faceDetection.FaceCount == 1
                         && faceDetection.Faces.Any(f => f.Confidence > 90);
         session.FaceMatchPassed = faceValid;
         session.FaceMatchScore = faceValid ? faceDetection.Faces.First().Confidence : 0;
 
         // Determinar resultado
-        var verified = session.LivenessCheckPassed && 
-                       session.FaceMatchPassed && 
+        var verified = session.LivenessCheckPassed &&
+                       session.FaceMatchPassed &&
                        session.DocumentValidationPassed;
 
         if (verified)
@@ -374,7 +374,7 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
             session.CompletedAt = DateTime.UtcNow;
 
             // TODO: Crear o actualizar KYCProfile
-            _logger.LogInformation("Identity verification completed successfully for session {SessionId}", 
+            _logger.LogInformation("Identity verification completed successfully for session {SessionId}",
                 request.SessionId);
 
             return new VerificationCompletedResponse
@@ -433,7 +433,7 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
             session.FailureReason = DetermineFailureReason(session);
             session.FailureDetails = GetFailureDetails(session.FailureReason ?? VerificationFailureReason.None);
 
-            _logger.LogWarning("Identity verification failed for session {SessionId}: {Reason}", 
+            _logger.LogWarning("Identity verification failed for session {SessionId}: {Reason}",
                 request.SessionId, session.FailureReason);
 
             throw new VerificationFailedException(session);
@@ -488,7 +488,7 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
             return (false, 0);
         }
 
-        _logger.LogInformation("Liveness check result: IsLive={IsLive}, Score={Score}", 
+        _logger.LogInformation("Liveness check result: IsLive={IsLive}, Score={Score}",
             livenessResult.IsLive, livenessResult.LivenessScore);
 
         return (livenessResult.IsLive, livenessResult.LivenessScore);
@@ -527,10 +527,10 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
     {
         if (!session.LivenessCheckPassed)
             return VerificationFailureReason.LivenessCheckFailed;
-        
+
         if (!session.FaceMatchPassed)
             return VerificationFailureReason.FaceMismatch;
-        
+
         if (!session.DocumentValidationPassed)
             return VerificationFailureReason.InvalidDocumentNumber;
 
@@ -541,13 +541,13 @@ public class ProcessSelfieHandler : IRequestHandler<ProcessSelfieCommand, Verifi
     {
         return reason switch
         {
-            VerificationFailureReason.FaceMismatch => 
+            VerificationFailureReason.FaceMismatch =>
                 "La foto de la selfie no coincide con la foto del documento de identidad.",
-            VerificationFailureReason.LivenessCheckFailed => 
+            VerificationFailureReason.LivenessCheckFailed =>
                 "No se pudo verificar que eres una persona real. Por favor, sigue las instrucciones cuidadosamente.",
-            VerificationFailureReason.DocumentBlurry => 
+            VerificationFailureReason.DocumentBlurry =>
                 "La imagen del documento está borrosa. Por favor, toma una foto más clara.",
-            VerificationFailureReason.InvalidDocumentNumber => 
+            VerificationFailureReason.InvalidDocumentNumber =>
                 "El número de documento no es válido. Por favor, verifica que sea correcto.",
             _ => "La verificación no pudo completarse. Por favor, intenta de nuevo."
         };
@@ -607,7 +607,7 @@ public class VerificationFailedException : Exception
     public IdentityVerificationSession Session { get; }
     public VerificationFailedResponse Response { get; }
 
-    public VerificationFailedException(IdentityVerificationSession session) 
+    public VerificationFailedException(IdentityVerificationSession session)
         : base($"Verification failed: {session.FailureReason}")
     {
         Session = session;
@@ -795,7 +795,7 @@ public class VerifyIdentityByProfileHandler : IRequestHandler<VerifyIdentityByPr
 
     public async Task<VerifyIdentityResponse> Handle(VerifyIdentityByProfileCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing identity verification for profile {ProfileId}, user {UserId}", 
+        _logger.LogInformation("Processing identity verification for profile {ProfileId}, user {UserId}",
             request.ProfileId, request.UserId);
 
         // SECURITY: IDOR check — verify the profile belongs to the requesting user
@@ -852,7 +852,7 @@ public class VerifyIdentityByProfileHandler : IRequestHandler<VerifyIdentityByPr
             livenessConfirmed = livenessResult.IsLive;
             livenessScore = (double)livenessResult.LivenessScore;
 
-            _logger.LogInformation("Liveness validation via Rekognition: IsLive={IsLive}, Score={Score}", 
+            _logger.LogInformation("Liveness validation via Rekognition: IsLive={IsLive}, Score={Score}",
                 livenessConfirmed, livenessScore);
         }
         else if (!livenessEnabled)
@@ -867,7 +867,7 @@ public class VerifyIdentityByProfileHandler : IRequestHandler<VerifyIdentityByPr
         // Get the document image from the profile's uploaded documents
         var documents = await _documentRepository.GetByProfileIdAsync(request.ProfileId, cancellationToken);
         var identityDoc = documents
-            .Where(d => d.Type == DocumentType.Cedula || d.Type == DocumentType.Passport 
+            .Where(d => d.Type == DocumentType.Cedula || d.Type == DocumentType.Passport
                      || d.DocumentName.Contains("identity", StringComparison.OrdinalIgnoreCase)
                      || d.Side == "Front")
             .OrderByDescending(d => d.UploadedAt)
@@ -924,7 +924,7 @@ public class VerifyIdentityByProfileHandler : IRequestHandler<VerifyIdentityByPr
             {
                 matchScore = (double)detection.Faces.First().Confidence;
                 faceMatched = true; // Face detected, no document to compare
-                _logger.LogWarning("No document image available for comparison, using face detection only for profile {ProfileId}", 
+                _logger.LogWarning("No document image available for comparison, using face detection only for profile {ProfileId}",
                     request.ProfileId);
             }
         }
@@ -941,8 +941,8 @@ public class VerifyIdentityByProfileHandler : IRequestHandler<VerifyIdentityByPr
             Success = true,
             MatchScore = matchScore,
             Passed = passed,
-            Message = passed 
-                ? "Verificación de identidad completada exitosamente" 
+            Message = passed
+                ? "Verificación de identidad completada exitosamente"
                 : "La verificación no cumplió con los requisitos mínimos",
             Details = new VerificationDetails
             {

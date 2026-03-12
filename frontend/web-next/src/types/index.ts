@@ -62,6 +62,10 @@ export interface Vehicle {
   historicalMileage?: number;
   odometerVerifiedAt?: string;
 
+  // Image health (CDN URL verification)
+  hasBrokenImages?: boolean;
+  brokenImagesDetectedAt?: string;
+
   // Seller
   sellerId: string;
   sellerType: 'seller' | 'dealer';
@@ -95,7 +99,8 @@ export type VehicleStatus =
   | 'sold'
   | 'reserved'
   | 'expired'
-  | 'rejected';
+  | 'rejected'
+  | 'pending_media';
 
 export type DealRating = 'great' | 'good' | 'fair' | 'high' | 'uncertain';
 

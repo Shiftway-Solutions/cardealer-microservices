@@ -9,7 +9,7 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
 {
     private readonly DealerAnalyticsDbContext _context;
     private readonly ILogger<DealerSnapshotRepository> _logger;
-    
+
     public DealerSnapshotRepository(
         DealerAnalyticsDbContext context,
         ILogger<DealerSnapshotRepository> logger)
@@ -17,12 +17,12 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
         _context = context;
         _logger = logger;
     }
-    
+
     public async Task<DealerSnapshot?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _context.DealerSnapshots.FindAsync(new object[] { id }, ct);
     }
-    
+
     public async Task<DealerSnapshot?> GetLatestAsync(Guid dealerId, CancellationToken ct = default)
     {
         return await _context.DealerSnapshots
@@ -30,32 +30,32 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
             .OrderByDescending(s => s.SnapshotDate)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<DealerSnapshot?> GetByDateAsync(Guid dealerId, DateTime date, CancellationToken ct = default)
     {
         return await _context.DealerSnapshots
             .Where(s => s.DealerId == dealerId && s.SnapshotDate.Date == date.Date)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<IEnumerable<DealerSnapshot>> GetRangeAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         return await _context.DealerSnapshots
-            .Where(s => s.DealerId == dealerId && 
-                        s.SnapshotDate >= fromDate.Date && 
+            .Where(s => s.DealerId == dealerId &&
+                        s.SnapshotDate >= fromDate.Date &&
                         s.SnapshotDate <= toDate.Date)
             .OrderBy(s => s.SnapshotDate)
             .ToListAsync(ct);
     }
-    
+
     public async Task<DealerSnapshot> CreateAsync(DealerSnapshot snapshot, CancellationToken ct = default)
     {
         _context.DealerSnapshots.Add(snapshot);
         await _context.SaveChangesAsync(ct);
         return snapshot;
     }
-    
+
     public async Task<DealerSnapshot> UpdateAsync(DealerSnapshot snapshot, CancellationToken ct = default)
     {
         snapshot.UpdatedAt = DateTime.UtcNow;
@@ -63,7 +63,7 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
         await _context.SaveChangesAsync(ct);
         return snapshot;
     }
-    
+
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var snapshot = await GetByIdAsync(id, ct);
@@ -73,24 +73,24 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
             await _context.SaveChangesAsync(ct);
         }
     }
-    
+
     public async Task BulkInsertAsync(IEnumerable<DealerSnapshot> snapshots, CancellationToken ct = default)
     {
         await _context.DealerSnapshots.AddRangeAsync(snapshots, ct);
         await _context.SaveChangesAsync(ct);
     }
-    
+
     public async Task<DealerSnapshot> AggregateAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var snapshots = await GetRangeAsync(dealerId, fromDate, toDate, ct);
         var list = snapshots.ToList();
-        
+
         if (!list.Any())
         {
             return DealerSnapshot.CreateEmpty(dealerId, toDate);
         }
-        
+
         return new DealerSnapshot
         {
             DealerId = dealerId,
@@ -123,15 +123,15 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
             CreatedAt = DateTime.UtcNow
         };
     }
-    
+
     public async Task<(DealerSnapshot? current, DealerSnapshot? previous)> GetComparisonAsync(
         Guid dealerId, DateTime currentDate, int compareDays, CancellationToken ct = default)
     {
         var current = await GetLatestAsync(dealerId, ct);
-        
+
         var previousDate = currentDate.AddDays(-compareDays);
         var previous = await GetByDateAsync(dealerId, previousDate, ct);
-        
+
         // Si no hay snapshot exacto, buscar el más cercano
         if (previous == null)
         {
@@ -140,18 +140,18 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
                 .OrderByDescending(s => s.SnapshotDate)
                 .FirstOrDefaultAsync(ct);
         }
-        
+
         return (current, previous);
     }
-    
+
     public async Task<double> GetAverageMetricAsync(
         Guid dealerId, string metricName, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var snapshots = await GetRangeAsync(dealerId, fromDate, toDate, ct);
         var list = snapshots.ToList();
-        
+
         if (!list.Any()) return 0;
-        
+
         return metricName.ToLower() switch
         {
             "views" => list.Average(s => s.TotalViews),
@@ -164,12 +164,12 @@ public class DealerSnapshotRepository : IDealerSnapshotRepository
             _ => 0
         };
     }
-    
+
     public async Task<Dictionary<DateTime, double>> GetMetricTrendAsync(
         Guid dealerId, string metricName, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var snapshots = await GetRangeAsync(dealerId, fromDate, toDate, ct);
-        
+
         return snapshots.ToDictionary(
             s => s.SnapshotDate,
             s => metricName.ToLower() switch

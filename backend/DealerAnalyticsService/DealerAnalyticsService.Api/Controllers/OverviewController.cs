@@ -17,13 +17,13 @@ public class OverviewController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<OverviewController> _logger;
-    
+
     public OverviewController(IMediator mediator, ILogger<OverviewController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener overview completo del dashboard
     /// ANAL-001: Dashboard Overview
@@ -42,7 +42,7 @@ public class OverviewController : ControllerBase
         {
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             var query = new GetAnalyticsOverviewQuery(dealerId, start, end);
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -53,7 +53,7 @@ public class OverviewController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving overview" });
         }
     }
-    
+
     /// <summary>
     /// Obtener KPIs principales
     /// </summary>
@@ -71,7 +71,7 @@ public class OverviewController : ControllerBase
         {
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             var query = new GetKpisQuery(dealerId, start, end);
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -82,7 +82,7 @@ public class OverviewController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving KPIs" });
         }
     }
-    
+
     /// <summary>
     /// Obtener snapshot actual
     /// </summary>
@@ -108,7 +108,7 @@ public class OverviewController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving snapshot" });
         }
     }
-    
+
     /// <summary>
     /// Obtener comparación con período anterior
     /// </summary>
@@ -133,7 +133,7 @@ public class OverviewController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving comparison" });
         }
     }
-    
+
     /// <summary>
     /// Obtener tendencias de una métrica específica
     /// </summary>
@@ -155,10 +155,10 @@ public class OverviewController : ControllerBase
             {
                 return BadRequest(new { Message = $"Invalid metric type. Use: {string.Join(", ", validMetrics)}" });
             }
-            
+
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             var query = new GetTrendsQuery(dealerId, start, end, metricType.ToLower());
             var result = await _mediator.Send(query);
             return Ok(result);
@@ -169,7 +169,7 @@ public class OverviewController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving trends" });
         }
     }
-    
+
     /// <summary>
     /// Obtener métricas de engagement (vistas, contactos, favoritos)
     /// </summary>
@@ -187,11 +187,11 @@ public class OverviewController : ControllerBase
         {
             var end = toDate ?? DateTime.UtcNow;
             var start = fromDate ?? end.AddDays(-30);
-            
+
             // Utiliza el overview query y extrae solo engagement
             var query = new GetAnalyticsOverviewQuery(dealerId, start, end);
             var result = await _mediator.Send(query);
-            
+
             var engagement = new EngagementMetricsDto
             {
                 TotalViews = result.Kpis.TotalViews,
@@ -205,7 +205,7 @@ public class OverviewController : ControllerBase
                 ViewsTrend = result.ViewsTrend,
                 ContactsTrend = result.ContactsTrend
             };
-            
+
             return Ok(engagement);
         }
         catch (Exception ex)

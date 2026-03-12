@@ -8,7 +8,7 @@ namespace AuthService.Application.Features.Auth.Commands.Login;
 /// CaptchaToken is required after 2+ failed login attempts.
 /// </summary>
 public record LoginCommand(
-    string Email, 
+    string Email,
     string Password,
     string? CaptchaToken = null
 ) : IRequest<LoginResponse>;

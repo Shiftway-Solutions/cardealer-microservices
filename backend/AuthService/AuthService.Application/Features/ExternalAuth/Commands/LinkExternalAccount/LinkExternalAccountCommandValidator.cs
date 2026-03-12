@@ -10,7 +10,7 @@ namespace AuthService.Application.Features.ExternalAuth.Commands.LinkExternalAcc
 /// </summary>
 public class LinkExternalAccountCommandValidator : AbstractValidator<LinkExternalAccountCommand>
 {
-    private static readonly string[] SupportedProviders = 
+    private static readonly string[] SupportedProviders =
         Enum.GetNames<ExternalAuthProvider>();
 
     public LinkExternalAccountCommandValidator()

@@ -29,7 +29,7 @@ public class RequestUnlinkCodeCommandValidator : AbstractValidator<RequestUnlink
 
     private static bool BeValidProvider(string provider)
     {
-        return !string.IsNullOrEmpty(provider) && 
+        return !string.IsNullOrEmpty(provider) &&
                ValidProviders.Any(p => p.Equals(provider, StringComparison.OrdinalIgnoreCase));
     }
 }

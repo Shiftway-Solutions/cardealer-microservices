@@ -37,7 +37,7 @@ public class GetActiveDealerModulesQueryHandler : IRequestHandler<GetActiveDeale
             ExpiresAt = m.ExpiresAt
         }).ToList();
 
-        _logger.LogInformation("Found {Count} active modules for dealer {DealerId}", 
+        _logger.LogInformation("Found {Count} active modules for dealer {DealerId}",
             activeModules.Count, request.DealerId);
 
         return activeModules;

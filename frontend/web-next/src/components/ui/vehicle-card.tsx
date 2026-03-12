@@ -17,11 +17,12 @@ import {
   User,
   ArrowLeftRight,
 } from 'lucide-react';
-import { cn, formatCurrency, formatMileage } from '@/lib/utils';
+import { cn, formatCurrency, formatMileage, getAlternateCurrencyDisplay } from '@/lib/utils';
 import { Badge } from './badge';
 import { DealRatingBadge, type DealRating } from './deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { vehicleService } from '@/services/vehicles';
 import { vehicleKeys } from '@/hooks/use-vehicles';
@@ -161,7 +162,14 @@ export function VehicleCard({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-primary text-lg font-bold">{formatCurrency(vehicle.price)}</span>
+            <div>
+              <span className="text-primary text-lg font-bold">
+                {formatCurrency(vehicle.price, { currency: vehicle.currency || 'DOP' })}
+              </span>
+              <p className="text-muted-foreground text-xs">
+                ≈ {getAlternateCurrencyDisplay(vehicle.price, vehicle.currency || 'DOP').text}
+              </p>
+            </div>
             {showFavoriteButton && (
               <button
                 onClick={handleFavoriteClick}
@@ -213,7 +221,12 @@ export function VehicleCard({
           <h3 className="text-card-foreground group-hover:text-primary truncate text-sm font-semibold">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h3>
-          <p className="text-primary mt-1 text-sm font-bold">{formatCurrency(vehicle.price)}</p>
+          <p className="text-primary mt-1 text-sm font-bold">
+            {formatCurrency(vehicle.price, { currency: vehicle.currency || 'DOP' })}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            ≈ {getAlternateCurrencyDisplay(vehicle.price, vehicle.currency || 'DOP').text}
+          </p>
         </div>
       </Link>
     );
@@ -323,10 +336,17 @@ export function VehicleCard({
               Dealer
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-600 uppercase dark:bg-slate-800 dark:text-slate-400">
-              <User className="h-2.5 w-2.5" />
-              Particular
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-600 uppercase dark:bg-slate-800 dark:text-slate-400">
+                  <User className="h-2.5 w-2.5" />
+                  Particular
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                Vehículo publicado por un vendedor particular, no por un concesionario.
+              </TooltipContent>
+            </Tooltip>
           )}
           {vehicle.isVerified && (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 uppercase dark:bg-emerald-950 dark:text-emerald-300">
@@ -371,8 +391,11 @@ export function VehicleCard({
           <div className="flex items-end justify-between">
             <div>
               <span className="text-primary text-xl font-extrabold">
-                {formatCurrency(vehicle.price)}
+                {formatCurrency(vehicle.price, { currency: vehicle.currency || 'DOP' })}
               </span>
+              <p className="text-muted-foreground text-xs">
+                ≈ {getAlternateCurrencyDisplay(vehicle.price, vehicle.currency || 'DOP').text}
+              </p>
               {vehicle.monthlyPayment && (
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   Est. {formatCurrency(vehicle.monthlyPayment)}/mes

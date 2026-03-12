@@ -1,0 +1,332 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * E2E Smoke Test — Post-Deploy Image Integrity Validation
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * Validates that images in the 5 most recent production listings are
+ * fully operational after a deploy. Catches CDN misconfigs, CORS issues,
+ * broken URLs, and corrupted/empty images BEFORE users see them.
+ *
+ * Failure threshold: If >20% of images fail, the test suite fails
+ * and the deploy workflow should trigger automatic rollback.
+ *
+ * Run against production:
+ *   pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts --config=playwright.prod.config.ts
+ *
+ * Run against staging:
+ *   PLAYWRIGHT_BASE_URL=https://staging.okla.do pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts --config=playwright.prod.config.ts
+ */
+
+import { test, expect, type APIRequestContext } from '@playwright/test';
+
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.okla.do';
+const FAILURE_THRESHOLD = 0.2; // 20% — if more than this % of images fail, deploy is bad
+const MIN_IMAGE_SIZE_BYTES = 1024; // 1KB — anything smaller is corrupted/empty
+const MAX_LISTINGS = 5;
+const IMAGE_REQUEST_TIMEOUT = 15000; // 15s per image
+
+interface VehicleListing {
+  id: string;
+  title?: string;
+  slug?: string;
+}
+
+interface ImageResult {
+  url: string;
+  listingId: string;
+  status: number;
+  contentType: string | null;
+  sizeBytes: number;
+  passed: boolean;
+  failureReason?: string;
+}
+
+test.describe('Post-Deploy Image Integrity Smoke Test', () => {
+  let listings: VehicleListing[] = [];
+  const allImageResults: ImageResult[] = [];
+
+  test.beforeAll(async ({ request }) => {
+    // Fetch the 5 most recent listings from the API
+    const response = await request.get(
+      `${API_BASE_URL}/api/vehicles?page=1&pageSize=${MAX_LISTINGS}&sortBy=createdAt&sortOrder=desc`
+    );
+
+    expect(
+      response.ok(),
+      `API /api/vehicles should respond with 2xx (got ${response.status()})`
+    ).toBeTruthy();
+
+    const data = await response.json();
+
+    // The API returns paginated results — extract items array
+    const items = data.items || data.data || data.results || data.vehicles || [];
+    expect(items.length).toBeGreaterThan(0);
+
+    listings = items.slice(0, MAX_LISTINGS).map((item: Record<string, unknown>) => ({
+      id: String(item.id),
+      title: String(item.title || item.make + ' ' + item.model || 'Unknown'),
+      slug: String(item.slug || item.id),
+    }));
+
+    // eslint-disable-next-line no-console
+    console.log(`📸 Found ${listings.length} listings to validate images for`);
+  });
+
+  test('should fetch and validate images for all recent listings', async ({ request }) => {
+    // For each listing, fetch its images and validate each one
+    for (const listing of listings) {
+      // Try multiple possible API endpoints for listing images
+      let imageUrls: string[] = [];
+
+      // Attempt 1: /api/listings/{id}/images
+      const imagesResponse = await request
+        .get(`${API_BASE_URL}/api/vehicles/${listing.id}/images`)
+        .catch(() => null);
+
+      if (imagesResponse && imagesResponse.ok()) {
+        const imagesData = await imagesResponse.json();
+        const images = Array.isArray(imagesData)
+          ? imagesData
+          : imagesData.images || imagesData.data || [];
+        imageUrls = images
+          .map((img: Record<string, unknown>) =>
+            String(img.cdnUrl || img.url || img.imageUrl || img.src || '')
+          )
+          .filter((url: string) => url.length > 0);
+      }
+
+      // Attempt 2: If no images endpoint, extract from vehicle detail
+      if (imageUrls.length === 0) {
+        const detailResponse = await request
+          .get(`${API_BASE_URL}/api/vehicles/${listing.id}`)
+          .catch(() => null);
+
+        if (detailResponse && detailResponse.ok()) {
+          const detail = await detailResponse.json();
+          const photos = detail.photos || detail.images || detail.media || [];
+          imageUrls = (Array.isArray(photos) ? photos : [])
+            .map((photo: Record<string, unknown>) =>
+              String(photo.cdnUrl || photo.url || photo.imageUrl || photo.src || photo || '')
+            )
+            .filter((url: string) => url.startsWith('http'));
+        }
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(`  📷 Listing "${listing.title}" (${listing.id}): ${imageUrls.length} images`);
+
+      // Validate each image URL
+      for (const url of imageUrls) {
+        const result = await validateImageUrl(request, url, listing.id);
+        allImageResults.push(result);
+      }
+    }
+
+    // Calculate failure rate
+    const totalImages = allImageResults.length;
+    const failedImages = allImageResults.filter(r => !r.passed);
+    const failureRate = totalImages > 0 ? failedImages.length / totalImages : 0;
+
+    // eslint-disable-next-line no-console
+    console.log(`\n📊 Image Validation Summary:`);
+    // eslint-disable-next-line no-console
+    console.log(`   Total images checked: ${totalImages}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Passed: ${totalImages - failedImages.length}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Failed: ${failedImages.length}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Failure rate: ${(failureRate * 100).toFixed(1)}%`);
+    // eslint-disable-next-line no-console
+    console.log(`   Threshold: ${(FAILURE_THRESHOLD * 100).toFixed(0)}%`);
+
+    if (failedImages.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`\n❌ Failed images:`);
+      for (const img of failedImages) {
+        // eslint-disable-next-line no-console
+        console.log(`   - [${img.failureReason}] ${img.url} (listing: ${img.listingId})`);
+      }
+    }
+
+    // CRITICAL: Assert failure rate is below threshold
+    expect(
+      failureRate,
+      `Image failure rate ${(failureRate * 100).toFixed(1)}% exceeds threshold ${(FAILURE_THRESHOLD * 100).toFixed(0)}%. ` +
+        `${failedImages.length}/${totalImages} images failed. Deploy should be rolled back.`
+    ).toBeLessThanOrEqual(FAILURE_THRESHOLD);
+  });
+
+  test('should render listing images in browser without CORS/CSP errors', async ({ page }) => {
+    // Skip if no listings found
+    test.skip(listings.length === 0, 'No listings to validate');
+
+    const consoleErrors: string[] = [];
+
+    // Listen for CORS and CSP errors in console
+    page.on('console', msg => {
+      const text = msg.text();
+      if (
+        msg.type() === 'error' &&
+        (text.includes('CORS') ||
+          text.includes('Cross-Origin') ||
+          text.includes('Content-Security-Policy') ||
+          text.includes('CSP') ||
+          text.includes('blocked') ||
+          text.includes('net::ERR'))
+      ) {
+        consoleErrors.push(text);
+      }
+    });
+
+    // Navigate to the first listing's detail page
+    const firstListing = listings[0];
+    const detailUrl = `/vehiculos/${firstListing.slug || firstListing.id}`;
+
+    await page.goto(detailUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+    // Wait for images to attempt loading
+    await page.waitForTimeout(3000);
+
+    // Check all img elements on the page
+    const images = page.locator('img');
+    const imageCount = await images.count();
+
+    // eslint-disable-next-line no-console
+    console.log(`🖼️  Found ${imageCount} <img> elements on ${detailUrl}`);
+
+    let brokenCount = 0;
+    for (let i = 0; i < imageCount; i++) {
+      const img = images.nth(i);
+      const src = await img.getAttribute('src');
+
+      // Skip non-CDN images (icons, logos, placeholders)
+      if (
+        !src ||
+        src.startsWith('data:') ||
+        src.includes('placeholder') ||
+        src.includes('/_next/static')
+      ) {
+        continue;
+      }
+
+      // Check if image loaded correctly via naturalWidth > 0
+      const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
+      if (naturalWidth === 0) {
+        brokenCount++;
+        // eslint-disable-next-line no-console
+        console.log(`   ❌ Broken image: ${src}`);
+      }
+    }
+
+    // Report CORS/CSP errors
+    if (consoleErrors.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`\n⚠️  CORS/CSP errors detected:`);
+      for (const err of consoleErrors) {
+        // eslint-disable-next-line no-console
+        console.log(`   - ${err}`);
+      }
+    }
+
+    // Assert: no CORS/CSP errors
+    expect(
+      consoleErrors.length,
+      `${consoleErrors.length} CORS/CSP errors detected on ${detailUrl}. ` +
+        `Errors: ${consoleErrors.slice(0, 3).join(' | ')}`
+    ).toBe(0);
+
+    // Assert: no broken images (allow some tolerance for lazy-loaded off-screen images)
+    const cdnImageCount = imageCount - brokenCount; // approximate non-broken
+    if (cdnImageCount > 0) {
+      const brokenRate = brokenCount / cdnImageCount;
+      expect(
+        brokenRate,
+        `${brokenCount} broken images out of ${cdnImageCount} CDN images on ${detailUrl}`
+      ).toBeLessThanOrEqual(FAILURE_THRESHOLD);
+    }
+  });
+});
+
+/**
+ * Validates a single image URL:
+ * 1. HTTP GET returns status 200
+ * 2. Content-Type is image/* (preferably image/webp)
+ * 3. Response body is > 1KB (not corrupted/empty)
+ */
+async function validateImageUrl(
+  request: APIRequestContext,
+  url: string,
+  listingId: string
+): Promise<ImageResult> {
+  try {
+    // Use Playwright's request context for image validation
+    const response = await request.get(url, {
+      timeout: IMAGE_REQUEST_TIMEOUT,
+    });
+
+    const status = response.status();
+    const headers = response.headers();
+    const contentType = headers['content-type'] || null;
+    const body = await response.body();
+    const sizeBytes = body.length;
+
+    // Check 1: Status 200
+    if (status !== 200) {
+      return {
+        url,
+        listingId,
+        status,
+        contentType,
+        sizeBytes,
+        passed: false,
+        failureReason: `HTTP ${status} (expected 200)`,
+      };
+    }
+
+    // Check 2: Content-Type is image/webp (all variants are WebP since pipeline migration)
+    if (!contentType || !contentType.includes('image/webp')) {
+      return {
+        url,
+        listingId,
+        status,
+        contentType,
+        sizeBytes,
+        passed: false,
+        failureReason: `Content-Type "${contentType}" is not image/webp`,
+      };
+    }
+
+    // Check 3: Size > 1KB
+    if (sizeBytes < MIN_IMAGE_SIZE_BYTES) {
+      return {
+        url,
+        listingId,
+        status,
+        contentType,
+        sizeBytes,
+        passed: false,
+        failureReason: `Size ${sizeBytes}B < ${MIN_IMAGE_SIZE_BYTES}B (corrupted/empty)`,
+      };
+    }
+
+    return {
+      url,
+      listingId,
+      status,
+      contentType,
+      sizeBytes,
+      passed: true,
+    };
+  } catch (error) {
+    return {
+      url,
+      listingId,
+      status: 0,
+      contentType: null,
+      sizeBytes: 0,
+      passed: false,
+      failureReason: `Request failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}

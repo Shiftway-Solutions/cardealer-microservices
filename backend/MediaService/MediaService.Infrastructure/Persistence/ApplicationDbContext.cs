@@ -68,6 +68,17 @@ namespace MediaService.Infrastructure.Persistence
             modelBuilder.Entity<ImageMedia>(entity =>
             {
                 entity.HasBaseType<MediaAsset>();
+
+                // Image health scan columns
+                entity.Property(e => e.BrokenImage)
+                    .HasDefaultValue(false);
+                entity.Property(e => e.BrokenImageDetectedAt);
+                entity.Property(e => e.BrokenImageHttpStatus);
+                entity.Property(e => e.LastHealthCheckAt);
+
+                entity.HasIndex(e => e.BrokenImage)
+                    .HasFilter("\"BrokenImage\" = true")
+                    .HasDatabaseName("IX_media_assets_BrokenImage");
             });
 
             modelBuilder.Entity<VideoMedia>(entity =>

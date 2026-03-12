@@ -116,7 +116,7 @@ public class RedisRateLimitClient : IRateLimitClient
     public async Task<RateLimitResult> CheckAsync(HttpContext context, CancellationToken cancellationToken = default)
     {
         var path = context.Request.Path.Value ?? "/";
-        
+
         // Check if path is excluded
         if (IsExcludedPath(path))
         {
@@ -174,14 +174,14 @@ public class RedisRateLimitClient : IRateLimitClient
 
         // Check for specific role claims to determine tier
         var roles = context.User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-        
+
         if (roles.Contains("Admin"))
             return "admin";
         if (roles.Contains("Premium") || roles.Contains("Enterprise"))
             return "premium";
         if (roles.Contains("Dealer"))
             return "dealer";
-        
+
         return "authenticated";
     }
 

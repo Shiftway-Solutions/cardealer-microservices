@@ -55,7 +55,7 @@ public class AdminController : ControllerBase
         _logger.LogInformation("Getting admin user {UserId}", userId);
 
         var result = await _mediator.Send(new GetAdminUserQuery(userId));
-        
+
         if (result == null)
             return NotFound(new { error = "Admin user not found" });
 
@@ -73,7 +73,7 @@ public class AdminController : ControllerBase
         _logger.LogInformation("Getting current admin profile for {UserId}", userId);
 
         var result = await _mediator.Send(new GetAdminUserQuery(userId));
-        
+
         if (result == null)
             return NotFound(new { error = "Admin profile not found" });
 
@@ -170,8 +170,8 @@ public class AdminController : ControllerBase
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("sub") ?? User.FindFirst("userId");
-        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId) 
-            ? userId 
+        return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)
+            ? userId
             : Guid.Empty;
     }
 }

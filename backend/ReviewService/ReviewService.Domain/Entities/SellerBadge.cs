@@ -47,14 +47,14 @@ public class SellerBadge : BaseEntity<Guid>
     /// Fecha cuando se obtuvo el badge
     /// </summary>
     public DateTime EarnedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
     /// Fecha cuando se otorgó el badge (alias for EarnedAt)
     /// </summary>
-    public DateTime GrantedAt 
-    { 
-        get => EarnedAt; 
-        set => EarnedAt = value; 
+    public DateTime GrantedAt
+    {
+        get => EarnedAt;
+        set => EarnedAt = value;
     }
 
     /// <summary>
@@ -71,12 +71,12 @@ public class SellerBadge : BaseEntity<Guid>
     /// Criterios que se cumplieron para obtener el badge
     /// </summary>
     public string? Criteria { get; set; }
-    
+
     /// <summary>
     /// Estadísticas que califican para el badge (JSON)
     /// </summary>
     public string? QualifyingStats { get; set; }
-    
+
     /// <summary>
     /// Notas adicionales del badge
     /// </summary>

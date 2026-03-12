@@ -8,62 +8,62 @@ namespace AuthService.Domain.Entities;
 public class TrustedDevice
 {
     public Guid Id { get; private set; }
-    
+
     /// <summary>
     /// The user who owns this device
     /// </summary>
     public string UserId { get; private set; } = null!;
-    
+
     /// <summary>
     /// Unique device fingerprint (hash from FingerprintJS)
     /// </summary>
     public string FingerprintHash { get; private set; } = null!;
-    
+
     /// <summary>
     /// User-friendly device name (e.g., "Chrome on Windows")
     /// </summary>
     public string DeviceName { get; private set; } = null!;
-    
+
     /// <summary>
     /// Browser user agent string
     /// </summary>
     public string? UserAgent { get; private set; }
-    
+
     /// <summary>
     /// IP address when device was first trusted
     /// </summary>
     public string? IpAddress { get; private set; }
-    
+
     /// <summary>
     /// Geographic location (city, country) when first trusted
     /// </summary>
     public string? Location { get; private set; }
-    
+
     /// <summary>
     /// When this device was first trusted
     /// </summary>
     public DateTime CreatedAt { get; private set; }
-    
+
     /// <summary>
     /// Last time this device was used for login
     /// </summary>
     public DateTime LastUsedAt { get; private set; }
-    
+
     /// <summary>
     /// Number of times this device has been used for login
     /// </summary>
     public int LoginCount { get; private set; }
-    
+
     /// <summary>
     /// Whether this device is currently trusted (can be revoked)
     /// </summary>
     public bool IsTrusted { get; private set; }
-    
+
     /// <summary>
     /// When the device was revoked (if applicable)
     /// </summary>
     public DateTime? RevokedAt { get; private set; }
-    
+
     /// <summary>
     /// Reason for revoking (manual, suspicious activity, password change)
     /// </summary>

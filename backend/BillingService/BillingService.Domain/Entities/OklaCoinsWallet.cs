@@ -8,59 +8,59 @@ namespace BillingService.Domain.Entities;
 public class OklaCoinsWallet
 {
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// ID del dealer propietario
     /// </summary>
     public Guid DealerId { get; set; }
-    
+
     /// <summary>
     /// Balance actual de OKLA Coins
     /// </summary>
     public int Balance { get; set; }
-    
+
     /// <summary>
     /// Total de coins comprados (histórico)
     /// </summary>
     public int TotalPurchased { get; set; }
-    
+
     /// <summary>
     /// Total de coins recibidos como bonus
     /// </summary>
     public int TotalBonus { get; set; }
-    
+
     /// <summary>
     /// Total de coins recibidos del plan mensual
     /// </summary>
     public int TotalFromPlan { get; set; }
-    
+
     /// <summary>
     /// Total de coins gastados (histórico)
     /// </summary>
     public int TotalSpent { get; set; }
-    
+
     /// <summary>
     /// Moneda de referencia para conversión (1 coin = $0.01 USD)
     /// </summary>
     public string Currency { get; set; } = "USD";
-    
+
     /// <summary>
     /// Última fecha en que se acreditaron coins del plan mensual
     /// </summary>
     public DateTime? LastPlanCreditDate { get; set; }
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-    
+
     // ── Domain Methods ──
-    
+
     public void AddCoins(int amount, CoinTransactionType type, string description)
     {
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
-        
+
         Balance += amount;
         UpdatedAt = DateTime.UtcNow;
-        
+
         switch (type)
         {
             case CoinTransactionType.Purchase:
@@ -75,18 +75,18 @@ public class OklaCoinsWallet
                 break;
         }
     }
-    
+
     public bool SpendCoins(int amount, string description)
     {
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
         if (Balance < amount) return false;
-        
+
         Balance -= amount;
         TotalSpent += amount;
         UpdatedAt = DateTime.UtcNow;
         return true;
     }
-    
+
     public bool HasSufficientBalance(int amount) => Balance >= amount;
 }
 

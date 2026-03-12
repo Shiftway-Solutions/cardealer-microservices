@@ -12,7 +12,7 @@ public class NotificationSentEvent : INotification
     public string? ErrorMessage { get; }
     public string? ProviderMessageId { get; }
 
-    public NotificationSentEvent(Guid notificationId, string recipient, string type, 
+    public NotificationSentEvent(Guid notificationId, string recipient, string type,
         DateTime sentAt, bool success, string? errorMessage = null, string? providerMessageId = null)
     {
         NotificationId = notificationId;
@@ -25,28 +25,28 @@ public class NotificationSentEvent : INotification
     }
 
     // Factory methods
-    public static NotificationSentEvent CreateSuccess(Guid notificationId, string recipient, 
+    public static NotificationSentEvent CreateSuccess(Guid notificationId, string recipient,
         string type, string? providerMessageId = null)
     {
         return new NotificationSentEvent(
-            notificationId, 
-            recipient, 
-            type, 
-            DateTime.UtcNow, 
-            true, 
-            null, 
+            notificationId,
+            recipient,
+            type,
+            DateTime.UtcNow,
+            true,
+            null,
             providerMessageId);
     }
 
-    public static NotificationSentEvent CreateFailure(Guid notificationId, string recipient, 
+    public static NotificationSentEvent CreateFailure(Guid notificationId, string recipient,
         string type, string errorMessage)
     {
         return new NotificationSentEvent(
-            notificationId, 
-            recipient, 
-            type, 
-            DateTime.UtcNow, 
-            false, 
+            notificationId,
+            recipient,
+            type,
+            DateTime.UtcNow,
+            false,
             errorMessage);
     }
 }

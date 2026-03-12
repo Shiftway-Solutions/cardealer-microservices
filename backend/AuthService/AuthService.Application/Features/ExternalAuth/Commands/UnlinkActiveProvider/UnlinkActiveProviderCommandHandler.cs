@@ -25,12 +25,12 @@ public class UnlinkActiveProviderCommandHandler : IRequestHandler<UnlinkActivePr
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IDistributedCache _cache;
     private readonly ILogger<UnlinkActiveProviderCommandHandler> _logger;
-    
+
     // Redis key prefixes
     private const string CODE_PREFIX = "unlink_code:";
     private const string ATTEMPTS_PREFIX = "unlink_attempts:";
     private const string LOCKOUT_PREFIX = "unlink_lockout:";
-    
+
     // Configuration
     private const int MAX_VERIFICATION_ATTEMPTS = 5;
     private static readonly TimeSpan LOCKOUT_DURATION = TimeSpan.FromHours(1);
@@ -90,7 +90,7 @@ public class UnlinkActiveProviderCommandHandler : IRequestHandler<UnlinkActivePr
             if (codeData.Code != request.VerificationCode)
             {
                 attempts++;
-                
+
                 if (attempts >= MAX_VERIFICATION_ATTEMPTS)
                 {
                     // Lock out the user
@@ -157,8 +157,8 @@ public class UnlinkActiveProviderCommandHandler : IRequestHandler<UnlinkActivePr
 
             // Revoke ALL user sessions
             await _refreshTokenRepository.RevokeAllForUserAsync(
-                request.UserId, 
-                "OAUTH_PROVIDER_UNLINKED", 
+                request.UserId,
+                "OAUTH_PROVIDER_UNLINKED",
                 cancellationToken);
 
             // Note: sessionsRevoked count not available from this method

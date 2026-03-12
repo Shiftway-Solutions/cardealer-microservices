@@ -15,22 +15,22 @@ public interface IDataValidationService
     /// Compara los datos del usuario registrados vs los datos extraídos por OCR
     /// </summary>
     Task<DataComparisonResult> CompareUserDataAsync(
-        UserRegistrationData userData, 
-        OCRExtractedData ocrData, 
+        UserRegistrationData userData,
+        OCRExtractedData ocrData,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Valida el formato de la cédula usando el algoritmo Módulo 10
     /// </summary>
     Task<CedulaFormatValidation> ValidateCedulaFormatAsync(
-        string cedulaNumber, 
+        string cedulaNumber,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Verifica si el documento está expirado
     /// </summary>
     Task<DocumentExpirationResult> CheckDocumentExpirationAsync(
-        DateTime? expirationDate, 
+        DateTime? expirationDate,
         CancellationToken cancellationToken = default);
 }
 

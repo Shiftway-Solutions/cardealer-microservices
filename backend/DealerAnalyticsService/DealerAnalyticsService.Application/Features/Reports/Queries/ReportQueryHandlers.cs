@@ -644,7 +644,7 @@ internal static class ReportBuilder
 
         if (kpis.TotalViews > 0)
             insights.Add($"Tu inventario recibió {kpis.TotalViews} vistas en este período.");
-        
+
         if (kpis.ViewsChange > 10)
             insights.Add($"Las vistas aumentaron un {kpis.ViewsChange:F0}% respecto al período anterior. ¡Buen trabajo!");
         else if (kpis.ViewsChange < -10)

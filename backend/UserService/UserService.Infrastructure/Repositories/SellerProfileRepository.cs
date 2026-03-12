@@ -67,7 +67,7 @@ public class SellerProfileRepository : ISellerProfileRepository
     {
         var profile = await _context.SellerProfiles.FindAsync(id);
         if (profile == null) return false;
-        
+
         profile.IsDeleted = true;
         profile.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -115,7 +115,7 @@ public class SellerProfileRepository : ISellerProfileRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower();
-            query = query.Where(sp => 
+            query = query.Where(sp =>
                 (sp.DisplayName != null && sp.DisplayName.ToLower().Contains(term)) ||
                 sp.FullName.ToLower().Contains(term) ||
                 (sp.BusinessName != null && sp.BusinessName.ToLower().Contains(term)));
@@ -147,7 +147,7 @@ public class SellerProfileRepository : ISellerProfileRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower();
-            query = query.Where(sp => 
+            query = query.Where(sp =>
                 (sp.DisplayName != null && sp.DisplayName.ToLower().Contains(term)) ||
                 sp.FullName.ToLower().Contains(term) ||
                 (sp.BusinessName != null && sp.BusinessName.ToLower().Contains(term)));
@@ -208,8 +208,8 @@ public class SellerProfileRepository : ISellerProfileRepository
     {
         // Verificar si ya tiene el badge
         var existing = await _context.Set<SellerBadgeAssignment>()
-            .FirstOrDefaultAsync(b => b.SellerProfileId == badge.SellerProfileId && 
-                                      b.Badge == badge.Badge && 
+            .FirstOrDefaultAsync(b => b.SellerProfileId == badge.SellerProfileId &&
+                                      b.Badge == badge.Badge &&
                                       b.IsActive);
 
         if (existing != null)
@@ -232,8 +232,8 @@ public class SellerProfileRepository : ISellerProfileRepository
     public async Task<bool> RemoveBadgeAsync(Guid sellerProfileId, SellerBadge badge)
     {
         var existing = await _context.Set<SellerBadgeAssignment>()
-            .FirstOrDefaultAsync(b => b.SellerProfileId == sellerProfileId && 
-                                      b.Badge == badge && 
+            .FirstOrDefaultAsync(b => b.SellerProfileId == sellerProfileId &&
+                                      b.Badge == badge &&
                                       b.IsActive);
 
         if (existing == null) return false;
@@ -246,8 +246,8 @@ public class SellerProfileRepository : ISellerProfileRepository
     public async Task<bool> HasBadgeAsync(Guid sellerProfileId, SellerBadge badge)
     {
         return await _context.Set<SellerBadgeAssignment>()
-            .AnyAsync(b => b.SellerProfileId == sellerProfileId && 
-                          b.Badge == badge && 
+            .AnyAsync(b => b.SellerProfileId == sellerProfileId &&
+                          b.Badge == badge &&
                           b.IsActive &&
                           (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow));
     }
@@ -256,7 +256,7 @@ public class SellerProfileRepository : ISellerProfileRepository
 
     #region Estadísticas
 
-    public async Task UpdateStatsAsync(Guid sellerProfileId, int totalListings, int activeListings, int totalSales, 
+    public async Task UpdateStatsAsync(Guid sellerProfileId, int totalListings, int activeListings, int totalSales,
         decimal averageRating, int totalReviews, int responseTimeMinutes, int responseRate)
     {
         var profile = await _context.SellerProfiles.FindAsync(sellerProfileId);
@@ -351,8 +351,8 @@ public class SellerProfileRepository : ISellerProfileRepository
     public async Task<List<SellerProfile>> GetPendingVerificationsAsync(int page = 1, int pageSize = 20)
     {
         return await _context.SellerProfiles
-            .Where(sp => !sp.IsDeleted && 
-                        (sp.VerificationStatus == SellerVerificationStatus.PendingReview || 
+            .Where(sp => !sp.IsDeleted &&
+                        (sp.VerificationStatus == SellerVerificationStatus.PendingReview ||
                          sp.VerificationStatus == SellerVerificationStatus.InReview))
             .OrderBy(sp => sp.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -379,9 +379,9 @@ public class SellerProfileRepository : ISellerProfileRepository
         var profile = await _context.SellerProfiles.FindAsync(sellerProfileId);
         if (profile == null) return false;
 
-        return profile.IsActive && 
-               !profile.IsDeleted && 
-               profile.LastActiveAt.HasValue && 
+        return profile.IsActive &&
+               !profile.IsDeleted &&
+               profile.LastActiveAt.HasValue &&
                profile.LastActiveAt.Value > DateTime.UtcNow.AddDays(-30);
     }
 

@@ -63,7 +63,7 @@ namespace UserService.Infrastructure.External
             try
             {
                 var response = await _client.IndexAsync(Role, _settings.DefaultIndex);
-                
+
                 if (!response.IsValidResponse)
                 {
                     _logger.LogWarning("Failed to index error log in Elasticsearch: {DebugInfo}", response.DebugInformation);

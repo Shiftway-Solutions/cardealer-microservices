@@ -229,6 +229,18 @@ public class Vehicle : ITenantEntity
     public DateTime? OdometerVerifiedAt { get; set; }
 
     // ========================================
+    // HEALTH DE IMÁGENES (CDN URL Verification)
+    // ========================================
+    /// <summary>
+    /// True when the periodic health scan or publish-time verification
+    /// detected that one or more images are unreachable from the CDN.
+    /// Triggers the "Fotos en actualización" buyer-facing banner.
+    /// </summary>
+    public bool HasBrokenImages { get; set; } = false;
+    /// <summary>When broken images were last detected</summary>
+    public DateTime? BrokenImagesDetectedAt { get; set; }
+
+    // ========================================
     // REPORTES DE COMPRADORES
     // ========================================
     /// <summary>Total de reportes únicos recibidos de compradores</summary>
@@ -326,7 +338,13 @@ public enum VehicleStatus
     /// Auto-suspended by the moderation system after ≥3 buyer reports.
     /// Listing is hidden from search until dealer reviews and admin approves.
     /// </summary>
-    Suspended = 7
+    Suspended = 7,
+    /// <summary>
+    /// All image URLs failed CDN verification at publish time.
+    /// Listing is blocked until the dealer re-uploads accessible images and re-submits.
+    /// The dealer sees a clear message explaining which images are inaccessible.
+    /// </summary>
+    PendingMedia = 8
 }
 
 /// <summary>

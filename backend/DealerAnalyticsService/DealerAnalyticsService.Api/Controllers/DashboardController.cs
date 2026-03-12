@@ -15,13 +15,13 @@ public class DashboardController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<DashboardController> _logger;
-    
+
     public DashboardController(IMediator mediator, ILogger<DashboardController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener resumen completo del dashboard para un dealer
     /// </summary>
@@ -42,10 +42,10 @@ public class DashboardController : ControllerBase
         {
             var endDate = toDate ?? DateTime.UtcNow;
             var startDate = fromDate ?? endDate.AddDays(-30);
-            
+
             var query = new GetDashboardSummaryQuery(dealerId, startDate, endDate);
             var result = await _mediator.Send(query);
-            
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -54,7 +54,7 @@ public class DashboardController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving dashboard data" });
         }
     }
-    
+
     /// <summary>
     /// Obtener métricas rápidas para el header del dashboard
     /// </summary>
@@ -70,10 +70,10 @@ public class DashboardController : ControllerBase
         {
             var today = DateTime.UtcNow;
             var thirtyDaysAgo = today.AddDays(-30);
-            
+
             var query = new GetDashboardSummaryQuery(dealerId, thirtyDaysAgo, today);
             var result = await _mediator.Send(query);
-            
+
             var quickStats = new
             {
                 TotalViews = result.Analytics.TotalViews,
@@ -86,7 +86,7 @@ public class DashboardController : ControllerBase
                 SalesGrowth = result.SalesGrowth,
                 RevenueGrowth = result.RevenueGrowth
             };
-            
+
             return Ok(quickStats);
         }
         catch (Exception ex)
@@ -95,7 +95,7 @@ public class DashboardController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving quick stats" });
         }
     }
-    
+
     /// <summary>
     /// Obtener comparación de performance del dealer vs mercado
     /// </summary>
@@ -112,10 +112,10 @@ public class DashboardController : ControllerBase
         {
             var today = DateTime.UtcNow;
             var startDate = today.AddDays(-periodDays);
-            
+
             var query = new GetDashboardSummaryQuery(dealerId, startDate, today);
             var result = await _mediator.Send(query);
-            
+
             // Return performance comparison format expected by frontend
             var performanceComparison = new
             {
@@ -133,7 +133,7 @@ public class DashboardController : ControllerBase
                     CustomerSatisfactionScore = 4.1m
                 }
             };
-            
+
             return Ok(performanceComparison);
         }
         catch (Exception ex)
@@ -142,7 +142,7 @@ public class DashboardController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving performance data" });
         }
     }
-    
+
     /// <summary>
     /// Obtener datos de tendencias diarias para el gráfico
     /// </summary>
@@ -159,13 +159,13 @@ public class DashboardController : ControllerBase
         {
             var today = DateTime.UtcNow.Date;
             var startDate = today.AddDays(-days + 1);
-            
+
             var query = new GetDashboardSummaryQuery(dealerId, startDate, today);
             var result = await _mediator.Send(query);
-            
+
             // Get daily data from dealer_analytics table directly
             var dailyData = await GetDailyDataAsync(dealerId, startDate, today);
-            
+
             return Ok(new
             {
                 DealerId = dealerId,
@@ -181,12 +181,12 @@ public class DashboardController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving trends data" });
         }
     }
-    
+
     private async Task<List<object>> GetDailyDataAsync(Guid dealerId, DateTime startDate, DateTime endDate)
     {
         // Use the DbContext directly to query dealer_analytics
         var dbContext = HttpContext.RequestServices.GetRequiredService<DealerAnalyticsService.Infrastructure.Persistence.DealerAnalyticsDbContext>();
-        
+
         var data = await dbContext.DealerAnalytics
             .Where(da => da.DealerId == dealerId && da.Date >= startDate && da.Date <= endDate)
             .OrderBy(da => da.Date)
@@ -200,7 +200,7 @@ public class DashboardController : ControllerBase
                 Revenue = da.TotalRevenue
             })
             .ToListAsync<object>();
-            
+
         return data;
     }
 

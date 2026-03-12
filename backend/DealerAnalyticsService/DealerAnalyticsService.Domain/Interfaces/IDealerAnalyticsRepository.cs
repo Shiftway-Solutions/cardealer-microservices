@@ -9,7 +9,7 @@ public interface IDealerAnalyticsRepository
     Task<IEnumerable<DealerAnalytic>> GetDealerAnalyticsRangeAsync(Guid dealerId, DateTime fromDate, DateTime toDate);
     Task<DealerAnalytic> CreateOrUpdateAnalyticsAsync(DealerAnalytic analytics);
     Task DeleteDealerAnalyticsAsync(Guid dealerId, DateTime date);
-    
+
     // Aggregate methods
     Task<DealerAnalytic> GetDealerAnalyticsSummaryAsync(Guid dealerId, DateTime fromDate, DateTime toDate);
     Task<decimal> GetDealerConversionRateAsync(Guid dealerId, DateTime fromDate, DateTime toDate);

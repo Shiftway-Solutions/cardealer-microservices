@@ -9,7 +9,7 @@ public class InventoryAging
     public Guid Id { get; set; }
     public Guid DealerId { get; set; }
     public DateTime Date { get; set; }
-    
+
     // Age Buckets (días en el mercado)
     public int Vehicles0To15Days { get; set; }
     public int Vehicles16To30Days { get; set; }
@@ -17,7 +17,7 @@ public class InventoryAging
     public int Vehicles46To60Days { get; set; }
     public int Vehicles61To90Days { get; set; }
     public int VehiclesOver90Days { get; set; }
-    
+
     // Values by bucket
     public decimal Value0To15Days { get; set; }
     public decimal Value16To30Days { get; set; }
@@ -25,50 +25,50 @@ public class InventoryAging
     public decimal Value46To60Days { get; set; }
     public decimal Value61To90Days { get; set; }
     public decimal ValueOver90Days { get; set; }
-    
+
     // Totals
-    public int TotalVehicles => 
-        Vehicles0To15Days + 
-        Vehicles16To30Days + 
-        Vehicles31To45Days + 
-        Vehicles46To60Days + 
-        Vehicles61To90Days + 
+    public int TotalVehicles =>
+        Vehicles0To15Days +
+        Vehicles16To30Days +
+        Vehicles31To45Days +
+        Vehicles46To60Days +
+        Vehicles61To90Days +
         VehiclesOver90Days;
-    
-    public decimal TotalValue => 
-        Value0To15Days + 
-        Value16To30Days + 
-        Value31To45Days + 
-        Value46To60Days + 
-        Value61To90Days + 
+
+    public decimal TotalValue =>
+        Value0To15Days +
+        Value16To30Days +
+        Value31To45Days +
+        Value46To60Days +
+        Value61To90Days +
         ValueOver90Days;
-    
+
     // Percentages
-    public double PercentFresh => TotalVehicles > 0 
-        ? (double)(Vehicles0To15Days + Vehicles16To30Days) / TotalVehicles * 100 
+    public double PercentFresh => TotalVehicles > 0
+        ? (double)(Vehicles0To15Days + Vehicles16To30Days) / TotalVehicles * 100
         : 0;
-    
-    public double PercentAging => TotalVehicles > 0 
-        ? (double)(Vehicles46To60Days + Vehicles61To90Days + VehiclesOver90Days) / TotalVehicles * 100 
+
+    public double PercentAging => TotalVehicles > 0
+        ? (double)(Vehicles46To60Days + Vehicles61To90Days + VehiclesOver90Days) / TotalVehicles * 100
         : 0;
-    
+
     // Average days calculation
     public double AverageDaysOnMarket { get; set; }
     public double MedianDaysOnMarket { get; set; }
-    
+
     // Risk Metrics
     public decimal AtRiskValue => Value61To90Days + ValueOver90Days;
     public int AtRiskCount => Vehicles61To90Days + VehiclesOver90Days;
-    
+
     public DateTime CreatedAt { get; set; }
-    
+
     // Constructor
     public InventoryAging()
     {
         Id = Guid.NewGuid();
         CreatedAt = DateTime.UtcNow;
     }
-    
+
     /// <summary>
     /// Obtiene los buckets como lista para gráficos
     /// </summary>

@@ -236,9 +236,9 @@ namespace AdminService.Infrastructure.External
 
                 // Count by status from the returned vehicles
                 var vehicles = rawResult.Vehicles ?? new List<RawVehicle>();
-                stats.Active   = vehicles.Count(v => string.Equals(v.Status, "Active",       StringComparison.OrdinalIgnoreCase));
-                stats.Pending  = vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
-                stats.Rejected = vehicles.Count(v => string.Equals(v.Status, "Rejected",      StringComparison.OrdinalIgnoreCase));
+                stats.Active = vehicles.Count(v => string.Equals(v.Status, "Active", StringComparison.OrdinalIgnoreCase));
+                stats.Pending = vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
+                stats.Rejected = vehicles.Count(v => string.Equals(v.Status, "Rejected", StringComparison.OrdinalIgnoreCase));
                 stats.Featured = vehicles.Count(v => v.IsFeatured);
                 stats.WithReports = 0;  // Not available from VehiclesSaleService
 
@@ -256,9 +256,9 @@ namespace AdminService.Infrastructure.External
                         var pageResult = JsonSerializer.Deserialize<RawVehicleSearchResult>(pageContent, JsonOptions);
                         if (pageResult?.Vehicles == null) break;
 
-                        stats.Active   += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Active",       StringComparison.OrdinalIgnoreCase));
-                        stats.Pending  += pageResult.Vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
-                        stats.Rejected += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Rejected",      StringComparison.OrdinalIgnoreCase));
+                        stats.Active += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Active", StringComparison.OrdinalIgnoreCase));
+                        stats.Pending += pageResult.Vehicles.Count(v => string.Equals(v.Status, "PendingReview", StringComparison.OrdinalIgnoreCase));
+                        stats.Rejected += pageResult.Vehicles.Count(v => string.Equals(v.Status, "Rejected", StringComparison.OrdinalIgnoreCase));
                         stats.Featured += pageResult.Vehicles.Count(v => v.IsFeatured);
                     }
                 }
@@ -549,11 +549,11 @@ namespace AdminService.Infrastructure.External
             return sellerType?.ToLowerInvariant() switch
             {
                 "individual" => "individual",
-                "seller"     => "individual",
-                "dealer"     => "dealer",
-                "franchise"  => "franchise",
-                "wholesale"  => "wholesale",
-                _            => sellerType?.ToLowerInvariant() ?? "individual"
+                "seller" => "individual",
+                "dealer" => "dealer",
+                "franchise" => "franchise",
+                "wholesale" => "wholesale",
+                _ => sellerType?.ToLowerInvariant() ?? "individual"
             };
         }
 

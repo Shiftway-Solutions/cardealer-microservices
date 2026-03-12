@@ -37,7 +37,8 @@ export type VehicleStatus =
   | 'sold'
   | 'expired'
   | 'rejected'
-  | 'draft';
+  | 'draft'
+  | 'pending_media';
 
 export type KYCStatus =
   | 'pending'
@@ -89,6 +90,7 @@ const VEHICLE_STATUS_CONFIG: Record<VehicleStatus, StatusConfig> = {
   expired: { label: 'Expirado', className: 'bg-red-100 text-red-700' },
   rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-700' },
   draft: { label: 'Borrador', className: 'bg-gray-100 text-gray-700' },
+  pending_media: { label: 'Fotos Pendientes', className: 'bg-orange-100 text-orange-700' },
 };
 
 const KYC_STATUS_CONFIG: Record<KYCStatus, StatusConfig> = {

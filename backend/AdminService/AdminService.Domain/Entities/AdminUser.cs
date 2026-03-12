@@ -243,7 +243,7 @@ public class AdminUser
     public IEnumerable<string> GetEffectivePermissions()
     {
         var basePermissions = GetRolePermissions();
-        
+
         return basePermissions
             .Union(CustomPermissions)
             .Except(RevokedPermissions)
@@ -274,9 +274,9 @@ public class AdminUser
     /// Crea un nuevo administrador con valores por defecto.
     /// </summary>
     public static AdminUser Create(
-        Guid userId, 
-        AdminRole role, 
-        string fullName, 
+        Guid userId,
+        AdminRole role,
+        string fullName,
         string email,
         Guid? createdByAdminId = null)
     {
@@ -312,7 +312,7 @@ public class AdminUser
     public void RecordFailedLogin()
     {
         FailedLoginAttempts++;
-        
+
         // Bloquear después de 5 intentos fallidos
         if (FailedLoginAttempts >= 5)
         {
@@ -328,13 +328,13 @@ public enum MfaMethod
 {
     /// <summary>Autenticador TOTP (Google Authenticator, etc.)</summary>
     Authenticator = 0,
-    
+
     /// <summary>SMS con código</summary>
     Sms = 1,
-    
+
     /// <summary>Email con código</summary>
     Email = 2,
-    
+
     /// <summary>Llave de seguridad FIDO2/WebAuthn</summary>
     SecurityKey = 3
 }
@@ -386,7 +386,7 @@ public static class AdminPermissions
     /// <summary>Todos los permisos (para SuperAdmin)</summary>
     public static readonly string[] All = new[]
     {
-        ConfigView, ConfigEdit, MaintenanceToggle, MaintenanceSchedule, 
+        ConfigView, ConfigEdit, MaintenanceToggle, MaintenanceSchedule,
         HomepageManage, FeaturesToggle,
         ListingsView, ListingsApprove, ListingsReject, DealersVerify,
         UsersSuspend, UsersBan, ReportsView, ReportsResolve,

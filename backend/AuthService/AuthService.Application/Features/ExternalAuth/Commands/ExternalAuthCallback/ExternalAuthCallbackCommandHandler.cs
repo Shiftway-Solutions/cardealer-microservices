@@ -95,7 +95,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
                 expiresAt: DateTime.UtcNow.AddDays(7)
             );
             await _sessionRepository.AddAsync(userSession, cancellationToken);
-            _logger.LogInformation("Created session {SessionId} for user {UserId} via {Provider}", 
+            _logger.LogInformation("Created session {SessionId} for user {UserId} via {Provider}",
                 userSession.Id, user.Id, request.Provider);
 
             _logger.LogInformation("External auth callback processed successfully for user {UserId} from IP {IpAddress}",
@@ -224,7 +224,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
             throw new InvalidOperationException("Facebook OAuth credentials are not configured");
 
         var client = _httpClientFactory.CreateClient();
-        
+
         // Facebook returns access_token, not id_token, so we need to get user info
         var tokenEndpoint = $"https://graph.facebook.com/v18.0/oauth/access_token?" +
             $"client_id={clientId}&redirect_uri={Uri.EscapeDataString(redirectUri ?? "")}" +
@@ -292,7 +292,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
     private static string ParseDeviceInfo(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
-        
+
         if (userAgent.Contains("Mobile")) return "Mobile Device";
         if (userAgent.Contains("Tablet")) return "Tablet";
         return "Desktop";
@@ -301,7 +301,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
     private static string ParseBrowser(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown";
-        
+
         if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
         if (userAgent.Contains("Firefox")) return "Firefox";
         if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
@@ -313,7 +313,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
     private static string ParseOperatingSystem(string? userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown";
-        
+
         if (userAgent.Contains("Windows NT 10")) return "Windows 10/11";
         if (userAgent.Contains("Windows")) return "Windows";
         if (userAgent.Contains("Mac OS X")) return "macOS";

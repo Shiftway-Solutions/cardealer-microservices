@@ -7,20 +7,20 @@ namespace DealerAnalyticsService.Infrastructure.Persistence.Repositories;
 public class MarketBenchmarkRepository : IMarketBenchmarkRepository
 {
     private readonly DealerAnalyticsDbContext _context;
-    
+
     public MarketBenchmarkRepository(DealerAnalyticsDbContext context)
     {
         _context = context;
     }
-    
+
     public async Task<MarketBenchmark?> GetBenchmarkAsync(string vehicleCategory, string priceRange, DateTime date)
     {
         return await _context.MarketBenchmarks
-            .FirstOrDefaultAsync(x => x.VehicleCategory == vehicleCategory && 
-                                    x.PriceRange == priceRange && 
+            .FirstOrDefaultAsync(x => x.VehicleCategory == vehicleCategory &&
+                                    x.PriceRange == priceRange &&
                                     x.Date.Date == date.Date);
     }
-    
+
     public async Task<IEnumerable<MarketBenchmark>> GetBenchmarksAsync(DateTime date)
     {
         return await _context.MarketBenchmarks
@@ -29,17 +29,17 @@ public class MarketBenchmarkRepository : IMarketBenchmarkRepository
             .ThenBy(x => x.PriceRange)
             .ToListAsync();
     }
-    
+
     public async Task<MarketBenchmark> CreateOrUpdateBenchmarkAsync(MarketBenchmark benchmark)
     {
         var existing = await GetBenchmarkAsync(benchmark.VehicleCategory, benchmark.PriceRange, benchmark.Date);
-        
+
         if (existing == null)
         {
             benchmark.Id = Guid.NewGuid();
             benchmark.CreatedAt = DateTime.UtcNow;
             benchmark.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.MarketBenchmarks.Add(benchmark);
         }
         else
@@ -54,14 +54,14 @@ public class MarketBenchmarkRepository : IMarketBenchmarkRepository
             existing.TotalDealersInSample = benchmark.TotalDealersInSample;
             existing.TotalVehiclesInSample = benchmark.TotalVehiclesInSample;
             existing.UpdatedAt = DateTime.UtcNow;
-            
+
             benchmark = existing;
         }
-        
+
         await _context.SaveChangesAsync();
         return benchmark;
     }
-    
+
     public async Task DeleteBenchmarkAsync(string vehicleCategory, string priceRange, DateTime date)
     {
         var benchmark = await GetBenchmarkAsync(vehicleCategory, priceRange, date);
@@ -71,15 +71,15 @@ public class MarketBenchmarkRepository : IMarketBenchmarkRepository
             await _context.SaveChangesAsync();
         }
     }
-    
+
     public async Task<decimal> CompareDealerToBenchmarkAsync(Guid dealerId, string metric, DateTime date)
     {
         // Este método compara las métricas del dealer con el benchmarks del mercado
         // Por simplicidad, devolvemos un valor simulado
         // En un sistema real, esto requeriría lógica más compleja
-        
+
         var random = new Random();
-        
+
         return metric switch
         {
             "price" => (decimal)(random.NextDouble() * 30 - 15), // -15% a +15%
@@ -89,17 +89,17 @@ public class MarketBenchmarkRepository : IMarketBenchmarkRepository
             _ => 0
         };
     }
-    
+
     public async Task RecalculateBenchmarksAsync(DateTime date)
     {
         // En un sistema real, esto calcularía los benchmarks basado en todos los dealers
         // Por ahora, creamos datos de ejemplo
-        
+
         var categories = new[] { "SUV", "Sedan", "Camioneta", "Deportivo", "Compacto" };
         var priceRanges = new[] { "0-1M", "1-2M", "2-3M", "3M+" };
-        
+
         var random = new Random();
-        
+
         foreach (var category in categories)
         {
             foreach (var priceRange in priceRanges)
@@ -119,7 +119,7 @@ public class MarketBenchmarkRepository : IMarketBenchmarkRepository
                     TotalDealersInSample = random.Next(20, 100),
                     TotalVehiclesInSample = random.Next(100, 1000)
                 };
-                
+
                 await CreateOrUpdateBenchmarkAsync(benchmark);
             }
         }

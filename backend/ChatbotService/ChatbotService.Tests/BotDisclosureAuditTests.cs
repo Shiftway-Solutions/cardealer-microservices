@@ -31,38 +31,38 @@ public class BotDisclosureAuditTests
         string dealerName = "AutoMax RD",
         string privacyUrl = "https://okla.do/privacidad",
         bool requireConsent = true) => new()
-    {
-        Id = Guid.NewGuid(),
-        DealerId = Guid.NewGuid(),
-        Name = "Test Config",
-        DealerDisplayName = dealerName,
-        PrivacyPolicyUrl = privacyUrl,
-        RequireDisclosureConsent = requireConsent,
-        BotName = "Asistente OKLA",
-        WelcomeMessage = "¡Hola! 👋 Soy tu asistente virtual.",
-        MaxInteractionsPerSession = 10,
-        IsActive = true
-    };
+        {
+            Id = Guid.NewGuid(),
+            DealerId = Guid.NewGuid(),
+            Name = "Test Config",
+            DealerDisplayName = dealerName,
+            PrivacyPolicyUrl = privacyUrl,
+            RequireDisclosureConsent = requireConsent,
+            BotName = "Asistente OKLA",
+            WelcomeMessage = "¡Hola! 👋 Soy tu asistente virtual.",
+            MaxInteractionsPerSession = 10,
+            IsActive = true
+        };
 
     private static ChatSession CreateSession(
         Guid? configId = null,
         bool consentAccepted = false) => new()
-    {
-        Id = Guid.NewGuid(),
-        ChatbotConfigurationId = configId ?? Guid.NewGuid(),
-        SessionToken = Guid.NewGuid().ToString("N"),
-        Status = SessionStatus.Active,
-        ChatMode = ChatMode.General,
-        MaxInteractionsPerSession = 10,
-        InteractionCount = 0,
-        InteractionLimitReached = false,
-        MessageCount = 0,
-        Language = "es",
-        ConsentAccepted = consentAccepted,
-        ConsentAcceptedAt = consentAccepted ? DateTime.UtcNow : null,
-        CreatedAt = DateTime.UtcNow,
-        LastActivityAt = DateTime.UtcNow
-    };
+        {
+            Id = Guid.NewGuid(),
+            ChatbotConfigurationId = configId ?? Guid.NewGuid(),
+            SessionToken = Guid.NewGuid().ToString("N"),
+            Status = SessionStatus.Active,
+            ChatMode = ChatMode.General,
+            MaxInteractionsPerSession = 10,
+            InteractionCount = 0,
+            InteractionLimitReached = false,
+            MessageCount = 0,
+            Language = "es",
+            ConsentAccepted = consentAccepted,
+            ConsentAcceptedAt = consentAccepted ? DateTime.UtcNow : null,
+            CreatedAt = DateTime.UtcNow,
+            LastActivityAt = DateTime.UtcNow
+        };
 
     private StartSessionCommandHandler CreateStartHandler(
         Mock<IChatSessionRepository>? sessionRepo = null,

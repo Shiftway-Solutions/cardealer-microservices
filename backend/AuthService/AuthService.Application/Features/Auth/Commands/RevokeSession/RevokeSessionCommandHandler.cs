@@ -150,7 +150,7 @@ public class RevokeSessionCommandHandler : IRequestHandler<RevokeSessionCommand,
                 if (providedCodeHash != codeData.CodeHash)
                 {
                     codeData.RemainingAttempts--;
-                    
+
                     if (codeData.RemainingAttempts <= 0)
                     {
                         // Lockout
@@ -242,8 +242,8 @@ public class RevokeSessionCommandHandler : IRequestHandler<RevokeSessionCommand,
             }
 
             // 10. Revocar la sesión
-            var revocationReason = string.IsNullOrEmpty(request.VerificationCode) 
-                ? "User revoked session directly" 
+            var revocationReason = string.IsNullOrEmpty(request.VerificationCode)
+                ? "User revoked session directly"
                 : "User revoked session with verification code";
             await _sessionRepository.RevokeSessionAsync(
                 sessionGuid,

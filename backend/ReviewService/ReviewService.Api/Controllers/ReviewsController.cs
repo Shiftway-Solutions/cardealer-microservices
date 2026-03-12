@@ -818,18 +818,18 @@ public class ReviewsController : ControllerBase
 
             var reported = result.Value!.Items.Select(r => new ReportedAdminReviewDto
             {
-                Id           = r.Id,
-                AuthorName   = r.AuthorName,
+                Id = r.Id,
+                AuthorName = r.AuthorName,
                 AuthorAvatar = r.AuthorAvatar,
-                TargetName   = r.TargetName,
-                TargetType   = r.TargetType,
-                Rating       = r.Rating,
-                Title        = r.Title,
-                Comment      = r.Comment,
-                CreatedAt    = r.CreatedAt,
-                Status       = r.Status,
-                Reports      = r.Reports,
-                ReportCount  = 1,
+                TargetName = r.TargetName,
+                TargetType = r.TargetType,
+                Rating = r.Rating,
+                Title = r.Title,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                Status = r.Status,
+                Reports = r.Reports,
+                ReportCount = 1,
                 ReportReasons = Array.Empty<string>(),
                 LastReportedAt = r.CreatedAt
             }).ToList();

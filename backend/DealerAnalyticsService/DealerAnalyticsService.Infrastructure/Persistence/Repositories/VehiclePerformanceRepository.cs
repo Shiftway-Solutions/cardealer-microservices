@@ -9,7 +9,7 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
 {
     private readonly DealerAnalyticsDbContext _context;
     private readonly ILogger<VehiclePerformanceRepository> _logger;
-    
+
     public VehiclePerformanceRepository(
         DealerAnalyticsDbContext context,
         ILogger<VehiclePerformanceRepository> logger)
@@ -17,12 +17,12 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
         _context = context;
         _logger = logger;
     }
-    
+
     public async Task<VehiclePerformance?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _context.VehiclePerformances.FindAsync(new object[] { id }, ct);
     }
-    
+
     public async Task<VehiclePerformance?> GetByVehicleAndDateAsync(
         Guid vehicleId, DateTime date, CancellationToken ct = default)
     {
@@ -30,29 +30,29 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             .Where(v => v.VehicleId == vehicleId && v.Date.Date == date.Date)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetByDealerAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         return await _context.VehiclePerformances
-            .Where(v => v.DealerId == dealerId && 
-                        v.Date >= fromDate.Date && 
+            .Where(v => v.DealerId == dealerId &&
+                        v.Date >= fromDate.Date &&
                         v.Date <= toDate.Date)
             .OrderByDescending(v => v.PerformanceScore)
             .ToListAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetByVehicleAsync(
         Guid vehicleId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         return await _context.VehiclePerformances
-            .Where(v => v.VehicleId == vehicleId && 
-                        v.Date >= fromDate.Date && 
+            .Where(v => v.VehicleId == vehicleId &&
+                        v.Date >= fromDate.Date &&
                         v.Date <= toDate.Date)
             .OrderBy(v => v.Date)
             .ToListAsync(ct);
     }
-    
+
     public async Task<VehiclePerformance> CreateAsync(VehiclePerformance performance, CancellationToken ct = default)
     {
         performance.CalculatePerformanceScore();
@@ -60,7 +60,7 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
         await _context.SaveChangesAsync(ct);
         return performance;
     }
-    
+
     public async Task<VehiclePerformance> UpdateAsync(VehiclePerformance performance, CancellationToken ct = default)
     {
         performance.UpdatedAt = DateTime.UtcNow;
@@ -69,7 +69,7 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
         await _context.SaveChangesAsync(ct);
         return performance;
     }
-    
+
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var performance = await GetByIdAsync(id, ct);
@@ -79,7 +79,7 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             await _context.SaveChangesAsync(ct);
         }
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetTopPerformersAsync(
         Guid dealerId, int limit, CancellationToken ct = default)
     {
@@ -87,22 +87,22 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
         var latestDate = await _context.VehiclePerformances
             .Where(v => v.DealerId == dealerId)
             .MaxAsync(v => (DateTime?)v.Date, ct) ?? DateTime.UtcNow.AddDays(-1);
-        
+
         return await _context.VehiclePerformances
             .Where(v => v.DealerId == dealerId && v.Date.Date == latestDate.Date && !v.IsSold)
             .OrderByDescending(v => v.PerformanceScore)
             .Take(limit)
             .ToListAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetTopByViewsAsync(
         Guid dealerId, int limit, DateTime? fromDate = null, CancellationToken ct = default)
     {
         var query = _context.VehiclePerformances.Where(v => v.DealerId == dealerId && !v.IsSold);
-        
+
         if (fromDate.HasValue)
             query = query.Where(v => v.Date >= fromDate.Value);
-        
+
         return await query
             .GroupBy(v => v.VehicleId)
             .Select(g => new { VehicleId = g.Key, TotalViews = g.Sum(v => v.Views), Latest = g.OrderByDescending(v => v.Date).First() })
@@ -111,15 +111,15 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             .Select(x => x.Latest)
             .ToListAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetTopByContactsAsync(
         Guid dealerId, int limit, DateTime? fromDate = null, CancellationToken ct = default)
     {
         var query = _context.VehiclePerformances.Where(v => v.DealerId == dealerId && !v.IsSold);
-        
+
         if (fromDate.HasValue)
             query = query.Where(v => v.Date >= fromDate.Value);
-        
+
         return await query
             .GroupBy(v => v.VehicleId)
             .Select(g => new { VehicleId = g.Key, TotalContacts = g.Sum(v => v.Contacts), Latest = g.OrderByDescending(v => v.Date).First() })
@@ -128,15 +128,15 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             .Select(x => x.Latest)
             .ToListAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetTopByEngagementAsync(
         Guid dealerId, int limit, DateTime? fromDate = null, CancellationToken ct = default)
     {
         var query = _context.VehiclePerformances.Where(v => v.DealerId == dealerId && !v.IsSold);
-        
+
         if (fromDate.HasValue)
             query = query.Where(v => v.Date >= fromDate.Value);
-        
+
         return await query
             .GroupBy(v => v.VehicleId)
             .Select(g => new { VehicleId = g.Key, AvgEngagement = g.Average(v => v.EngagementScore), Latest = g.OrderByDescending(v => v.Date).First() })
@@ -145,37 +145,37 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             .Select(x => x.Latest)
             .ToListAsync(ct);
     }
-    
+
     public async Task<IEnumerable<VehiclePerformance>> GetLowPerformersAsync(
         Guid dealerId, int limit, CancellationToken ct = default)
     {
         var latestDate = await _context.VehiclePerformances
             .Where(v => v.DealerId == dealerId)
             .MaxAsync(v => (DateTime?)v.Date, ct) ?? DateTime.UtcNow.AddDays(-1);
-        
+
         return await _context.VehiclePerformances
-            .Where(v => v.DealerId == dealerId && 
-                        v.Date.Date == latestDate.Date && 
+            .Where(v => v.DealerId == dealerId &&
+                        v.Date.Date == latestDate.Date &&
                         !v.IsSold &&
                         v.DaysOnMarket > 30) // At least 30 days old
             .OrderBy(v => v.PerformanceScore)
             .Take(limit)
             .ToListAsync(ct);
     }
-    
+
     public async Task<VehiclePerformance> AggregateByVehicleAsync(
         Guid vehicleId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var performances = await GetByVehicleAsync(vehicleId, fromDate, toDate, ct);
         var list = performances.ToList();
-        
+
         if (!list.Any())
         {
             return new VehiclePerformance { VehicleId = vehicleId };
         }
-        
+
         var latest = list.Last();
-        
+
         return new VehiclePerformance
         {
             VehicleId = vehicleId,
@@ -206,12 +206,12 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
             PerformanceScore = list.Average(p => p.PerformanceScore)
         };
     }
-    
+
     public async Task<Dictionary<Guid, VehiclePerformance>> AggregateByDealerAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var performances = await GetByDealerAsync(dealerId, fromDate, toDate, ct);
-        
+
         return performances
             .GroupBy(p => p.VehicleId)
             .ToDictionary(
@@ -227,29 +227,29 @@ public class VehiclePerformanceRepository : IVehiclePerformanceRepository
                 }
             );
     }
-    
+
     public async Task<double> GetAverageViewsPerVehicleAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var performances = await GetByDealerAsync(dealerId, fromDate, toDate, ct);
         var grouped = performances.GroupBy(p => p.VehicleId).ToList();
-        
+
         if (!grouped.Any()) return 0;
-        
+
         return grouped.Average(g => g.Sum(p => p.Views));
     }
-    
+
     public async Task<double> GetAverageContactRateAsync(
         Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var performances = await GetByDealerAsync(dealerId, fromDate, toDate, ct);
         var list = performances.ToList();
-        
+
         if (!list.Any()) return 0;
-        
+
         var totalViews = list.Sum(p => p.Views);
         var totalContacts = list.Sum(p => p.Contacts);
-        
+
         return totalViews > 0 ? (double)totalContacts / totalViews * 100 : 0;
     }
 }

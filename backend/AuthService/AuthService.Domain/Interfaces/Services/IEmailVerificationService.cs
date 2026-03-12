@@ -16,7 +16,7 @@ public record EmailVerificationResult(
 public interface IEmailVerificationService
 {
     Task SendVerificationEmailAsync(ApplicationUser user);
-    
+
     /// <summary>
     /// Verifica el token de email. Retorna información del usuario si es exitoso.
     /// </summary>

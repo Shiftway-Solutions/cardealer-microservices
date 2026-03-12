@@ -1,0 +1,28 @@
+# =============================================================================
+# Semgrep Ignore Configuration — OKLA
+# =============================================================================
+# Files and directories to exclude from Semgrep SAST scanning.
+# To mark a false positive inline, use: // nosemgrep: <rule-id>
+# =============================================================================
+
+# Build artifacts
+.next/
+out/
+build/
+dist/
+node_modules/
+
+# Test files (scanned separately)
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+e2e/
+playwright-report/
+
+# Generated files
+public/sw.js
+public/workbox-*.js
+
+# Backup files
+**/*.bak_*

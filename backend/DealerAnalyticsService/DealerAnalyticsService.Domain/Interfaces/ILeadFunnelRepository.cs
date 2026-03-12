@@ -14,10 +14,10 @@ public interface ILeadFunnelRepository
     Task<LeadFunnelMetrics> CreateAsync(LeadFunnelMetrics metrics, CancellationToken ct = default);
     Task<LeadFunnelMetrics> UpdateAsync(LeadFunnelMetrics metrics, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
-    
+
     // Aggregation
     Task<LeadFunnelMetrics> AggregateAsync(Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
-    
+
     // Comparison
     Task<IEnumerable<LeadFunnelMetrics>> GetMonthlyTrendAsync(Guid dealerId, int months, CancellationToken ct = default);
     Task<(LeadFunnelMetrics? current, LeadFunnelMetrics? previous)> GetComparisonAsync(
@@ -25,11 +25,11 @@ public interface ILeadFunnelRepository
         DateTime currentPeriodStart,
         DateTime currentPeriodEnd,
         CancellationToken ct = default);
-    
+
     // Funnel Analysis
     Task<List<FunnelStage>> GetFunnelStagesAsync(Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
     Task<Dictionary<string, double>> GetConversionRatesAsync(Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
-    
+
     // Source Analysis
     Task<Dictionary<string, int>> GetLeadsBySourceAsync(Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
     Task<Dictionary<string, double>> GetConversionBySourceAsync(Guid dealerId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);

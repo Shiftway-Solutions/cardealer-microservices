@@ -116,6 +116,10 @@ const FEATURE_LABELS: Record<PlanFeatureKey, { title: string; description: strin
     title: 'WhatsApp Business',
     description: 'Recibe consultas directamente en tu WhatsApp Business con botón de contacto.',
   },
+  chatAgentWeb: {
+    title: 'ChatAgent IA',
+    description: 'Asistente de chat con IA que responde automáticamente a compradores potenciales.',
+  },
   searchPriority: {
     title: 'Prioridad en Búsquedas',
     description: 'Tus publicaciones aparecen primero en los resultados de búsqueda.',
@@ -192,7 +196,7 @@ export function UpgradePrompt({
               <h4 className="mb-1 font-semibold">{displayTitle}</h4>
               <p className="text-muted-foreground mb-4 text-sm">{displayDesc}</p>
               <Link href={upgradeUrl}>
-                <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
+                <Button className="bg-primary hover:bg-primary/90 w-full gap-2">
                   <Crown className="h-4 w-4" />
                   Upgrade a {requiredPlan}
                 </Button>
@@ -221,7 +225,7 @@ export function UpgradePrompt({
           <Badge className="bg-primary text-white">Requiere: {requiredPlan}</Badge>
         </div>
         <Link href={upgradeUrl}>
-          <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 gap-2">
             <Crown className="h-5 w-5" />
             {isDealer ? 'Mejorar Plan Dealer' : 'Mejorar Mi Plan'}
           </Button>

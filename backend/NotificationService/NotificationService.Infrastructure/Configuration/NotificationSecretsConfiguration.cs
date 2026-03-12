@@ -28,20 +28,20 @@ public static class NotificationSecretsConfiguration
         services.PostConfigure<NotificationService.Shared.NotificationSettings>(settings =>
         {
             var secretProvider = CompositeSecretProvider.CreateDefault();
-            
+
             // SendGrid
             var sendGridApiKey = secretProvider.GetSecret(SecretKeys.SendGridApiKey);
             if (!string.IsNullOrEmpty(sendGridApiKey))
             {
                 settings.SendGrid.ApiKey = sendGridApiKey;
             }
-            
+
             var sendGridFromEmail = secretProvider.GetSecret(SecretKeys.SendGridFromEmail);
             if (!string.IsNullOrEmpty(sendGridFromEmail))
             {
                 settings.SendGrid.FromEmail = sendGridFromEmail;
             }
-            
+
             var sendGridFromName = secretProvider.GetSecret(SecretKeys.SendGridFromName);
             if (!string.IsNullOrEmpty(sendGridFromName))
             {
@@ -54,13 +54,13 @@ public static class NotificationSecretsConfiguration
             {
                 settings.Twilio.AccountSid = twilioAccountSid;
             }
-            
+
             var twilioAuthToken = secretProvider.GetSecret(SecretKeys.TwilioAuthToken);
             if (!string.IsNullOrEmpty(twilioAuthToken))
             {
                 settings.Twilio.AuthToken = twilioAuthToken;
             }
-            
+
             var twilioFromNumber = secretProvider.GetSecret(SecretKeys.TwilioFromNumber);
             if (!string.IsNullOrEmpty(twilioFromNumber))
             {
@@ -105,7 +105,7 @@ public static class NotificationSecretsConfiguration
         this IServiceProvider serviceProvider,
         ILogger logger)
     {
-        var secretProvider = serviceProvider.GetService<ISecretProvider>() 
+        var secretProvider = serviceProvider.GetService<ISecretProvider>()
                              ?? CompositeSecretProvider.CreateDefault();
 
         // Database es requerido

@@ -43,7 +43,7 @@ public class ExternalAuthService : IExternalAuthService
             {
                 // Update profile info if missing
                 await UpdateUserProfileIfNeededAsync(existingUser, validationResult);
-                
+
                 _logger.LogInformation("External user found for {Email} with provider {Provider}",
                     validationResult.Email, provider);
                 return (existingUser, false);
@@ -92,25 +92,25 @@ public class ExternalAuthService : IExternalAuthService
     private async Task UpdateUserProfileIfNeededAsync(ApplicationUser user, ExternalTokenValidationResult validationResult)
     {
         bool updated = false;
-        
+
         if (string.IsNullOrEmpty(user.FirstName) && !string.IsNullOrEmpty(validationResult.FirstName))
         {
             user.FirstName = validationResult.FirstName;
             updated = true;
         }
-        
+
         if (string.IsNullOrEmpty(user.LastName) && !string.IsNullOrEmpty(validationResult.LastName))
         {
             user.LastName = validationResult.LastName;
             updated = true;
         }
-        
+
         if (string.IsNullOrEmpty(user.ProfilePictureUrl) && !string.IsNullOrEmpty(validationResult.ProfilePictureUrl))
         {
             user.ProfilePictureUrl = validationResult.ProfilePictureUrl;
             updated = true;
         }
-        
+
         if (updated)
         {
             user.MarkAsUpdated();

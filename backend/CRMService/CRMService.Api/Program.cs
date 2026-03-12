@@ -262,4 +262,3 @@ finally
 
 // Make the implicit Program class public so it can be accessed by tests
 public partial class Program { }
- 

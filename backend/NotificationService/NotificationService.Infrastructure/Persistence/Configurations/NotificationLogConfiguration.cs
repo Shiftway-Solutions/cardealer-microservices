@@ -10,7 +10,7 @@ public class NotificationLogConfiguration : IEntityTypeConfiguration<Notificatio
     public void Configure(EntityTypeBuilder<NotificationLog> builder)
     {
         builder.HasKey(l => l.Id);
-        
+
         builder.Property(l => l.Action)
             .IsRequired()
             .HasMaxLength(50);

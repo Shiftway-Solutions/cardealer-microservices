@@ -103,9 +103,15 @@ public class MockVehicleSpecsService : IVehicleSpecsService
         var modelYear = modelYearChar switch
         {
             >= 'A' and <= 'H' => 2010 + (modelYearChar - 'A'),
-            'J' => 2018, 'K' => 2019, 'L' => 2020,
-            'M' => 2021, 'N' => 2022, 'P' => 2023,
-            'R' => 2024, 'S' => 2025, 'T' => 2026,
+            'J' => 2018,
+            'K' => 2019,
+            'L' => 2020,
+            'M' => 2021,
+            'N' => 2022,
+            'P' => 2023,
+            'R' => 2024,
+            'S' => 2025,
+            'T' => 2026,
             >= '1' and <= '9' => 2000 + (modelYearChar - '0'),
             _ => DateTime.UtcNow.Year,
         };

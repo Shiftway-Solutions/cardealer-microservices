@@ -51,10 +51,10 @@ public class DeviceFingerprintService : IDeviceFingerprintService
             // Existing device - update last used
             existingDevice.RecordLogin(ipAddress);
             await _deviceRepository.UpdateAsync(existingDevice, cancellationToken);
-            
-            _logger.LogInformation("Known device {DeviceId} used for login by user {UserId}", 
+
+            _logger.LogInformation("Known device {DeviceId} used for login by user {UserId}",
                 existingDevice.Id, userId);
-            
+
             return (existingDevice, isNew: false);
         }
 
@@ -71,7 +71,7 @@ public class DeviceFingerprintService : IDeviceFingerprintService
 
         await _deviceRepository.AddAsync(newDevice, cancellationToken);
 
-        _logger.LogInformation("New device {DeviceId} trusted for user {UserId}: {DeviceName}", 
+        _logger.LogInformation("New device {DeviceId} trusted for user {UserId}: {DeviceName}",
             newDevice.Id, userId, deviceName);
 
         return (newDevice, isNew: true);
@@ -80,7 +80,7 @@ public class DeviceFingerprintService : IDeviceFingerprintService
     public async Task RecordLoginAsync(string userId, string fingerprintHash, string? ipAddress = null, CancellationToken cancellationToken = default)
     {
         var device = await _deviceRepository.GetByFingerprintAsync(userId, fingerprintHash, cancellationToken);
-        
+
         if (device != null)
         {
             device.RecordLogin(ipAddress);
@@ -91,13 +91,13 @@ public class DeviceFingerprintService : IDeviceFingerprintService
     public async Task RevokeDeviceAsync(Guid deviceId, string reason, CancellationToken cancellationToken = default)
     {
         var device = await _deviceRepository.GetByIdAsync(deviceId, cancellationToken);
-        
+
         if (device != null)
         {
             device.Revoke(reason);
             await _deviceRepository.UpdateAsync(device, cancellationToken);
-            
-            _logger.LogInformation("Device {DeviceId} revoked for user {UserId}. Reason: {Reason}", 
+
+            _logger.LogInformation("Device {DeviceId} revoked for user {UserId}. Reason: {Reason}",
                 deviceId, device.UserId, reason);
         }
     }
@@ -105,7 +105,7 @@ public class DeviceFingerprintService : IDeviceFingerprintService
     public async Task RevokeAllDevicesAsync(string userId, string reason, CancellationToken cancellationToken = default)
     {
         await _deviceRepository.RevokeAllForUserAsync(userId, reason, cancellationToken);
-        
+
         _logger.LogInformation("All devices revoked for user {UserId}. Reason: {Reason}", userId, reason);
     }
 
@@ -128,7 +128,7 @@ public class DeviceFingerprintService : IDeviceFingerprintService
     private async Task EnforcMaxDevicesLimitAsync(string userId, CancellationToken cancellationToken)
     {
         var deviceCount = await _deviceRepository.CountTrustedDevicesAsync(userId, cancellationToken);
-        
+
         if (deviceCount >= MAX_DEVICES_PER_USER)
         {
             // Get all devices and remove the oldest
@@ -140,7 +140,7 @@ public class DeviceFingerprintService : IDeviceFingerprintService
             foreach (var device in devicesToRemove)
             {
                 await _deviceRepository.DeleteAsync(device.Id, cancellationToken);
-                _logger.LogInformation("Removed oldest device {DeviceId} for user {UserId} due to device limit", 
+                _logger.LogInformation("Removed oldest device {DeviceId} for user {UserId} due to device limit",
                     device.Id, userId);
             }
         }

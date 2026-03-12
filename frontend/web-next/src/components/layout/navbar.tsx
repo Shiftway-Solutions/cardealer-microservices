@@ -146,9 +146,9 @@ function getUserBadgeInfo(user: UserType | null): { label: string; color: string
   if (user.accountType === 'dealer' || user.accountType === 'dealer_employee') {
     return null; // Ya tiene link "Mi Portal" en navegación
   }
-  // Seller accountType - siempre muestra badge Vendedor
+  // Seller accountType - siempre muestra badge Vendedor Particular
   if (user.accountType === 'seller') {
-    return { label: 'Vendedor', color: 'bg-green-500 text-white' };
+    return { label: 'Vendedor Particular', color: 'bg-green-500 text-white' };
   }
   // Buyer con intent de venta o listings activos
   if (
@@ -156,7 +156,7 @@ function getUserBadgeInfo(user: UserType | null): { label: string; color: string
     user.userIntent === 'buy_and_sell' ||
     (user.listingsCount ?? 0) > 0
   ) {
-    return { label: 'Vendedor', color: 'bg-green-500 text-white' };
+    return { label: 'Vendedor Particular', color: 'bg-green-500 text-white' };
   }
   if (user.userIntent === 'buy') {
     return { label: 'Comprador', color: 'bg-purple-500 text-white' };
@@ -182,14 +182,14 @@ function getDropdownBadgeInfo(user: UserType | null): { label: string; color: st
     return { label: 'Empleado Dealer', color: 'bg-blue-500 text-white' };
   }
   if (user.accountType === 'seller') {
-    return { label: 'Vendedor', color: 'bg-green-500 text-white' };
+    return { label: 'Vendedor Particular', color: 'bg-green-500 text-white' };
   }
   if (
     user.userIntent === 'sell' ||
     user.userIntent === 'buy_and_sell' ||
     (user.listingsCount ?? 0) > 0
   ) {
-    return { label: 'Vendedor', color: 'bg-green-500 text-white' };
+    return { label: 'Vendedor Particular', color: 'bg-green-500 text-white' };
   }
   if (user.userIntent === 'buy') {
     return { label: 'Comprador', color: 'bg-purple-500 text-white' };
@@ -244,7 +244,7 @@ function getDropdownItems(
     user.userIntent === 'buy_and_sell'
   ) {
     return [
-      { href: '/cuenta/mis-vehiculos', label: 'Mis Vehículos', icon: Car },
+      { href: '/cuenta/mis-vehiculos', label: 'Mi Garage', icon: Car },
       { href: '/dashboard', label: 'Estadísticas', icon: BarChart3 },
       ...consumerBaseItems,
       { href: '/cuenta/pagos', label: 'Pagos', icon: CreditCard },
@@ -300,11 +300,11 @@ function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-2.5">
       <div className="relative">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/90 shadow-lg shadow-primary/20 transition-all group-hover:shadow-xl group-hover:shadow-primary/30">
+        <div className="from-primary to-primary/90 shadow-primary/20 group-hover:shadow-primary/30 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg transition-all group-hover:shadow-xl">
           <span className="text-xl font-bold text-white">O</span>
         </div>
         {/* Subtle glow effect */}
-        <div className="absolute inset-0 rounded-xl bg-primary opacity-0 blur-lg transition-opacity group-hover:opacity-30" />
+        <div className="bg-primary absolute inset-0 rounded-xl opacity-0 blur-lg transition-opacity group-hover:opacity-30" />
       </div>
       <span className="text-foreground text-2xl font-bold tracking-tight">OKLA</span>
     </Link>
@@ -357,154 +357,153 @@ function DesktopNav({
           {link.icon}
           {link.label}
           {(pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))) && (
-            <span className="absolute right-2 bottom-0 left-2 h-0.5 rounded-full bg-primary transition-all duration-300" />
+            <span className="bg-primary absolute right-2 bottom-0 left-2 h-0.5 rounded-full transition-all duration-300" />
           )}
         </Link>
       ))}
 
       {/* User Links when authenticated - with tooltips and badges */}
-      {isAuthenticated && (
-        <>
-          <div className="via-border mx-3 h-8 w-px bg-gradient-to-b from-transparent to-transparent" />
-          <TooltipProvider delayDuration={200}>
-            {/* Favorites Link - SOLO para consumidores, NO para admin/platform_employee */}
-            {user?.accountType !== 'admin' && user?.accountType !== 'platform_employee' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href="/cuenta/favoritos"
+      {/* CLS FIX: Always reserve space for auth icons to prevent layout shift
+          when auth state transitions from loading to authenticated */}
+      <div className={cn('flex items-center', !isAuthenticated && 'invisible')}>
+        <div className="via-border mx-3 h-8 w-px bg-gradient-to-b from-transparent to-transparent" />
+        <TooltipProvider delayDuration={200}>
+          {/* Favorites Link - SOLO para consumidores, NO para admin/platform_employee */}
+          {user?.accountType !== 'admin' && user?.accountType !== 'platform_employee' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/cuenta/favoritos"
+                  className={cn(
+                    'relative flex items-center justify-center rounded-xl p-2.5 transition-all',
+                    pathname === '/cuenta/favoritos'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-foreground hover:bg-muted'
+                  )}
+                >
+                  <Heart className="h-4 w-4" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-medium">
+                Favoritos
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Notifications Dropdown */}
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
                     className={cn(
                       'relative flex items-center justify-center rounded-xl p-2.5 transition-all',
-                      pathname === '/cuenta/favoritos'
+                      pathname === '/cuenta/notificaciones'
                         ? 'bg-primary/10 text-primary shadow-sm'
                         : 'text-foreground hover:bg-muted'
                     )}
                   >
-                    <Heart className="h-4 w-4" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="font-medium">
-                  Favoritos
-                </TooltipContent>
-              </Tooltip>
-            )}
-
-            {/* Notifications Dropdown */}
-            <Popover>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        'relative flex items-center justify-center rounded-xl p-2.5 transition-all',
-                        pathname === '/cuenta/notificaciones'
-                          ? 'bg-primary/10 text-primary shadow-sm'
-                          : 'text-foreground hover:bg-muted'
-                      )}
-                    >
-                      <Bell className="h-4 w-4" />
-                      {/* Unread count badge */}
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm">
-                          {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="font-medium">
-                  Notificaciones
-                </TooltipContent>
-              </Tooltip>
-              <PopoverContent align="end" className="w-80 p-0 shadow-xl" sideOffset={8}>
-                {/* Header */}
-                <div className="border-border flex items-center justify-between border-b px-4 py-3">
-                  <h3 className="text-foreground font-semibold">Notificaciones</h3>
-                  <button
-                    className="text-primary text-xs font-medium hover:underline disabled:opacity-50"
-                    onClick={() => markAllReadMutation.mutate()}
-                    disabled={markAllReadMutation.isPending || unreadCount === 0}
-                  >
-                    Marcar todo leído
+                    <Bell className="h-4 w-4" />
+                    {/* Unread count badge */}
+                    {unreadCount > 0 && (
+                      <span className="bg-primary absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow-sm">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </button>
-                </div>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-medium">
+                Notificaciones
+              </TooltipContent>
+            </Tooltip>
+            <PopoverContent align="end" className="w-80 p-0 shadow-xl" sideOffset={8}>
+              {/* Header */}
+              <div className="border-border flex items-center justify-between border-b px-4 py-3">
+                <h3 className="text-foreground font-semibold">Notificaciones</h3>
+                <button
+                  className="text-primary text-xs font-medium hover:underline disabled:opacity-50"
+                  onClick={() => markAllReadMutation.mutate()}
+                  disabled={markAllReadMutation.isPending || unreadCount === 0}
+                >
+                  Marcar todo leído
+                </button>
+              </div>
 
-                {/* Notifications List */}
-                <div className="max-h-80 overflow-y-auto">
-                  {recentNotifications.length > 0 ? (
-                    recentNotifications.map(notification => {
-                      const Icon =
-                        notificationIcons[notification.type] || notificationIcons.default;
-                      const colorClass =
-                        notificationColors[notification.type] || notificationColors.default;
+              {/* Notifications List */}
+              <div className="max-h-80 overflow-y-auto">
+                {recentNotifications.length > 0 ? (
+                  recentNotifications.map(notification => {
+                    const Icon = notificationIcons[notification.type] || notificationIcons.default;
+                    const colorClass =
+                      notificationColors[notification.type] || notificationColors.default;
 
-                      return (
-                        <Link
-                          key={notification.id}
-                          href={notification.link ?? '/cuenta/notificaciones'}
+                    return (
+                      <Link
+                        key={notification.id}
+                        href={notification.link ?? '/cuenta/notificaciones'}
+                        className={cn(
+                          'hover:bg-muted flex gap-3 px-4 py-3 transition-colors',
+                          !notification.isRead && 'bg-primary/5'
+                        )}
+                      >
+                        <div
                           className={cn(
-                            'hover:bg-muted flex gap-3 px-4 py-3 transition-colors',
-                            !notification.isRead && 'bg-primary/5'
+                            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
+                            colorClass
                           )}
                         >
-                          <div
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
                             className={cn(
-                              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-                              colorClass
+                              'text-sm',
+                              !notification.isRead
+                                ? 'text-foreground font-semibold'
+                                : 'text-muted-foreground'
                             )}
                           >
-                            <Icon className="h-5 w-5" />
+                            {notification.title}
+                          </p>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {notification.message}
+                          </p>
+                          <p className="text-muted-foreground/70 mt-1 flex items-center gap-1 text-xs">
+                            <Clock className="h-3 w-3" />
+                            {formatNotificationTime(notification.createdAt)}
+                          </p>
+                        </div>
+                        {!notification.isRead && (
+                          <div className="flex-shrink-0 self-center">
+                            <span className="bg-primary h-2 w-2 rounded-full" />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className={cn(
-                                'text-sm',
-                                !notification.isRead
-                                  ? 'text-foreground font-semibold'
-                                  : 'text-muted-foreground'
-                              )}
-                            >
-                              {notification.title}
-                            </p>
-                            <p className="text-muted-foreground truncate text-xs">
-                              {notification.message}
-                            </p>
-                            <p className="text-muted-foreground/70 mt-1 flex items-center gap-1 text-xs">
-                              <Clock className="h-3 w-3" />
-                              {formatNotificationTime(notification.createdAt)}
-                            </p>
-                          </div>
-                          {!notification.isRead && (
-                            <div className="flex-shrink-0 self-center">
-                              <span className="h-2 w-2 rounded-full bg-primary" />
-                            </div>
-                          )}
-                        </Link>
-                      );
-                    })
-                  ) : (
-                    <div className="px-4 py-8 text-center">
-                      <Bell className="text-muted-foreground/30 mx-auto h-10 w-10" />
-                      <p className="text-muted-foreground mt-2 text-sm">No tienes notificaciones</p>
-                    </div>
-                  )}
-                </div>
+                        )}
+                      </Link>
+                    );
+                  })
+                ) : (
+                  <div className="px-4 py-8 text-center">
+                    <Bell className="text-muted-foreground/30 mx-auto h-10 w-10" />
+                    <p className="text-muted-foreground mt-2 text-sm">No tienes notificaciones</p>
+                  </div>
+                )}
+              </div>
 
-                {/* Footer */}
-                <div className="border-border border-t">
-                  <Link
-                    href="/cuenta/notificaciones"
-                    className="text-primary hover:bg-muted flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors"
-                  >
-                    Ver todas las notificaciones
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </TooltipProvider>
-        </>
-      )}
+              {/* Footer */}
+              <div className="border-border border-t">
+                <Link
+                  href="/cuenta/notificaciones"
+                  className="text-primary hover:bg-muted flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors"
+                >
+                  Ver todas las notificaciones
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </TooltipProvider>
+      </div>
     </div>
   );
 }
@@ -578,7 +577,7 @@ function RightActions({
           <Button
             asChild
             size="sm"
-            className="group to-primary hover:shadow-primary/25 relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+            className="group to-primary hover:shadow-primary/25 from-primary relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
           >
             <Link href="/registro">
               <UserPlus className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -875,7 +874,7 @@ function MobileMenu({
               <Bell className="h-4 w-4" />
               Notificaciones
               {unreadCount > 0 && (
-                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
+                <span className="bg-primary ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}

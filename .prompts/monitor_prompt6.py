@@ -23,11 +23,11 @@ def update_timestamp(filepath: Path) -> None:
 
     content = filepath.read_text(encoding="utf-8")
 
-    # Elimina TODAS las líneas <!-- monitor: ... --> existentes
-    cleaned = re.sub(r"\n<!-- monitor: [\d\- :]+ -->", "", content)
+    # Elimina TODAS las líneas <!-- monitor: ... --> y el bloque compact existentes
+    cleaned = re.sub(r"\nEjecutar el comando \"/compact\" al comienzo de cada auditoria|\n<!-- monitor: [\d\- :]+ -->", "", content)
 
-    # Agrega el nuevo timestamp al final (una sola línea)
-    updated = cleaned.rstrip() + f"\n{new_tag}"
+    # Agrega primero el comando /compact y luego el timestamp
+    updated = cleaned.rstrip() + f"\nEjecutar el comando \"/compact\" al comienzo de cada auditoria\n{new_tag}"
 
     filepath.write_text(updated, encoding="utf-8")
     print(f"[{timestamp}] Timestamp actualizado en: {filepath}")

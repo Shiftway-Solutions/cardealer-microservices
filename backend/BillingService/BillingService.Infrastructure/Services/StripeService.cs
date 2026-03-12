@@ -559,6 +559,55 @@ public class StripeService : IStripeService
     }
 
     // ========================================
+    // PAYMENT INTENT OPERATIONS
+    // ========================================
+
+    public async Task<StripePaymentIntentResult> CreatePaymentIntentAsync(
+        long amountCents,
+        string currency,
+        string? description = null,
+        Dictionary<string, string>? metadata = null,
+        string? receiptEmail = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var options = new PaymentIntentCreateOptions
+            {
+                Amount = amountCents,
+                Currency = currency,
+                Description = description,
+                Metadata = metadata,
+                ReceiptEmail = receiptEmail,
+                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true
+                }
+            };
+
+            var service = new PaymentIntentService();
+            var paymentIntent = await ExecuteWithResilienceAsync(
+                async ct => await service.CreateAsync(options, cancellationToken: ct), cancellationToken);
+
+            _logger.LogInformation(
+                "Created PaymentIntent {PaymentIntentId} for {Amount} {Currency}",
+                paymentIntent.Id, amountCents, currency);
+
+            return new StripePaymentIntentResult(
+                paymentIntent.Id,
+                paymentIntent.ClientSecret,
+                paymentIntent.Status,
+                paymentIntent.Amount,
+                paymentIntent.Currency ?? currency);
+        }
+        catch (StripeException ex)
+        {
+            _logger.LogError(ex, "Failed to create PaymentIntent for {Amount} {Currency}", amountCents, currency);
+            throw new InvalidOperationException($"Failed to create PaymentIntent: {ex.Message}", ex);
+        }
+    }
+
+    // ========================================
     // CHECKOUT & BILLING PORTAL
     // ========================================
 

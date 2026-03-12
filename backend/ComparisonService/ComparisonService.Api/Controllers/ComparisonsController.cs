@@ -33,7 +33,7 @@ public class ComparisonsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         var comparisons = await _comparisonRepository.GetByUserIdAsync(userId);
-        
+
         return Ok(comparisons.Select(c => MapToDto(c)));
     }
 
@@ -66,7 +66,7 @@ public class ComparisonsController : ControllerBase
             UpdatedAt = comparison.UpdatedAt,
             IsPublic = comparison.IsPublic,
             ShareToken = comparison.ShareToken,
-            ShareUrl = comparison.ShareToken != null 
+            ShareUrl = comparison.ShareToken != null
                 ? $"{Request.Scheme}://{Request.Host}/compare/{comparison.ShareToken}"
                 : null
         });
@@ -80,7 +80,7 @@ public class ComparisonsController : ControllerBase
     public async Task<ActionResult<ComparisonDetailDto>> GetByShareToken(string shareToken)
     {
         var comparison = await _comparisonRepository.GetByShareTokenAsync(shareToken);
-        
+
         if (comparison == null)
             return NotFound();
 
@@ -259,7 +259,7 @@ public class ComparisonsController : ControllerBase
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value 
+            ?? User.FindFirst("sub")?.Value
             ?? User.FindFirst("userId")?.Value;
 
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
@@ -280,7 +280,7 @@ public class ComparisonsController : ControllerBase
             {
                 // Call VehiclesSaleService (base URL configured in Program.cs)
                 var response = await _httpClient.GetAsync($"api/vehicles/{vehicleId}");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var vehicle = await response.Content.ReadFromJsonAsync<VehicleComparisonDto>();

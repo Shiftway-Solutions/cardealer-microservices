@@ -43,14 +43,14 @@ public sealed class ListingAgentController : ControllerBase
         var stats = await _cacheMetrics.GetStatsAsync(ct);
         return Ok(new
         {
-            totalRequests  = stats.TotalRequests,
-            cacheHits      = stats.CacheHits,
-            cacheMisses    = stats.CacheMisses,
+            totalRequests = stats.TotalRequests,
+            cacheHits = stats.CacheHits,
+            cacheMisses = stats.CacheMisses,
             hitRatePercent = stats.HitRatePercent,
-            targetMet      = stats.TargetMet,
-            targetPercent  = 50.0,
-            measuredAt     = stats.MeasuredAt,
-            status         = stats.TargetMet ? "✅ target_met" : "⚠️ below_target"
+            targetMet = stats.TargetMet,
+            targetPercent = 50.0,
+            measuredAt = stats.MeasuredAt,
+            status = stats.TargetMet ? "✅ target_met" : "⚠️ below_target"
         });
     }
 

@@ -77,10 +77,10 @@ public class IdempotencyMiddleware
             if (idempotentAttr.RequireKey || _options.RequireIdempotencyKey)
             {
                 _logger.LogWarning("Missing idempotency key for {Method} {Path}", method, path);
-                
+
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 context.Response.ContentType = "application/json";
-                
+
                 var error = new
                 {
                     type = "https://httpstatuses.io/400",
@@ -89,18 +89,18 @@ public class IdempotencyMiddleware
                     detail = $"The '{headerName}' header is required for this request.",
                     instance = path
                 };
-                
+
                 await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
                 return;
             }
-            
+
             // Key not required, proceed normally
             await _next(context);
             return;
         }
 
         var idempotencyKey = keyHeader.FirstOrDefault()!;
-        
+
         // Add prefix if configured
         if (!string.IsNullOrEmpty(idempotentAttr.KeyPrefix))
         {
@@ -110,14 +110,14 @@ public class IdempotencyMiddleware
         // Read and hash request body
         string requestBody = "";
         string requestHash = "";
-        
+
         if (idempotentAttr.IncludeBodyInHash)
         {
             context.Request.EnableBuffering();
             using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
             requestBody = await reader.ReadToEndAsync();
             context.Request.Body.Position = 0;
-            
+
             requestHash = idempotencyClient.GenerateRequestHash(requestBody);
         }
 
@@ -129,10 +129,10 @@ public class IdempotencyMiddleware
             _logger.LogWarning(
                 "Idempotency conflict for key {Key}: {Error}",
                 idempotencyKey, checkResult.ErrorMessage);
-            
+
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             context.Response.ContentType = "application/json";
-            
+
             var error = new
             {
                 type = "https://httpstatuses.io/409",
@@ -141,7 +141,7 @@ public class IdempotencyMiddleware
                 detail = checkResult.ErrorMessage,
                 instance = path
             };
-            
+
             await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
@@ -149,10 +149,10 @@ public class IdempotencyMiddleware
         if (checkResult.IsProcessing)
         {
             _logger.LogWarning("Request with key {Key} is still being processed", idempotencyKey);
-            
+
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             context.Response.ContentType = "application/json";
-            
+
             var error = new
             {
                 type = "https://httpstatuses.io/409",
@@ -161,7 +161,7 @@ public class IdempotencyMiddleware
                 detail = "A request with this idempotency key is currently being processed. Please wait and retry.",
                 instance = path
             };
-            
+
             await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
@@ -170,17 +170,17 @@ public class IdempotencyMiddleware
         {
             // Return cached response
             _logger.LogInformation("Replaying cached response for idempotency key {Key}", idempotencyKey);
-            
+
             context.Response.StatusCode = checkResult.Record.ResponseStatusCode;
             context.Response.ContentType = checkResult.Record.ResponseContentType;
             context.Response.Headers["X-Idempotency-Replayed"] = "true";
-            
+
             // Add cached headers
             foreach (var header in checkResult.Record.ResponseHeaders)
             {
                 context.Response.Headers[header.Key] = header.Value;
             }
-            
+
             await context.Response.WriteAsync(checkResult.Record.ResponseBody);
             return;
         }
@@ -197,15 +197,15 @@ public class IdempotencyMiddleware
         };
 
         var started = await idempotencyClient.StartProcessingAsync(record);
-        
+
         if (!started)
         {
             // Race condition - another request started processing
             _logger.LogWarning("Failed to start processing - another request won the race for key {Key}", idempotencyKey);
-            
+
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             context.Response.ContentType = "application/json";
-            
+
             var error = new
             {
                 type = "https://httpstatuses.io/409",
@@ -214,7 +214,7 @@ public class IdempotencyMiddleware
                 detail = "Another request with this idempotency key is being processed.",
                 instance = path
             };
-            
+
             await context.Response.WriteAsync(JsonSerializer.Serialize(error, s_jsonOptions));
             return;
         }
@@ -235,7 +235,7 @@ public class IdempotencyMiddleware
 
             // Extract headers to cache
             var headersToCache = new Dictionary<string, string>();
-            foreach (var header in context.Response.Headers.Where(h => 
+            foreach (var header in context.Response.Headers.Where(h =>
                 h.Key.StartsWith("X-", StringComparison.OrdinalIgnoreCase)))
             {
                 headersToCache[header.Key] = header.Value.ToString();

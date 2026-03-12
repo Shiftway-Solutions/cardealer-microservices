@@ -13,13 +13,13 @@ public class BenchmarkController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<BenchmarkController> _logger;
-    
+
     public BenchmarkController(IMediator mediator, ILogger<BenchmarkController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener benchmarks del mercado para una fecha
     /// </summary>
@@ -32,10 +32,10 @@ public class BenchmarkController : ControllerBase
         try
         {
             var targetDate = date ?? DateTime.UtcNow;
-            
+
             var query = new GetMarketBenchmarkQuery(targetDate);
             var result = await _mediator.Send(query);
-            
+
             return Ok(result);
         }
         catch (Exception ex)
@@ -44,7 +44,7 @@ public class BenchmarkController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving market benchmarks" });
         }
     }
-    
+
     /// <summary>
     /// Obtener comparación simplificada para dashboard
     /// </summary>
@@ -60,20 +60,20 @@ public class BenchmarkController : ControllerBase
         {
             var query = new GetMarketBenchmarkQuery(DateTime.UtcNow);
             var benchmarks = await _mediator.Send(query);
-            
+
             // Filtrar por categoría y rango de precio si se proporcionan
             var filtered = benchmarks.AsEnumerable();
-            
+
             if (!string.IsNullOrEmpty(vehicleCategory))
             {
                 filtered = filtered.Where(b => b.VehicleCategory.Equals(vehicleCategory, StringComparison.OrdinalIgnoreCase));
             }
-            
+
             if (!string.IsNullOrEmpty(priceRange))
             {
                 filtered = filtered.Where(b => b.PriceRange.Equals(priceRange, StringComparison.OrdinalIgnoreCase));
             }
-            
+
             var comparison = new
             {
                 Filters = new { VehicleCategory = vehicleCategory, PriceRange = priceRange },
@@ -105,7 +105,7 @@ public class BenchmarkController : ControllerBase
                     }
                 }).ToList()
             };
-            
+
             return Ok(comparison);
         }
         catch (Exception ex)
@@ -114,7 +114,7 @@ public class BenchmarkController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving benchmark comparison" });
         }
     }
-    
+
     /// <summary>
     /// Obtener categorías y rangos de precio disponibles
     /// </summary>
@@ -126,14 +126,14 @@ public class BenchmarkController : ControllerBase
         {
             var query = new GetMarketBenchmarkQuery(DateTime.UtcNow);
             var benchmarks = await _mediator.Send(query);
-            
+
             var filters = new
             {
                 VehicleCategories = benchmarks.Select(b => b.VehicleCategory).Distinct().OrderBy(c => c).ToList(),
                 PriceRanges = benchmarks.Select(b => b.PriceRange).Distinct().OrderBy(r => r).ToList(),
                 LastUpdated = benchmarks.Any() ? benchmarks.Max(b => b.Date) : DateTime.UtcNow
             };
-            
+
             return Ok(filters);
         }
         catch (Exception ex)

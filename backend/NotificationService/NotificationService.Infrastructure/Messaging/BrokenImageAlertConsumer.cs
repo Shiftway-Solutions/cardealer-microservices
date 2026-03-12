@@ -1,0 +1,507 @@
+using System.Collections.Concurrent;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using CarDealer.Contracts.Events.Alert;
+using NotificationService.Application.Interfaces;
+using NotificationService.Domain.Entities;
+using NotificationService.Domain.Enums;
+using NotificationService.Domain.Interfaces;
+using NotificationService.Domain.Interfaces.Repositories;
+
+namespace NotificationService.Infrastructure.Messaging;
+
+/// <summary>
+/// Background service that listens for ListingBrokenImagesAlertEvent
+/// and sends WhatsApp notifications to affected dealers.
+///
+/// Throttle: Maximum 1 notification per listing per 24 hours.
+/// Message: "Algunas fotos de tu [Marca Modelo Año] no se están viendo.
+///           Entra a tu panel OKLA para resubirlas."
+/// </summary>
+public class BrokenImageAlertConsumer : BackgroundService
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<BrokenImageAlertConsumer> _logger;
+    private readonly IConfiguration _configuration;
+    private IConnection? _connection;
+    private IModel? _channel;
+    private const string ExchangeName = "cardealer.events";
+    private const string QueueName = "notificationservice.listing.broken_images";
+    private const string RoutingKey = "alert.listing.broken_images";
+
+    /// <summary>
+    /// In-memory throttle: tracks last notification time per VehicleId.
+    /// Prevents sending more than 1 notification per listing per 24 hours.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Guid, DateTime> _lastNotificationSent = new();
+
+    public BrokenImageAlertConsumer(
+        IServiceProvider serviceProvider,
+        ILogger<BrokenImageAlertConsumer> logger,
+        IConfiguration configuration)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+        _configuration = configuration;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var rabbitMQEnabled = _configuration.GetValue<bool>("RabbitMQ:Enabled");
+        if (!rabbitMQEnabled)
+        {
+            _logger.LogInformation("RabbitMQ is disabled. BrokenImageAlertConsumer will not start.");
+            return;
+        }
+
+        try
+        {
+            InitializeRabbitMQ();
+
+            if (_channel == null)
+            {
+                _logger.LogWarning("RabbitMQ channel is null after initialization for BrokenImageAlertConsumer. Consumer will not start");
+                return;
+            }
+
+            var consumer = new AsyncEventingBasicConsumer(_channel);
+
+            consumer.Received += async (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+
+                try
+                {
+                    var alertEvent = JsonSerializer.Deserialize<ListingBrokenImagesAlertEvent>(message,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (alertEvent != null)
+                    {
+                        _logger.LogInformation(
+                            "Received ListingBrokenImagesAlertEvent: VehicleId={VehicleId}, BrokenImages={Broken}/{Total} ({Pct}%)",
+                            alertEvent.VehicleId,
+                            alertEvent.BrokenImages,
+                            alertEvent.TotalImages,
+                            alertEvent.BrokenPercentage);
+
+                        // 24h throttle check
+                        if (IsThrottled(alertEvent.VehicleId))
+                        {
+                            _logger.LogInformation(
+                                "Throttled: Notification for VehicleId={VehicleId} already sent within 24h. Skipping.",
+                                alertEvent.VehicleId);
+                            _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                            return;
+                        }
+
+                        await HandleBrokenImageAlertAsync(alertEvent, stoppingToken);
+
+                        // Record notification time for throttle
+                        _lastNotificationSent[alertEvent.VehicleId] = DateTime.UtcNow;
+
+                        _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                        _logger.LogDebug("Message acknowledged: {MessageId}", ea.BasicProperties.MessageId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to deserialize ListingBrokenImagesAlertEvent");
+                        _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing ListingBrokenImagesAlertEvent");
+                    _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: true);
+                }
+            };
+
+            _channel.BasicConsume(
+                queue: QueueName,
+                autoAck: false,
+                consumer: consumer);
+
+            _logger.LogInformation("🖼️ BrokenImageAlertConsumer started listening on queue: {Queue}", QueueName);
+
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("BrokenImageAlertConsumer stopping (cancellation requested)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fatal error in BrokenImageAlertConsumer");
+        }
+    }
+
+    private void InitializeRabbitMQ()
+    {
+        try
+        {
+            var factory = new ConnectionFactory
+            {
+                HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
+                Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
+                UserName = _configuration["RabbitMQ:Username"] ?? throw new InvalidOperationException("RabbitMQ:Username is not configured"),
+                Password = _configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured"),
+                VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/",
+                DispatchConsumersAsync = true,
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+            };
+
+            _connection = factory.CreateConnection();
+            _channel = _connection.CreateModel();
+
+            _channel.ExchangeDeclare(
+                exchange: ExchangeName,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false);
+
+            _channel.QueueDeclare(
+                queue: QueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
+            _channel.QueueBind(
+                queue: QueueName,
+                exchange: ExchangeName,
+                routingKey: RoutingKey);
+
+            _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+            _logger.LogInformation("RabbitMQ initialized successfully for BrokenImageAlertConsumer");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize RabbitMQ connection for BrokenImageAlertConsumer");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Checks if a notification was already sent for this vehicle within the last 24 hours.
+    /// Also cleans up stale entries older than 48 hours to prevent memory leaks.
+    /// </summary>
+    private static bool IsThrottled(Guid vehicleId)
+    {
+        // Cleanup stale entries (>48h)
+        var staleKeys = _lastNotificationSent
+            .Where(kv => (DateTime.UtcNow - kv.Value).TotalHours > 48)
+            .Select(kv => kv.Key)
+            .ToList();
+        foreach (var key in staleKeys)
+        {
+            _lastNotificationSent.TryRemove(key, out _);
+        }
+
+        if (_lastNotificationSent.TryGetValue(vehicleId, out var lastSent))
+        {
+            return (DateTime.UtcNow - lastSent).TotalHours < 24;
+        }
+
+        return false;
+    }
+
+    private async Task HandleBrokenImageAlertAsync(
+        ListingBrokenImagesAlertEvent alertEvent,
+        CancellationToken cancellationToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        // ── 0. Enrich event with vehicle details from VehiclesSaleService ──
+        // The publisher (MediaService) only knows OwnerId/DealerId from image grouping.
+        // We need Make/Model/Year/SellerId/SellerWhatsApp for notifications.
+        if (alertEvent.VehicleId != Guid.Empty)
+        {
+            await EnrichAlertWithVehicleDataAsync(scope, alertEvent, cancellationToken);
+        }
+
+        try
+        {
+            // ── 1. Send WhatsApp notification to dealer ──
+            var whatsAppPhone = alertEvent.DealerWhatsApp;
+            if (!string.IsNullOrWhiteSpace(whatsAppPhone))
+            {
+                try
+                {
+                    var notificationRepo = scope.ServiceProvider.GetService<INotificationRepository>();
+                    if (notificationRepo != null)
+                    {
+                        var whatsAppMessage = $"Algunas fotos de tu {alertEvent.Make} {alertEvent.Model} {alertEvent.Year} " +
+                                              $"no se están viendo. Entra a tu panel OKLA para resubirlas. " +
+                                              $"https://okla.com.do/vender/editar/{alertEvent.VehicleId}";
+
+                        var notification = Notification.CreateWhatsAppNotification(
+                            to: whatsAppPhone,
+                            message: whatsAppMessage,
+                            priority: PriorityLevel.High,
+                            templateName: "broken_images_alert",
+                            metadata: new Dictionary<string, object>
+                            {
+                                ["vehicleId"] = alertEvent.VehicleId.ToString(),
+                                ["brokenImages"] = alertEvent.BrokenImages,
+                                ["totalImages"] = alertEvent.TotalImages,
+                                ["brokenPercentage"] = alertEvent.BrokenPercentage
+                            },
+                            dealerId: alertEvent.DealerId);
+
+                        await notificationRepo.AddAsync(notification);
+
+                        _logger.LogInformation(
+                            "📱 WhatsApp broken images alert queued for dealer {SellerId}, VehicleId={VehicleId}, Phone={Phone}",
+                            alertEvent.SellerId, alertEvent.VehicleId, whatsAppPhone);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to send WhatsApp broken images alert for VehicleId={VehicleId}",
+                        alertEvent.VehicleId);
+                }
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "No WhatsApp number available for dealer {DealerId} (VehicleId={VehicleId}). Skipping WhatsApp notification.",
+                    alertEvent.DealerId, alertEvent.VehicleId);
+            }
+
+            // ── 2. Persist in-app notification for dealer ──
+            try
+            {
+                var userNotifService = scope.ServiceProvider.GetService<IUserNotificationService>();
+                if (userNotifService != null)
+                {
+                    await userNotifService.CreateAsync(
+                        userId: alertEvent.SellerId,
+                        type: "broken_images_alert",
+                        title: "⚠️ Fotos no disponibles",
+                        message: $"Algunas fotos de tu {alertEvent.Make} {alertEvent.Model} {alertEvent.Year} no se están viendo ({alertEvent.BrokenImages}/{alertEvent.TotalImages}). Entra a tu panel para resubirlas.",
+                        icon: "⚠️",
+                        link: $"/vender/editar/{alertEvent.VehicleId}",
+                        cancellationToken: cancellationToken);
+
+                    _logger.LogInformation(
+                        "🔔 In-app broken images notification created for seller {SellerId}, VehicleId={VehicleId}",
+                        alertEvent.SellerId, alertEvent.VehicleId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to create in-app notification for broken images. VehicleId={VehicleId}",
+                    alertEvent.VehicleId);
+            }
+
+            // ── 3. Send email to dealer as fallback ──
+            try
+            {
+                var emailService = scope.ServiceProvider.GetService<IEmailService>();
+                if (emailService != null)
+                {
+                    // Resolve dealer email
+                    string? dealerEmail = null;
+                    try
+                    {
+                        var httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
+                        if (httpClientFactory != null)
+                        {
+                            var client = httpClientFactory.CreateClient("UserService");
+                            var response = await client.GetAsync($"/api/users/{alertEvent.SellerId}/email", cancellationToken);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                dealerEmail = await response.Content.ReadAsStringAsync(cancellationToken);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to resolve dealer email for SellerId: {SellerId}", alertEvent.SellerId);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(dealerEmail))
+                    {
+                        var subject = $"⚠️ Fotos de tu {alertEvent.Make} {alertEvent.Model} {alertEvent.Year} no se están viendo";
+                        var body = $@"
+                            <html>
+                            <body style='font-family: Arial, sans-serif;'>
+                                <h2 style='color: #e53e3e;'>⚠️ Fotos de tu vehículo no se están mostrando</h2>
+                                <p>Hemos detectado que <strong>{alertEvent.BrokenImages} de {alertEvent.TotalImages}</strong> fotos
+                                de tu <strong>{alertEvent.Year} {alertEvent.Make} {alertEvent.Model}</strong> no se están viendo
+                                correctamente para los compradores.</p>
+                                
+                                <p>Esto puede afectar las visitas y los contactos que recibes.</p>
+                                
+                                <p style='margin-top: 20px;'>
+                                    <a href='https://okla.com.do/vender/editar/{alertEvent.VehicleId}' 
+                                       style='background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;'>
+                                        Resubir fotos ahora
+                                    </a>
+                                </p>
+                                
+                                <hr style='margin: 30px 0; border: none; border-top: 1px solid #dee2e6;'>
+                                <p style='color: #6c757d; font-size: 12px;'>
+                                    Este es un mensaje automático de OKLA. No responder a este correo.
+                                </p>
+                            </body>
+                            </html>";
+
+                        await emailService.SendEmailAsync(
+                            to: dealerEmail,
+                            subject: subject,
+                            body: body,
+                            isHtml: true);
+
+                        _logger.LogInformation(
+                            "📧 Broken images email sent to {Email} for VehicleId={VehicleId}",
+                            dealerEmail, alertEvent.VehicleId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send broken images email for VehicleId={VehicleId}", alertEvent.VehicleId);
+            }
+
+            _logger.LogInformation(
+                "✅ Broken images alert processed for VehicleId={VehicleId}: {Broken}/{Total} images broken ({Pct}%)",
+                alertEvent.VehicleId, alertEvent.BrokenImages, alertEvent.TotalImages, alertEvent.BrokenPercentage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to handle broken image alert for VehicleId={VehicleId}", alertEvent.VehicleId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Enriches the alert event with vehicle details (Make, Model, Year, SellerId, SellerWhatsApp)
+    /// by calling VehiclesSaleService GET /api/vehicles/{id}.
+    /// Also sets HasBrokenImages = true on the vehicle via PATCH.
+    /// </summary>
+    private async Task EnrichAlertWithVehicleDataAsync(
+        IServiceScope scope,
+        ListingBrokenImagesAlertEvent alertEvent,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var httpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
+            var client = httpClientFactory.CreateClient("VehiclesSaleService");
+
+            // GET vehicle details for enrichment
+            var response = await client.GetAsync($"/api/vehicles/{alertEvent.VehicleId}", cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "🖼️ Failed to enrich vehicle data for VehicleId={VehicleId}. HTTP {Status}",
+                    alertEvent.VehicleId, (int)response.StatusCode);
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            var vehicleData = JsonSerializer.Deserialize<JsonElement>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            // Enrich Make/Model/Year
+            if (vehicleData.TryGetProperty("make", out var make))
+                alertEvent.Make = make.GetString() ?? alertEvent.Make;
+            if (vehicleData.TryGetProperty("model", out var model))
+                alertEvent.Model = model.GetString() ?? alertEvent.Model;
+            if (vehicleData.TryGetProperty("year", out var year))
+                alertEvent.Year = year.TryGetInt32(out var y) ? y : alertEvent.Year;
+
+            // Enrich SellerId and WhatsApp
+            if (vehicleData.TryGetProperty("sellerId", out var sellerId) &&
+                Guid.TryParse(sellerId.GetString(), out var sid))
+                alertEvent.SellerId = sid;
+            if (vehicleData.TryGetProperty("sellerWhatsApp", out var whatsApp))
+                alertEvent.DealerWhatsApp = whatsApp.GetString();
+
+            _logger.LogInformation(
+                "🖼️ Enriched alert: VehicleId={VehicleId} → {Make} {Model} {Year}, SellerId={SellerId}, WhatsApp={HasWhatsApp}",
+                alertEvent.VehicleId, alertEvent.Make, alertEvent.Model, alertEvent.Year,
+                alertEvent.SellerId, !string.IsNullOrEmpty(alertEvent.DealerWhatsApp));
+
+            // Mark the vehicle as having broken images (buyer-facing banner)
+            await MarkVehicleBrokenImagesAsync(client, alertEvent.VehicleId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "🖼️ Non-critical: Failed to enrich vehicle data for VehicleId={VehicleId}. Notifications will use available data.",
+                alertEvent.VehicleId);
+        }
+    }
+
+    /// <summary>
+    /// Calls VehiclesSaleService to set HasBrokenImages = true on the vehicle,
+    /// enabling the buyer-facing "Fotos en actualización" banner.
+    /// </summary>
+    private async Task MarkVehicleBrokenImagesAsync(
+        HttpClient client,
+        Guid vehicleId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(new { hasBrokenImages = true }),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await client.PatchAsync(
+                $"/api/vehicles/{vehicleId}/broken-images",
+                content,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation(
+                    "🖼️ Marked vehicle {VehicleId} HasBrokenImages=true for buyer banner",
+                    vehicleId);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "🖼️ Failed to mark vehicle {VehicleId} as broken images. HTTP {Status}",
+                    vehicleId, (int)response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "🖼️ Non-critical: Failed to mark vehicle {VehicleId} broken images flag",
+                vehicleId);
+        }
+    }
+
+    public override void Dispose()
+    {
+        try
+        {
+            _channel?.Close();
+            _connection?.Close();
+            _channel?.Dispose();
+            _connection?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error disposing RabbitMQ connection for BrokenImageAlertConsumer");
+        }
+
+        base.Dispose();
+    }
+}

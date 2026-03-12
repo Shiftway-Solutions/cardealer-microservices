@@ -15,6 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   BarChart3,
   TrendingUp,
   Eye,
@@ -51,7 +58,26 @@ function StatsSkeleton() {
   );
 }
 
+const PERIOD_OPTIONS = [
+  { value: '7d', label: 'Últimos 7 días', days: 7 },
+  { value: '30d', label: 'Últimos 30 días', days: 30 },
+  { value: '90d', label: 'Últimos 90 días', days: 90 },
+  { value: '1y', label: 'Este año', days: 365 },
+] as const;
+
+function getDateRange(periodValue: string): { fromDate: string; toDate: string } {
+  const now = new Date();
+  const toDate = now.toISOString();
+  const from = new Date(now);
+  const opt = PERIOD_OPTIONS.find(p => p.value === periodValue);
+  from.setDate(from.getDate() - (opt?.days ?? 30));
+  return { fromDate: from.toISOString(), toDate };
+}
+
 function AnalyticsPageContent() {
+  const [period, setPeriod] = React.useState('30d');
+  const dateRange = React.useMemo(() => getDateRange(period), [period]);
+
   // Get current dealer
   const { data: dealer, isLoading: isDealerLoading } = useCurrentDealer();
 
@@ -67,11 +93,11 @@ function AnalyticsPageContent() {
   const { data: vehiclesData } = useVehiclesByDealer(dealer?.id || '');
 
   // Get engagement data for traffic sources
-  const { data: engagement } = useEngagement(dealer?.id || '');
+  const { data: engagement } = useEngagement(dealer?.id || '', dateRange);
 
-  // Get weekly views trend for chart
-  const { data: viewsTrend } = useTrends(dealer?.id || '', 'views');
-  const { data: leadsTrend } = useTrends(dealer?.id || '', 'leads');
+  // Get views trend for chart — filtered by selected period
+  const { data: viewsTrend } = useTrends(dealer?.id || '', 'views', dateRange);
+  const { data: leadsTrend } = useTrends(dealer?.id || '', 'leads', dateRange);
 
   // Export mutation
   const exportMutation = useExportReport(dealer?.id || '');
@@ -227,10 +253,19 @@ function AnalyticsPageContent() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualizar
           </Button>
-          <Button variant="outline">
-            <Calendar className="mr-2 h-4 w-4" />
-            Últimos 30 días
-          </Button>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-44">
+              <Calendar className="mr-2 h-4 w-4" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             onClick={() => exportMutation.mutate('pdf')}

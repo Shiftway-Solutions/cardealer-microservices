@@ -7,7 +7,7 @@ namespace MediaService.Workers.Handlers;
 
 /// <summary>
 /// Handles asynchronous image processing after upload.
-/// Generates real variants (thumb, small, medium, large, webp) and stores them in S3.
+/// Generates exactly 3 WebP variants (thumbnail, medium, original) and stores them in S3.
 /// Listens to RabbitMQ queue 'media.process' for ProcessMediaCommand messages.
 /// </summary>
 public class ImageProcessingHandler
@@ -17,13 +17,17 @@ public class ImageProcessingHandler
     private readonly IMediaStorageService _storageService;
     private readonly ILogger<ImageProcessingHandler> _logger;
 
+    /// <summary>
+    /// Exactly 3 required variants — all WebP with max file size enforcement.
+    /// thumbnail: 300×200 px, max 30 KB
+    /// medium:    800×600 px, max 150 KB
+    /// original:  no resize (0×0), max 2 MB — format conversion to WebP only
+    /// </summary>
     private static readonly ImageVariantDefinition[] DefaultVariants = new[]
     {
-        new ImageVariantDefinition("thumb", 200, 200, 80, "image/jpeg", "Max"),
-        new ImageVariantDefinition("small", 400, 400, 85, "image/jpeg", "Max"),
-        new ImageVariantDefinition("medium", 800, 800, 85, "image/jpeg", "Max"),
-        new ImageVariantDefinition("large", 1200, 1200, 90, "image/jpeg", "Max"),
-        new ImageVariantDefinition("webp", 800, 800, 80, "image/webp", "Max"),
+        new ImageVariantDefinition("thumbnail", 300, 200, 75, "image/webp", "Max", 30_720L),
+        new ImageVariantDefinition("medium",    800, 600, 80, "image/webp", "Max", 153_600L),
+        new ImageVariantDefinition("original",    0,   0, 85, "image/webp", "Max", 2_097_152L),
     };
 
     public ImageProcessingHandler(
@@ -91,7 +95,8 @@ public class ImageProcessingHandler
     }
 
     /// <summary>
-    /// Generate all variant sizes for an image and upload them to S3.
+    /// Generate all 3 WebP variant sizes for an image and upload them to S3.
+    /// Uses CreateWebpVariantAsync with iterative quality reduction to respect max file size per variant.
     /// </summary>
     private async Task<int> GenerateVariantsAsync(ImageMedia imageMedia, CancellationToken cancellationToken)
     {
@@ -111,9 +116,9 @@ public class ImageProcessingHandler
         {
             try
             {
-                // Skip generating variants larger than the original
-                if (variantDef.MaxWidth >= imageInfo.Width && variantDef.MaxHeight >= imageInfo.Height
-                    && variantDef.Name != "webp")
+                // For sized variants (thumbnail, medium): skip if original is smaller than target
+                if (variantDef.MaxWidth > 0 && variantDef.MaxHeight > 0
+                    && variantDef.MaxWidth >= imageInfo.Width && variantDef.MaxHeight >= imageInfo.Height)
                 {
                     _logger.LogDebug(
                         "Skipping variant {VariantName} for {MediaId} — original is smaller ({W}x{H})",
@@ -123,13 +128,17 @@ public class ImageProcessingHandler
 
                 originalStream.Position = 0;
 
-                using var variantStream = await _imageProcessor.CreateThumbnailAsync(
-                    originalStream, variantDef.MaxWidth, variantDef.MaxHeight, variantDef.ResizeMode);
+                using var variantStream = await _imageProcessor.CreateWebpVariantAsync(
+                    originalStream,
+                    variantDef.MaxWidth,
+                    variantDef.MaxHeight,
+                    variantDef.Quality,
+                    variantDef.MaxFileSizeBytes,
+                    variantDef.ResizeMode);
 
-                var extension = variantDef.ContentType == "image/webp" ? ".webp" : ".jpg";
-                var variantStorageKey = $"{basePath}/variants/{variantDef.Name}{extension}";
+                var variantStorageKey = $"{basePath}/variants/{variantDef.Name}.webp";
 
-                await _storageService.UploadFileAsync(variantStorageKey, variantStream, variantDef.ContentType);
+                await _storageService.UploadFileAsync(variantStorageKey, variantStream, "image/webp");
 
                 var variantUrl = await _storageService.GetFileUrlAsync(variantStorageKey);
 
@@ -137,10 +146,10 @@ public class ImageProcessingHandler
                     imageMedia.Id,
                     variantDef.Name,
                     variantStorageKey,
-                    variantDef.MaxWidth,
-                    variantDef.MaxHeight,
+                    variantDef.MaxWidth > 0 ? variantDef.MaxWidth : imageInfo.Width,
+                    variantDef.MaxHeight > 0 ? variantDef.MaxHeight : imageInfo.Height,
                     variantStream.Length,
-                    extension,
+                    ".webp",
                     variantDef.Quality);
 
                 mediaVariant.SetCdnUrl(variantUrl);
@@ -148,8 +157,8 @@ public class ImageProcessingHandler
                 variantsGenerated++;
 
                 _logger.LogDebug(
-                    "Generated variant {VariantName} ({Width}x{Height}, {Size} bytes) for {MediaId}",
-                    variantDef.Name, variantDef.MaxWidth, variantDef.MaxHeight, variantStream.Length, imageMedia.Id);
+                    "Generated WebP variant {VariantName} ({Size} bytes, q{Quality}) for {MediaId}",
+                    variantDef.Name, variantStream.Length, variantDef.Quality, imageMedia.Id);
             }
             catch (Exception ex)
             {
@@ -175,6 +184,8 @@ public class ImageProcessingHandler
 
     /// <summary>
     /// Defines the configuration for a single image variant.
+    /// MaxFileSizeBytes: 0 = no limit; >0 = quality will be reduced iteratively to fit.
+    /// MaxWidth/MaxHeight: 0 = keep original dimensions (format conversion only).
     /// </summary>
     private record ImageVariantDefinition(
         string Name,
@@ -182,5 +193,6 @@ public class ImageProcessingHandler
         int MaxHeight,
         int Quality,
         string ContentType,
-        string ResizeMode);
+        string ResizeMode,
+        long MaxFileSizeBytes = 0);
 }

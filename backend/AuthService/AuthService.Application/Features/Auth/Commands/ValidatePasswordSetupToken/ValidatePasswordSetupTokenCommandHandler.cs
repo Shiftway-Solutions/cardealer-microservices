@@ -16,7 +16,7 @@ public class ValidatePasswordSetupTokenCommandHandler : IRequestHandler<Validate
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<ValidatePasswordSetupTokenCommandHandler> _logger;
-    
+
     private const string TOKEN_PREFIX = "password_setup:token:";
     private static readonly TimeSpan TOKEN_TTL = TimeSpan.FromHours(1);
 
@@ -46,7 +46,7 @@ public class ValidatePasswordSetupTokenCommandHandler : IRequestHandler<Validate
             if (string.IsNullOrEmpty(tokenDataJson))
             {
                 _logger.LogWarning("Invalid or expired password setup token attempted");
-                
+
                 return new ValidatePasswordSetupTokenResponse(
                     IsValid: false,
                     Message: "This link has expired or is invalid. Please request a new password setup email."
@@ -68,7 +68,7 @@ public class ValidatePasswordSetupTokenCommandHandler : IRequestHandler<Validate
             {
                 // Clean up expired token
                 await _cache.RemoveAsync(tokenKey, cancellationToken);
-                
+
                 return new ValidatePasswordSetupTokenResponse(
                     IsValid: false,
                     Message: "This link has expired. Please request a new password setup email."

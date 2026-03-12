@@ -20,16 +20,16 @@ public class TwilioSmsService : ISmsProvider // ✅ Implementa interfaz de Domai
     {
         _logger = logger;
         var twilioSettings = settings.Value.Twilio;
-        
+
         // Verificar si está configurado
-        if (string.IsNullOrWhiteSpace(twilioSettings?.AccountSid) || 
+        if (string.IsNullOrWhiteSpace(twilioSettings?.AccountSid) ||
             string.IsNullOrWhiteSpace(twilioSettings?.AuthToken))
         {
             _logger.LogWarning("Twilio credentials not configured. SMS sending will be mocked.");
             _isConfigured = false;
             return;
         }
-        
+
         TwilioClient.Init(twilioSettings.AccountSid, twilioSettings.AuthToken);
         _fromNumber = twilioSettings.FromNumber;
         _isConfigured = true;
@@ -48,7 +48,7 @@ public class TwilioSmsService : ISmsProvider // ✅ Implementa interfaz de Domai
             _logger.LogInformation("[MOCK] SMS would be sent to {To}: {Message}", to, message);
             return (true, $"mock-sms-{Guid.NewGuid()}", null);
         }
-        
+
         try
         {
             var messageResource = await MessageResource.CreateAsync(

@@ -46,19 +46,19 @@ public class RequestAccountDeletionCommandHandler : IRequestHandler<RequestAccou
     {
         // 1. Obtener datos del usuario - buscar por email ya que los IDs entre AuthService y UserService pueden diferir
         Domain.Entities.User? user = null;
-        
+
         // Primero intentar buscar por email (más confiable entre microservicios)
         if (!string.IsNullOrEmpty(request.Email))
         {
             user = await _userRepository.GetByEmailAsync(request.Email);
         }
-        
+
         // Fallback: buscar por ID
         if (user == null)
         {
             user = await _userRepository.GetByIdAsync(request.UserId);
         }
-        
+
         if (user == null)
         {
             throw new InvalidOperationException($"Usuario no encontrado. Email: {request.Email ?? "N/A"}, ID: {request.UserId}");
@@ -138,12 +138,12 @@ public class RequestAccountDeletionCommandHandler : IRequestHandler<RequestAccou
         var localPart = parts[0];
         var domainPart = parts[1];
 
-        var maskedLocal = localPart.Length > 2 
+        var maskedLocal = localPart.Length > 2
             ? localPart[0] + new string('*', localPart.Length - 2) + localPart[^1]
             : new string('*', localPart.Length);
 
         var domainParts = domainPart.Split('.');
-        var maskedDomain = domainParts[0].Length > 2 
+        var maskedDomain = domainParts[0].Length > 2
             ? domainParts[0][0] + new string('*', domainParts[0].Length - 2) + domainParts[0][^1]
             : new string('*', domainParts[0].Length);
 

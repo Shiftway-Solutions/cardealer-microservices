@@ -16,7 +16,7 @@ public record CreateReviewCommand : IRequest<Result<ReviewDto>>
     public int Rating { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Content { get; init; } = string.Empty;
-    
+
     // Info del buyer para cache
     public string BuyerName { get; init; } = string.Empty;
     public string? BuyerPhotoUrl { get; init; }

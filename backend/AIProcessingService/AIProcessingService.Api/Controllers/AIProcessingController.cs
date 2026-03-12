@@ -88,10 +88,10 @@ public class AIProcessingController : ControllerBase
     {
         var query = new GetJobStatusQuery(jobId);
         var result = await _mediator.Send(query, ct);
-        
+
         if (result == null)
             return NotFound();
-        
+
         return Ok(result);
     }
 
@@ -104,10 +104,10 @@ public class AIProcessingController : ControllerBase
     {
         var query = new GetSpin360StatusQuery(jobId);
         var result = await _mediator.Send(query, ct);
-        
+
         if (result == null)
             return NotFound();
-        
+
         return Ok(result);
     }
 
@@ -152,7 +152,7 @@ public class AIProcessingController : ControllerBase
     [HttpPost("callback")]
     public async Task<ActionResult> ProcessingCallback([FromBody] ProcessingCallbackRequest request, CancellationToken ct)
     {
-        _logger.LogInformation("Received callback for job {JobId} with status {Status}", 
+        _logger.LogInformation("Received callback for job {JobId} with status {Status}",
             request.JobId, request.Success ? "success" : "failed");
 
         var command = new UpdateJobStatusCommand(
@@ -189,7 +189,7 @@ public class AIProcessingController : ControllerBase
     {
         var accountType = User.IsInRole("Dealer") ? "Dealer" : User.IsInRole("Admin") ? "Admin" : "Individual";
         var hasSubscription = User.HasClaim("subscription", "active");
-        
+
         var query = new GetFeaturesQuery(accountType, hasSubscription);
         var result = await _mediator.Send(query, ct);
         return Ok(result);
@@ -236,22 +236,22 @@ public class AIProcessingController : ControllerBase
             _logger.LogWarning("Image not found: {Path}", imagePath);
             return NotFound();
         }
-        
+
         var contentType = extension switch
         {
             ".png" => "image/png",
             ".webp" => "image/webp",
             _ => "image/jpeg"
         };
-        
+
         return PhysicalFile(imagePath, contentType);
     }
 
     private Guid GetUserIdFromClaims()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value ?? 
+        var userIdClaim = User.FindFirst("sub")?.Value ??
                          User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        
+
         return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 }

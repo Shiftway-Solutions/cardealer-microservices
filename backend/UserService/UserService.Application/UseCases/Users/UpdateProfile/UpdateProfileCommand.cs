@@ -43,7 +43,7 @@ namespace UserService.Application.UseCases.Users.UpdateProfile
         public async Task<UserDto> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByIdAsync(request.UserId);
-            
+
             if (user == null)
             {
                 throw new NotFoundException($"User {request.UserId} not found");
@@ -52,22 +52,22 @@ namespace UserService.Application.UseCases.Users.UpdateProfile
             // Update fields if provided
             if (!string.IsNullOrWhiteSpace(request.FirstName))
                 user.FirstName = request.FirstName.Trim();
-            
+
             if (!string.IsNullOrWhiteSpace(request.LastName))
                 user.LastName = request.LastName.Trim();
-            
+
             if (request.Phone != null)
                 user.PhoneNumber = request.Phone.Trim();
-            
+
             // Note: Bio is not in the User entity - would need to add it
             // For now, we skip it
-            
+
             if (request.Location != null)
                 user.BusinessAddress = request.Location.Trim();
-            
+
             if (request.City != null)
                 user.City = request.City.Trim();
-            
+
             if (request.Province != null)
                 user.Province = request.Province.Trim();
 

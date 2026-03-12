@@ -145,7 +145,7 @@ public class IdentityVerificationSession
 
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<List<LivenessChallenge>>(LivenessChallengesJson) 
+            return System.Text.Json.JsonSerializer.Deserialize<List<LivenessChallenge>>(LivenessChallengesJson)
                    ?? new List<LivenessChallenge>();
         }
         catch
@@ -172,7 +172,7 @@ public class IdentityVerificationSession
 
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(DocumentValidationErrorsJson) 
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(DocumentValidationErrorsJson)
                    ?? new List<string>();
         }
         catch
@@ -231,7 +231,7 @@ public class OcrExtractionResult
 {
     public bool Success { get; set; }
     public decimal Confidence { get; set; }
-    
+
     // Campos extraídos
     public string? FullName { get; set; }
     public string? FirstName { get; set; }
@@ -243,14 +243,14 @@ public class OcrExtractionResult
     public string? Gender { get; set; }
     public string? Address { get; set; }
     public string? PlaceOfBirth { get; set; }
-    
+
     // Campos adicionales (para pasaporte)
     public string? MrzLine1 { get; set; }
     public string? MrzLine2 { get; set; }
-    
+
     // Errores encontrados
     public List<string> Errors { get; set; } = new();
-    
+
     // Raw data from provider
     public string? RawResponseJson { get; set; }
 }
@@ -279,7 +279,7 @@ public class FaceComparisonResult
     public decimal Threshold { get; set; }
     public bool Passed { get; set; }
     public string? ErrorMessage { get; set; }
-    
+
     // Detalles adicionales
     public bool FaceDetectedInDocument { get; set; }
     public bool FaceDetectedInSelfie { get; set; }

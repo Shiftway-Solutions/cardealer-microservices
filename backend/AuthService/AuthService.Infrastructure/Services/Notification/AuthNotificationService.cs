@@ -673,7 +673,7 @@ public class AuthNotificationService : IAuthNotificationService
     private string GeneratePasswordChangedEmailBody()
     {
         var changedAt = System.DateTime.UtcNow.ToString("MMMM dd, yyyy 'at' HH:mm 'UTC'");
-        
+
         return $@"
             <!DOCTYPE html>
             <html>
@@ -804,10 +804,10 @@ public class AuthNotificationService : IAuthNotificationService
     {
         var changedAt = alert.Timestamp.ToString("yyyy-MM-dd HH:mm:ss UTC");
         var location = alert.Location ?? "Ubicación desconocida";
-        var lockoutInfo = alert.LockoutDuration.HasValue 
-            ? $"<p><strong>Duración del bloqueo:</strong> {alert.LockoutDuration.Value.TotalMinutes} minutos</p>" 
+        var lockoutInfo = alert.LockoutDuration.HasValue
+            ? $"<p><strong>Duración del bloqueo:</strong> {alert.LockoutDuration.Value.TotalMinutes} minutos</p>"
             : "";
-        
+
         var alertTypeMessage = alert.AlertType switch
         {
             "FailedLoginAttempts" => $"Detectamos <strong>{alert.AttemptCount}</strong> intentos fallidos de inicio de sesión en tu cuenta.",
@@ -817,7 +817,7 @@ public class AuthNotificationService : IAuthNotificationService
             "SuspiciousActivity" => "Detectamos actividad sospechosa en tu cuenta.",
             _ => "Se detectó una actividad inusual en tu cuenta."
         };
-        
+
         var changePasswordUrl = $"{_settings.FrontendBaseUrl}/recuperar-contrasena";
         var supportUrl = $"{_settings.FrontendBaseUrl}/contacto";
 

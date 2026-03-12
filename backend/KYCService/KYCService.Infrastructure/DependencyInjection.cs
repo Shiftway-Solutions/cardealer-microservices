@@ -25,13 +25,13 @@ public static class DependencyInjection
         // Configurar Data Validation Service (reemplaza a JCE que no existe en RD)
         services.Configure<DataValidationConfig>(
             configuration.GetSection("DataValidation"));
-        
+
         services.AddScoped<IDataValidationService, DataValidationService>();
 
         // Mantener JCE Service por compatibilidad (solo validación local)
         services.Configure<JCEServiceConfig>(
             configuration.GetSection(JCEServiceConfig.SectionName));
-        
+
         services.AddHttpClient<IJCEService, JCEService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
@@ -40,19 +40,19 @@ public static class DependencyInjection
         // Configurar OCR Service
         services.Configure<OCRServiceConfig>(
             configuration.GetSection(OCRServiceConfig.SectionName));
-        
+
         services.AddSingleton<IOCRService, TesseractOCRService>();
 
         // Configurar Face Comparison Service
         services.Configure<FaceComparisonConfig>(
             configuration.GetSection(FaceComparisonConfig.SectionName));
-        
+
         // Configurar Amazon Rekognition (RECOMENDADO: económico ~$0.001/imagen)
         services.Configure<AmazonRekognitionConfig>(
             configuration.GetSection("AmazonRekognition"));
-        
+
         services.AddSingleton<AmazonRekognitionService>();
-        
+
         services.AddScoped<IFaceComparisonService, FaceComparisonService>();
 
         return services;
@@ -126,7 +126,7 @@ public static class DependencyInjection
             options.UseAmazonRekognition = true;  // ✅ RECOMENDADO: Económico
             options.UseAzureFaceApi = false;      // No usar Azure (más caro)
         });
-        
+
         // Configurar Amazon Rekognition para producción
         services.Configure<AmazonRekognitionConfig>(options =>
         {

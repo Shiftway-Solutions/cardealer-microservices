@@ -161,6 +161,34 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
+    /// Internal endpoint: Mark vehicle as having broken images.
+    /// Called by NotificationService when ImageUrlHealthScanJob detects >50% broken images.
+    /// Sets HasBrokenImages=true so the buyer-facing "Fotos en actualización" banner shows.
+    /// </summary>
+    [HttpPatch("{id:guid}/broken-images")]
+    [AllowAnonymous] // Internal service-to-service call (no user token available)
+    public async Task<ActionResult> MarkBrokenImages(Guid id)
+    {
+        var vehicle = await _vehicleRepository.GetByIdAsync(id);
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        vehicle.HasBrokenImages = true;
+        vehicle.BrokenImagesDetectedAt = DateTime.UtcNow;
+
+        await _vehicleRepository.UpdateAsync(vehicle);
+
+        // Invalidate cache so buyers see the banner immediately
+        await _cache.RemoveAsync($"vehicle:detail:{id}");
+
+        _logger.LogInformation(
+            "🖼️ Vehicle {VehicleId} marked HasBrokenImages=true by health scan",
+            id);
+
+        return Ok(new { message = "Vehicle marked as having broken images", vehicleId = id });
+    }
+
+    /// <summary>
     /// Get vehicle by slug (format: {year}-{make}-{model}-{shortId})
     /// </summary>
     [HttpGet("slug/{slug}")]
@@ -1258,11 +1286,11 @@ public class VehiclesController : ControllerBase
         }
 
         // Validate status - only Draft, Archived, or Rejected can be submitted for review
-        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected)
+        if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected && vehicle.Status != VehicleStatus.PendingMedia)
         {
             return BadRequest(new
             {
-                message = $"Vehicle cannot be submitted from status '{vehicle.Status}'. Only Draft, Archived, or Rejected vehicles can be submitted for review.",
+                message = $"Vehicle cannot be submitted from status '{vehicle.Status}'. Only Draft, Archived, Rejected, or PendingMedia vehicles can be submitted for review.",
                 currentStatus = vehicle.Status.ToString()
             });
         }
@@ -1444,6 +1472,83 @@ public class VehiclesController : ControllerBase
                 // Add moderation note for reviewer
                 vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
                     + $"\n[FOTOS] {photoModeration.RejectedCount}/{photoModeration.TotalImages} fotos rechazadas por moderación automática.";
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CDN URL VERIFICATION: Validate images are accessible from public CDN
+        // Uses HEAD requests in parallel to verify all image URLs within 3 seconds.
+        // Detects permissions issues (403), missing files (404), server errors (500).
+        // ═══════════════════════════════════════════════════════════════
+        VehiclesSaleService.Application.Services.ImageUrlValidationResult? urlValidation = null;
+        var imagesWithUrls = vehicle.Images
+            .Where(img => !string.IsNullOrWhiteSpace(img.Url))
+            .Select(img => (img.Id, img.Url))
+            .ToList();
+
+        if (imagesWithUrls.Count > 0)
+        {
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient("ImageUrlValidation");
+                httpClient.Timeout = TimeSpan.FromSeconds(5); // Per-request timeout
+
+                urlValidation = await VehiclesSaleService.Application.Services.ImageUrlValidationService.ValidateAllAsync(
+                    imagesWithUrls,
+                    httpClient,
+                    timeoutSeconds: 3,
+                    cancellationToken: HttpContext.RequestAborted);
+
+                if (!urlValidation.AllValid)
+                {
+                    _logger.LogWarning(
+                        "CDN URL validation for vehicle {VehicleId}: {FailedCount}/{TotalChecked} URLs failed",
+                        id, urlValidation.FailedCount, urlValidation.TotalChecked);
+
+                    // Flag the vehicle for the buyer-facing "Fotos en actualización" banner
+                    vehicle.HasBrokenImages = true;
+                    vehicle.BrokenImagesDetectedAt = DateTime.UtcNow;
+
+                    foreach (var failed in urlValidation.FailedImages)
+                    {
+                        validationErrors.Add($"La imagen no es accesible: {failed.Error} ({failed.Url})");
+                    }
+
+                    // If ALL images fail CDN verification, block listing in PendingMedia state
+                    if (urlValidation.FailedCount == urlValidation.TotalChecked)
+                    {
+                        vehicle.Status = VehicleStatus.PendingMedia;
+                        vehicle.UpdatedAt = DateTime.UtcNow;
+                        vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                            + "\n[MEDIA] ⚠️ NINGUNA imagen es accesible desde el CDN. Listing bloqueado en estado PendingMedia.";
+
+                        await _context.SaveChangesAsync();
+
+                        _logger.LogWarning(
+                            "Vehicle {VehicleId} set to PendingMedia: ALL {FailedCount} images failed CDN verification",
+                            id, urlValidation.FailedCount);
+
+                        return BadRequest(new
+                        {
+                            message = "Ninguna imagen del vehículo es accesible. Por favor, vuelve a subir las imágenes y reintenta la publicación.",
+                            error = "ALL_IMAGES_INACCESSIBLE",
+                            status = "PendingMedia",
+                            failedImages = urlValidation.FailedImages.Select(f => new { f.Url, f.Error, f.HttpStatusCode }),
+                            totalChecked = urlValidation.TotalChecked,
+                            failedCount = urlValidation.FailedCount
+                        });
+                    }
+                    else
+                    {
+                        vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                            + $"\n[MEDIA] {urlValidation.FailedCount}/{urlValidation.TotalChecked} imágenes no accesibles desde CDN.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // URL validation failure should NOT block publish — degrade gracefully
+                _logger.LogWarning(ex, "CDN URL validation failed for vehicle {VehicleId}. Proceeding without URL verification.", id);
             }
         }
 

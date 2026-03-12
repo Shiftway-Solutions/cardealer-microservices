@@ -44,7 +44,7 @@ public class IdempotencyKeyRepository : IIdempotencyKeyRepository
         var expired = await _context.IdempotencyKeys
             .Where(k => k.ExpiresAt < DateTime.UtcNow)
             .ToListAsync(cancellationToken);
-        
+
         _context.IdempotencyKeys.RemoveRange(expired);
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -169,7 +169,7 @@ public class RateLimitRepository : IRateLimitRepository
         var entries = await _context.RateLimitEntries
             .Where(r => r.Key == key && r.Endpoint == endpoint)
             .ToListAsync(cancellationToken);
-        
+
         _context.RateLimitEntries.RemoveRange(entries);
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -179,7 +179,7 @@ public class RateLimitRepository : IRateLimitRepository
         var expired = await _context.RateLimitEntries
             .Where(r => r.WindowEnd < DateTime.UtcNow)
             .ToListAsync(cancellationToken);
-        
+
         _context.RateLimitEntries.RemoveRange(expired);
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -221,7 +221,7 @@ public class KYCSagaRepository : IKYCSagaRepository
     public async Task<List<KYCSagaState>> GetIncompleteSagasAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.KYCSagaStates
-            .Where(s => s.UserId == userId && 
+            .Where(s => s.UserId == userId &&
                        (s.Status == SagaStatus.Started || s.Status == SagaStatus.InProgress))
             .OrderByDescending(s => s.StartedAt)
             .ToListAsync(cancellationToken);

@@ -55,7 +55,7 @@ public class GetPendingReviewRequestsQueryHandler : IRequestHandler<GetPendingRe
             var now = DateTime.UtcNow;
 
             var buyerRequests = await _requestRepository.GetByBuyerIdAsync(request.BuyerId, ReviewRequestStatus.Sent, cancellationToken);
-            
+
             var pendingRequests = buyerRequests
                 .Where(r => r.ExpiresAt > now && r.ReviewId == null)
                 .OrderByDescending(r => r.RequestSentAt)

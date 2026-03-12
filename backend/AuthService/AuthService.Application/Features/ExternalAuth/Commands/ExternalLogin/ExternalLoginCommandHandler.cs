@@ -43,7 +43,7 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
     private string GenerateAuthorizationUrl(string provider, string redirectUri)
     {
         var encodedRedirectUri = Uri.EscapeDataString(redirectUri);
-        
+
         return provider.ToLower() switch
         {
             "google" => GenerateGoogleAuthUrl(encodedRedirectUri),
@@ -56,9 +56,9 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
 
     private string GenerateGoogleAuthUrl(string redirectUri)
     {
-        var clientId = _configuration["Authentication:Google:ClientId"] 
+        var clientId = _configuration["Authentication:Google:ClientId"]
             ?? throw new InvalidOperationException("Google Client ID is not configured");
-        
+
         return $"https://accounts.google.com/o/oauth2/v2/auth?" +
                $"client_id={clientId}&" +
                $"redirect_uri={redirectUri}&" +
@@ -70,9 +70,9 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
 
     private string GenerateMicrosoftAuthUrl(string redirectUri)
     {
-        var clientId = _configuration["Authentication:Microsoft:ClientId"] 
+        var clientId = _configuration["Authentication:Microsoft:ClientId"]
             ?? throw new InvalidOperationException("Microsoft Client ID is not configured");
-        
+
         return $"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" +
                $"client_id={clientId}&" +
                $"redirect_uri={redirectUri}&" +
@@ -82,9 +82,9 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
 
     private string GenerateFacebookAuthUrl(string redirectUri)
     {
-        var clientId = _configuration["Authentication:Facebook:AppId"] 
+        var clientId = _configuration["Authentication:Facebook:AppId"]
             ?? throw new InvalidOperationException("Facebook App ID is not configured");
-        
+
         return $"https://www.facebook.com/v18.0/dialog/oauth?" +
                $"client_id={clientId}&" +
                $"redirect_uri={redirectUri}&" +
@@ -94,9 +94,9 @@ public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand,
 
     private string GenerateAppleAuthUrl(string redirectUri)
     {
-        var clientId = _configuration["Authentication:Apple:ClientId"] 
+        var clientId = _configuration["Authentication:Apple:ClientId"]
             ?? throw new InvalidOperationException("Apple Client ID is not configured");
-        
+
         return $"https://appleid.apple.com/auth/authorize?" +
                $"client_id={clientId}&" +
                $"redirect_uri={redirectUri}&" +

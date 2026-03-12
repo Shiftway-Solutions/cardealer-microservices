@@ -32,6 +32,7 @@ export type PlanFeatureKey =
   | 'apiAccess'
   | 'prioritySupport'
   | 'whatsappIntegration'
+  | 'chatAgentWeb'
   // Seller features
   | 'searchPriority'
   | 'verifiedBadge'
@@ -104,6 +105,7 @@ function dealerCanAccess(plan: string, feature: PlanFeatureKey): boolean {
     apiAccess: limits.apiAccess,
     prioritySupport: limits.prioritySupport,
     whatsappIntegration: limits.whatsappIntegration,
+    chatAgentWeb: limits.chatAgentWeb !== 0,
     // Seller features mapped for dealers (always available for pro+)
     searchPriority: dp !== DealerPlan.LIBRE,
     verifiedBadge: dp !== DealerPlan.LIBRE,

@@ -39,7 +39,7 @@ public class RevokeSessionHandlerTests
         _notificationServiceMock = new Mock<INotificationService>();
         _revokedDeviceServiceMock = new Mock<IRevokedDeviceService>();
         _loggerMock = new Mock<ILogger<RevokeSessionCommandHandler>>();
-        
+
         _handler = new RevokeSessionCommandHandler(
             _sessionRepositoryMock.Object,
             _refreshTokenRepositoryMock.Object,
@@ -61,7 +61,7 @@ public class RevokeSessionHandlerTests
         var user = CreateTestUser(userId);
         var verificationCode = "123456";
         var codeHash = HashCode(verificationCode);
-        
+
         var cacheData = new
         {
             CodeHash = codeHash,
@@ -69,13 +69,13 @@ public class RevokeSessionHandlerTests
             RemainingAttempts = 3,
             SessionId = sessionId.ToString()
         };
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             VerificationCode: verificationCode,
             CurrentSessionId: currentSessionId);
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_lockout")), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_code")), It.IsAny<CancellationToken>()))
@@ -99,7 +99,7 @@ public class RevokeSessionHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var sessionId = Guid.NewGuid();
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
@@ -123,7 +123,7 @@ public class RevokeSessionHandlerTests
         var currentSessionId = Guid.NewGuid().ToString();
         var verificationCode = "123456";
         var codeHash = HashCode(verificationCode);
-        
+
         var cacheData = new
         {
             CodeHash = codeHash,
@@ -131,13 +131,13 @@ public class RevokeSessionHandlerTests
             RemainingAttempts = 3,
             SessionId = sessionId.ToString()
         };
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             VerificationCode: verificationCode,
             CurrentSessionId: currentSessionId);
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_lockout")), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_code")), It.IsAny<CancellationToken>()))
@@ -159,7 +159,7 @@ public class RevokeSessionHandlerTests
         var sessionId = Guid.NewGuid();
         var currentSessionId = Guid.NewGuid().ToString();
         var correctCodeHash = HashCode("123456");
-        
+
         var cacheData = new
         {
             CodeHash = correctCodeHash,
@@ -167,13 +167,13 @@ public class RevokeSessionHandlerTests
             RemainingAttempts = 3,
             SessionId = sessionId.ToString()
         };
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             VerificationCode: "999999",
             CurrentSessionId: currentSessionId);
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_lockout")), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
         _cacheMock.Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("session_revoke_code")), It.IsAny<CancellationToken>()))
@@ -192,16 +192,16 @@ public class RevokeSessionHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid().ToString();
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: "not-a-valid-guid-format",
             VerificationCode: "123456",
             CurrentSessionId: Guid.NewGuid().ToString());
-        
+
         // No lockout setup needed - invalid format is checked before code verification
         _cacheMock.Setup(x => x.GetAsync(
-            It.IsAny<string>(), 
+            It.IsAny<string>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
 
@@ -219,13 +219,13 @@ public class RevokeSessionHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var sessionId = Guid.NewGuid();
-        
+
         var command = new RevokeSessionCommand(
             UserId: userId,
             SessionId: sessionId.ToString(),
             VerificationCode: "123456",
             CurrentSessionId: Guid.NewGuid().ToString());
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
 
@@ -247,7 +247,7 @@ public class RevokeSessionHandlerTests
             SessionId: "invalid-guid",
             VerificationCode: "123456",
             CurrentSessionId: Guid.NewGuid().ToString());
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
 

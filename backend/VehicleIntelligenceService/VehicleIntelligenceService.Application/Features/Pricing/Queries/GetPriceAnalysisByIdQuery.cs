@@ -18,7 +18,7 @@ public class GetPriceAnalysisByIdHandler : IRequestHandler<GetPriceAnalysisByIdQ
     public async Task<PriceAnalysisDto?> Handle(GetPriceAnalysisByIdQuery request, CancellationToken cancellationToken)
     {
         var analysis = await _repository.GetByIdAsync(request.Id, cancellationToken);
-        
+
         if (analysis == null)
             return null;
 

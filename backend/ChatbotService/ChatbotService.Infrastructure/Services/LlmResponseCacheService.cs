@@ -73,7 +73,7 @@ public class LlmResponseCacheService : ILlmResponseCacheService
                 var response = JsonSerializer.Deserialize<CachedLlmResponseDto>(cached);
                 if (response != null)
                 {
-                    _logger.LogInformation("Cache HIT for query: '{Query}' (key: {Key})", 
+                    _logger.LogInformation("Cache HIT for query: '{Query}' (key: {Key})",
                         query[..Math.Min(30, query.Length)], key[..12]);
                     _metrics.RecordCacheHit();
                     response.FromCache = true;
@@ -135,7 +135,7 @@ public class LlmResponseCacheService : ILlmResponseCacheService
             };
 
             await _cache.SetStringAsync(key, json, options, ct);
-            _logger.LogDebug("Cached response for query: '{Query}' (TTL: {Ttl})", 
+            _logger.LogDebug("Cached response for query: '{Query}' (TTL: {Ttl})",
                 query[..Math.Min(30, query.Length)], (ttl ?? _defaultTtl).TotalMinutes);
         }
         catch (Exception ex)

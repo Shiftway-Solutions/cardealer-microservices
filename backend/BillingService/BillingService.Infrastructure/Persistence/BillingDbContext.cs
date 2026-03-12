@@ -27,6 +27,7 @@ public class BillingDbContext : DbContext
     // CONTRA #6 FIX: Payment reconciliation — daily Stripe↔OKLA DB audit
     public DbSet<ReconciliationReport> ReconciliationReports => Set<ReconciliationReport>();
     public DbSet<ReconciliationDiscrepancy> ReconciliationDiscrepancies => Set<ReconciliationDiscrepancy>();
+    public DbSet<ReportPurchase> ReportPurchases => Set<ReportPurchase>();
 
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
@@ -275,6 +276,28 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.CampaignName).HasMaxLength(300);
             entity.Property(e => e.Notes).HasMaxLength(1000);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
+        });
+
+        // ========================================
+        // Report Purchases (OKLA Score™ one-time reports)
+        // ========================================
+        modelBuilder.Entity<ReportPurchase>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.VehicleId, e.BuyerEmail });
+            entity.HasIndex(e => e.BuyerEmail);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.StripePaymentIntentId).IsUnique();
+            entity.HasIndex(e => e.Status);
+
+            entity.Property(e => e.VehicleId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ProductId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.BuyerEmail).HasMaxLength(256).IsRequired();
+            entity.Property(e => e.StripePaymentIntentId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Currency).HasMaxLength(3);
+            entity.Property(e => e.ConcurrencyStamp)
+                .IsConcurrencyToken()
+                .HasMaxLength(36);
         });
 
         // ========================================

@@ -46,7 +46,7 @@ public class ProcessImageCommandHandler : IRequestHandler<ProcessImageCommand, P
         // Determinar la cola correcta basado en el tipo de procesamiento
         var queueName = request.Type switch
         {
-            DTOs.ProcessingType.BackgroundRemoval or 
+            DTOs.ProcessingType.BackgroundRemoval or
             DTOs.ProcessingType.VehicleSegmentation or
             DTOs.ProcessingType.BackgroundReplacement or
             DTOs.ProcessingType.FullPipeline => "ai-processing-segmentation",
@@ -60,7 +60,7 @@ public class ProcessImageCommandHandler : IRequestHandler<ProcessImageCommand, P
 
         // Enviar mensaje a la cola específica de RabbitMQ
         var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{queueName}"));
-        
+
         var message = new PythonWorkerMessage
         {
             job_id = job.Id.ToString(),
@@ -112,7 +112,7 @@ public class ProcessImageCommandHandler : IRequestHandler<ProcessImageCommand, P
     private static ProcessingOptions MapOptions(ProcessingOptionsDto? dto)
     {
         if (dto == null) return new ProcessingOptions();
-        
+
         return new ProcessingOptions
         {
             BackgroundId = dto.BackgroundId,
@@ -215,7 +215,7 @@ public class ProcessBatchCommandHandler : IRequestHandler<ProcessBatchCommand, P
     private static ProcessingOptions MapOptions(ProcessingOptionsDto? dto)
     {
         if (dto == null) return new ProcessingOptions();
-        
+
         return new ProcessingOptions
         {
             BackgroundId = dto.BackgroundId,
@@ -273,8 +273,8 @@ public class Generate360CommandHandler : IRequestHandler<Generate360Command, Gen
             SourceVideoUrl = request.VideoUrl,
             SourceImageUrls = request.ImageUrls ?? new List<string>(),
             FrameCount = request.FrameCount,
-            TotalFrames = request.SourceType == DtoSpin360SourceType.Video 
-                ? request.FrameCount 
+            TotalFrames = request.SourceType == DtoSpin360SourceType.Video
+                ? request.FrameCount
                 : request.ImageUrls?.Count ?? 0,
             Status = Domain.Entities.Spin360Status.Pending,
             Options = MapOptions(request.Options)
@@ -319,7 +319,7 @@ public class Generate360CommandHandler : IRequestHandler<Generate360Command, Gen
     private static Spin360Options MapOptions(Spin360OptionsDto? dto)
     {
         if (dto == null) return new Spin360Options();
-        
+
         return new Spin360Options
         {
             TargetFrameCount = dto.TargetFrameCount,
@@ -362,7 +362,7 @@ public class UpdateJobStatusCommandHandler : IRequestHandler<UpdateJobStatusComm
     public async Task<Unit> Handle(UpdateJobStatusCommand request, CancellationToken cancellationToken)
     {
         var job = await _repository.GetByIdAsync(request.JobId, cancellationToken);
-        
+
         if (job == null)
         {
             _logger.LogWarning("Job {JobId} not found for callback", request.JobId);
@@ -374,8 +374,8 @@ public class UpdateJobStatusCommandHandler : IRequestHandler<UpdateJobStatusComm
             job.Status = JobStatus.Completed;
             job.ProcessedImageUrl = request.ProcessedImageUrl;
             job.CompletedAt = DateTime.UtcNow;
-            
-            _logger.LogInformation("Job {JobId} completed successfully. Processed image: {Url}", 
+
+            _logger.LogInformation("Job {JobId} completed successfully. Processed image: {Url}",
                 request.JobId, request.ProcessedImageUrl);
         }
         else
@@ -383,12 +383,12 @@ public class UpdateJobStatusCommandHandler : IRequestHandler<UpdateJobStatusComm
             job.Status = JobStatus.Failed;
             job.ErrorMessage = request.Error;
             job.CompletedAt = DateTime.UtcNow;
-            
+
             _logger.LogWarning("Job {JobId} failed: {Error}", request.JobId, request.Error);
         }
 
         await _repository.UpdateAsync(job, cancellationToken);
-        
+
         return Unit.Value;
     }
 }

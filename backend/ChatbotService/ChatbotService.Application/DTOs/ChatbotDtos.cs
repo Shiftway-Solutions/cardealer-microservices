@@ -21,7 +21,7 @@ public record StartSessionRequest
     public string? DeviceType { get; init; }
     public string? Language { get; init; } = "es";
     public Guid? DealerId { get; init; }
-    
+
     // Dual-mode support
     public string? ChatMode { get; init; }
     public Guid? VehicleId { get; init; }
@@ -41,23 +41,23 @@ public record StartSessionResponse
     public int MaxInteractionsPerSession { get; init; }
     public int RemainingInteractions { get; init; }
     public string? ChatMode { get; init; }
-    
+
     // ══════════════════════════════════════════════════════════════
     // BOT DISCLOSURE — Campos obligatorios de identificación de bot
     // ══════════════════════════════════════════════════════════════
-    
+
     /// <summary>
     /// Mensaje de disclosure obligatorio que incluye: nombre del dealer,
     /// identificación como asistente virtual de OKLA, y enlace a privacidad.
     /// El frontend DEBE mostrar este mensaje antes de permitir interacción.
     /// </summary>
     public string DisclosureMessage { get; init; } = string.Empty;
-    
+
     /// <summary>
     /// URL de la política de privacidad (okla.do/privacidad).
     /// </summary>
     public string PrivacyPolicyUrl { get; init; } = string.Empty;
-    
+
     /// <summary>
     /// Si true, el comprador DEBE aceptar el disclosure antes de enviar mensajes.
     /// El frontend debe mostrar un botón "Acepto" y llamar POST /api/chat/accept-disclosure.
@@ -122,22 +122,22 @@ public record ChatbotResponse
     public List<VehicleCardDto>? VehicleCards { get; init; }
     public bool IsFallback { get; init; }
     public int ResponseTimeMs { get; init; }
-    
+
     // Modo de chat y handoff
     public string? ChatMode { get; init; }
     public bool IsHumanMode { get; init; }
-    
+
     // DealerChatAgent — Intent Scoring
     public int IntentScore { get; init; }
     public string? Clasificacion { get; init; }
     public string? ModuloActivo { get; init; }
     public bool HandoffActivado { get; init; }
-    
+
     // Información de límites
     public int RemainingInteractions { get; init; }
     public bool InteractionLimitReached { get; init; }
     public string? LimitReachedMessage { get; init; }
-    
+
     // Si se generó lead
     public bool LeadGenerated { get; init; }
     public Guid? LeadId { get; init; }
@@ -253,7 +253,7 @@ public record ChatbotConfigurationDto
     public Guid? DealerId { get; init; }
     public string Name { get; init; } = string.Empty;
     public bool IsActive { get; init; }
-    
+
     // Plan y límites
     public ChatbotPlan Plan { get; init; }
     public int FreeInteractionsPerMonth { get; init; }
@@ -261,17 +261,17 @@ public record ChatbotConfigurationDto
     public int MaxInteractionsPerSession { get; init; }
     public int MaxInteractionsPerUserPerDay { get; init; }
     public int MaxInteractionsPerUserPerMonth { get; init; }
-    
+
     // Personalización
     public string BotName { get; init; } = string.Empty;
     public string? BotAvatarUrl { get; init; }
     public string WelcomeMessage { get; init; } = string.Empty;
-    
+
     // Canales
     public bool EnableWebChat { get; init; }
     public bool EnableWhatsApp { get; init; }
     public bool EnableFacebook { get; init; }
-    
+
     // Automatización
     public bool EnableAutoInventorySync { get; init; }
     public bool EnableAutoReports { get; init; }
@@ -286,26 +286,26 @@ public record CreateOrUpdateConfigurationRequest
 {
     public Guid? DealerId { get; init; }
     public string Name { get; init; } = "Default Chatbot";
-    
+
     // LLM Server
     public string LlmServerUrl { get; init; } = string.Empty;
     public string LlmModelId { get; init; } = string.Empty;
     public string LlmLanguageCode { get; init; } = "es";
     public string? LlmSystemPrompt { get; init; }
-    
+
     // Límites
     public int MaxInteractionsPerSession { get; init; } = 10;
     public int MaxInteractionsPerUserPerDay { get; init; } = 50;
     public int MaxInteractionsPerUserPerMonth { get; init; } = 500;
     public int MaxGlobalInteractionsPerDay { get; init; } = 5000;
     public int MaxGlobalInteractionsPerMonth { get; init; } = 100000;
-    
+
     // Personalización
     public string BotName { get; init; } = "Asistente OKLA";
     public string? BotAvatarUrl { get; init; }
     public string WelcomeMessage { get; init; } = "¡Hola! 👋 Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?";
     public string? QuickRepliesJson { get; init; }
-    
+
     // Automatización
     public bool EnableAutoInventorySync { get; init; } = true;
     public int InventorySyncIntervalMinutes { get; init; } = 60;

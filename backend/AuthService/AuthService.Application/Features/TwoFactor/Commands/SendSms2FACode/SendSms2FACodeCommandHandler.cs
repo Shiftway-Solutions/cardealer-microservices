@@ -28,7 +28,7 @@ public class SendSms2FACodeCommandHandler : IRequestHandler<SendSms2FACodeComman
     private readonly INotificationService _notificationService;
     private readonly IJwtGenerator _jwtGenerator;
     private readonly ILogger<SendSms2FACodeCommandHandler> _logger;
-    
+
     private const int CODE_LENGTH = 6;
     private const int CODE_EXPIRATION_MINUTES = 5;
     private const int MAX_SMS_PER_HOUR = 3;
@@ -72,10 +72,10 @@ public class SendSms2FACodeCommandHandler : IRequestHandler<SendSms2FACodeComman
         {
             smsCount = existingCount;
         }
-        
+
         if (smsCount >= MAX_SMS_PER_HOUR)
         {
-            _logger.LogWarning("Rate limit exceeded for SMS 2FA. User {UserId} attempted {Count} SMS in 1 hour", 
+            _logger.LogWarning("Rate limit exceeded for SMS 2FA. User {UserId} attempted {Count} SMS in 1 hour",
                 userId, smsCount);
             throw new ValidationException($"Too many SMS requests. Please wait before requesting another code. Maximum {MAX_SMS_PER_HOUR} codes per hour.");
         }
@@ -93,7 +93,7 @@ public class SendSms2FACodeCommandHandler : IRequestHandler<SendSms2FACodeComman
         }
 
         // 4. Check if SMS method is enabled
-        if (twoFactorAuth.PrimaryMethod != TwoFactorAuthType.SMS && 
+        if (twoFactorAuth.PrimaryMethod != TwoFactorAuthType.SMS &&
             !twoFactorAuth.EnabledMethods.Contains(TwoFactorAuthType.SMS))
         {
             _logger.LogWarning("SMS 2FA not enabled for user {UserId}", userId);
@@ -125,15 +125,15 @@ public class SendSms2FACodeCommandHandler : IRequestHandler<SendSms2FACodeComman
             await _notificationService.SendSmsAsync(
                 phoneNumber,
                 $"Tu código de verificación OKLA es: {code}. Válido por {CODE_EXPIRATION_MINUTES} minutos.");
-            
+
             // 9. Increment rate limit counter after successful send
-            await _cache.SetStringAsync(rateLimitKey, (smsCount + 1).ToString(), 
+            await _cache.SetStringAsync(rateLimitKey, (smsCount + 1).ToString(),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(SMS_RATE_LIMIT_MINUTES)
                 }, cancellationToken);
-            
-            _logger.LogInformation("SMS 2FA code sent to user {UserId}, phone ending in {PhoneSuffix}. SMS count: {Count}/{Max}", 
+
+            _logger.LogInformation("SMS 2FA code sent to user {UserId}, phone ending in {PhoneSuffix}. SMS count: {Count}/{Max}",
                 userId, phoneNumber.Length >= 2 ? phoneNumber[^2..] : "**", smsCount + 1, MAX_SMS_PER_HOUR);
         }
         catch (Exception ex)
@@ -158,7 +158,7 @@ public class SendSms2FACodeCommandHandler : IRequestHandler<SendSms2FACodeComman
         var bytes = new byte[length];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
-        
+
         var code = new char[length];
         for (int i = 0; i < length; i++)
         {

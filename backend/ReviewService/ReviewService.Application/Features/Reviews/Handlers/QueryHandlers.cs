@@ -203,17 +203,17 @@ public class GetAdminReviewsQueryHandler : IRequestHandler<GetAdminReviewsQuery,
 
         return new AdminReviewDto
         {
-            Id          = r.Id.ToString(),
-            AuthorName  = r.BuyerName,
+            Id = r.Id.ToString(),
+            AuthorName = r.BuyerName,
             AuthorAvatar = r.BuyerPhotoUrl,
-            TargetName  = r.SellerId.ToString(),
-            TargetType  = "seller",
-            Rating      = r.Rating,
-            Title       = r.Title,
-            Comment     = r.Content,
-            CreatedAt   = r.CreatedAt.ToString("O"),
-            Status      = status,
-            Reports     = Array.Empty<string>()
+            TargetName = r.SellerId.ToString(),
+            TargetType = "seller",
+            Rating = r.Rating,
+            Title = r.Title,
+            Comment = r.Content,
+            CreatedAt = r.CreatedAt.ToString("O"),
+            Status = status,
+            Reports = Array.Empty<string>()
         };
     }
 }
@@ -236,10 +236,10 @@ public class GetAdminReviewStatsQueryHandler : IRequestHandler<GetAdminReviewSta
 
         return Result<AdminReviewStatsDto>.Success(new AdminReviewStatsDto
         {
-            TotalReviews    = stats.TotalReviews,
-            PendingReviews  = stats.PendingReviews,
+            TotalReviews = stats.TotalReviews,
+            PendingReviews = stats.PendingReviews,
             ApprovedReviews = stats.ApprovedReviews,
-            AverageRating   = stats.AverageRating,
+            AverageRating = stats.AverageRating,
             ReportedReviews = stats.FlaggedReviews
         });
     }

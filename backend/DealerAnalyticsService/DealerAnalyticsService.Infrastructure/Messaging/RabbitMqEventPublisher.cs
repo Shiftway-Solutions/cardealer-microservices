@@ -27,7 +27,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     {
         _logger = logger;
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "dealer-analytics-events";
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

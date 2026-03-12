@@ -25,9 +25,9 @@ public class EmailService : IEmailService
         try
         {
             _logger.LogInformation("Sending email to {To} with subject: {Subject}", to, subject);
-            
+
             var (success, messageId, error) = await _emailProvider.SendAsync(to, subject, body, isHtml);
-            
+
             if (success)
             {
                 _logger.LogInformation("Email sent successfully to {To}. MessageId: {MessageId}", to, messageId);
@@ -36,7 +36,7 @@ public class EmailService : IEmailService
             {
                 _logger.LogWarning("Failed to send email to {To}. Error: {Error}", to, error);
             }
-            
+
             return success;
         }
         catch (Exception ex)

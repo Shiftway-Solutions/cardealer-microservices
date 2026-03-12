@@ -1,0 +1,144 @@
+namespace VehiclesSaleService.Application.Services;
+
+/// <summary>
+/// Validates that image URLs are accessible from the CDN (public-facing domain)
+/// before allowing a listing to be published. Uses HEAD requests in parallel
+/// to verify all images within 3 seconds for up to 10 images.
+/// </summary>
+public class ImageUrlValidationService
+{
+    /// <summary>
+    /// HTTP status codes that indicate a broken/inaccessible image.
+    /// </summary>
+    private static readonly HashSet<int> BrokenStatusCodes = new() { 403, 404, 410, 500 };
+
+    /// <summary>
+    /// Validates all image URLs in parallel. Returns results within the timeout.
+    /// </summary>
+    /// <param name="imageUrls">List of (imageId, url) tuples to validate.</param>
+    /// <param name="httpClient">Configured HTTP client (should have short timeout).</param>
+    /// <param name="timeoutSeconds">Max total time for all validations (default 3s).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Validation result with per-image details.</returns>
+    public static async Task<ImageUrlValidationResult> ValidateAllAsync(
+        IList<(Guid ImageId, string Url)> imageUrls,
+        HttpClient httpClient,
+        int timeoutSeconds = 3,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new ImageUrlValidationResult();
+
+        if (imageUrls.Count == 0)
+        {
+            result.AllValid = true;
+            return result;
+        }
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+        var tasks = imageUrls.Select(async img =>
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Head, img.Url);
+                using var response = await httpClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cts.Token);
+
+                var statusCode = (int)response.StatusCode;
+
+                if (BrokenStatusCodes.Contains(statusCode))
+                {
+                    return new ImageUrlCheckResult
+                    {
+                        ImageId = img.ImageId,
+                        Url = img.Url,
+                        IsValid = false,
+                        HttpStatusCode = statusCode,
+                        Error = $"URL returned HTTP {statusCode}"
+                    };
+                }
+
+                return new ImageUrlCheckResult
+                {
+                    ImageId = img.ImageId,
+                    Url = img.Url,
+                    IsValid = true,
+                    HttpStatusCode = statusCode
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                return new ImageUrlCheckResult
+                {
+                    ImageId = img.ImageId,
+                    Url = img.Url,
+                    IsValid = false,
+                    HttpStatusCode = 0,
+                    Error = "URL verification timed out (>3s)",
+                    IsTimeout = true
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ImageUrlCheckResult
+                {
+                    ImageId = img.ImageId,
+                    Url = img.Url,
+                    IsValid = false,
+                    HttpStatusCode = 0,
+                    Error = $"Connection error: {ex.Message}"
+                };
+            }
+        }).ToArray();
+
+        try
+        {
+            var results = await Task.WhenAll(tasks);
+            result.ImageResults = results.ToList();
+        }
+        catch (Exception)
+        {
+            // Collect completed results even if some failed
+            result.ImageResults = tasks
+                .Where(t => t.IsCompletedSuccessfully)
+                .Select(t => t.Result)
+                .ToList();
+        }
+
+        result.AllValid = result.ImageResults.All(r => r.IsValid);
+        result.TotalChecked = result.ImageResults.Count;
+        result.FailedCount = result.ImageResults.Count(r => !r.IsValid);
+
+        return result;
+    }
+}
+
+/// <summary>
+/// Result of validating all image URLs for a listing.
+/// </summary>
+public class ImageUrlValidationResult
+{
+    public bool AllValid { get; set; }
+    public int TotalChecked { get; set; }
+    public int FailedCount { get; set; }
+    public List<ImageUrlCheckResult> ImageResults { get; set; } = new();
+
+    public List<ImageUrlCheckResult> FailedImages =>
+        ImageResults.Where(r => !r.IsValid).ToList();
+}
+
+/// <summary>
+/// Result of checking a single image URL.
+/// </summary>
+public class ImageUrlCheckResult
+{
+    public Guid ImageId { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public bool IsValid { get; set; }
+    public int HttpStatusCode { get; set; }
+    public string? Error { get; set; }
+    public bool IsTimeout { get; set; }
+}

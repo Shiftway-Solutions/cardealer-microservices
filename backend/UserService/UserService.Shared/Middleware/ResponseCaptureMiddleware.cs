@@ -16,7 +16,7 @@ namespace UserService.Shared.Middleware
         public async Task InvokeAsync(HttpContext context)
         {
             var originalBodyStream = context.Response.Body;
-            
+
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
@@ -25,7 +25,7 @@ namespace UserService.Shared.Middleware
             responseBody.Seek(0, SeekOrigin.Begin);
             await responseBody.CopyToAsync(originalBodyStream);
             context.Response.Body = originalBodyStream;
-            
+
             // Guardar el cuerpo de la respuesta para que el ErrorHandlingMiddleware pueda leerlo
             responseBody.Seek(0, SeekOrigin.Begin);
             var responseBodyContent = await new StreamReader(responseBody).ReadToEndAsync();

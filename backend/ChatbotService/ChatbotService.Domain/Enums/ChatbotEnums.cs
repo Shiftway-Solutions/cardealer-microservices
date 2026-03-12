@@ -7,10 +7,10 @@ public enum ChatMode
 {
     /// <summary>Chat sobre un vehículo específico (contexto fijo)</summary>
     SingleVehicle = 1,
-    
+
     /// <summary>Chat con acceso al inventario completo del dealer (RAG + function calling)</summary>
     DealerInventory = 2,
-    
+
     /// <summary>Chat general sin contexto de vehículo (FAQ, soporte)</summary>
     General = 3
 }
@@ -22,13 +22,13 @@ public enum HandoffStatus
 {
     /// <summary>Bot responde automáticamente</summary>
     BotActive = 1,
-    
+
     /// <summary>Agente humano tomó control</summary>
     HumanActive = 2,
-    
+
     /// <summary>Handoff solicitado, esperando agente</summary>
     PendingHuman = 3,
-    
+
     /// <summary>Agente devolvió control al bot</summary>
     ReturnedToBot = 4
 }
@@ -69,19 +69,19 @@ public enum FunctionCallType
 {
     /// <summary>Buscar vehículos en inventario del dealer</summary>
     SearchInventory = 1,
-    
+
     /// <summary>Comparar 2-3 vehículos lado a lado</summary>
     CompareVehicles = 2,
-    
+
     /// <summary>Agendar cita para ver un vehículo</summary>
     ScheduleAppointment = 3,
-    
+
     /// <summary>Obtener detalles de un vehículo específico</summary>
     GetVehicleDetails = 4,
-    
+
     /// <summary>Calcular financiamiento</summary>
     CalculateFinancing = 5,
-    
+
     /// <summary>Obtener info del dealer (horarios, ubicación)</summary>
     GetDealerInfo = 6
 }
@@ -113,7 +113,7 @@ public enum IntentCategory
     Farewell = 2,
     Help = 3,
     Fallback = 4,
-    
+
     // Inventario y vehículos
     VehicleSearch = 10,
     VehicleDetails = 11,
@@ -121,35 +121,35 @@ public enum IntentCategory
     VehicleAvailability = 13,
     VehiclePrice = 14,
     VehicleFeatures = 15,
-    
+
     // Financiamiento
     FinancingInfo = 20,
     FinancingCalculation = 21,
     FinancingRequirements = 22,
     TradeIn = 23,
-    
+
     // Citas y test drives
     TestDriveSchedule = 30,
     AppointmentSchedule = 31,
     AppointmentCancel = 32,
     AppointmentReschedule = 33,
-    
+
     // Información del dealer
     DealerLocation = 40,
     DealerHours = 41,
     DealerContact = 42,
     DealerServices = 43,
-    
+
     // Postventa
     ServiceAppointment = 50,
     WarrantyInfo = 51,
     PartsInquiry = 52,
-    
+
     // Lead generation
     ContactRequest = 60,
     QuoteRequest = 61,
     CallbackRequest = 62,
-    
+
     // Otros
     Complaint = 70,
     Feedback = 71,
@@ -225,26 +225,26 @@ public enum MaintenanceTaskType
     // Sincronización
     InventorySync = 1,
     PriceSync = 2,
-    
+
     // Monitoreo
     HealthCheck = 10,
     ErrorAnalysis = 11,
     PerformanceCheck = 12,
-    
+
     // Reportes
     DailyReport = 20,
     WeeklyReport = 21,
     MonthlyReport = 22,
-    
+
     // Backup
     DataBackup = 30,
     ConversationBackup = 31,
-    
+
     // Optimización
     IntentAnalysis = 40,
     ConversationAnalysis = 41,
     AutoLearning = 42,
-    
+
     // Limpieza
     SessionCleanup = 50,
     LogCleanup = 51,

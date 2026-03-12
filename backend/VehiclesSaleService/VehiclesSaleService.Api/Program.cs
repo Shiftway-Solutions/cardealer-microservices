@@ -391,6 +391,13 @@ try
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     }).AddStandardResilience(builder.Configuration);
 
+    // ImageUrlValidation — HEAD requests to CDN for publish-time image verification
+    builder.Services.AddHttpClient("ImageUrlValidation", client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "OKLA-VehiclesSaleService/1.0");
+        client.Timeout = TimeSpan.FromSeconds(5);
+    });
+
     // IExchangeRateService — live DOP/USD rate from BCRD with cache + fallback chain
     builder.Services.AddSingleton<VehiclesSaleService.Application.Interfaces.IExchangeRateService,
         VehiclesSaleService.Infrastructure.External.BcrdExchangeRateService>();

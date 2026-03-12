@@ -10,16 +10,16 @@ public class UserPreference
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    
+
     // Preferencias de marca
     public List<string> PreferredMakes { get; set; } = new();
     public List<string> PreferredModels { get; set; } = new();
-    
+
     // Preferencias de tipo
     public List<string> PreferredBodyTypes { get; set; } = new();
     public List<string> PreferredFuelTypes { get; set; } = new();
     public List<string> PreferredTransmissions { get; set; } = new();
-    
+
     // Rangos preferidos
     public int? MinYear { get; set; }
     public int? MaxYear { get; set; }
@@ -27,22 +27,22 @@ public class UserPreference
     public decimal? MaxPrice { get; set; }
     public int? MinMileage { get; set; }
     public int? MaxMileage { get; set; }
-    
+
     // Colores preferidos
     public List<string> PreferredColors { get; set; } = new();
-    
+
     // Features preferidas
     public List<string> PreferredFeatures { get; set; } = new();
-    
+
     // Confianza en las preferencias (0.0 - 1.0)
     public double Confidence { get; set; } = 0.0;
-    
+
     // Contadores para calcular preferencias
     public int TotalVehiclesViewed { get; set; }
     public int TotalSearches { get; set; }
     public int TotalFavorites { get; set; }
     public int TotalContacts { get; set; }
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

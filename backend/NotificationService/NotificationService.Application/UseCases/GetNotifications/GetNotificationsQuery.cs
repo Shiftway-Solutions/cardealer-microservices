@@ -3,5 +3,5 @@ using NotificationService.Application.DTOs;
 
 namespace NotificationService.Application.UseCases.GetNotifications;
 
-public record GetNotificationsQuery(GetNotificationsRequest Request) 
+public record GetNotificationsQuery(GetNotificationsRequest Request)
     : IRequest<GetNotificationsResponse>;

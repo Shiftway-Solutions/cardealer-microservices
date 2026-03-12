@@ -27,12 +27,12 @@ public class DemandController : ControllerBase
     [HttpPost("predict")]
     public async Task<ActionResult<DemandPredictionDto>> PredictDemand([FromBody] CreateDemandPredictionRequest request)
     {
-        _logger.LogInformation("Predicting demand for {Make} {Model} {Year}", 
+        _logger.LogInformation("Predicting demand for {Make} {Model} {Year}",
             request.Make, request.Model, request.Year);
-        
+
         var command = new PredictDemandCommand(request);
         var result = await _mediator.Send(command);
-        
+
         return Ok(result);
     }
 
@@ -41,16 +41,16 @@ public class DemandController : ControllerBase
     /// </summary>
     [HttpGet("{make}/{model}/{year}")]
     public async Task<ActionResult<DemandPredictionDto>> GetDemandPrediction(
-        string make, 
-        string model, 
+        string make,
+        string model,
         int year)
     {
         var query = new GetDemandPredictionQuery(make, model, year);
         var result = await _mediator.Send(query);
-        
+
         if (result == null)
             return NotFound(new { message = "No demand prediction found for this vehicle" });
-        
+
         return Ok(result);
     }
 }

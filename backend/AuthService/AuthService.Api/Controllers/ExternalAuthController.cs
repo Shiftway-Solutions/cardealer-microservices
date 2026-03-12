@@ -312,10 +312,10 @@ public class ExternalAuthController : ControllerBase
                 userId, request.Provider);
 
             var command = new UnlinkActiveProviderCommand(
-                userId, 
-                request.Provider, 
-                request.VerificationCode, 
-                ipAddress, 
+                userId,
+                request.Provider,
+                request.VerificationCode,
+                ipAddress,
                 userAgent);
             var result = await _mediator.Send(command);
 

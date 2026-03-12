@@ -11,7 +11,7 @@ namespace UserService.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Create indexes for Location fields (FASE 2)
-            
+
             // Composite index: City + State (most common search)
             migrationBuilder.CreateIndex(
                 name: "idx_seller_profiles_city_state",

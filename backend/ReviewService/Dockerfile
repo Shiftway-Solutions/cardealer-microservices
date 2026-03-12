@@ -12,6 +12,10 @@ ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
 # Copy shared projects
 COPY _Shared/CarDealer.Shared/CarDealer.Shared.csproj _Shared/CarDealer.Shared/
 COPY _Shared/CarDealer.Contracts/CarDealer.Contracts.csproj _Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj _Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj _Shared/CarDealer.Shared.Audit/
+COPY _Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj _Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj _Shared/CarDealer.Shared.Observability/
 # Copy service projects
 COPY ReviewService/ReviewService.Domain/ReviewService.Domain.csproj ReviewService/ReviewService.Domain/
 COPY ReviewService/ReviewService.Application/ReviewService.Application.csproj ReviewService/ReviewService.Application/
@@ -26,6 +30,10 @@ RUN dotnet restore
 WORKDIR /src
 COPY _Shared/CarDealer.Shared/ _Shared/CarDealer.Shared/
 COPY _Shared/CarDealer.Contracts/ _Shared/CarDealer.Contracts/
+COPY _Shared/CarDealer.Shared.Logging/ _Shared/CarDealer.Shared.Logging/
+COPY _Shared/CarDealer.Shared.Audit/ _Shared/CarDealer.Shared.Audit/
+COPY _Shared/CarDealer.Shared.ErrorHandling/ _Shared/CarDealer.Shared.ErrorHandling/
+COPY _Shared/CarDealer.Shared.Observability/ _Shared/CarDealer.Shared.Observability/
 COPY ReviewService/ ReviewService/
 
 # Build the application

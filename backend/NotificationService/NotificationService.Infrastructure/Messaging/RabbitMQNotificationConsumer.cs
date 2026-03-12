@@ -259,22 +259,22 @@ public class RabbitMQNotificationConsumer : BackgroundService
         // Parse JSON to extract fields - supports both Message and Body properties
         using var doc = JsonDocument.Parse(message);
         var root = doc.RootElement;
-        
-        var to = root.TryGetProperty("to", out var toElem) ? toElem.GetString() 
+
+        var to = root.TryGetProperty("to", out var toElem) ? toElem.GetString()
                 : root.TryGetProperty("To", out var toElem2) ? toElem2.GetString() : null;
-        
+
         // Support both "Message" (CarDealer.Contracts) and "Body" (AuthService.Shared) formats
         var smsMessage = root.TryGetProperty("message", out var msgElem) ? msgElem.GetString()
                         : root.TryGetProperty("Message", out var msgElem2) ? msgElem2.GetString()
                         : root.TryGetProperty("body", out var bodyElem) ? bodyElem.GetString()
                         : root.TryGetProperty("Body", out var bodyElem2) ? bodyElem2.GetString() : null;
-        
+
         if (string.IsNullOrEmpty(to) || string.IsNullOrEmpty(smsMessage))
         {
             _logger.LogWarning("Failed to extract SMS fields - To: {To}, Message: {HasMessage}", to, !string.IsNullOrEmpty(smsMessage));
             return;
         }
-        
+
         Dictionary<string, object>? metadata = null;
         if (root.TryGetProperty("data", out var dataElem) || root.TryGetProperty("Data", out dataElem))
         {

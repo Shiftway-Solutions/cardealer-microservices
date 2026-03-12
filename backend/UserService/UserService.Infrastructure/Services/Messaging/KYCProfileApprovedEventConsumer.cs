@@ -197,9 +197,9 @@ public class KYCProfileApprovedEventConsumer : BackgroundService
                 user.IsVerified = true;
                 user.VerifiedAt = @event.ChangedAt;
                 user.UpdatedAt = DateTime.UtcNow;
-                #pragma warning disable CS0618 // Obsolete Email — Ley 172-13 migration in progress
+#pragma warning disable CS0618 // Obsolete Email — Ley 172-13 migration in progress
                 _logger.LogInformation("Set IsVerified=true for user {UserId} ({Email}) after KYC approval", @event.UserId, @event.Email);
-                #pragma warning restore CS0618
+#pragma warning restore CS0618
                 break;
 
             case "Rejected":
@@ -208,9 +208,9 @@ public class KYCProfileApprovedEventConsumer : BackgroundService
                 user.IsVerified = false;
                 user.VerifiedAt = null;
                 user.UpdatedAt = DateTime.UtcNow;
-                #pragma warning disable CS0618 // Obsolete Email — Ley 172-13 migration in progress
+#pragma warning disable CS0618 // Obsolete Email — Ley 172-13 migration in progress
                 _logger.LogInformation("Set IsVerified=false for user {UserId} ({Email}) after KYC status={Status}", @event.UserId, @event.Email, @event.NewStatus);
-                #pragma warning restore CS0618
+#pragma warning restore CS0618
                 break;
 
             default:

@@ -8,11 +8,21 @@
 'use client';
 
 import Link from 'next/link';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   Bell,
@@ -24,6 +34,7 @@ import {
   Check,
   AlertCircle,
   Loader2,
+  Search,
 } from 'lucide-react';
 import {
   usePriceAlerts,
@@ -32,6 +43,8 @@ import {
   useAlertStats,
   type PriceAlert,
 } from '@/hooks/use-alerts';
+import { useCreateSavedSearch } from '@/hooks/use-alerts';
+import { useMakes, useModelsByMake } from '@/hooks/use-vehicles';
 import { formatPrice } from '@/lib/format';
 
 export default function AlertsPage() {
@@ -42,9 +55,55 @@ export default function AlertsPage() {
   // Mutations
   const toggleMutation = useTogglePriceAlert();
   const deleteMutation = useDeletePriceAlert();
+  const createSavedSearchMutation = useCreateSavedSearch();
+
+  // Create alert form state
+  const [showCreateForm, setShowCreateForm] = React.useState(false);
+  const [alertMake, setAlertMake] = React.useState('');
+  const [alertModel, setAlertModel] = React.useState('');
+  const [alertYearMin, setAlertYearMin] = React.useState('');
+  const [alertYearMax, setAlertYearMax] = React.useState('');
+  const [alertPriceMax, setAlertPriceMax] = React.useState('');
+
+  // Catalog data for selects
+  const { data: makes = [] } = useMakes();
+  const { data: models = [] } = useModelsByMake(alertMake);
 
   // Get alerts array from paginated response
   const alerts = alertsData?.items ?? [];
+
+  const handleCreateAlert = async () => {
+    if (!alertMake) {
+      toast.error('Selecciona al menos una marca');
+      return;
+    }
+    const name = [alertMake, alertModel, alertYearMin && `${alertYearMin}+`]
+      .filter(Boolean)
+      .join(' ');
+    try {
+      await createSavedSearchMutation.mutateAsync({
+        name: name || 'Alerta de búsqueda',
+        searchParams: {
+          make: alertMake || undefined,
+          model: alertModel || undefined,
+          yearMin: alertYearMin ? parseInt(alertYearMin) : undefined,
+          yearMax: alertYearMax ? parseInt(alertYearMax) : undefined,
+          priceMax: alertPriceMax ? parseInt(alertPriceMax) : undefined,
+        },
+        notifyNewListings: true,
+        notifyFrequency: 'instant',
+      });
+      toast.success('Alerta creada exitosamente');
+      setShowCreateForm(false);
+      setAlertMake('');
+      setAlertModel('');
+      setAlertYearMin('');
+      setAlertYearMax('');
+      setAlertPriceMax('');
+    } catch {
+      toast.error('Error al crear la alerta');
+    }
+  };
 
   const handleToggleAlert = async (alert: PriceAlert) => {
     try {
@@ -133,13 +192,121 @@ export default function AlertsPage() {
           <h1 className="text-foreground text-2xl font-bold">Alertas de Precio</h1>
           <p className="text-muted-foreground">Recibe notificaciones cuando baje el precio</p>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link href="/buscar">
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Alerta
-          </Link>
+        <Button
+          onClick={() => setShowCreateForm(v => !v)}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva Alerta
         </Button>
       </div>
+
+      {/* Create Alert Form */}
+      {showCreateForm && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Search className="h-5 w-5" />
+              Crear Alerta por Marca / Modelo / Año
+            </CardTitle>
+            <CardDescription>
+              Te notificaremos cuando aparezca un vehículo que coincida con estos criterios
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="space-y-2">
+                <Label htmlFor="alert-make">Marca</Label>
+                <Select
+                  value={alertMake}
+                  onValueChange={v => {
+                    setAlertMake(v);
+                    setAlertModel('');
+                  }}
+                >
+                  <SelectTrigger id="alert-make">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {makes.map((m: { id: string; name: string }) => (
+                      <SelectItem key={m.id} value={m.name}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alert-model">Modelo</Label>
+                <Select value={alertModel} onValueChange={setAlertModel} disabled={!alertMake}>
+                  <SelectTrigger id="alert-model">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map((m: { id: string; name: string }) => (
+                      <SelectItem key={m.id} value={m.name}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alert-year-min">Año desde</Label>
+                <Input
+                  id="alert-year-min"
+                  type="number"
+                  placeholder="2018"
+                  value={alertYearMin}
+                  onChange={e => setAlertYearMin(e.target.value)}
+                  min={1990}
+                  max={2027}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alert-year-max">Año hasta</Label>
+                <Input
+                  id="alert-year-max"
+                  type="number"
+                  placeholder="2026"
+                  value={alertYearMax}
+                  onChange={e => setAlertYearMax(e.target.value)}
+                  min={1990}
+                  max={2027}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alert-price-max">Precio máximo (RD$)</Label>
+                <Input
+                  id="alert-price-max"
+                  type="number"
+                  placeholder="2,000,000"
+                  value={alertPriceMax}
+                  onChange={e => setAlertPriceMax(e.target.value)}
+                  min={0}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <Button
+                onClick={handleCreateAlert}
+                disabled={createSavedSearchMutation.isPending || !alertMake}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {createSavedSearchMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Bell className="mr-2 h-4 w-4" />
+                )}
+                Crear Alerta
+              </Button>
+              <Button variant="ghost" onClick={() => setShowCreateForm(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

@@ -1,0 +1,1359 @@
+# =============================================================================
+# SMART TRIGGERS CI/CD - Monorepo Orchestrator
+# =============================================================================
+# Detecta qué servicios cambiaron y solo ejecuta CI/CD para ellos
+# Ahorra ~80% de minutos de GitHub Actions
+#
+# Branching Strategy:
+#   - main:     CI/CD completo (build + test + push Docker images) + auto-deploy a K8s DOKS (staging).
+#   - sprint/*: Solo tests, no build imágenes.
+# =============================================================================
+
+name: 🚀 Smart CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Required permissions to push to GHCR
+permissions:
+  contents: read
+  packages: write
+
+# Evita ejecuciones duplicadas
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # STEP 1: Detectar cambios
+  # ============================================
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: [self-hosted, macOS, ARM64]
+    outputs:
+      # Core services
+      authservice: ${{ steps.filter.outputs.authservice }}
+      userservice: ${{ steps.filter.outputs.userservice }}
+      roleservice: ${{ steps.filter.outputs.roleservice }}
+      errorservice: ${{ steps.filter.outputs.errorservice }}
+      notificationservice: ${{ steps.filter.outputs.notificationservice }}
+      vehiclessaleservice: ${{ steps.filter.outputs.vehiclessaleservice }}
+      mediaservice: ${{ steps.filter.outputs.mediaservice }}
+      billingservice: ${{ steps.filter.outputs.billingservice }}
+      kycservice: ${{ steps.filter.outputs.kycservice }}
+      auditservice: ${{ steps.filter.outputs.auditservice }}
+      idempotencyservice: ${{ steps.filter.outputs.idempotencyservice }}
+      adminservice: ${{ steps.filter.outputs.adminservice }}
+      # Business services
+      contactservice: ${{ steps.filter.outputs.contactservice }}
+      reviewservice: ${{ steps.filter.outputs.reviewservice }}
+      dealermanagementservice: ${{ steps.filter.outputs.dealermanagementservice }}
+      dealeranalyticsservice: ${{ steps.filter.outputs.dealeranalyticsservice }}
+      crmservice: ${{ steps.filter.outputs.crmservice }}
+      maintenanceservice: ${{ steps.filter.outputs.maintenanceservice }}
+      comparisonservice: ${{ steps.filter.outputs.comparisonservice }}
+      alertservice: ${{ steps.filter.outputs.alertservice }}
+      appointmentservice: ${{ steps.filter.outputs.appointmentservice }}
+      marketingservice: ${{ steps.filter.outputs.marketingservice }}
+      staffservice: ${{ steps.filter.outputs.staffservice }}
+      reportsservice: ${{ steps.filter.outputs.reportsservice }}
+      inventorymanagementservice: ${{ steps.filter.outputs.inventorymanagementservice }}
+      # Payment services
+      paymentservice: ${{ steps.filter.outputs.paymentservice }}
+      # AI/ML services
+      aiprocessingservice: ${{ steps.filter.outputs.aiprocessingservice }}
+      vehicleintelligenceservice: ${{ steps.filter.outputs.vehicleintelligenceservice }}
+      recommendationservice: ${{ steps.filter.outputs.recommendationservice }}
+      leadscoringservice: ${{ steps.filter.outputs.leadscoringservice }}
+      backgroundremovalservice: ${{ steps.filter.outputs.backgroundremovalservice }}
+      vehicle360processingservice: ${{ steps.filter.outputs.vehicle360processingservice }}
+      video360service: ${{ steps.filter.outputs.video360service }}
+      # Infrastructure services
+      cacheservice: ${{ steps.filter.outputs.cacheservice }}
+      messagebusservice: ${{ steps.filter.outputs.messagebusservice }}
+      configurationservice: ${{ steps.filter.outputs.configurationservice }}
+      schedulerservice: ${{ steps.filter.outputs.schedulerservice }}
+      ratelimitingservice: ${{ steps.filter.outputs.ratelimitingservice }}
+      servicediscovery: ${{ steps.filter.outputs.servicediscovery }}
+      apidocsservice: ${{ steps.filter.outputs.apidocsservice }}
+      integrationservice: ${{ steps.filter.outputs.integrationservice }}
+      # Compliance
+      dataprotectionservice: ${{ steps.filter.outputs.dataprotectionservice }}
+      # Advertising
+      advertisingservice: ${{ steps.filter.outputs.advertisingservice }}
+      # Search Agent (AI search)
+      searchagent: ${{ steps.filter.outputs.searchagent }}
+      # Support Agent (AI support)
+      supportagent: ${{ steps.filter.outputs.supportagent }}
+      # Recommendation Agent (AI recommendations)
+      recoagent: ${{ steps.filter.outputs.recoagent }}
+      # Chatbot (MLOps pipeline)
+      chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
+      llm-server: ${{ steps.filter.outputs.llm-server }}
+      # Gateway
+      gateway: ${{ steps.filter.outputs.gateway }}
+      # Shared libraries
+      shared: ${{ steps.filter.outputs.shared }}
+      # Frontend
+      frontend-web: ${{ steps.filter.outputs.frontend-web }}
+      # Infrastructure
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # Explicitly compare against the SHA before this push.
+          # Without this, paths-filter can compare HEAD against itself
+          # (resulting in 0 changes detected) when the runner already
+          # has the latest commit checked out.
+          base: ${{ github.event.before }}
+          filters: |
+            # Core services
+            authservice:
+              - 'backend/AuthService/**'
+              - 'backend/_Shared/**'
+            userservice:
+              - 'backend/UserService/**'
+              - 'backend/_Shared/**'
+            roleservice:
+              - 'backend/RoleService/**'
+              - 'backend/_Shared/**'
+            errorservice:
+              - 'backend/ErrorService/**'
+              - 'backend/_Shared/**'
+            notificationservice:
+              - 'backend/NotificationService/**'
+              - 'backend/_Shared/**'
+            vehiclessaleservice:
+              - 'backend/VehiclesSaleService/**'
+              - 'backend/_Shared/**'
+            mediaservice:
+              - 'backend/MediaService/**'
+              - 'backend/_Shared/**'
+            billingservice:
+              - 'backend/BillingService/**'
+              - 'backend/_Shared/**'
+            kycservice:
+              - 'backend/KYCService/**'
+              - 'backend/_Shared/**'
+            auditservice:
+              - 'backend/AuditService/**'
+              - 'backend/_Shared/**'
+            idempotencyservice:
+              - 'backend/IdempotencyService/**'
+              - 'backend/_Shared/**'
+            adminservice:
+              - 'backend/AdminService/**'
+              - 'backend/_Shared/**'
+            # Business services
+            contactservice:
+              - 'backend/ContactService/**'
+              - 'backend/_Shared/**'
+            reviewservice:
+              - 'backend/ReviewService/**'
+              - 'backend/_Shared/**'
+            dealermanagementservice:
+              - 'backend/DealerManagementService/**'
+              - 'backend/_Shared/**'
+            dealeranalyticsservice:
+              - 'backend/DealerAnalyticsService/**'
+              - 'backend/_Shared/**'
+            crmservice:
+              - 'backend/CRMService/**'
+              - 'backend/_Shared/**'
+            maintenanceservice:
+              - 'backend/MaintenanceService/**'
+              - 'backend/_Shared/**'
+            comparisonservice:
+              - 'backend/ComparisonService/**'
+              - 'backend/_Shared/**'
+            alertservice:
+              - 'backend/AlertService/**'
+              - 'backend/_Shared/**'
+            appointmentservice:
+              - 'backend/AppointmentService/**'
+              - 'backend/_Shared/**'
+            marketingservice:
+              - 'backend/MarketingService/**'
+              - 'backend/_Shared/**'
+            staffservice:
+              - 'backend/StaffService/**'
+              - 'backend/_Shared/**'
+            reportsservice:
+              - 'backend/ReportsService/**'
+              - 'backend/_Shared/**'
+            inventorymanagementservice:
+              - 'backend/InventoryManagementService/**'
+              - 'backend/_Shared/**'
+            # Payment services
+            paymentservice:
+              - 'backend/PaymentService/**'
+              - 'backend/_Shared/**'
+            # AI/ML services
+            aiprocessingservice:
+              - 'backend/AIProcessingService/**'
+              - 'backend/_Shared/**'
+            vehicleintelligenceservice:
+              - 'backend/VehicleIntelligenceService/**'
+              - 'backend/_Shared/**'
+            recommendationservice:
+              - 'backend/RecommendationService/**'
+              - 'backend/_Shared/**'
+            leadscoringservice:
+              - 'backend/LeadScoringService/**'
+              - 'backend/_Shared/**'
+            backgroundremovalservice:
+              - 'backend/BackgroundRemovalService/**'
+              - 'backend/_Shared/**'
+            vehicle360processingservice:
+              - 'backend/Vehicle360ProcessingService/**'
+              - 'backend/_Shared/**'
+            video360service:
+              - 'backend/Video360Service/**'
+              - 'backend/_Shared/**'
+            # Infrastructure services
+            cacheservice:
+              - 'backend/CacheService/**'
+              - 'backend/_Shared/**'
+            messagebusservice:
+              - 'backend/MessageBusService/**'
+              - 'backend/_Shared/**'
+            configurationservice:
+              - 'backend/ConfigurationService/**'
+              - 'backend/_Shared/**'
+            schedulerservice:
+              - 'backend/SchedulerService/**'
+              - 'backend/_Shared/**'
+            ratelimitingservice:
+              - 'backend/RateLimitingService/**'
+              - 'backend/_Shared/**'
+            servicediscovery:
+              - 'backend/ServiceDiscovery/**'
+              - 'backend/_Shared/**'
+            apidocsservice:
+              - 'backend/ApiDocsService/**'
+              - 'backend/_Shared/**'
+            integrationservice:
+              - 'backend/IntegrationService/**'
+              - 'backend/_Shared/**'
+            # Compliance
+            dataprotectionservice:
+              - 'backend/DataProtectionService/**'
+              - 'backend/_Shared/**'
+            # Advertising
+            advertisingservice:
+              - 'backend/AdvertisingService/**'
+              - 'backend/_Shared/**'
+            # Search Agent (AI search)
+            searchagent:
+              - 'backend/SearchAgent/**'
+              - 'backend/_Shared/**'
+            # Support Agent (AI support)
+            supportagent:
+              - 'backend/SupportAgent/**'
+              - 'backend/_Shared/**'
+            # Recommendation Agent (AI recommendations)
+            recoagent:
+              - 'backend/RecoAgent/**'
+              - 'backend/_Shared/**'
+            # Chatbot
+            chatbotservice:
+              - 'backend/ChatbotService/ChatbotService.Api/**'
+              - 'backend/ChatbotService/ChatbotService.Application/**'
+              - 'backend/ChatbotService/ChatbotService.Domain/**'
+              - 'backend/ChatbotService/ChatbotService.Infrastructure/**'
+              - 'backend/ChatbotService/Dockerfile'
+              - 'backend/_Shared/**'
+            llm-server:
+              - 'backend/ChatbotService/LlmServer/**'
+            # Gateway
+            gateway:
+              - 'backend/Gateway/**'
+            # Shared libraries (triggers rebuild of dependent services)
+            shared:
+              - 'backend/_Shared/**'
+            # Frontend
+            frontend-web:
+              - 'frontend/web-next/**'
+            # Infrastructure
+            infrastructure:
+              - 'k8s/**'
+              - 'helm/**'
+              - 'compose.yaml'
+              - 'compose.*.yaml'
+
+      - name: 📊 Summary of changes
+        run: |
+          echo "## 📊 Detected Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| AuthService | ${{ steps.filter.outputs.authservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UserService | ${{ steps.filter.outputs.userservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RoleService | ${{ steps.filter.outputs.roleservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ErrorService | ${{ steps.filter.outputs.errorservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NotificationService | ${{ steps.filter.outputs.notificationservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| VehiclesSaleService | ${{ steps.filter.outputs.vehiclessaleservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MediaService | ${{ steps.filter.outputs.mediaservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| BillingService | ${{ steps.filter.outputs.billingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| KYCService | ${{ steps.filter.outputs.kycservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AuditService | ${{ steps.filter.outputs.auditservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IdempotencyService | ${{ steps.filter.outputs.idempotencyservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdminService | ${{ steps.filter.outputs.adminservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ContactService | ${{ steps.filter.outputs.contactservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ReviewService | ${{ steps.filter.outputs.reviewservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerManagementService | ${{ steps.filter.outputs.dealermanagementservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerAnalyticsService | ${{ steps.filter.outputs.dealeranalyticsservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CRMService | ${{ steps.filter.outputs.crmservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MaintenanceService | ${{ steps.filter.outputs.maintenanceservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ComparisonService | ${{ steps.filter.outputs.comparisonservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AlertService | ${{ steps.filter.outputs.alertservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AppointmentService | ${{ steps.filter.outputs.appointmentservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MarketingService | ${{ steps.filter.outputs.marketingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| StaffService | ${{ steps.filter.outputs.staffservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ReportsService | ${{ steps.filter.outputs.reportsservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| InventoryManagementService | ${{ steps.filter.outputs.inventorymanagementservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PaymentService | ${{ steps.filter.outputs.paymentservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AIProcessingService | ${{ steps.filter.outputs.aiprocessingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| VehicleIntelligenceService | ${{ steps.filter.outputs.vehicleintelligenceservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecommendationService | ${{ steps.filter.outputs.recommendationservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| LeadScoringService | ${{ steps.filter.outputs.leadscoringservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| BackgroundRemovalService | ${{ steps.filter.outputs.backgroundremovalservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Vehicle360ProcessingService | ${{ steps.filter.outputs.vehicle360processingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ steps.filter.outputs.video360service }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CacheService | ${{ steps.filter.outputs.cacheservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MessageBusService | ${{ steps.filter.outputs.messagebusservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ConfigurationService | ${{ steps.filter.outputs.configurationservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SchedulerService | ${{ steps.filter.outputs.schedulerservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RateLimitingService | ${{ steps.filter.outputs.ratelimitingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ServiceDiscovery | ${{ steps.filter.outputs.servicediscovery }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ApiDocsService | ${{ steps.filter.outputs.apidocsservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IntegrationService | ${{ steps.filter.outputs.integrationservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DataProtectionService | ${{ steps.filter.outputs.dataprotectionservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdvertisingService | ${{ steps.filter.outputs.advertisingservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ steps.filter.outputs.searchagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ steps.filter.outputs.supportagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ steps.filter.outputs.recoagent }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ChatbotService | ${{ steps.filter.outputs.chatbotservice }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| LLM Server | ${{ steps.filter.outputs.llm-server }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway | ${{ steps.filter.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Web | ${{ steps.filter.outputs.frontend-web }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Shared Libraries | ${{ steps.filter.outputs.shared }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # CORE BACKEND SERVICES
+  # ============================================
+
+  authservice:
+    name: 🔐 AuthService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.authservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: authservice
+      service-path: backend/AuthService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  userservice:
+    name: 👤 UserService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.userservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: userservice
+      service-path: backend/UserService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  roleservice:
+    name: 🎭 RoleService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.roleservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: roleservice
+      service-path: backend/RoleService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  errorservice:
+    name: ⚠️ ErrorService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.errorservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: errorservice
+      service-path: backend/ErrorService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  notificationservice:
+    name: 📬 NotificationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notificationservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: notificationservice
+      service-path: backend/NotificationService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  vehiclessaleservice:
+    name: 🚗 VehiclesSaleService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.vehiclessaleservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: vehiclessaleservice
+      service-path: backend/VehiclesSaleService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  mediaservice:
+    name: 📸 MediaService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.mediaservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: mediaservice
+      service-path: backend/MediaService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  billingservice:
+    name: 💳 BillingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.billingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: billingservice
+      service-path: backend/BillingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  kycservice:
+    name: 🪪 KYCService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.kycservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: kycservice
+      service-path: backend/KYCService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  auditservice:
+    name: 📋 AuditService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.auditservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: auditservice
+      service-path: backend/AuditService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  idempotencyservice:
+    name: 🔑 IdempotencyService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.idempotencyservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: idempotencyservice
+      service-path: backend/IdempotencyService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  adminservice:
+    name: 🛡️ AdminService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.adminservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: adminservice
+      service-path: backend/AdminService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # BUSINESS SERVICES
+  # ============================================
+
+  contactservice:
+    name: 📞 ContactService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.contactservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: contactservice
+      service-path: backend/ContactService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  reviewservice:
+    name: ⭐ ReviewService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reviewservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: reviewservice
+      service-path: backend/ReviewService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  dealermanagementservice:
+    name: 🏢 DealerManagementService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.dealermanagementservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: dealermanagementservice
+      service-path: backend/DealerManagementService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  dealeranalyticsservice:
+    name: 📊 DealerAnalyticsService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.dealeranalyticsservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: dealeranalyticsservice
+      service-path: backend/DealerAnalyticsService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  crmservice:
+    name: 🤝 CRMService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.crmservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: crmservice
+      service-path: backend/CRMService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  maintenanceservice:
+    name: 🛠️ MaintenanceService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.maintenanceservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: maintenanceservice
+      service-path: backend/MaintenanceService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  comparisonservice:
+    name: 🔄 ComparisonService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.comparisonservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: comparisonservice
+      service-path: backend/ComparisonService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  alertservice:
+    name: 🔔 AlertService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.alertservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: alertservice
+      service-path: backend/AlertService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  appointmentservice:
+    name: 📅 AppointmentService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.appointmentservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: appointmentservice
+      service-path: backend/AppointmentService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  marketingservice:
+    name: 📣 MarketingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.marketingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: marketingservice
+      service-path: backend/MarketingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  staffservice:
+    name: 👨‍💼 StaffService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.staffservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: staffservice
+      service-path: backend/StaffService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  reportsservice:
+    name: 📑 ReportsService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reportsservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: reportsservice
+      service-path: backend/ReportsService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  inventorymanagementservice:
+    name: 📦 InventoryManagementService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.inventorymanagementservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: inventorymanagementservice
+      service-path: backend/InventoryManagementService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # PAYMENT SERVICES
+  # ============================================
+
+  paymentservice:
+    name: 💰 PaymentService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.paymentservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: paymentservice
+      service-path: backend/PaymentService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # AI/ML SERVICES
+  # ============================================
+
+  aiprocessingservice:
+    name: 🧠 AIProcessingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.aiprocessingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: aiprocessingservice
+      service-path: backend/AIProcessingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  vehicleintelligenceservice:
+    name: 🚘 VehicleIntelligenceService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.vehicleintelligenceservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: vehicleintelligenceservice
+      service-path: backend/VehicleIntelligenceService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  recommendationservice:
+    name: 💡 RecommendationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.recommendationservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: recommendationservice
+      service-path: backend/RecommendationService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  leadscoringservice:
+    name: 🎯 LeadScoringService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.leadscoringservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: leadscoringservice
+      service-path: backend/LeadScoringService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  backgroundremovalservice:
+    name: 🖼️ BackgroundRemovalService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backgroundremovalservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: backgroundremovalservice
+      service-path: backend/BackgroundRemovalService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  vehicle360processingservice:
+    name: 🔄 Vehicle360ProcessingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.vehicle360processingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: vehicle360processingservice
+      service-path: backend/Vehicle360ProcessingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  video360service:
+    name: 🎬 Video360Service
+    needs: detect-changes
+    if: needs.detect-changes.outputs.video360service == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: video360service
+      service-path: backend/Video360Service
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================
+
+  cacheservice:
+    name: 🗄️ CacheService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.cacheservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: cacheservice
+      service-path: backend/CacheService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  messagebusservice:
+    name: 📨 MessageBusService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.messagebusservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: messagebusservice
+      service-path: backend/MessageBusService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  configurationservice:
+    name: ⚙️ ConfigurationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.configurationservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: configurationservice
+      service-path: backend/ConfigurationService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  schedulerservice:
+    name: ⏰ SchedulerService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.schedulerservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: schedulerservice
+      service-path: backend/SchedulerService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  ratelimitingservice:
+    name: 🚦 RateLimitingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ratelimitingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: ratelimitingservice
+      service-path: backend/RateLimitingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  servicediscovery:
+    name: 🔍 ServiceDiscovery
+    needs: detect-changes
+    if: needs.detect-changes.outputs.servicediscovery == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: servicediscovery
+      service-path: backend/ServiceDiscovery
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  apidocsservice:
+    name: 📚 ApiDocsService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.apidocsservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: apidocsservice
+      service-path: backend/ApiDocsService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  integrationservice:
+    name: 🔗 IntegrationService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.integrationservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: integrationservice
+      service-path: backend/IntegrationService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # COMPLIANCE SERVICES
+  # ============================================
+
+  dataprotectionservice:
+    name: 🛡️ DataProtectionService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.dataprotectionservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: dataprotectionservice
+      service-path: backend/DataProtectionService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # ADVERTISING
+  # ============================================
+
+  advertisingservice:
+    name: 📣 AdvertisingService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.advertisingservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: advertisingservice
+      service-path: backend/AdvertisingService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # SEARCH AGENT (AI-powered search)
+  # ============================================
+
+  searchagent:
+    name: 🔍 SearchAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.searchagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: searchagent
+      service-path: backend/SearchAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  recoagent:
+    name: 🎯 RecoAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.recoagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: recoagent
+      service-path: backend/RecoAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  supportagent:
+    name: 🤝 SupportAgent
+    needs: detect-changes
+    if: needs.detect-changes.outputs.supportagent == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: supportagent
+      service-path: backend/SupportAgent
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # CHATBOT (MLOps — dedicated pipeline)
+  # ============================================
+
+  chatbotservice:
+    name: 🤖 ChatbotService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.chatbotservice == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: chatbotservice
+      service-path: backend/ChatbotService
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # GATEWAY
+  # ============================================
+
+  gateway:
+    name: 🌐 Gateway
+    needs: detect-changes
+    if: needs.detect-changes.outputs.gateway == 'true'
+    uses: ./.github/workflows/_reusable-dotnet-service.yml
+    with:
+      service-name: gateway
+      service-path: backend/Gateway
+      run-tests: false
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+
+  frontend-web:
+    name: 🌐 Frontend Web
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-web == 'true'
+    uses: ./.github/workflows/_reusable-frontend.yml
+    with:
+      run-docker-push: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  # ============================================
+  # STAGE 3: INTEGRATION TESTS
+  # ============================================
+  # Runs after all service CI jobs pass. Validates cross-service communication
+  # using Docker Compose with PostgreSQL, Redis, and RabbitMQ.
+  # A failure here blocks deployment to staging.
+  # ============================================
+  integration-tests:
+    name: 🔗 Integration Tests
+    needs:
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - gateway
+      - frontend-web
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Start infrastructure (Docker Compose)
+        run: |
+          echo "🚀 Starting infrastructure services..."
+          docker compose -f compose.docker.yaml up -d postgres redis rabbitmq
+          echo "⏳ Waiting for PostgreSQL to be healthy..."
+          for i in $(seq 1 30); do
+            if docker compose -f compose.docker.yaml exec -T postgres pg_isready -U postgres 2>/dev/null; then
+              echo "✅ PostgreSQL is ready"
+              break
+            fi
+            echo "  Attempt $i/30..."
+            sleep 5
+          done
+          echo "⏳ Waiting for Redis..."
+          sleep 5
+          echo "⏳ Waiting for RabbitMQ..."
+          sleep 10
+
+      - name: 🔗 Run integration tests (Core services)
+        run: |
+          # Run integration/E2E tests for services that have them
+          INTEGRATION_FAILURES=""
+
+          for SERVICE in AuthService ErrorService Gateway; do
+            TEST_DIR="backend/$SERVICE/$SERVICE.Tests"
+            if [ -d "$TEST_DIR" ]; then
+              echo "🧪 Running integration tests for $SERVICE..."
+              cd "backend/$SERVICE"
+              dotnet test --filter "Category=Integration|Category=E2E" \
+                --configuration Release \
+                --logger "console;verbosity=minimal" \
+                --blame-hang --blame-hang-timeout 3min \
+                2>&1 || {
+                  echo "⚠️ $SERVICE integration tests failed"
+                  INTEGRATION_FAILURES="$INTEGRATION_FAILURES $SERVICE"
+                }
+              cd ../..
+            fi
+          done
+
+          if [ -n "$INTEGRATION_FAILURES" ]; then
+            echo "::error::Integration test failures:$INTEGRATION_FAILURES"
+            exit 1
+          fi
+          echo "✅ All integration tests passed"
+
+      - name: 🧹 Cleanup infrastructure
+        if: always()
+        run: |
+          docker compose -f compose.docker.yaml down -v 2>/dev/null || true
+
+  # ============================================
+  # DEPLOY TO DIGITAL OCEAN (Only on main)
+  # ============================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    # REMOVED continue-on-error: true — a staging deploy failure MUST block the pipeline
+    # and be visible as a real failure. Silencing it hides regressions from reaching production.
+    needs:
+      # Integration tests gate (runs after all service CI jobs)
+      - integration-tests
+      # Core
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - notificationservice
+      - vehiclessaleservice
+      - mediaservice
+      - billingservice
+      - kycservice
+      - auditservice
+      - idempotencyservice
+      - adminservice
+      # Business
+      - contactservice
+      - reviewservice
+      - dealermanagementservice
+      - dealeranalyticsservice
+      - crmservice
+      - maintenanceservice
+      - comparisonservice
+      - alertservice
+      - appointmentservice
+      - marketingservice
+      - staffservice
+      - reportsservice
+      - inventorymanagementservice
+      # Payment
+      - paymentservice
+      # AI/ML
+      - aiprocessingservice
+      - vehicleintelligenceservice
+      - recommendationservice
+      - leadscoringservice
+      - backgroundremovalservice
+      - vehicle360processingservice
+      - video360service
+      # Infrastructure
+      - cacheservice
+      - messagebusservice
+      - configurationservice
+      - schedulerservice
+      - ratelimitingservice
+      - servicediscovery
+      - apidocsservice
+      - integrationservice
+      # Compliance
+      - dataprotectionservice
+      # Advertising
+      - advertisingservice
+      # Search Agent
+      - searchagent
+      # Support Agent
+      - supportagent
+      # Recommendation Agent
+      - recoagent
+      # Chatbot + Gateway + Frontend
+      - chatbotservice
+      - gateway
+      - frontend-web
+    if: |
+      always() && 
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: [self-hosted, macOS, ARM64]
+    environment: staging
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: 🔐 Setup Kubernetes
+        run: |
+          doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
+
+      - name: 🚀 Deploy to Kubernetes
+        run: |
+          # Apply Kubernetes manifests in order
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmaps.yaml
+
+          # Deploy infrastructure (PostgreSQL + Redis + RabbitMQ)
+          kubectl apply -f k8s/infrastructure.yaml
+
+          echo "⏳ Waiting for PostgreSQL to be ready..."
+          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
+          sleep 15
+
+          echo "⏳ Waiting for Redis to be ready..."
+          kubectl rollout status deployment/redis -n okla --timeout=60s || true
+
+          echo "⏳ Waiting for RabbitMQ to be ready..."
+          kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
+
+          # Deploy services
+          kubectl apply -f k8s/deployments.yaml
+          kubectl apply -f k8s/services.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+          # Deploy ChatbotService + LLM Server (separate manifest)
+          kubectl apply -f k8s/chatbotservice.yaml
+
+          # ⚠️ TARGETED restarts — only restart services that were actually rebuilt.
+          # Blanket "kubectl rollout restart deployment -n okla" causes unnecessary pod
+          # churn in 40+ services, drops in-flight requests, and resets connection pools.
+          echo "🔄 Restarting only CHANGED deployments to pick up new images..."
+
+          # Build list of changed services from job outcomes (success = was built)
+          CHANGED_SERVICES=""
+          ${{ needs.authservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES authservice"' || '' }}
+          ${{ needs.userservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES userservice"' || '' }}
+          ${{ needs.roleservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES roleservice"' || '' }}
+          ${{ needs.errorservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES errorservice"' || '' }}
+          ${{ needs.notificationservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES notificationservice"' || '' }}
+          ${{ needs.vehiclessaleservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES vehiclessaleservice"' || '' }}
+          ${{ needs.mediaservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES mediaservice"' || '' }}
+          ${{ needs.billingservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES billingservice"' || '' }}
+          ${{ needs.kycservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES kycservice"' || '' }}
+          ${{ needs.auditservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES auditservice"' || '' }}
+          ${{ needs.idempotencyservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES idempotencyservice"' || '' }}
+          ${{ needs.adminservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES adminservice"' || '' }}
+          ${{ needs.contactservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES contactservice"' || '' }}
+          ${{ needs.reviewservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES reviewservice"' || '' }}
+          ${{ needs.dealermanagementservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES dealermanagementservice"' || '' }}
+          ${{ needs.chatbotservice.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES chatbotservice"' || '' }}
+          ${{ needs.gateway.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES gateway"' || '' }}
+          ${{ needs.frontend-web.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES frontend-web"' || '' }}
+          ${{ needs.searchagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES searchagent"' || '' }}
+          ${{ needs.supportagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES supportagent"' || '' }}
+          ${{ needs.recoagent.result == 'success' && 'CHANGED_SERVICES="$CHANGED_SERVICES recoagent"' || '' }}
+
+          if [ -z "$CHANGED_SERVICES" ]; then
+            echo "ℹ️ No services changed — skipping restarts"
+          else
+            for SVC in $CHANGED_SERVICES; do
+              echo "  🔄 Restarting $SVC..."
+              kubectl rollout restart deployment/$SVC -n okla || true
+            done
+            echo "✅ Restarted $(echo $CHANGED_SERVICES | wc -w | tr -d ' ') services"
+          fi
+
+      - name: ✅ Verify deployment
+        run: |
+          kubectl rollout status deployment/frontend-web -n okla --timeout=300s
+          kubectl rollout status deployment/gateway -n okla --timeout=300s
+          kubectl rollout status deployment/authservice -n okla --timeout=300s
+          kubectl rollout status deployment/chatbotservice -n okla --timeout=300s || true
+          kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  summary:
+    name: 📊 Pipeline Summary
+    needs:
+      - detect-changes
+      - integration-tests
+      # Core
+      - authservice
+      - userservice
+      - roleservice
+      - errorservice
+      - notificationservice
+      - vehiclessaleservice
+      - mediaservice
+      - billingservice
+      - kycservice
+      - auditservice
+      - idempotencyservice
+      - adminservice
+      # Business
+      - contactservice
+      - reviewservice
+      - dealermanagementservice
+      - dealeranalyticsservice
+      - crmservice
+      - maintenanceservice
+      - comparisonservice
+      - alertservice
+      - appointmentservice
+      - marketingservice
+      - staffservice
+      - reportsservice
+      - inventorymanagementservice
+      # Payment
+      - paymentservice
+      # AI/ML
+      - aiprocessingservice
+      - vehicleintelligenceservice
+      - recommendationservice
+      - leadscoringservice
+      - backgroundremovalservice
+      - vehicle360processingservice
+      - video360service
+      # Infrastructure
+      - cacheservice
+      - messagebusservice
+      - configurationservice
+      - schedulerservice
+      - ratelimitingservice
+      - servicediscovery
+      - apidocsservice
+      - integrationservice
+      # Compliance
+      - dataprotectionservice
+      # Advertising
+      - advertisingservice
+      # Search Agent
+      - searchagent
+      # Support Agent
+      - supportagent
+      # Recommendation Agent
+      - recoagent
+      # Chatbot + Gateway + Frontend
+      - chatbotservice
+      - gateway
+      - frontend-web
+    if: always()
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          # Detect if any service failed
+          FAILED_SERVICES=""
+          ${{ contains(needs.authservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES AuthService"' || '' }}
+          ${{ contains(needs.userservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES UserService"' || '' }}
+          ${{ contains(needs.vehiclessaleservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES VehiclesSaleService"' || '' }}
+          ${{ contains(needs.gateway.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES Gateway"' || '' }}
+          ${{ contains(needs.frontend-web.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES Frontend"' || '' }}
+          ${{ contains(needs.kycservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES KYCService"' || '' }}
+          ${{ contains(needs.billingservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES BillingService"' || '' }}
+          ${{ contains(needs.chatbotservice.result, 'failure') && 'FAILED_SERVICES="$FAILED_SERVICES ChatbotService"' || '' }}
+
+          if [ -n "$FAILED_SERVICES" ]; then
+            echo "::error::❌ CI/CD FAILURES detected:$FAILED_SERVICES"
+            echo "PIPELINE_STATUS=failure" >> $GITHUB_ENV
+            echo "FAILED_LIST=$FAILED_SERVICES" >> $GITHUB_ENV
+          else
+            echo "PIPELINE_STATUS=success" >> $GITHUB_ENV
+          fi
+
+          echo "## 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| AuthService | ${{ needs.authservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UserService | ${{ needs.userservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RoleService | ${{ needs.roleservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ErrorService | ${{ needs.errorservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NotificationService | ${{ needs.notificationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| VehiclesSaleService | ${{ needs.vehiclessaleservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MediaService | ${{ needs.mediaservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| BillingService | ${{ needs.billingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| KYCService | ${{ needs.kycservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AuditService | ${{ needs.auditservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IdempotencyService | ${{ needs.idempotencyservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdminService | ${{ needs.adminservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ContactService | ${{ needs.contactservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ReviewService | ${{ needs.reviewservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerManagementService | ${{ needs.dealermanagementservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DealerAnalyticsService | ${{ needs.dealeranalyticsservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CRMService | ${{ needs.crmservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MaintenanceService | ${{ needs.maintenanceservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ComparisonService | ${{ needs.comparisonservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AlertService | ${{ needs.alertservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AppointmentService | ${{ needs.appointmentservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MarketingService | ${{ needs.marketingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| StaffService | ${{ needs.staffservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ReportsService | ${{ needs.reportsservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| InventoryManagementService | ${{ needs.inventorymanagementservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PaymentService | ${{ needs.paymentservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AIProcessingService | ${{ needs.aiprocessingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| VehicleIntelligenceService | ${{ needs.vehicleintelligenceservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecommendationService | ${{ needs.recommendationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| LeadScoringService | ${{ needs.leadscoringservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| BackgroundRemovalService | ${{ needs.backgroundremovalservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Vehicle360ProcessingService | ${{ needs.vehicle360processingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Video360Service | ${{ needs.video360service.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CacheService | ${{ needs.cacheservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MessageBusService | ${{ needs.messagebusservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ConfigurationService | ${{ needs.configurationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SchedulerService | ${{ needs.schedulerservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RateLimitingService | ${{ needs.ratelimitingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ServiceDiscovery | ${{ needs.servicediscovery.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ApiDocsService | ${{ needs.apidocsservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| IntegrationService | ${{ needs.integrationservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DataProtectionService | ${{ needs.dataprotectionservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AdvertisingService | ${{ needs.advertisingservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SearchAgent | ${{ needs.searchagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SupportAgent | ${{ needs.supportagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| RecoAgent | ${{ needs.recoagent.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ChatbotService | ${{ needs.chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway | ${{ needs.gateway.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Web | ${{ needs.frontend-web.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pipeline Gates" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 Integration Tests | ${{ needs.integration-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔔 Notify on failure (Slack)
+        if: env.PIPELINE_STATUS == 'failure' && env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,message,commit,author,action,ref,workflow
+          text: |
+            ❌ CI/CD Pipeline FAILED
+            Failed services: ${{ env.FAILED_LIST }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: 🚨 Create GitHub Issue on critical failure
+        if: env.PIPELINE_STATUS == 'failure' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedServices = process.env.FAILED_LIST || 'unknown';
+            const title = `🚨 CI/CD Pipeline Failure on main — ${new Date().toISOString().slice(0,10)}`;
+            const body = `## Pipeline Failure\n\n**Branch:** main\n**Commit:** ${context.sha}\n**Failed Services:** ${failedServices}\n**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n> Auto-generated by CI/CD pipeline.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['ci-failure', 'priority-high']
+            });
+        continue-on-error: true

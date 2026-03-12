@@ -15,10 +15,10 @@ public class IpApiGeoLocationService : IGeoLocationService
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
     private readonly ILogger<IpApiGeoLocationService> _logger;
-    
+
     // Cache duration for IP lookups (24 hours - IPs don't change location often)
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
-    
+
     // ip-api.com free endpoint (no API key required)
     private const string ApiBaseUrl = "http://ip-api.com/json/";
 
@@ -33,7 +33,7 @@ public class IpApiGeoLocationService : IGeoLocationService
     }
 
     public async Task<GeoLocationResult?> GetLocationFromIpAsync(
-        string ipAddress, 
+        string ipAddress,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(ipAddress) || ipAddress == "Unknown")
@@ -74,7 +74,7 @@ public class IpApiGeoLocationService : IGeoLocationService
 
             if (response == null || response.Status != "success")
             {
-                _logger.LogWarning("Geolocation lookup failed for IP: {IpAddress}. Message: {Message}", 
+                _logger.LogWarning("Geolocation lookup failed for IP: {IpAddress}. Message: {Message}",
                     ipAddress, response?.Message ?? "No response");
                 return null;
             }
@@ -92,8 +92,8 @@ public class IpApiGeoLocationService : IGeoLocationService
 
             // Cache the result
             _cache.Set(cacheKey, result, CacheDuration);
-            
-            _logger.LogInformation("Geolocation resolved for IP {IpAddress}: {City}, {Country}", 
+
+            _logger.LogInformation("Geolocation resolved for IP {IpAddress}: {City}, {Country}",
                 ipAddress, result.City, result.Country);
 
             return result;
@@ -147,8 +147,8 @@ public class IpApiGeoLocationService : IGeoLocationService
         }
 
         // Check for IPv6 link-local or private
-        if (ipAddress.StartsWith("fe80:") || 
-            ipAddress.StartsWith("fc00:") || 
+        if (ipAddress.StartsWith("fe80:") ||
+            ipAddress.StartsWith("fc00:") ||
             ipAddress.StartsWith("fd00:"))
         {
             return true;

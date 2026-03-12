@@ -41,7 +41,7 @@ public class UpdateBadgesCommandHandler : IRequestHandler<UpdateBadgesCommand, R
             // Obtener estadísticas actuales del vendedor
             var (reviews, _) = await _reviewRepository.GetBySellerIdAsync(sellerId, 1, 1000, true);
             var reviewsList = reviews.ToList();
-            
+
             var totalReviews = reviewsList.Count;
             var averageRating = totalReviews > 0 ? reviewsList.Average(r => r.Rating) : 0;
             var fiveStarCount = reviewsList.Count(r => r.Rating == 5);
@@ -52,7 +52,7 @@ public class UpdateBadgesCommandHandler : IRequestHandler<UpdateBadgesCommand, R
             var currentBadges = await _badgeRepository.GetActiveBySellerIdAsync(sellerId, cancellationToken);
 
             // Evaluar cada tipo de badge
-            await EvaluateBadge(sellerId, BadgeType.TopRated, 
+            await EvaluateBadge(sellerId, BadgeType.TopRated,
                 averageRating >= 4.8 && totalReviews >= 10,
                 "Top Rated", "Calificación promedio de 4.8+ con 10+ reviews",
                 "⭐", "#FFD700",
@@ -141,7 +141,7 @@ public class UpdateBadgesCommandHandler : IRequestHandler<UpdateBadgesCommand, R
             // Otorgar nuevo badge
             await _badgeRepository.GrantBadgeAsync(sellerId, badgeType, description, null, cancellationToken);
             newBadgesEarned.Add(title);
-            
+
             _logger.LogInformation("Badge '{Title}' earned by seller {SellerId}", title, sellerId);
         }
         else if (!meetsRequirements && existingBadge != null && existingBadge.IsActive)
@@ -149,7 +149,7 @@ public class UpdateBadgesCommandHandler : IRequestHandler<UpdateBadgesCommand, R
             // Revocar badge
             await _badgeRepository.RevokeBadgeAsync(sellerId, badgeType, cancellationToken);
             badgesRevoked.Add(title);
-            
+
             _logger.LogInformation("Badge '{Title}' revoked from seller {SellerId}", title, sellerId);
         }
     }

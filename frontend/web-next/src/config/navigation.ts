@@ -56,6 +56,8 @@ export interface NavItem {
   external?: boolean;
   /** Requires specific permission */
   permission?: string;
+  /** Minimum plan required to access this feature (shown as lock+tooltip for lower plans) */
+  requiredPlan?: string;
 }
 
 export interface NavSection {
@@ -124,9 +126,9 @@ export const SELLER_NAVIGATION: NavSection[] = [
     ],
   },
   {
-    title: 'Mis Publicaciones',
+    title: 'Mi Garage',
     items: [
-      { href: '/cuenta/mis-vehiculos', label: 'Mis Vehículos', icon: Car },
+      { href: '/cuenta/mis-vehiculos', label: 'Mi Garage', icon: Car },
       { href: '/cuenta/estadisticas', label: 'Estadísticas', icon: BarChart3 },
       { href: '/cuenta/consultas', label: 'Consultas Recibidas', icon: MessageSquare },
       { href: '/cuenta/resenas', label: 'Reseñas', icon: Star },
@@ -168,15 +170,30 @@ export const DEALER_NAVIGATION: NavSection[] = [
       { href: '/cuenta', label: 'Dashboard', icon: Home },
       { href: '/dealer/inventario', label: 'Inventario', icon: Package },
       { href: '/dealer/publicar', label: 'Publicar Vehículo', icon: Upload },
-      { href: '/dealer/importar', label: 'Importar Masivo', icon: FileText },
+      {
+        href: '/dealer/importar',
+        label: 'Importar Masivo',
+        icon: FileText,
+        requiredPlan: 'VISIBLE',
+      },
     ],
   },
   {
     title: 'Ventas',
     items: [
-      { href: '/dealer/leads', label: 'Leads / Consultas', icon: MessageSquare },
-      { href: '/dealer/analytics', label: 'Analíticas', icon: TrendingUp },
-      { href: '/dealer/rendimiento', label: 'Rendimiento', icon: BarChart3 },
+      {
+        href: '/dealer/leads',
+        label: 'Leads / Consultas',
+        icon: MessageSquare,
+        requiredPlan: 'VISIBLE',
+      },
+      { href: '/dealer/analytics', label: 'Analíticas', icon: TrendingUp, requiredPlan: 'VISIBLE' },
+      {
+        href: '/dealer/rendimiento',
+        label: 'Rendimiento',
+        icon: BarChart3,
+        requiredPlan: 'VISIBLE',
+      },
     ],
   },
   {
@@ -281,6 +298,7 @@ export const ADMIN_NAVIGATION: NavSection[] = [
       { href: '/admin/facturacion', label: 'Facturación', icon: DollarSign },
       { href: '/admin/suscripciones', label: 'Suscripciones', icon: Star },
       { href: '/admin/transacciones', label: 'Transacciones', icon: CreditCard },
+      { href: '/admin/costos-llm', label: 'Costos LLM / IA', icon: Brain },
     ],
   },
   {

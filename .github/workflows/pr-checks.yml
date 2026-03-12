@@ -32,6 +32,7 @@ jobs:
   detect-changes:
     name: 🔍 Detect Changes
     runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 5
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -62,6 +63,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
     runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout
@@ -77,21 +79,48 @@ jobs:
         with:
           version: 9
 
+      - name: 📦 Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 📦 Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: 📦 Install dependencies
         working-directory: frontend/web-next
         run: pnpm install --frozen-lockfile
 
       - name: 🔍 Lint
         working-directory: frontend/web-next
-        run: pnpm lint
+        run: pnpm eslint . --format=eslint-formatter-github-actions
 
       - name: 📝 Type check
         working-directory: frontend/web-next
         run: pnpm typecheck
 
+      - name: 📋 Audit npm dependencies
+        working-directory: frontend/web-next
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
       - name: 🧪 Unit tests
+        timeout-minutes: 3
         working-directory: frontend/web-next
         run: pnpm test -- --run --reporter=verbose
+
+      - name: 🔔 Notify failure to Slack
+        if: failure()
+        uses: ./.github/actions/slack-notify-failure
+        continue-on-error: true
+        with:
+          stage-name: "PR Check — Frontend"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # ============================================
   # BACKEND CHECKS (Parallel)
@@ -101,6 +130,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
     runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout
@@ -173,6 +203,14 @@ jobs:
             echo "::error::Critical NuGet vulnerabilities detected — PR blocked"
             exit 1
           fi
+
+      - name: 🔔 Notify failure to Slack
+        if: failure()
+        uses: ./.github/actions/slack-notify-failure
+        continue-on-error: true
+        with:
+          stage-name: "PR Check — Backend"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # ============================================
   # PR QUALITY CHECKS

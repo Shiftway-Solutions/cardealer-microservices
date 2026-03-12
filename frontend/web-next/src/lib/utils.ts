@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import { DOP_USD_EXCHANGE_RATE } from '@/lib/constants';
+
 /**
  * Utility function to merge Tailwind CSS classes
  * Handles conflicts and removes duplicates
@@ -29,6 +31,22 @@ export function formatCurrency(
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+/**
+ * Get the alternate currency amount.
+ * If the listing is in DOP, returns the USD equivalent and vice-versa.
+ */
+export function getAlternateCurrencyDisplay(
+  amount: number,
+  listingCurrency: 'DOP' | 'USD' = 'DOP'
+): { text: string; currency: string } {
+  if (listingCurrency === 'USD') {
+    const dop = Math.round(amount * DOP_USD_EXCHANGE_RATE);
+    return { text: formatCurrency(dop, { currency: 'DOP' }), currency: 'DOP' };
+  }
+  const usd = Math.round(amount / DOP_USD_EXCHANGE_RATE);
+  return { text: formatCurrency(usd, { currency: 'USD', locale: 'en-US' }), currency: 'USD' };
 }
 
 /**

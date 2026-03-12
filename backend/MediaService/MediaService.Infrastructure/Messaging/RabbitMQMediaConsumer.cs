@@ -34,7 +34,7 @@ public class RabbitMQMediaConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await InitializeConnectionWithRetryAsync(stoppingToken);
-        
+
         if (_channel == null || !_channel.IsOpen)
         {
             _logger.LogWarning("RabbitMQ connection not available, consumer will not start");
@@ -62,7 +62,7 @@ public class RabbitMQMediaConsumer : BackgroundService
             {
                 _logger.LogWarning("RabbitMQ connection lost, attempting to reconnect...");
                 await InitializeConnectionWithRetryAsync(stoppingToken);
-                
+
                 if (_channel != null && _channel.IsOpen)
                 {
                     var newConsumer = new AsyncEventingBasicConsumer(_channel);
@@ -77,7 +77,7 @@ public class RabbitMQMediaConsumer : BackgroundService
                     _logger.LogInformation("Reconnected to RabbitMQ successfully");
                 }
             }
-            
+
             await Task.Delay(5000, stoppingToken);
         }
     }
@@ -87,7 +87,7 @@ public class RabbitMQMediaConsumer : BackgroundService
         int retryCount = 0;
         const int maxRetryDelay = 60; // segundos máximo entre reintentos
         const int maxRetries = 10; // máximo número de reintentos antes de continuar sin RabbitMQ
-        
+
         while (!stoppingToken.IsCancellationRequested && retryCount < maxRetries)
         {
             try
@@ -136,11 +136,11 @@ public class RabbitMQMediaConsumer : BackgroundService
             {
                 retryCount++;
                 var delaySeconds = Math.Min(maxRetryDelay, (int)Math.Pow(2, Math.Min(retryCount, 6)));
-                
-                _logger.LogWarning(ex, 
-                    "Failed to connect to RabbitMQ (attempt {RetryCount}/{MaxRetries}). Retrying in {Delay} seconds...", 
+
+                _logger.LogWarning(ex,
+                    "Failed to connect to RabbitMQ (attempt {RetryCount}/{MaxRetries}). Retrying in {Delay} seconds...",
                     retryCount, maxRetries, delaySeconds);
-                
+
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);
@@ -152,7 +152,7 @@ public class RabbitMQMediaConsumer : BackgroundService
                 }
             }
         }
-        
+
         if (retryCount >= maxRetries)
         {
             _logger.LogWarning("Failed to connect to RabbitMQ after {MaxRetries} attempts. Service will continue in degraded mode without RabbitMQ messaging.", maxRetries);
@@ -311,10 +311,10 @@ public class RabbitMQMediaConsumer : BackgroundService
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("RabbitMQMediaConsumer stopping gracefully...");
-        
+
         try { _channel?.Close(); } catch { /* swallow on shutdown */ }
         try { _connection?.Close(); } catch { /* swallow on shutdown */ }
-        
+
         await base.StopAsync(cancellationToken);
         _logger.LogInformation("RabbitMQMediaConsumer stopped");
     }

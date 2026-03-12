@@ -124,12 +124,12 @@ public class ModerationController : ControllerBase
             var reviewerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
 
             var command = new ProcessModerationActionCommand(
-                id, 
-                request.Action, 
-                reviewerId, 
-                request.Reason, 
+                id,
+                request.Action,
+                reviewerId,
+                request.Reason,
                 request.Notes);
-            
+
             var result = await _mediator.Send(command);
 
             if (!result.Success)
@@ -156,14 +156,14 @@ public class ModerationController : ControllerBase
         try
         {
             var reviewerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
-            
+
             var command = new ProcessModerationActionCommand(
-                id, 
-                "approve", 
-                reviewerId, 
-                null, 
+                id,
+                "approve",
+                reviewerId,
+                null,
                 request?.Notes);
-            
+
             var result = await _mediator.Send(command);
 
             if (!result.Success)
@@ -194,14 +194,14 @@ public class ModerationController : ControllerBase
                 return BadRequest(new { Error = "Rejection reason is required" });
 
             var reviewerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
-            
+
             var command = new ProcessModerationActionCommand(
-                id, 
-                "reject", 
-                reviewerId, 
-                request.Reason, 
+                id,
+                "reject",
+                reviewerId,
+                request.Reason,
                 request.Notes);
-            
+
             var result = await _mediator.Send(command);
 
             if (!result.Success)

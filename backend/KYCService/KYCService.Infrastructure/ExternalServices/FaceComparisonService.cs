@@ -84,17 +84,17 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
         _config = config.Value;
         _rekognitionService = rekognitionService;
 
-        var mode = _config.UseSimulation ? "Simulation" 
-            : (_config.UseAmazonRekognition ? "Amazon Rekognition" 
+        var mode = _config.UseSimulation ? "Simulation"
+            : (_config.UseAmazonRekognition ? "Amazon Rekognition"
             : (_config.UseAzureFaceApi ? "Azure Face API" : "Unknown"));
-        
+
         _logger.LogInformation("Face Comparison Service initialized. Mode: {Mode}", mode);
     }
 
     /// <inheritdoc />
     public async Task<FaceComparisonResult> CompareFacesAsync(
-        byte[] image1, 
-        byte[] image2, 
+        byte[] image1,
+        byte[] image2,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -112,7 +112,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
             {
                 // RECOMENDADO: Usar Amazon Rekognition (económico y preciso)
                 var rekognitionResult = await _rekognitionService.CompareFacesAsync(image1, image2, cancellationToken);
-                
+
                 result.Success = rekognitionResult.Success;
                 result.IsMatch = rekognitionResult.IsMatch;
                 result.SimilarityScore = rekognitionResult.SimilarityScore;
@@ -135,7 +135,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
 
             result.IsMatch = result.SimilarityScore >= result.Threshold;
 
-            _logger.LogInformation("Face comparison completed. Match: {IsMatch}, Score: {Score}%", 
+            _logger.LogInformation("Face comparison completed. Match: {IsMatch}, Score: {Score}%",
                 result.IsMatch, result.SimilarityScore);
         }
         catch (Exception ex)
@@ -155,8 +155,8 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
 
     /// <inheritdoc />
     public async Task<FaceComparisonResult> CompareWithDocumentAsync(
-        byte[] selfieImage, 
-        byte[] documentImage, 
+        byte[] selfieImage,
+        byte[] documentImage,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Comparing selfie with document photo...");
@@ -168,7 +168,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
 
     /// <inheritdoc />
     public async Task<FaceDetectionResult> DetectFacesAsync(
-        byte[] imageData, 
+        byte[] imageData,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -215,7 +215,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
 
     /// <inheritdoc />
     public async Task<LivenessResult> CheckLivenessAsync(
-        LivenessCheckRequest request, 
+        LivenessCheckRequest request,
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -233,7 +233,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
             {
                 // Determinar el challenge basado en los resultados del request
                 var challengeType = request.ChallengeResults.FirstOrDefault()?.ChallengeType ?? "None";
-                var challenge = Enum.TryParse<LivenessChallenge>(challengeType, true, out var c) 
+                var challenge = Enum.TryParse<LivenessChallenge>(challengeType, true, out var c)
                     ? c : LivenessChallenge.None;
                 result = await _rekognitionService.CheckBasicLivenessAsync(request.SelfieImage, challenge, cancellationToken);
             }
@@ -247,7 +247,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
                 result.Threshold = (decimal)_config.LivenessThreshold;
             }
 
-            _logger.LogInformation("Liveness check completed. IsLive: {IsLive}, Score: {Score}%", 
+            _logger.LogInformation("Liveness check completed. IsLive: {IsLive}, Score: {Score}%",
                 result.IsLive, result.LivenessScore);
         }
         catch (Exception ex)
@@ -267,7 +267,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
 
     /// <inheritdoc />
     public async Task<FaceExtractionResult> ExtractFaceFromDocumentAsync(
-        byte[] documentImage, 
+        byte[] documentImage,
         CancellationToken cancellationToken = default)
     {
         var result = new FaceExtractionResult();
@@ -287,7 +287,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
                 result.BoundingBox = extraction.BoundingBox;
                 result.Quality = extraction.Quality;
                 result.ErrorMessage = extraction.ErrorMessage;
-                
+
                 // Retornar la imagen completa - en producción se podría recortar
                 if (extraction.Success)
                 {
@@ -323,7 +323,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
         // Simular delay de procesamiento
         var random = new Random();
         var score = random.Next(75, 100);
-        
+
         return Task.FromResult(new FaceComparisonResult
         {
             Success = true,
@@ -364,7 +364,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
         var random = new Random();
         var passed = random.Next(100) > 15; // 85% éxito
         var challengeType = request.ChallengeResults.FirstOrDefault()?.ChallengeType ?? "None";
-        
+
         return new LivenessResult
         {
             Success = true,
@@ -404,7 +404,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
     private FaceComparisonResult CompareWithAzureFaceApi(byte[] image1, byte[] image2)
     {
         _logger.LogWarning("Azure Face API not implemented. Please use Amazon Rekognition instead.");
-        
+
         return new FaceComparisonResult
         {
             Success = false,
@@ -415,7 +415,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
     private FaceDetectionResult DetectWithAzureFaceApi(byte[] imageData)
     {
         _logger.LogWarning("Azure Face API detection not implemented.");
-        
+
         return new FaceDetectionResult
         {
             Success = false,
@@ -426,7 +426,7 @@ public class FaceComparisonService : IFaceComparisonService, IDisposable
     private FaceExtractionResult ExtractWithAzureFaceApi(byte[] documentImage)
     {
         _logger.LogWarning("Azure Face API extraction not implemented.");
-        
+
         return new FaceExtractionResult
         {
             Success = false,

@@ -10,13 +10,13 @@ public record RecoveryCodeLoginResponse(
     string AccessToken,
     string RefreshToken,
     DateTime ExpiresAt,
-    
+
     /// <summary>
     /// Number of unused recovery codes remaining.
     /// If this is low (e.g., 3 or less), prompt user to regenerate codes.
     /// </summary>
     int RemainingRecoveryCodes,
-    
+
     /// <summary>
     /// Warning message if recovery codes are running low
     /// </summary>

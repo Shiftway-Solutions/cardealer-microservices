@@ -77,7 +77,7 @@ public class SupportAgentPromptAuditTests
     {
         _prompt.Should().Contain("NO proceses pagos",
             "must prohibit payment processing");
-        _prompt.Should().Contain("NO modifiques cuentas",
+        _prompt.Should().Contain("ni modifiques cuentas",
             "must prohibit account modification");
     }
 

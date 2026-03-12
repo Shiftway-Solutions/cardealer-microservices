@@ -63,6 +63,7 @@ import {
   sanitizeMileage,
   sanitizeYear,
 } from '@/lib/security/sanitize';
+import { DEALER_PLAN_LIMITS, DealerPlan } from '@/lib/plan-config';
 
 // =============================================================================
 // TYPES
@@ -192,6 +193,8 @@ export default function NewVehiclePage() {
   });
 
   // Image state
+  const maxImages =
+    DEALER_PLAN_LIMITS[(dealer?.plan as DealerPlan) ?? DealerPlan.LIBRE]?.maxImages ?? 10;
   const [images, setImages] = React.useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
   const [uploading, setUploading] = React.useState(false);
@@ -215,7 +218,7 @@ export default function NewVehiclePage() {
     const files = e.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      const remaining = 20 - images.length;
+      const remaining = maxImages - images.length;
       const filesToAdd = newFiles.slice(0, remaining);
 
       setImages(prev => [...prev, ...filesToAdd]);
@@ -834,7 +837,8 @@ export default function NewVehiclePage() {
                 <Upload className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
                 <p className="text-muted-foreground mb-1">Haz clic o arrastra fotos aquí</p>
                 <p className="text-muted-foreground text-xs">
-                  PNG, JPG hasta 10MB • Máximo 20 fotos • {20 - images.length} restantes
+                  PNG, JPG hasta 10MB • Máximo {maxImages} fotos • {maxImages - images.length}{' '}
+                  restantes
                 </p>
               </div>
 

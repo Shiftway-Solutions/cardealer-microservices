@@ -105,7 +105,7 @@ public class UserBillingController : ControllerBase
         var userId = GetCurrentUserId();
 
         var transaction = await _azulTransactionRepository.GetByIdAsync(transactionId);
-        
+
         if (transaction == null)
             return NotFound(new { error = "Transacción no encontrada" });
 

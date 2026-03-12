@@ -13,16 +13,16 @@ public class DealerAlert
     public DealerAlertType Type { get; set; }
     public AlertSeverity Severity { get; set; }
     public AlertStatus Status { get; set; }
-    
+
     // Alert Content
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public string? ActionUrl { get; set; }
     public string? ActionLabel { get; set; }
-    
+
     // Context Data (JSON serialized)
     public string? MetadataJson { get; set; }
-    
+
     // Computed property for accessing metadata as Dictionary
     private Dictionary<string, string>? _metadata;
     public Dictionary<string, string>? Metadata
@@ -42,16 +42,16 @@ public class DealerAlert
             }
         }
     }
-    
+
     // Related Entities
     public Guid? RelatedVehicleId { get; set; }
     public Guid? RelatedLeadId { get; set; }
-    
+
     // Thresholds (what triggered the alert)
     public string? TriggerCondition { get; set; }
     public double? CurrentValue { get; set; }
     public double? ThresholdValue { get; set; }
-    
+
     // User Interaction
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
@@ -59,7 +59,7 @@ public class DealerAlert
     public DateTime? DismissedAt { get; set; }
     public bool IsActedUpon { get; set; }
     public DateTime? ActedUponAt { get; set; }
-    
+
     // Notification Tracking
     public bool EmailSent { get; set; }
     public DateTime? EmailSentAt { get; set; }
@@ -67,14 +67,14 @@ public class DealerAlert
     public DateTime? PushSentAt { get; set; }
     public bool SmsSent { get; set; }
     public DateTime? SmsSentAt { get; set; }
-    
+
     // Expiration
     public DateTime? ExpiresAt { get; set; }
     public bool IsExpired => ExpiresAt.HasValue && DateTime.UtcNow > ExpiresAt.Value;
-    
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    
+
     // Constructor
     public DealerAlert()
     {
@@ -82,13 +82,13 @@ public class DealerAlert
         CreatedAt = DateTime.UtcNow;
         Status = AlertStatus.Active;
     }
-    
+
     /// <summary>
     /// Factory method para crear alertas específicas
     /// </summary>
     public static DealerAlert Create(
-        Guid dealerId, 
-        DealerAlertType type, 
+        Guid dealerId,
+        DealerAlertType type,
         AlertSeverity severity,
         string title,
         string message,
@@ -106,7 +106,7 @@ public class DealerAlert
             ExpiresAt = expiresIn.HasValue ? DateTime.UtcNow.Add(expiresIn.Value) : null
         };
     }
-    
+
     // Alert Factory Methods
     public static DealerAlert CreateLowInventoryAlert(Guid dealerId, int currentCount)
     {
@@ -123,7 +123,7 @@ public class DealerAlert
         alert.ActionLabel = "Agregar Vehículo";
         return alert;
     }
-    
+
     public static DealerAlert CreateAgingInventoryAlert(Guid dealerId, Guid vehicleId, string vehicleTitle, int daysOnMarket)
     {
         var alert = Create(
@@ -140,7 +140,7 @@ public class DealerAlert
         alert.ActionLabel = "Editar Precio";
         return alert;
     }
-    
+
     public static DealerAlert CreateSlowResponseAlert(Guid dealerId, Guid leadId, double hoursWithoutResponse)
     {
         var alert = Create(
@@ -157,7 +157,7 @@ public class DealerAlert
         alert.ActionLabel = "Responder";
         return alert;
     }
-    
+
     public static DealerAlert CreateViewsDroppingAlert(Guid dealerId, double percentDrop)
     {
         var alert = Create(
@@ -173,7 +173,7 @@ public class DealerAlert
         alert.ActionLabel = "Ver Recomendaciones";
         return alert;
     }
-    
+
     public static DealerAlert CreateConversionDroppingAlert(Guid dealerId, double currentRate, double previousRate)
     {
         var percentDrop = previousRate > 0 ? ((previousRate - currentRate) / previousRate) * 100 : 0;
@@ -190,7 +190,7 @@ public class DealerAlert
         alert.ActionLabel = "Analizar Funnel";
         return alert;
     }
-    
+
     public static DealerAlert CreateGoalAchievedAlert(Guid dealerId, string goalName, double achievedValue)
     {
         var alert = Create(
@@ -205,9 +205,9 @@ public class DealerAlert
         alert.ActionLabel = "Ver Progreso";
         return alert;
     }
-    
+
     // Additional Factory Methods for AlertAnalysisService
-    
+
     public static DealerAlert CreateLowInventoryAlert(Guid dealerId, int currentCount, int threshold)
     {
         var alert = Create(
@@ -223,7 +223,7 @@ public class DealerAlert
         alert.ActionLabel = "Agregar Vehículo";
         return alert;
     }
-    
+
     public static DealerAlert CreateViewsDroppingAlert(Guid dealerId, double percentDrop, int currentViews, int previousViews)
     {
         var alert = Create(
@@ -240,7 +240,7 @@ public class DealerAlert
         alert.ActionLabel = "Ver Recomendaciones";
         return alert;
     }
-    
+
     public static DealerAlert CreateLeadResponseSlowAlert(Guid dealerId, int avgResponseMinutes, int thresholdMinutes)
     {
         var hours = avgResponseMinutes / 60.0;
@@ -257,7 +257,7 @@ public class DealerAlert
         alert.ActionLabel = "Ver Leads Pendientes";
         return alert;
     }
-    
+
     public static DealerAlert CreateConversionDropAlert(Guid dealerId, double percentDrop, decimal currentRate, decimal previousRate)
     {
         var alert = Create(
@@ -274,7 +274,7 @@ public class DealerAlert
         alert.ActionLabel = "Analizar Funnel";
         return alert;
     }
-    
+
     public static DealerAlert CreateAgingInventoryAlert(Guid dealerId, int vehicleCount, decimal totalValue)
     {
         var alert = Create(
@@ -291,7 +291,7 @@ public class DealerAlert
         alert.ActionLabel = "Ver Vehículos";
         return alert;
     }
-    
+
     public static DealerAlert CreateHighDemandAlert(Guid dealerId, Guid vehicleId, int views, int contacts)
     {
         var alert = Create(
@@ -309,14 +309,14 @@ public class DealerAlert
         alert.ActionLabel = "Ver Vehículo";
         return alert;
     }
-    
+
     public void MarkAsRead()
     {
         IsRead = true;
         ReadAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void Dismiss()
     {
         IsDismissed = true;
@@ -324,7 +324,7 @@ public class DealerAlert
         Status = AlertStatus.Dismissed;
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void MarkAsActedUpon()
     {
         IsActedUpon = true;

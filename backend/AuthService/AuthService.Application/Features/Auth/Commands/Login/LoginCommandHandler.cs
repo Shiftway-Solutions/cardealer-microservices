@@ -98,20 +98,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             }
 
             var captchaValid = await _captchaService.VerifyAsync(
-                request.CaptchaToken, 
-                "login", 
+                request.CaptchaToken,
+                "login",
                 _requestContext.IpAddress);
 
             if (!captchaValid)
             {
-                _logger.LogWarning("CAPTCHA verification failed for {Email}. Score: {Score}", 
+                _logger.LogWarning("CAPTCHA verification failed for {Email}. Score: {Score}",
                     request.Email, _captchaService.LastScore);
                 throw new BadRequestException("CAPTCHA verification failed. Please try again.");
             }
         }
 
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
-        
+
         if (user == null)
         {
             await TrackFailedLoginAttemptAsync(request.Email, null, cancellationToken);
@@ -174,14 +174,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         {
             // Generar token temporal para 2FA
             var tempToken = _jwtGenerator.GenerateTempToken(user.Id);
-            
+
             // Determinar el tipo de 2FA y obtener el string para el frontend
             string twoFactorTypeString = "authenticator"; // default
-            
+
             if (user.TwoFactorAuth != null)
             {
                 var twoFactorType = user.TwoFactorAuth.PrimaryMethod;
-                
+
                 // Map enum to string for frontend
                 twoFactorTypeString = twoFactorType switch
                 {
@@ -189,7 +189,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                     TwoFactorAuthType.Email => "email",
                     _ => "authenticator"
                 };
-                
+
                 // Enviar código 2FA automáticamente para SMS y Email
                 if (twoFactorType == TwoFactorAuthType.SMS || twoFactorType == TwoFactorAuthType.Email)
                 {
@@ -294,15 +294,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 expiresAt: sessionExpiresAt
             );
             sessionId = userSession.Id;
-            
+
             // Set location if available
             if (!string.IsNullOrEmpty(locationString))
             {
                 userSession.UpdateLocation(locationString, country, city);
             }
-            
+
             await _sessionRepository.AddAsync(userSession, cancellationToken);
-            _logger.LogInformation("Created new session {SessionId} for user {UserId} from {Location}", 
+            _logger.LogInformation("Created new session {SessionId} for user {UserId} from {Location}",
                 userSession.Id, user.Id, locationString ?? "Unknown location");
 
             // Send new session notification email
@@ -365,7 +365,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 
         var failedAttemptsKey = $"login_failed:{email.ToLowerInvariant()}";
         var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
-        
+
         int attempts = 1;
         if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
         {
@@ -378,7 +378,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(lockoutMinutes)
         }, cancellationToken);
 
-        _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}", 
+        _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}",
             attempts, email, _requestContext.IpAddress);
 
         // US-18.2: Send security alert after 3+ failed attempts
@@ -394,7 +394,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                     DeviceInfo: _requestContext.UserAgent
                 );
                 await _notificationService.SendSecurityAlertAsync(userEmail, alert);
-                _logger.LogInformation("Security alert sent to {Email} after {Attempts} failed login attempts", 
+                _logger.LogInformation("Security alert sent to {Email} after {Attempts} failed login attempts",
                     userEmail, attempts);
             }
             catch (Exception ex)
@@ -416,7 +416,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private static string ParseDeviceInfo(string userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
-        
+
         if (userAgent.Contains("Mobile") || userAgent.Contains("Android") || userAgent.Contains("iPhone"))
             return "Mobile";
         if (userAgent.Contains("Tablet") || userAgent.Contains("iPad"))
@@ -430,7 +430,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private static string ParseBrowser(string userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown";
-        
+
         if (userAgent.Contains("Edg/")) return "Microsoft Edge";
         if (userAgent.Contains("Chrome/") && !userAgent.Contains("Chromium")) return "Chrome";
         if (userAgent.Contains("Firefox/")) return "Firefox";
@@ -445,7 +445,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private static string ParseOperatingSystem(string userAgent)
     {
         if (string.IsNullOrEmpty(userAgent)) return "Unknown";
-        
+
         if (userAgent.Contains("Windows NT 10")) return "Windows 10/11";
         if (userAgent.Contains("Windows NT")) return "Windows";
         if (userAgent.Contains("Mac OS X")) return "macOS";

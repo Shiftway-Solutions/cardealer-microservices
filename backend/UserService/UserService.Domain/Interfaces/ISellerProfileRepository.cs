@@ -47,7 +47,7 @@ public interface ISellerProfileRepository
     // ========================================
     // ESTADÍSTICAS
     // ========================================
-    Task UpdateStatsAsync(Guid sellerProfileId, int totalListings, int activeListings, int totalSales, 
+    Task UpdateStatsAsync(Guid sellerProfileId, int totalListings, int activeListings, int totalSales,
         decimal averageRating, int totalReviews, int responseTimeMinutes, int responseRate);
     Task UpdateMonthlyStatsAsync(Guid sellerProfileId, int viewsThisMonth, int leadsThisMonth);
     Task<List<SellerProfile>> GetTopSellersAsync(int count = 10, string? city = null);

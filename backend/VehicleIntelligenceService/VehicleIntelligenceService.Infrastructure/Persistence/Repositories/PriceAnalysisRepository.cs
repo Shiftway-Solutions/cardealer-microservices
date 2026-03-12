@@ -39,7 +39,7 @@ public class PriceAnalysisRepository : IPriceAnalysisRepository
     {
         analysis.CreatedAt = DateTime.UtcNow;
         analysis.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.PriceAnalyses.Add(analysis);
         await _context.SaveChangesAsync(cancellationToken);
         return analysis;
@@ -48,7 +48,7 @@ public class PriceAnalysisRepository : IPriceAnalysisRepository
     public async Task<PriceAnalysis> UpdateAsync(PriceAnalysis analysis, CancellationToken cancellationToken = default)
     {
         analysis.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.PriceAnalyses.Update(analysis);
         await _context.SaveChangesAsync(cancellationToken);
         return analysis;

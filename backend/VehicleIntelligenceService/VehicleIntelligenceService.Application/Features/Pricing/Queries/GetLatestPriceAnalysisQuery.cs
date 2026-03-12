@@ -18,7 +18,7 @@ public class GetLatestPriceAnalysisHandler : IRequestHandler<GetLatestPriceAnaly
     public async Task<PriceAnalysisDto?> Handle(GetLatestPriceAnalysisQuery request, CancellationToken cancellationToken)
     {
         var analysis = await _repository.GetLatestByVehicleIdAsync(request.VehicleId, cancellationToken);
-        
+
         if (analysis == null)
             return null;
 

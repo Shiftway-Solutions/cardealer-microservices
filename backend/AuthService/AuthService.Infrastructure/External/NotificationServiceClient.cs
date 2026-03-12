@@ -262,7 +262,7 @@ public class NotificationServiceClient : INotificationService
     }
 
     #region INotificationService Implementation
-    
+
     /// <summary>
     /// INotificationService.SendEmailAsync implementation - delegates to existing method
     /// </summary>
@@ -306,7 +306,7 @@ public class NotificationServiceClient : INotificationService
     {
         return IsHealthyAsync();
     }
-    
+
     #endregion
 
 }

@@ -110,8 +110,8 @@ public class RevokedDeviceService : IRevokedDeviceService
             // También guardar en una lista de dispositivos revocados del usuario (para posible auditoría)
             var listKey = $"{REVOKED_DEVICES_LIST_PREFIX}{userId}";
             var existingList = await _cache.GetStringAsync(listKey, cancellationToken);
-            var deviceList = string.IsNullOrEmpty(existingList) 
-                ? new List<string>() 
+            var deviceList = string.IsNullOrEmpty(existingList)
+                ? new List<string>()
                 : JsonSerializer.Deserialize<List<string>>(existingList) ?? new List<string>();
 
             if (!deviceList.Contains(fingerprint))
@@ -230,7 +230,7 @@ public class RevokedDeviceService : IRevokedDeviceService
         // por lo que usamos solo partes estables
         var stableUserAgent = ExtractStableUserAgentParts(userAgent);
         var combined = $"{ipAddress}|{stableUserAgent}";
-        
+
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
         return Convert.ToBase64String(bytes);

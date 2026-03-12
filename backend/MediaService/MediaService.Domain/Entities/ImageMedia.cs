@@ -11,6 +11,28 @@ public class ImageMedia : MediaAsset
     public bool IsPrimary { get; private set; }
     public string? AltText { get; private set; }
 
+    /// <summary>
+    /// Indicates whether the CDN/public URL for this image is broken (403, 404, 410, 500 or timeout).
+    /// Set by the ImageUrlHealthScanJob background service.
+    /// </summary>
+    public bool BrokenImage { get; private set; }
+
+    /// <summary>
+    /// Timestamp of the last time BrokenImage was detected.
+    /// Null if the image has never been detected as broken.
+    /// </summary>
+    public DateTime? BrokenImageDetectedAt { get; private set; }
+
+    /// <summary>
+    /// HTTP status code that caused the image to be flagged as broken.
+    /// </summary>
+    public int? BrokenImageHttpStatus { get; private set; }
+
+    /// <summary>
+    /// Timestamp of the last successful URL health check scan.
+    /// </summary>
+    public DateTime? LastHealthCheckAt { get; private set; }
+
     public ImageMedia(
         Guid dealerId,
         string ownerId,
@@ -52,6 +74,30 @@ public class ImageMedia : MediaAsset
     public void SetAltText(string altText)
     {
         AltText = altText;
+        MarkAsUpdated();
+    }
+
+    /// <summary>
+    /// Marks this image URL as broken with the HTTP status code that caused the failure.
+    /// </summary>
+    public void MarkAsBrokenImage(int httpStatusCode)
+    {
+        BrokenImage = true;
+        BrokenImageDetectedAt = DateTime.UtcNow;
+        BrokenImageHttpStatus = httpStatusCode;
+        LastHealthCheckAt = DateTime.UtcNow;
+        MarkAsUpdated();
+    }
+
+    /// <summary>
+    /// Marks this image URL as healthy after a successful HEAD request.
+    /// </summary>
+    public void MarkAsHealthyImage()
+    {
+        BrokenImage = false;
+        BrokenImageDetectedAt = null;
+        BrokenImageHttpStatus = null;
+        LastHealthCheckAt = DateTime.UtcNow;
         MarkAsUpdated();
     }
 

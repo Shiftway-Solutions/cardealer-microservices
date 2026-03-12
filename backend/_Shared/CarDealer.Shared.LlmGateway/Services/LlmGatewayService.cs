@@ -296,8 +296,12 @@ public sealed class LlmGatewayService : ILlmGateway
         {
             return new LlmModelDistribution
             {
-                Claude = 0, Gemini = 0, Llama = 0, Cache = 0,
-                TotalRequests = 0, Since = DateTimeOffset.UtcNow
+                Claude = 0,
+                Gemini = 0,
+                Llama = 0,
+                Cache = 0,
+                TotalRequests = 0,
+                Since = DateTimeOffset.UtcNow
             };
         }
 

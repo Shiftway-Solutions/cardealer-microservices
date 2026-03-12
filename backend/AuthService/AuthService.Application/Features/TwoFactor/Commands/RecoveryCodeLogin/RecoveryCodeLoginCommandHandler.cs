@@ -109,15 +109,15 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
         {
             // Track failed attempt with lockout - US-18.2: passes email for security alerts
             await TrackFailedRecoveryAttemptAsync(userId, user.Email!, lockoutKey, cancellationToken);
-            
+
             twoFactorAuth.IncrementFailedAttempts();
             await _userRepository.AddOrUpdateTwoFactorAuthAsync(twoFactorAuth);
-            
+
             _logger.LogWarning(
-                "Invalid recovery code attempt for user {UserId}. Failed attempts tracked.", 
+                "Invalid recovery code attempt for user {UserId}. Failed attempts tracked.",
                 userId
             );
-            
+
             throw new UnauthorizedException("Invalid or already used recovery code.");
         }
 
@@ -157,24 +157,24 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
         {
             // User used their last recovery code
             _logger.LogWarning("User {UserId} used their last recovery code.", userId);
-            
+
             if (twoFactorAuth.PrimaryMethod == AuthService.Domain.Enums.TwoFactorAuthType.Authenticator)
             {
                 // AUTHENTICATOR: Generate NEW secret (QR code) + new recovery codes
                 // User lost their device, they need a NEW authenticator setup
                 var (newSecret, newQrCodeUri) = await _twoFactorService.GenerateAuthenticatorKeyAsync(user.Id, user.Email!);
                 var newCodes = await _twoFactorService.GenerateRecoveryCodesAsync(user.Id);
-                
+
                 // Update 2FA with new secret
                 twoFactorAuth.ResetAuthenticator(newSecret, newCodes);
                 await _userRepository.AddOrUpdateTwoFactorAuthAsync(twoFactorAuth);
-                
+
                 // Send new QR code + recovery codes via email
                 await _notificationService.SendNewAuthenticatorSetupAsync(user.Email!, newSecret, newQrCodeUri, newCodes);
-                
+
                 remainingCodes = newCodes.Count;
                 warning = "🔄 Recovery codes exhausted. A NEW Authenticator setup (QR code) and 10 new recovery codes have been sent to your email. Please configure your authenticator app with the new QR code.";
-                
+
                 _logger.LogInformation("New authenticator secret generated and sent to {Email} for user {UserId}", user.Email, userId);
             }
             else if (twoFactorAuth.PrimaryMethod == AuthService.Domain.Enums.TwoFactorAuthType.SMS)
@@ -184,10 +184,10 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
                 twoFactorAuth.UpdateRecoveryCodes(newCodes);
                 await _userRepository.AddOrUpdateTwoFactorAuthAsync(twoFactorAuth);
                 await _notificationService.SendTwoFactorBackupCodesAsync(user.Email!, newCodes);
-                
+
                 remainingCodes = newCodes.Count;
                 warning = "🔄 Recovery codes exhausted. 10 new recovery codes have been sent to your email. If you lost your phone, please update your phone number in account settings.";
-                
+
                 _logger.LogInformation("New recovery codes generated for SMS 2FA user {UserId}", userId);
             }
         }
@@ -198,8 +198,8 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
         }
 
         _logger.LogInformation(
-            "Recovery code login successful for user {UserId}. Remaining codes: {RemainingCodes}", 
-            userId, 
+            "Recovery code login successful for user {UserId}. Remaining codes: {RemainingCodes}",
+            userId,
             remainingCodes
         );
 
@@ -223,7 +223,7 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
     {
         var failedAttemptsKey = $"recovery_failed:{odGuidUserId}";
         var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
-        
+
         int attempts = 1;
         if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
         {
@@ -280,7 +280,7 @@ public class RecoveryCodeLoginCommandHandler : IRequestHandler<RecoveryCodeLogin
                 _logger.LogError(ex, "Failed to send lockout notification for user {UserId}", odGuidUserId);
             }
 
-            _logger.LogWarning("User {UserId} locked out from recovery code login after {Attempts} failed attempts", 
+            _logger.LogWarning("User {UserId} locked out from recovery code login after {Attempts} failed attempts",
                 odGuidUserId, MAX_FAILED_ATTEMPTS);
         }
         else

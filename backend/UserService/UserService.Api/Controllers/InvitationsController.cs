@@ -35,9 +35,9 @@ public class InvitationsController : ControllerBase
     public async Task<ActionResult<InvitationDetailsDto>> GetInvitationDetails(string token)
     {
         _logger.LogInformation("Getting invitation details for token ...{TokenSuffix}", token.Length > 8 ? token[^8..] : "***");
-        
+
         var result = await _mediator.Send(new GetInvitationDetailsQuery(token));
-        
+
         if (result == null)
             return NotFound(new { error = "Invitación no encontrada" });
 
@@ -87,9 +87,9 @@ public class InvitationsController : ControllerBase
     public async Task<ActionResult> DeclineInvitation(string token)
     {
         _logger.LogInformation("Declining invitation for token ...{TokenSuffix}", token.Length > 8 ? token[^8..] : "***");
-        
+
         await _mediator.Send(new DeclineInvitationCommand(token));
-        
+
         return NoContent();
     }
 }

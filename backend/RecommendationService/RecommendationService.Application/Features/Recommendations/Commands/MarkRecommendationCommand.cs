@@ -20,13 +20,13 @@ public class MarkRecommendationViewedCommandHandler : IRequestHandler<MarkRecomm
     public async Task<bool> Handle(MarkRecommendationViewedCommand request, CancellationToken cancellationToken)
     {
         var recommendation = await _repository.GetByIdAsync(request.RecommendationId);
-        
+
         if (recommendation == null)
             return false;
 
         recommendation.MarkViewed();
         await _repository.UpdateAsync(recommendation);
-        
+
         return true;
     }
 }
@@ -45,13 +45,13 @@ public class MarkRecommendationClickedCommandHandler : IRequestHandler<MarkRecom
     public async Task<bool> Handle(MarkRecommendationClickedCommand request, CancellationToken cancellationToken)
     {
         var recommendation = await _repository.GetByIdAsync(request.RecommendationId);
-        
+
         if (recommendation == null)
             return false;
 
         recommendation.MarkClicked();
         await _repository.UpdateAsync(recommendation);
-        
+
         return true;
     }
 }

@@ -22,18 +22,18 @@ public class FavoriteRepository : IFavoriteRepository
     }
 
     public async Task<Favorite?> GetByUserAndVehicleAsync(
-        Guid userId, 
-        Guid vehicleId, 
+        Guid userId,
+        Guid vehicleId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
             .FirstOrDefaultAsync(
-                f => f.UserId == userId && f.VehicleId == vehicleId, 
+                f => f.UserId == userId && f.VehicleId == vehicleId,
                 cancellationToken);
     }
 
     public async Task<IEnumerable<Favorite>> GetByUserIdAsync(
-        Guid userId, 
+        Guid userId,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@ public class FavoriteRepository : IFavoriteRepository
     }
 
     public async Task<int> GetCountByUserIdAsync(
-        Guid userId, 
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
@@ -73,7 +73,7 @@ public class FavoriteRepository : IFavoriteRepository
     }
 
     public async Task<int> GetCountByVehicleIdAsync(
-        Guid vehicleId, 
+        Guid vehicleId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
@@ -81,18 +81,18 @@ public class FavoriteRepository : IFavoriteRepository
     }
 
     public async Task<bool> IsFavoriteAsync(
-        Guid userId, 
-        Guid vehicleId, 
+        Guid userId,
+        Guid vehicleId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Favorites
             .AnyAsync(
-                f => f.UserId == userId && f.VehicleId == vehicleId, 
+                f => f.UserId == userId && f.VehicleId == vehicleId,
                 cancellationToken);
     }
 
     public async Task<Favorite> CreateAsync(
-        Favorite favorite, 
+        Favorite favorite,
         CancellationToken cancellationToken = default)
     {
         await _context.Favorites.AddAsync(favorite, cancellationToken);
@@ -111,8 +111,8 @@ public class FavoriteRepository : IFavoriteRepository
     }
 
     public async Task DeleteByUserAndVehicleAsync(
-        Guid userId, 
-        Guid vehicleId, 
+        Guid userId,
+        Guid vehicleId,
         CancellationToken cancellationToken = default)
     {
         var favorite = await GetByUserAndVehicleAsync(userId, vehicleId, cancellationToken);

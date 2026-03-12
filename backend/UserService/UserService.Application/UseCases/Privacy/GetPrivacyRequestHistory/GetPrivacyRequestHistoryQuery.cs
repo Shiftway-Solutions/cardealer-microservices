@@ -25,7 +25,7 @@ public class GetPrivacyRequestHistoryQueryHandler : IRequestHandler<GetPrivacyRe
     {
         // TODO: Implementar query real a la base de datos
         await Task.CompletedTask;
-        
+
         var mockRequests = new List<PrivacyRequestHistoryDto>
         {
             new(
@@ -53,7 +53,7 @@ public class GetPrivacyRequestHistoryQueryHandler : IRequestHandler<GetPrivacyRe
                 CompletedAt: DateTime.UtcNow.AddDays(-45)
             )
         };
-        
+
         return new PrivacyRequestsListDto(
             Requests: mockRequests,
             TotalCount: 3,

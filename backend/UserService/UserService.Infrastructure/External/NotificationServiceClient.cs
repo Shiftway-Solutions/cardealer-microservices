@@ -106,14 +106,14 @@ namespace UserService.Infrastructure.External
                 _logger.LogWarning(ex, "Failed to send password reset email to {Email}", email);
             }
         }
-        
+
         // ========================================
         // DEALER ONBOARDING EMAILS
         // ========================================
-        
+
         public async Task SendDealerVerificationEmailAsync(
-            string email, 
-            string businessName, 
+            string email,
+            string businessName,
             string verificationToken,
             DateTime tokenExpiry)
         {
@@ -122,7 +122,7 @@ namespace UserService.Infrastructure.External
                 var baseUrl = await GetServiceUrlAsync();
                 var verificationUrl = $"https://okla.com.do/dealer/verify-email?token={verificationToken}";
                 var expiryFormatted = tokenExpiry.ToString("dd/MM/yyyy HH:mm");
-                
+
                 var notification = new
                 {
                     To = email,
@@ -154,7 +154,7 @@ El equipo de OKLA",
                 _logger.LogWarning(ex, "Failed to send dealer verification email to {Email}", email);
             }
         }
-        
+
         public async Task NotifyAdminsNewDealerApplicationAsync(
             string businessName,
             string rnc,
@@ -165,7 +165,7 @@ El equipo de OKLA",
             {
                 var baseUrl = await GetServiceUrlAsync();
                 var reviewUrl = $"https://okla.com.do/admin/dealers/{dealerId}";
-                
+
                 var notification = new
                 {
                     To = "admin@okla.com.do", // Lista de admins
@@ -194,9 +194,9 @@ Este es un mensaje automático del sistema OKLA.",
                 _logger.LogWarning(ex, "Failed to notify admins about new dealer application {DealerId}", dealerId);
             }
         }
-        
+
         public async Task SendDealerApprovalEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string requestedPlan)
         {
@@ -204,7 +204,7 @@ Este es un mensaje automático del sistema OKLA.",
             {
                 var baseUrl = await GetServiceUrlAsync();
                 var checkoutUrl = "https://okla.com.do/dealer/checkout";
-                
+
                 var notification = new
                 {
                     To = email,
@@ -238,16 +238,16 @@ El equipo de OKLA",
                 _logger.LogWarning(ex, "Failed to send dealer approval email to {Email}", email);
             }
         }
-        
+
         public async Task SendDealerRejectionEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string rejectionReason)
         {
             try
             {
                 var baseUrl = await GetServiceUrlAsync();
-                
+
                 var notification = new
                 {
                     To = email,
@@ -277,9 +277,9 @@ El equipo de OKLA",
                 _logger.LogWarning(ex, "Failed to send dealer rejection email to {Email}", email);
             }
         }
-        
+
         public async Task SendDealerWelcomeEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string plan,
             bool isEarlyBird)
@@ -288,17 +288,17 @@ El equipo de OKLA",
             {
                 var baseUrl = await GetServiceUrlAsync();
                 var dashboardUrl = "https://okla.com.do/dealer/dashboard";
-                
-                var earlyBirdMessage = isEarlyBird 
+
+                var earlyBirdMessage = isEarlyBird
                     ? @"
 
 🎉 ¡BENEFICIOS EARLY BIRD ACTIVADOS!
 - 90 días de prueba gratuita
 - 20% de descuento de por vida
 - Badge de 'Miembro Fundador'
-" 
+"
                     : "";
-                
+
                 var notification = new
                 {
                     To = email,
@@ -350,7 +350,7 @@ El equipo de OKLA",
             {
                 var baseUrl = await GetServiceUrlAsync();
                 var gracePeriodFormatted = gracePeriodEndsAt.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-DO"));
-                
+
                 var notification = new
                 {
                     To = email,
@@ -400,7 +400,7 @@ El equipo de OKLA",
             {
                 var baseUrl = await GetServiceUrlAsync();
                 var deletionDateFormatted = deletionDate.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-DO"));
-                
+
                 var notification = new
                 {
                     To = email,
@@ -445,7 +445,7 @@ El equipo de OKLA",
             try
             {
                 var baseUrl = await GetServiceUrlAsync();
-                
+
                 var notification = new
                 {
                     To = email,

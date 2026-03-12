@@ -26,7 +26,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   currency: 'DOP' | 'USD';
-  type: 'boost' | 'subscription' | 'listing';
+  type: 'boost' | 'subscription' | 'listing' | 'report';
   features: string[];
   duration?: number; // days for boost, null for subscription
 }
@@ -261,6 +261,23 @@ const staticProducts: Record<string, Product> = {
       'Analytics avanzados',
       'Alertas de baja de precio',
       'Soporte prioritario',
+    ],
+  },
+  'okla-score-report': {
+    id: 'okla-score-report',
+    name: 'Informe Completo OKLA Score™',
+    description: 'Reporte detallado con las 7 dimensiones de evaluación del vehículo',
+    price: 420,
+    currency: 'DOP',
+    type: 'report',
+    features: [
+      'Desglose de las 7 dimensiones',
+      'Historial en EE.UU. (VIN)',
+      'Análisis de precio vs. mercado',
+      'Evaluación de depreciación',
+      'Alertas de seguridad y retiros',
+      'Reputación del vendedor',
+      'Descargable en PDF',
     ],
   },
 };

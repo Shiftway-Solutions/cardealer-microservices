@@ -31,7 +31,7 @@ public class InteractionsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            
+
             var command = new TrackInteractionCommand(
                 userId,
                 request.VehicleId,
@@ -57,10 +57,10 @@ public class InteractionsController : ControllerBase
     {
         // Para usuarios no autenticados, usamos un ID temporal basado en IP/sesión
         // En producción, esto se complementaría con cookies/fingerprinting
-        
-        _logger.LogInformation("Anonymous interaction tracked: VehicleId={VehicleId}, Type={Type}", 
+
+        _logger.LogInformation("Anonymous interaction tracked: VehicleId={VehicleId}, Type={Type}",
             request.VehicleId, request.Type);
-        
+
         return Ok(new { message = "Interaction tracked" });
     }
 

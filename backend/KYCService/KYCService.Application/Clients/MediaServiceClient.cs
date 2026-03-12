@@ -42,12 +42,12 @@ public class MediaServiceClient : IMediaServiceClient
     {
         _httpClient = httpClient;
         _logger = logger;
-        
+
         // Get MediaService URL from configuration
-        _baseUrl = configuration["Services:MediaService:BaseUrl"] 
+        _baseUrl = configuration["Services:MediaService:BaseUrl"]
             ?? configuration["MediaService:BaseUrl"]
             ?? "http://mediaservice:8080";
-        
+
         _logger.LogInformation("MediaServiceClient initialized with base URL: {BaseUrl}", _baseUrl);
     }
 
@@ -64,11 +64,11 @@ public class MediaServiceClient : IMediaServiceClient
             // URL encode the storage key for the query string
             var encodedKey = Uri.EscapeDataString(storageKey);
             var requestUrl = $"{_baseUrl}/api/media/url?storageKey={encodedKey}";
-            
+
             _logger.LogDebug("Requesting fresh URL for storageKey: {StorageKey}", storageKey);
-            
+
             var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(

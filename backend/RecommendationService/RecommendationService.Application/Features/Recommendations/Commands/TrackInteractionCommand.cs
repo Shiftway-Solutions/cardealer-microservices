@@ -70,7 +70,7 @@ public class TrackInteractionCommandHandler : IRequestHandler<TrackInteractionCo
         try
         {
             var preferences = await _preferenceRepository.GetByUserIdAsync(userId);
-            
+
             if (preferences == null)
             {
                 preferences = new UserPreference(userId);

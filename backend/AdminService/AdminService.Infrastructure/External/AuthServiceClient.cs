@@ -29,13 +29,13 @@ public class AuthServiceClient : IAuthServiceClient
     {
         _httpClient = httpClient;
         _logger = logger;
-        
+
         // In Docker, use service name; otherwise use localhost
         var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
         _authServiceUrl = configuration["ServiceUrls:AuthService"]
-            ?? configuration["Services:AuthService"] 
+            ?? configuration["Services:AuthService"]
             ?? (isDevelopment ? "http://localhost:15001" : "http://authservice:8080");
-        
+
         _httpClient.BaseAddress = new Uri(_authServiceUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
@@ -68,7 +68,7 @@ public class AuthServiceClient : IAuthServiceClient
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Failed to create admin user {Email}: {StatusCode} - {Error}", 
+            _logger.LogWarning("Failed to create admin user {Email}: {StatusCode} - {Error}",
                 request.Email, response.StatusCode, errorContent);
 
             return new CreateAdminUserResult
@@ -103,7 +103,7 @@ public class AuthServiceClient : IAuthServiceClient
             }
 
             _logger.LogWarning("Failed to get security status: {StatusCode}", response.StatusCode);
-            
+
             // Return default values if call fails
             return new AuthSecurityStatus
             {
@@ -139,7 +139,7 @@ public class AuthServiceClient : IAuthServiceClient
             }
 
             var errorContent = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Failed to delete default admin: {StatusCode} - {Error}", 
+            _logger.LogWarning("Failed to delete default admin: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
             return new DeleteAdminResult

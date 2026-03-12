@@ -35,7 +35,7 @@ public class TesseractOCRService : IOCRService, IDisposable
         {
             // Inicializar motor Tesseract con datos de entrenamiento en español
             var tessDataPath = _config.TesseractDataPath ?? Path.Combine(AppContext.BaseDirectory, "tessdata");
-            
+
             if (Directory.Exists(tessDataPath))
             {
                 _engine = new TesseractEngine(tessDataPath, "spa", EngineMode.Default);
@@ -186,7 +186,7 @@ public class TesseractOCRService : IOCRService, IDisposable
         {
             // Análisis básico de la imagen
             using var stream = new MemoryStream(imageData);
-            
+
             // TODO: Usar SkiaSharp o ImageSharp para análisis real
             // Por ahora, retornar valores simulados
             await Task.CompletedTask;
@@ -207,8 +207,8 @@ public class TesseractOCRService : IOCRService, IDisposable
 
             // Evaluar calidad general
             result.QualityScore = (result.Metrics.Sharpness + result.Metrics.Brightness + result.Metrics.Contrast) / 3;
-            result.IsAcceptable = result.QualityScore >= 60 && 
-                                  !result.Metrics.IsBlurry && 
+            result.IsAcceptable = result.QualityScore >= 60 &&
+                                  !result.Metrics.IsBlurry &&
                                   !result.Metrics.IsDocumentCutOff;
 
             // Agregar problemas e sugerencias
@@ -256,7 +256,7 @@ public class TesseractOCRService : IOCRService, IDisposable
             {
                 using var pix = Pix.LoadFromMemory(imageData);
                 using var page = _engine!.Process(pix);
-                
+
                 result.RawText = page.GetText()?.Trim() ?? string.Empty;
                 result.Confidence = (decimal)page.GetMeanConfidence() * 100;
                 result.DetectedLanguage = "spa";
@@ -264,7 +264,7 @@ public class TesseractOCRService : IOCRService, IDisposable
                 // Extraer líneas individuales
                 using var iter = page.GetIterator();
                 iter.Begin();
-                
+
                 do
                 {
                     if (iter.TryGetBoundingBox(PageIteratorLevel.TextLine, out var bounds))
@@ -365,7 +365,7 @@ public class TesseractOCRService : IOCRService, IDisposable
         {
             if (NamePattern.IsMatch(line) && line.Length > 5 && line.Length < 50)
             {
-                if (!line.Contains("DOMINICANA") && !line.Contains("REPUBLICA") && 
+                if (!line.Contains("DOMINICANA") && !line.Contains("REPUBLICA") &&
                     !line.Contains("CEDULA") && !line.Contains("JUNTA"))
                 {
                     result.FullName = line;
@@ -425,7 +425,7 @@ public class TesseractOCRService : IOCRService, IDisposable
         // Buscar dirección (líneas largas sin caracteres especiales de MRZ)
         foreach (var line in lines)
         {
-            if (!line.Contains('<') && line.Length > 15 && 
+            if (!line.Contains('<') && line.Length > 15 &&
                 (line.Contains("CALLE") || line.Contains("AVE") || line.Contains("URB") ||
                  line.Contains("SECTOR") || line.Contains("NO.") || line.Contains("#")))
             {

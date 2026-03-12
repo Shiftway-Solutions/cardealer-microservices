@@ -38,6 +38,9 @@ import {
   processModerationAction,
   approveModerationItem,
   rejectModerationItem,
+  getCancelledDealers,
+  getTopChatAgentDealers,
+  exportDashboardExcel,
   type UserFilters,
   type VehicleFilters,
   type DealerFilters,
@@ -83,6 +86,10 @@ export const adminKeys = {
     [...adminKeys.moderation(), 'queue', filters] as const,
   moderationItem: (id: string) => [...adminKeys.moderation(), 'item', id] as const,
   moderationStats: () => [...adminKeys.moderation(), 'stats'] as const,
+  // Financial Dashboard
+  cancelledDealers: (month?: string) => [...adminKeys.all, 'cancelled-dealers', month] as const,
+  topChatAgentDealers: (limit: number) =>
+    [...adminKeys.all, 'top-chatagent-dealers', limit] as const,
 };
 
 // =============================================================================
@@ -478,5 +485,33 @@ export function useRejectModerationItem() {
       queryClient.invalidateQueries({ queryKey: adminKeys.moderationItem(id) });
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() });
     },
+  });
+}
+
+// =============================================================================
+// FINANCIAL DASHBOARD HOOKS
+// =============================================================================
+
+export function useCancelledDealers(month?: string) {
+  return useQuery({
+    queryKey: adminKeys.cancelledDealers(month),
+    queryFn: () => getCancelledDealers(month),
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  });
+}
+
+export function useTopChatAgentDealers(limit: number = 10) {
+  return useQuery({
+    queryKey: adminKeys.topChatAgentDealers(limit),
+    queryFn: () => getTopChatAgentDealers(limit),
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  });
+}
+
+export function useExportDashboardExcel() {
+  return useMutation({
+    mutationFn: () => exportDashboardExcel(),
   });
 }

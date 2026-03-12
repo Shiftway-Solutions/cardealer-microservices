@@ -11,7 +11,7 @@ public class RecalculateAnalyticsCommandHandler : IRequestHandler<RecalculateAna
 {
     private readonly IDealerAnalyticsRepository _analyticsRepository;
     private readonly IConversionFunnelRepository _funnelRepository;
-    
+
     public RecalculateAnalyticsCommandHandler(
         IDealerAnalyticsRepository analyticsRepository,
         IConversionFunnelRepository funnelRepository)
@@ -19,20 +19,20 @@ public class RecalculateAnalyticsCommandHandler : IRequestHandler<RecalculateAna
         _analyticsRepository = analyticsRepository;
         _funnelRepository = funnelRepository;
     }
-    
+
     public async Task<DealerAnalyticsDto> Handle(RecalculateAnalyticsCommand request, CancellationToken cancellationToken)
     {
         // Recalcular analytics del dealer
         var analytics = await _analyticsRepository.GetDealerAnalyticsSummaryAsync(
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         // Actualizar conversión funnel
         await _funnelRepository.CalculateFunnelMetricsAsync(
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         return MapToDto(analytics);
     }
-    
+
     private static DealerAnalyticsDto MapToDto(DealerAnalytic analytics)
     {
         return new DealerAnalyticsDto

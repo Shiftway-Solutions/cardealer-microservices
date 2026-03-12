@@ -33,13 +33,13 @@ public class Notification : IOptionalTenantEntity
     public string? ErrorMessage { get; set; }
     public string? TemplateName { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
-    
+
     /// <summary>
     /// true = marketing/promotional message (requires user opt-in consent).
     /// false = transactional message (always allowed: confirmations, receipts, security alerts).
     /// </summary>
     public bool IsMarketing { get; set; }
-    
+
     /// <summary>
     /// The recipient's user ID in UserService (for consent lookup).
     /// Null if the notification is system-generated or recipient is not a registered user.

@@ -51,15 +51,15 @@ public class BackgroundsController : ControllerBase
     {
         var accountType = User.IsInRole("Dealer") ? "Dealer" : User.IsInRole("Admin") ? "Admin" : "Individual";
         var hasSubscription = User.Identity?.IsAuthenticated == true && User.HasClaim("subscription", "active");
-        
+
         var query = new GetAvailableBackgroundsQuery(accountType, hasSubscription);
         var result = await _mediator.Send(query, ct);
-        
+
         var background = result.Backgrounds.FirstOrDefault(b => b.Code == code);
         if (background == null)
             return NotFound();
 
-        
+
         return Ok(background);
     }
 }

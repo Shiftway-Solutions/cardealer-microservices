@@ -8,7 +8,7 @@ public interface IUnitOfWork : IDisposable
     INotificationTemplateRepository NotificationTemplates { get; }
     INotificationQueueRepository NotificationQueues { get; }
     INotificationLogRepository NotificationLogs { get; }
-    
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync();

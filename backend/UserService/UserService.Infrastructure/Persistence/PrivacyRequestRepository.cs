@@ -30,8 +30,8 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
     public async Task<PrivacyRequest?> GetPendingDeletionRequestAsync(Guid userId)
     {
         return await _context.PrivacyRequests
-            .FirstOrDefaultAsync(pr => 
-                pr.UserId == userId && 
+            .FirstOrDefaultAsync(pr =>
+                pr.UserId == userId &&
                 pr.Type == PrivacyRequestType.Cancellation &&
                 pr.Status == PrivacyRequestStatus.Pending);
     }
@@ -60,8 +60,8 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
     public async Task<bool> HasPendingRequestAsync(Guid userId, PrivacyRequestType type)
     {
         return await _context.PrivacyRequests
-            .AnyAsync(pr => 
-                pr.UserId == userId && 
+            .AnyAsync(pr =>
+                pr.UserId == userId &&
                 pr.Type == type &&
                 pr.Status == PrivacyRequestStatus.Pending);
     }
@@ -69,7 +69,7 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
     public async Task<IEnumerable<PrivacyRequest>> GetExpiredGracePeriodRequestsAsync()
     {
         return await _context.PrivacyRequests
-            .Where(pr => 
+            .Where(pr =>
                 pr.Type == PrivacyRequestType.Cancellation &&
                 pr.Status == PrivacyRequestStatus.Processing &&
                 pr.IsConfirmed &&
@@ -81,8 +81,8 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
     public async Task<PrivacyRequest?> GetByConfirmationCodeAsync(Guid userId, string code)
     {
         return await _context.PrivacyRequests
-            .FirstOrDefaultAsync(pr => 
-                pr.UserId == userId && 
+            .FirstOrDefaultAsync(pr =>
+                pr.UserId == userId &&
                 pr.ConfirmationCode == code &&
                 pr.Type == PrivacyRequestType.Cancellation &&
                 pr.Status == PrivacyRequestStatus.Pending &&

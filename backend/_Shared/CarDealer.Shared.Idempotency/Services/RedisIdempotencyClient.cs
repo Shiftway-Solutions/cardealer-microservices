@@ -58,9 +58,9 @@ public class RedisIdempotencyClient : IIdempotencyClient
             }
 
             // Check for conflict (different request body with same key)
-            if (_options.ValidateRequestHash && 
+            if (_options.ValidateRequestHash &&
                 !string.IsNullOrEmpty(requestHash) &&
-                !string.IsNullOrEmpty(record.RequestHash) && 
+                !string.IsNullOrEmpty(record.RequestHash) &&
                 record.RequestHash != requestHash)
             {
                 _logger.LogWarning(
@@ -79,7 +79,7 @@ public class RedisIdempotencyClient : IIdempotencyClient
                     _logger.LogWarning(
                         "Idempotency record timeout: Key={Key} has been processing for {Seconds}s",
                         key, processingTime.TotalSeconds);
-                    
+
                     // Delete stale record and allow retry
                     await DeleteAsync(key, cancellationToken);
                     return IdempotencyCheckResult.NotFound();
@@ -108,7 +108,7 @@ public class RedisIdempotencyClient : IIdempotencyClient
         {
             var cacheKey = GetCacheKey(record.Key);
             var db = _redis.GetDatabase();
-            
+
             record.Status = IdempotencyStatus.Processing;
             record.CreatedAt = DateTime.UtcNow;
             record.ExpiresAt = DateTime.UtcNow.AddSeconds(_options.DefaultTtlSeconds);
@@ -168,7 +168,7 @@ public class RedisIdempotencyClient : IIdempotencyClient
             record.ResponseStatusCode = statusCode;
             record.ResponseBody = responseBody;
             record.ResponseContentType = contentType;
-            
+
             if (headers != null)
             {
                 record.ResponseHeaders = headers;
@@ -176,7 +176,7 @@ public class RedisIdempotencyClient : IIdempotencyClient
 
             var updatedData = JsonSerializer.Serialize(record, _jsonOptions);
             var remainingTtl = record.ExpiresAt - DateTime.UtcNow;
-            
+
             if (remainingTtl <= TimeSpan.Zero)
             {
                 remainingTtl = TimeSpan.FromSeconds(_options.DefaultTtlSeconds);
@@ -218,14 +218,14 @@ public class RedisIdempotencyClient : IIdempotencyClient
             }
 
             record.Status = IdempotencyStatus.Failed;
-            
+
             if (!string.IsNullOrEmpty(errorMessage))
             {
                 record.Metadata["error"] = errorMessage;
             }
 
             var updatedData = JsonSerializer.Serialize(record, _jsonOptions);
-            
+
             // Failed records expire faster (5 minutes) to allow retry
             await db.StringSetAsync(cacheKey, updatedData, TimeSpan.FromMinutes(5));
 

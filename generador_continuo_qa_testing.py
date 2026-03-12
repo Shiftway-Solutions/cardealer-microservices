@@ -538,11 +538,12 @@ def main():
                     print("\n--- 🔄 Ciclo completo de auditorías finalizado. Comenzando nuevo ciclo. ---\n")
 
                 # Elegir número de prompt sin repetir el último
-                opciones = [p for p in range(1, 6) if p != ultimo_prompt]
+                #opciones = [p for p in range(1, 6) if p != ultimo_prompt]
+                opciones =[6]
                 prompt = random.choice(opciones)
                 mensaje = generar_mensaje(prompt, tipo_auditoria=tipo_actual)
                 escribir_en_archivo(archivo_destino, mensaje)
-                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] READ detectado → Prompt {prompt} | Auditoría: {tipo_actual}")
+                print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] READ detectado → Prompt 6| Auditoría: {tipo_actual}")
                 print(f"Mensaje: {mensaje[:120]}...\n")
                 ultimo_prompt = prompt
 

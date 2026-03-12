@@ -23,7 +23,7 @@ public class GetLinkedAccountsQueryHandler : IRequestHandler<GetLinkedAccountsQu
         _logger.LogInformation("Getting linked accounts for user {UserId}", request.UserId);
 
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-        
+
         if (user == null)
         {
             _logger.LogWarning("User {UserId} not found", request.UserId);

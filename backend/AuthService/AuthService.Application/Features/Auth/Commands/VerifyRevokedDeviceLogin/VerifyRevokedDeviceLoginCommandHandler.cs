@@ -19,7 +19,7 @@ namespace AuthService.Application.Features.Auth.Commands.VerifyRevokedDeviceLogi
 /// 4. Requiere código para continuar
 /// 5. Si el código es válido, permite el login y limpia el dispositivo de la lista
 /// </summary>
-public class VerifyRevokedDeviceLoginCommandHandler : 
+public class VerifyRevokedDeviceLoginCommandHandler :
     IRequestHandler<RequestRevokedDeviceLoginCommand, RequestRevokedDeviceLoginResponse>,
     IRequestHandler<VerifyRevokedDeviceLoginCommand, VerifyRevokedDeviceLoginResponse>
 {

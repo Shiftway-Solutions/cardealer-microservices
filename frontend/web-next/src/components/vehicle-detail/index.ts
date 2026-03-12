@@ -10,3 +10,4 @@ export { VehicleTabs } from './vehicle-tabs';
 export { SimilarVehicles } from './similar-vehicles';
 export { ReportVehicleModal } from './report-vehicle-modal';
 export { OdometerAlert } from './odometer-alert';
+export { BrokenImagesAlert } from './broken-images-alert';

@@ -26,7 +26,7 @@ public class Enable2FAHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
         _notificationServiceMock = new Mock<IAuthNotificationService>();
-        
+
         _handler = new Enable2FACommandHandler(
             _userRepositoryMock.Object,
             _twoFactorServiceMock.Object,
@@ -40,7 +40,7 @@ public class Enable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Authenticator);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _twoFactorServiceMock.Setup(x => x.GenerateAuthenticatorKeyAsync(user.Id, user.Email!))
@@ -65,7 +65,7 @@ public class Enable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUserWith2FAEnabled(userId);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Authenticator);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -84,7 +84,7 @@ public class Enable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId, phoneNumber: null);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.SMS);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -103,7 +103,7 @@ public class Enable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId, phoneNumber: "+18095551234", phoneConfirmed: false);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.SMS);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -122,7 +122,7 @@ public class Enable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId, emailConfirmed: false);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Email);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -140,7 +140,7 @@ public class Enable2FAHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Authenticator);
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
 
@@ -162,7 +162,7 @@ public class Enable2FAHandlerTests
         var user = CreateTestUser(userId);
         var command = new Enable2FACommand(userId, TwoFactorAuthType.Authenticator);
         var recoveryCodes = new List<string> { "ABC123", "DEF456" };
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _twoFactorServiceMock.Setup(x => x.GenerateAuthenticatorKeyAsync(user.Id, user.Email!))
@@ -211,10 +211,10 @@ public class Enable2FAHandlerTests
         // Use reflection to set the private TwoFactorAuth property since IsTwoFactorEnabled is computed
         var twoFactorAuth = new TwoFactorAuth(userId, TwoFactorAuthType.Authenticator);
         twoFactorAuth.Enable("SECRET123", new List<string> { "CODE1", "CODE2" });
-        
+
         var property = typeof(ApplicationUser).GetProperty("TwoFactorAuth");
         property?.SetValue(user, twoFactorAuth);
-        
+
         return user;
     }
 

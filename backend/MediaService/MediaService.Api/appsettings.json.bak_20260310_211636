@@ -1,0 +1,77 @@
+{
+    "$comment": "Development only - Use Docker secrets or environment variables in production",
+    "Storage": {
+        "Provider": "local",
+        "Local": {
+            "BasePath": "/app/media-files",
+            "BaseUrl": "http://localhost:15020/uploads"
+        },
+        "S3": {
+            "AccessKey": "",
+            "SecretKey": "",
+            "BucketName": "okla-images-2026",
+            "Region": "us-east-2",
+            "CdnBaseUrl": "",
+            "PreSignedUrlExpirationMinutes": 1440
+        }
+    },
+    "Database":  {
+                     "Provider":  "PostgreSQL",
+                     "ConnectionStrings":  {
+                                               "PostgreSQL":  "",
+                                               "SqlServer":  "",
+                                               "Oracle":  ""
+                                           },
+                     "AutoMigrate":  false,
+                     "CommandTimeout":  30,
+                     "MaxRetryCount":  3,
+                     "MaxRetryDelay":  30,
+                     "EnableSensitiveDataLogging":  false,
+                     "EnableDetailedErrors":  false
+                 },
+    "Logging":  {
+                    "LogLevel":  {
+                                     "Default":  "Information",
+                                     "Microsoft.AspNetCore":  "Warning"
+                                 }
+                },
+    "AllowedHosts":  "*",
+    "Service":  {
+                    "Name":  "MediaService",
+                    "Host":  "localhost",
+                    "Port":  "5000",
+                    "HealthCheckUrl":  "http://localhost:5000/health"
+                },
+    "Consul":  {
+                   "Address":  "http://localhost:8500"
+               },
+    "OpenTelemetry":  {
+                          "ServiceName":  "MediaService",
+                          "Exporter":  {
+                                           "Otlp":  {
+                                                        "Protocol":  "HttpProtobuf",
+                                                        "Endpoint":  "http://otel-collector:4318"
+                                                    }
+                                       },
+                          "Tracing":  {
+                                          "MaxExportBatchSize":  512,
+                                          "SamplingRatio":  0.1,
+                                          "ExportIntervalMilliseconds":  5000,
+                                          "MaxQueueSize":  2048,
+                                          "Enabled":  true
+                                      },
+                          "OtlpEndpoint":  "http://otel-collector:4318",
+                          "Metrics":  {
+                                          "MaxExportBatchSize":  512,
+                                          "MaxQueueSize":  2048,
+                                          "ExportIntervalMilliseconds":  60000,
+                                          "Enabled":  true
+                                      },
+                          "Resources":  {
+                                            "service.namespace":  "cardealer",
+                                            "service.name":  "MediaService",
+                                            "deployment.environment":  "development",
+                                            "service.version":  "1.0.0"
+                                        }
+                      }
+}

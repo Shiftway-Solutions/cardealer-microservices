@@ -49,7 +49,7 @@ public class IdempotencyMiddleware
 
         // Get idempotency key from header
         var idempotencyKey = context.Request.Headers["X-Idempotency-Key"].FirstOrDefault();
-        
+
         if (string.IsNullOrEmpty(idempotencyKey))
         {
             // SECURITY: Require idempotency key on mutation endpoints to prevent duplicates
@@ -65,7 +65,7 @@ public class IdempotencyMiddleware
         }
 
         // Get user ID from claims for audit
-        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? context.User.FindFirst("sub")?.Value
                        ?? context.User.FindFirst("user_id")?.Value
                        ?? "anonymous";
@@ -92,7 +92,7 @@ public class IdempotencyMiddleware
             if (checkResult.IsProcessing)
             {
                 // Request is still being processed - return 409 Conflict
-                _logger.LogWarning("Duplicate request detected while processing. Key: {Key}, User: {UserId}", 
+                _logger.LogWarning("Duplicate request detected while processing. Key: {Key}, User: {UserId}",
                     idempotencyKey, userIdClaim);
 
                 // Log to audit service
@@ -139,7 +139,7 @@ public class IdempotencyMiddleware
             if (!checkResult.RequestHashMatches)
             {
                 _logger.LogWarning("Idempotency key reused with different request. Key: {Key}", idempotencyKey);
-                
+
                 context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new
@@ -174,12 +174,12 @@ public class IdempotencyMiddleware
             await _next(context);
             return;
         }
-        
+
         if (!started)
         {
             // Failed to start - might be a race condition
             _logger.LogWarning("Failed to start idempotency processing for key: {Key}", idempotencyKey);
-            
+
             // Check again if it exists now
             var recheckResult = await idempotencyClient.CheckAsync(idempotencyKey, requestHash);
             if (recheckResult.Exists)
@@ -194,7 +194,7 @@ public class IdempotencyMiddleware
                 }));
                 return;
             }
-            
+
             // Proceed without idempotency if service is unavailable
             _logger.LogWarning("IdempotencyService unavailable, proceeding without idempotency");
             await _next(context);

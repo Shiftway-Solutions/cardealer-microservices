@@ -75,7 +75,7 @@ public class LinkExternalAccountCommandHandler : IRequestHandler<LinkExternalAcc
                 _logger.LogWarning(
                     "Email mismatch during account linking. User email: {UserEmail}, External email: {ExternalEmail}",
                     user.Email, externalUser.Email);
-                
+
                 // We allow linking even with different email, but log it for security
                 // In stricter environments, you might want to throw an exception here
             }

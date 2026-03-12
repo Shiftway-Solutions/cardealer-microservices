@@ -39,13 +39,13 @@ public class VehicleHistoryOptions
     public string Provider { get; set; } = "Mock";
     public string ApiKey { get; set; } = string.Empty;
     public string BaseUrl { get; set; } = "https://api.vinaudit.com/v1";
-    
+
     /// <summary>
     /// If true, falls back to Mock when the real API is unavailable.
     /// Recommended for development/staging.
     /// </summary>
     public bool FallbackToMock { get; set; } = true;
-    
+
     /// <summary>
     /// Timeout for HTTP requests to the provider API in seconds.
     /// </summary>

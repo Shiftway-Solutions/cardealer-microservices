@@ -16,7 +16,7 @@ public class SendReviewRequestCommandHandler : IRequestHandler<SendReviewRequest
     private readonly ILogger<SendReviewRequestCommandHandler> _logger;
 
     public SendReviewRequestCommandHandler(
-        IReviewRequestRepository requestRepository, 
+        IReviewRequestRepository requestRepository,
         IReviewRepository reviewRepository,
         ILogger<SendReviewRequestCommandHandler> logger)
     {
@@ -70,7 +70,7 @@ public class SendReviewRequestCommandHandler : IRequestHandler<SendReviewRequest
             await _requestRepository.AddAsync(reviewRequest);
 
             _logger.LogInformation(
-                "Review request sent for order {OrderId}. RequestId: {RequestId}", 
+                "Review request sent for order {OrderId}. RequestId: {RequestId}",
                 request.OrderId, reviewRequest.Id);
 
             // TODO: Enviar email al comprador via NotificationService

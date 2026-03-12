@@ -125,7 +125,7 @@ public class Review : BaseEntity<Guid>
     public string? UserAgent { get; set; }
 
     // Navigation properties
-    
+
     /// <summary>
     /// Respuesta del vendedor a esta review
     /// </summary>

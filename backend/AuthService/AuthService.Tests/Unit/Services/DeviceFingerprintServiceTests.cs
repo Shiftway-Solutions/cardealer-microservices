@@ -24,7 +24,7 @@ public class DeviceFingerprintServiceTests
         _deviceRepositoryMock = new Mock<ITrustedDeviceRepository>();
         _notificationServiceMock = new Mock<IAuthNotificationService>();
         _loggerMock = new Mock<ILogger<DeviceFingerprintService>>();
-        
+
         _service = new DeviceFingerprintService(
             _deviceRepositoryMock.Object,
             _notificationServiceMock.Object,
@@ -68,7 +68,7 @@ public class DeviceFingerprintServiceTests
         var userId = "user-123";
         var fingerprintHash = "hash-abc";
         var device = new TrustedDevice(userId, fingerprintHash, "Chrome on Mac");
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync(device);
@@ -86,7 +86,7 @@ public class DeviceFingerprintServiceTests
         // Arrange
         var userId = "user-123";
         var fingerprintHash = "hash-abc";
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TrustedDevice?)null);
@@ -106,7 +106,7 @@ public class DeviceFingerprintServiceTests
         var fingerprintHash = "hash-abc";
         var device = new TrustedDevice(userId, fingerprintHash, "Old Device");
         device.Revoke("Security concern");
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync(device);
@@ -125,15 +125,15 @@ public class DeviceFingerprintServiceTests
         var userId = "user-123";
         var fingerprintHash = "new-hash";
         var deviceName = "Safari on iPhone";
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TrustedDevice?)null);
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TrustedDevice>());
-        
+
         _deviceRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TrustedDevice device, CancellationToken _) => device);
@@ -147,7 +147,7 @@ public class DeviceFingerprintServiceTests
         device.UserId.Should().Be(userId);
         device.FingerprintHash.Should().Be(fingerprintHash);
         device.DeviceName.Should().Be(deviceName);
-        
+
         _deviceRepositoryMock.Verify(r => r.AddAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -158,11 +158,11 @@ public class DeviceFingerprintServiceTests
         var userId = "user-123";
         var fingerprintHash = "existing-hash";
         var existingDevice = new TrustedDevice(userId, fingerprintHash, "Chrome on Mac");
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingDevice);
-        
+
         _deviceRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -174,7 +174,7 @@ public class DeviceFingerprintServiceTests
         // Assert
         isNew.Should().BeFalse();
         device.Should().Be(existingDevice);
-        
+
         _deviceRepositoryMock.Verify(r => r.UpdateAsync(existingDevice, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -186,11 +186,11 @@ public class DeviceFingerprintServiceTests
         var fingerprintHash = "hash-abc";
         var device = new TrustedDevice(userId, fingerprintHash, "Chrome on Mac");
         var initialCount = device.LoginCount;
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByFingerprintAsync(userId, fingerprintHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync(device);
-        
+
         _deviceRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -210,11 +210,11 @@ public class DeviceFingerprintServiceTests
         // Arrange
         var deviceId = Guid.NewGuid();
         var device = new TrustedDevice("user-123", "hash-abc", "Old Device");
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByIdAsync(deviceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(device);
-        
+
         _deviceRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -240,7 +240,7 @@ public class DeviceFingerprintServiceTests
             new TrustedDevice(userId, "hash-2", "Device 2"),
             new TrustedDevice(userId, "hash-3", "Device 3")
         };
-        
+
         _deviceRepositoryMock
             .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(devices);

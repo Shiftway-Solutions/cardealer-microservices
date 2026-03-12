@@ -10,9 +10,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Gauge, Calendar, Heart } from 'lucide-react';
-import { useState } from 'react';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useFavorites } from '@/hooks/use-favorites';
+import { useAuth } from '@/hooks/use-auth';
+import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
+import { useState } from 'react';
 import type { Vehicle } from '@/services/homepage-sections';
 
 interface FeaturedListingGridProps {
@@ -35,6 +38,17 @@ export default function FeaturedListingGrid({
   className = '',
 }: FeaturedListingGridProps) {
   const displayVehicles = maxItems ? vehicles.slice(0, maxItems) : vehicles;
+  const { isAuthenticated } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const handleFavoriteToggle = (vehicleId: string) => {
+    if (!isAuthenticated) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    toggleFavorite(vehicleId).catch(() => {});
+  };
 
   // Generate vehicle URL (mirrors backend GenerateSlug: {year}-{make}-{model}-{shortId8})
   const generateVehicleUrl = (vehicle: Vehicle) => {
@@ -46,17 +60,26 @@ export default function FeaturedListingGrid({
   };
 
   return (
-    <div className={cn(`grid ${columnClasses[columns]} gap-4 md:gap-6`, className)}>
-      {displayVehicles.map((vehicle, index) => (
-        <FeaturedListingCard
-          key={vehicle.id}
-          vehicle={vehicle}
-          vehicleUrl={generateVehicleUrl(vehicle)}
-          priority={index < 4}
-          index={index}
-        />
-      ))}
-    </div>
+    <>
+      <div className={cn(`grid ${columnClasses[columns]} gap-4 md:gap-6`, className)}>
+        {displayVehicles.map((vehicle, index) => (
+          <FeaturedListingCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            vehicleUrl={generateVehicleUrl(vehicle)}
+            priority={index < 4}
+            index={index}
+            isFavorite={isFavorite(vehicle.id)}
+            onFavoriteClick={handleFavoriteToggle}
+          />
+        ))}
+      </div>
+      <AuthPromptDialog
+        open={showAuthPrompt}
+        onClose={() => setShowAuthPrompt(false)}
+        action="guardar en favoritos"
+      />
+    </>
   );
 }
 
@@ -66,6 +89,8 @@ interface FeaturedListingCardProps {
   vehicleUrl: string;
   priority?: boolean;
   index: number;
+  isFavorite: boolean;
+  onFavoriteClick: (vehicleId: string) => void;
 }
 
 function FeaturedListingCard({
@@ -73,9 +98,9 @@ function FeaturedListingCard({
   vehicleUrl,
   priority = false,
   index,
+  isFavorite,
+  onFavoriteClick,
 }: FeaturedListingCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
   // Render badge based on tier
   const renderBadge = () => {
     if (!vehicle.tier || vehicle.tier === 'basic') return null;
@@ -132,7 +157,7 @@ function FeaturedListingCard({
             <button
               onClick={e => {
                 e.preventDefault();
-                setIsFavorite(!isFavorite);
+                onFavoriteClick(vehicle.id);
               }}
               className="absolute top-2 left-2 touch-manipulation rounded-full bg-white/90 p-1.5 shadow-md transition-colors hover:bg-white active:bg-white sm:top-3 sm:left-3 sm:p-2"
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}

@@ -151,14 +151,14 @@ public class DealerEmployeesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DealerEmployeeInvitationDto>> ResendInvitation(
-        Guid dealerId, 
+        Guid dealerId,
         Guid invitationId)
     {
         _logger.LogInformation("Resending invitation {InvitationId} for dealer {DealerId}", invitationId, dealerId);
 
         // TODO: Get current user ID from JWT claims
         var currentUserId = Guid.Empty; // Placeholder - should come from User.Claims
-        
+
         var result = await _mediator.Send(new ResendInvitationCommand(dealerId, invitationId, currentUserId));
 
         return Ok(result);

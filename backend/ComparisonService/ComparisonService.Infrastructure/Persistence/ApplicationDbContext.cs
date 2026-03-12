@@ -23,7 +23,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.UpdatedAt);
             entity.Property(e => e.ShareToken).HasMaxLength(50);
             entity.Property(e => e.IsPublic).IsRequired().HasDefaultValue(false);
-            
+
             // Store VehicleIds as JSON for better query support
             entity.Property(e => e.VehicleIds)
                 .HasConversion(
@@ -39,7 +39,7 @@ public class ApplicationDbContext : DbContext
                 .HasDatabaseName("IX_vehicle_comparisons_share_token")
                 .IsUnique()
                 .HasFilter("share_token IS NOT NULL");
-                
+
             // Compound index for user's recent comparisons
             entity.HasIndex(e => new { e.UserId, e.CreatedAt })
                 .HasDatabaseName("IX_vehicle_comparisons_user_created");

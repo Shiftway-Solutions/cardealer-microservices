@@ -13,27 +13,27 @@ public interface IIdempotencyServiceClient
     /// Check if an idempotency key exists and get its status
     /// </summary>
     Task<IdempotencyCheckResponse> CheckAsync(string key, string? requestHash = null, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Start processing a request with the given idempotency key
     /// </summary>
     Task<bool> StartProcessingAsync(IdempotencyStartRequest request, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Complete processing and store the response
     /// </summary>
     Task<bool> CompleteAsync(string key, int statusCode, string responseBody, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Mark the request as failed
     /// </summary>
     Task<bool> FailAsync(string key, string? errorMessage = null, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Get an existing idempotency record
     /// </summary>
     Task<IdempotencyRecordResponse?> GetAsync(string key, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Delete an idempotency record (for testing/cleanup)
     /// </summary>

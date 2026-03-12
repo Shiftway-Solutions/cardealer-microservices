@@ -102,7 +102,7 @@ public class UserSession
     public void Revoke(string reason = "User requested")
     {
         if (IsRevoked) return;
-        
+
         IsRevoked = true;
         RevokedAt = DateTime.UtcNow;
         RevokedReason = reason;

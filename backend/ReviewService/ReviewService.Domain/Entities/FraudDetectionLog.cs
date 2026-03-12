@@ -42,14 +42,14 @@ public class FraudDetectionLog : BaseEntity<Guid>
     /// Fecha y hora de la verificación
     /// </summary>
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
     /// Fecha y hora cuando se verificó (alias for CreatedAt)
     /// </summary>
-    public DateTime CheckedAt 
-    { 
-        get => CreatedAt; 
-        set => CreatedAt = value; 
+    public DateTime CheckedAt
+    {
+        get => CreatedAt;
+        set => CreatedAt = value;
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public class FraudDetectionLog : BaseEntity<Guid>
     public string AlgorithmVersion { get; set; } = "1.0";
 
     // Navigation properties
-    
+
     /// <summary>
     /// Review asociada
     /// </summary>
@@ -140,7 +140,7 @@ public enum FraudCheckResult
     /// Falló, probable fraude
     /// </summary>
     Fail = 3,
-    
+
     /// <summary>
     /// Fallo detectado (alias)
     /// </summary>

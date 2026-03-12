@@ -16,21 +16,21 @@ public class AzulTransaction
     public DateTime TransactionDateTime { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; } = string.Empty; // Approved, Declined, Cancelled, Error
-    
+
     // DataVault fields (tokenización)
     public string? DataVaultToken { get; set; }
     public string? DataVaultExpiration { get; set; }
     public string? DataVaultBrand { get; set; }
-    
+
     // Relación con usuario (opcional)
     public Guid? UserId { get; set; }
-    
+
     // Currency tracking (DOP/USD) — critical for Dominican card reconciliation
     public string Currency { get; set; } = "DOP";
-    
+
     // Decline reason localized in Spanish for Dominican banks
     public string? DeclineReasonLocalized { get; set; }
-    
+
     // Metadata adicional
     public string? CustomerEmail { get; set; }
     public string? CustomerName { get; set; }

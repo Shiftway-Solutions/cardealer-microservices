@@ -27,14 +27,14 @@ public class ReviewHelpfulVote : BaseEntity<Guid>
     /// Fecha y hora del voto
     /// </summary>
     public new DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
     /// Fecha y hora del voto (alias for CreatedAt)
     /// </summary>
-    public DateTime VotedAt 
-    { 
-        get => CreatedAt; 
-        set => CreatedAt = value; 
+    public DateTime VotedAt
+    {
+        get => CreatedAt;
+        set => CreatedAt = value;
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public class ReviewHelpfulVote : BaseEntity<Guid>
     public string? UserAgent { get; set; }
 
     // Navigation properties
-    
+
     /// <summary>
     /// Review asociada
     /// </summary>

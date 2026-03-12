@@ -12,11 +12,15 @@
 
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { Rate } from "k6/metrics";
+import { Rate, Counter } from "k6/metrics";
 
 const errorRate = new Rate("errors");
+const imageFailures = new Counter("image_failures");
+const imageChecks = new Counter("image_checks");
 
 const BASE_URL = __ENV.BASE_URL || "https://api.okla.do";
+const IMAGE_FAILURE_THRESHOLD = 0.2; // 20% — if more images fail, deploy is bad
+const MIN_IMAGE_SIZE = 1024; // 1KB
 
 export const options = {
   vus: 10,
@@ -58,5 +62,98 @@ export default function () {
 
     errorRate.add(!ok);
     sleep(1);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // IMAGE INTEGRITY VALIDATION — Post-Deploy Step
+  // ═══════════════════════════════════════════════════════════════════
+  // Fetch 5 most recent listings, extract image URLs, validate each one
+  // checks: HTTP 200, Content-Type image/*, size > 1KB
+  // If >20% of images fail → deploy should be rolled back
+  // ═══════════════════════════════════════════════════════════════════
+
+  const vehiclesRes = http.get(
+    `${BASE_URL}/api/vehicles?page=1&pageSize=5&sortBy=createdAt&sortOrder=desc`,
+    { tags: { name: "Image Smoke: Fetch Listings" } },
+  );
+
+  const listingsOk = check(vehiclesRes, {
+    "Listings: status 200": (r) => r.status === 200,
+  });
+
+  if (listingsOk && vehiclesRes.json()) {
+    const data = vehiclesRes.json();
+    const items =
+      data.items || data.data || data.results || data.vehicles || [];
+
+    let totalImages = 0;
+    let failedImages = 0;
+
+    for (const item of items.slice(0, 5)) {
+      // Try to get images from vehicle detail
+      const detailRes = http.get(`${BASE_URL}/api/vehicles/${item.id}`, {
+        tags: { name: "Image Smoke: Vehicle Detail" },
+      });
+
+      if (detailRes.status === 200 && detailRes.json()) {
+        const detail = detailRes.json();
+        const photos = detail.photos || detail.images || detail.media || [];
+
+        for (const photo of photos) {
+          const imageUrl =
+            photo.cdnUrl || photo.url || photo.imageUrl || photo.src || "";
+          if (!imageUrl || !imageUrl.startsWith("http")) continue;
+
+          totalImages++;
+          imageChecks.add(1);
+
+          // Validate the image URL with a GET request
+          const imgRes = http.get(imageUrl, {
+            tags: { name: "Image Smoke: CDN Image" },
+            timeout: "15s",
+          });
+
+          const imgOk = check(imgRes, {
+            "Image: status 200": (r) => r.status === 200,
+            "Image: Content-Type is image/webp": (r) =>
+              (r.headers["Content-Type"] || "").includes("image/webp"),
+            "Image: size > 1KB": (r) => (r.body || "").length > MIN_IMAGE_SIZE,
+          });
+
+          if (!imgOk) {
+            failedImages++;
+            imageFailures.add(1);
+            console.warn(
+              `❌ Image failed: ${imageUrl} (status: ${imgRes.status}, ` +
+                `type: ${imgRes.headers["Content-Type"]}, size: ${(imgRes.body || "").length}B)`,
+            );
+          }
+        }
+      }
+      sleep(0.5);
+    }
+
+    // Final image failure rate check
+    if (totalImages > 0) {
+      const failureRate = failedImages / totalImages;
+      check(null, {
+        [`Image failure rate ${(failureRate * 100).toFixed(1)}% <= ${IMAGE_FAILURE_THRESHOLD * 100}%`]:
+          () => failureRate <= IMAGE_FAILURE_THRESHOLD,
+      });
+
+      if (failureRate > IMAGE_FAILURE_THRESHOLD) {
+        console.error(
+          `🚨 IMAGE SMOKE FAILED: ${failedImages}/${totalImages} images broken ` +
+            `(${(failureRate * 100).toFixed(1)}% > ${IMAGE_FAILURE_THRESHOLD * 100}% threshold). ` +
+            `DEPLOY SHOULD BE ROLLED BACK.`,
+        );
+        errorRate.add(true);
+      } else {
+        console.log(
+          `✅ Image smoke passed: ${totalImages - failedImages}/${totalImages} images OK ` +
+            `(${(failureRate * 100).toFixed(1)}% failure rate)`,
+        );
+      }
+    }
   }
 }

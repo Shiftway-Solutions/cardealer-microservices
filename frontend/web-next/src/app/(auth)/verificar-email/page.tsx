@@ -22,9 +22,10 @@ type VerificationState = 'pending' | 'verifying' | 'success' | 'error';
 interface VerifyEmailFormProps {
   token: string | null;
   emailParam: string | null;
+  redirectTo: string | null;
 }
 
-function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
+function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps) {
   const [state, setState] = React.useState<VerificationState>(token ? 'verifying' : 'pending');
   const [error, setError] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState(emailParam || '');
@@ -32,6 +33,7 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
   const [resendSuccess, setResendSuccess] = React.useState(false);
   const [canResend, setCanResend] = React.useState(true);
   const [resendTimer, setResendTimer] = React.useState(0);
+  const loginHref = redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login';
 
   // Verify email on mount if token exists
   React.useEffect(() => {
@@ -156,7 +158,7 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
           </div>
         </div>
 
-        <Link href="/login">
+        <Link href={loginHref}>
           <Button variant="ghost" className="w-full">
             Volver al inicio de sesión
           </Button>
@@ -199,7 +201,7 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
           </p>
         </div>
 
-        <Link href="/login">
+        <Link href={loginHref}>
           <Button className="w-full">Iniciar sesión</Button>
         </Link>
       </div>
@@ -253,7 +255,7 @@ function VerifyEmailForm({ token, emailParam }: VerifyEmailFormProps) {
         </div>
       </div>
 
-      <Link href="/login">
+      <Link href={loginHref}>
         <Button variant="ghost" className="w-full">
           Volver al inicio de sesión
         </Button>
@@ -266,7 +268,8 @@ function VerifyEmailPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email');
-  return <VerifyEmailForm token={token} emailParam={emailParam} />;
+  const redirectTo = searchParams.get('redirect');
+  return <VerifyEmailForm token={token} emailParam={emailParam} redirectTo={redirectTo} />;
 }
 
 export default function VerifyEmailPage() {

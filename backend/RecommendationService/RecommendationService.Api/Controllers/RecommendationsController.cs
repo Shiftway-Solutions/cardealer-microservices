@@ -69,10 +69,10 @@ public class RecommendationsController : ControllerBase
     {
         var command = new MarkRecommendationViewedCommand(recommendationId);
         var result = await _mediator.Send(command);
-        
+
         if (!result)
             return NotFound();
-        
+
         return Ok(new { message = "Recommendation marked as viewed" });
     }
 
@@ -85,10 +85,10 @@ public class RecommendationsController : ControllerBase
     {
         var command = new MarkRecommendationClickedCommand(recommendationId);
         var result = await _mediator.Send(command);
-        
+
         if (!result)
             return NotFound();
-        
+
         return Ok(new { message = "Recommendation marked as clicked" });
     }
 
@@ -102,10 +102,10 @@ public class RecommendationsController : ControllerBase
         var userId = GetUserId();
         var query = new GetUserPreferencesQuery(userId);
         var preferences = await _mediator.Send(query);
-        
+
         if (preferences == null)
             return NotFound(new { message = "User preferences not found" });
-        
+
         return Ok(preferences);
     }
 

@@ -63,7 +63,7 @@ public class SecurityController : ControllerBase
     {
         // SECURITY FIX: Always use JWT claim — never trust client headers (IDOR prevention)
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized(ApiResponse<object>.Fail("User not authenticated"));
@@ -116,7 +116,7 @@ public class SecurityController : ControllerBase
 
             // Obtener historial de logins (últimos 10)
             var loginHistory = await _loginHistoryRepository.GetByUserIdAsync(userId, 10, cancellationToken);
-            
+
             var loginDtos = loginHistory.Select(l => new LoginHistoryDto(
                 Id: l.Id.ToString(),
                 Device: l.DeviceInfo,
@@ -196,7 +196,7 @@ public class SecurityController : ControllerBase
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             _logger.LogWarning("Password change attempt without valid authentication");
@@ -241,7 +241,7 @@ public class SecurityController : ControllerBase
             return BadRequest(ApiResponse<ChangePasswordResponse>.Fail(
                 string.Join("; ", errors)));
         }
-        catch (Exception ex) when (ex.Message.Contains("incorrect") || 
+        catch (Exception ex) when (ex.Message.Contains("incorrect") ||
                                    ex.Message.Contains("wrong") ||
                                    ex.Message.Contains("invalid", StringComparison.OrdinalIgnoreCase))
         {
@@ -638,7 +638,7 @@ public class SecurityController : ControllerBase
     private string GetDeviceFromUserAgent()
     {
         var userAgent = Request.Headers.UserAgent.ToString();
-        
+
         if (userAgent.Contains("iPhone") || userAgent.Contains("iPad"))
             return "Mobile iOS";
         if (userAgent.Contains("Android"))
@@ -649,14 +649,14 @@ public class SecurityController : ControllerBase
             return "Desktop Mac";
         if (userAgent.Contains("Linux"))
             return "Desktop Linux";
-        
+
         return "Unknown Device";
     }
 
     private string GetBrowserFromUserAgent()
     {
         var userAgent = Request.Headers.UserAgent.ToString();
-        
+
         if (userAgent.Contains("Edg/"))
             return "Edge";
         if (userAgent.Contains("Chrome/"))
@@ -665,14 +665,14 @@ public class SecurityController : ControllerBase
             return "Firefox";
         if (userAgent.Contains("Safari/") && !userAgent.Contains("Chrome"))
             return "Safari";
-        
+
         return "Unknown Browser";
     }
 
     private string GetOsFromUserAgent()
     {
         var userAgent = Request.Headers.UserAgent.ToString();
-        
+
         if (userAgent.Contains("Windows NT 10"))
             return "Windows 10/11";
         if (userAgent.Contains("Windows"))
@@ -685,21 +685,21 @@ public class SecurityController : ControllerBase
             return "iOS";
         if (userAgent.Contains("Android"))
             return "Android";
-        
+
         return "Unknown OS";
     }
 
     private string GetClientIpAddress()
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        
+
         // Check for forwarded IP (when behind proxy/load balancer)
         var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrEmpty(forwardedFor))
         {
             ip = forwardedFor.Split(',').First().Trim();
         }
-        
+
         return ip ?? "Unknown";
     }
 

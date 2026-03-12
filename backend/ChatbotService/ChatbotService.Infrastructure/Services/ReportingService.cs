@@ -69,7 +69,7 @@ public class ReportingService : IReportingService
             var daysInPeriod = (endDate - startDate).Days + 1;
             var monthsInPeriod = Math.Max(1, daysInPeriod / 30.0);
             var freeInteractionsForPeriod = (int)(FreeInteractionsPerMonth * monthsInPeriod);
-            
+
             report.FreeInteractionsUsed = Math.Min(report.TotalInteractions, freeInteractionsForPeriod);
             report.PaidInteractions = Math.Max(0, report.TotalInteractions - freeInteractionsForPeriod);
 
@@ -82,10 +82,10 @@ public class ReportingService : IReportingService
             report.CostSavingsFromQuickResponses = quickResponseCount * CostPerInteraction;
 
             // Calculate averages
-            report.CostPerInteraction = report.TotalInteractions > 0 
-                ? report.TotalCost / report.TotalInteractions 
+            report.CostPerInteraction = report.TotalInteractions > 0
+                ? report.TotalCost / report.TotalInteractions
                 : 0;
-            
+
             var dailyAvg = report.TotalInteractions / (double)daysInPeriod;
             report.ProjectedMonthlyCost = (decimal)(dailyAvg * 30) * CostPerInteraction;
 
@@ -96,8 +96,8 @@ public class ReportingService : IReportingService
                 .Where(u => u.ChatbotConfigurationId == configurationId && u.UsageDate >= prevStart && u.UsageDate <= prevEnd)
                 .SumAsync(u => u.TotalCost, ct);
             report.PreviousPeriodCost = prevUsages;
-            report.CostChangePercent = prevUsages > 0 
-                ? ((report.TotalCost - prevUsages) / prevUsages) * 100 
+            report.CostChangePercent = prevUsages > 0
+                ? ((report.TotalCost - prevUsages) / prevUsages) * 100
                 : 0;
 
             // Breakdown by category
@@ -117,7 +117,7 @@ public class ReportingService : IReportingService
             // Generate recommendations
             GenerateRecommendations(report);
 
-            _logger.LogInformation("Cost report generated: {TotalInteractions} interactions, ${TotalCost} cost", 
+            _logger.LogInformation("Cost report generated: {TotalInteractions} interactions, ${TotalCost} cost",
                 report.TotalInteractions, report.TotalCost);
         }
         catch (Exception ex)
@@ -133,7 +133,7 @@ public class ReportingService : IReportingService
         try
         {
             var htmlContent = GenerateReportHtml(report);
-            
+
             var notification = new
             {
                 Type = "Email",
@@ -144,7 +144,7 @@ public class ReportingService : IReportingService
             };
 
             var response = await _httpClient.PostAsJsonAsync($"{_settings.NotificationServiceUrl}/send", notification, ct);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to send report email: {StatusCode}", response.StatusCode);
@@ -169,7 +169,7 @@ public class ReportingService : IReportingService
 
         var todayInteractions = await _usageRepo.GetGlobalTodayInteractionsAsync(configurationId, ct);
         var monthInteractions = await _usageRepo.GetGlobalMonthInteractionsAsync(configurationId, now.Year, now.Month, ct);
-        
+
         var activeSessions = await _context.ChatSessions
             .CountAsync(s => s.ChatbotConfigurationId == configurationId && s.Status == Domain.Enums.SessionStatus.Active, ct);
 
@@ -218,7 +218,7 @@ public class ReportingService : IReportingService
     {
         var result = new List<int>();
         var today = DateTime.UtcNow.Date;
-        
+
         for (int i = 6; i >= 0; i--)
         {
             var date = today.AddDays(-i);
@@ -329,7 +329,7 @@ public class ReportingService : IReportingService
         sb.AppendLine($"<tr><td>Ahorro por Quick Responses</td><td>${report.CostSavingsFromQuickResponses:F2}</td></tr>");
         sb.AppendLine($"<tr><td>Proyección Mensual</td><td>${report.ProjectedMonthlyCost:F2}</td></tr>");
         sb.AppendLine("</table>");
-        
+
         if (report.Recommendations.Any())
         {
             sb.AppendLine("<h2>Recomendaciones</h2><ul>");
@@ -337,7 +337,7 @@ public class ReportingService : IReportingService
                 sb.AppendLine($"<li><strong>{rec.Title}</strong>: {rec.Description}</li>");
             sb.AppendLine("</ul>");
         }
-        
+
         sb.AppendLine("</body></html>");
         return sb.ToString();
     }

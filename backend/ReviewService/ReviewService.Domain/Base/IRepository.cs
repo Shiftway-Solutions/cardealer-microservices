@@ -3,7 +3,7 @@ namespace ReviewService.Domain.Base;
 /// <summary>
 /// Repositorio base genérico
 /// </summary>
-public interface IRepository<TEntity, TId> 
+public interface IRepository<TEntity, TId>
     where TEntity : BaseEntity<TId>
 {
     Task<TEntity?> GetByIdAsync(TId id);

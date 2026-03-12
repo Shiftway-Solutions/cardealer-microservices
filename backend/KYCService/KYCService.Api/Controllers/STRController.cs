@@ -91,7 +91,7 @@ public class STRController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/approve")]
     public async Task<ActionResult<SuspiciousTransactionReportDto>> Approve(
-        Guid id, 
+        Guid id,
         [FromBody] ApproveSTRCommand command)
     {
         if (id != command.Id)
@@ -107,7 +107,7 @@ public class STRController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/send-to-uaf")]
     public async Task<ActionResult<SuspiciousTransactionReportDto>> SendToUAF(
-        Guid id, 
+        Guid id,
         [FromBody] SendSTRToUAFCommand command)
     {
         if (id != command.Id)

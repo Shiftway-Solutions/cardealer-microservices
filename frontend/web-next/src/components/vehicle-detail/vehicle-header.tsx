@@ -13,7 +13,7 @@
 'use client';
 
 import * as React from 'react';
-import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock, Flag } from 'lucide-react';
+import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock, Flag, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DealRatingBadge } from '@/components/ui/deal-rating-badge';
@@ -22,17 +22,20 @@ import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
 import { ShareDialog } from '@/components/ui/share-dialog';
 import { ReportVehicleModal } from './report-vehicle-modal';
 import { OdometerAlert } from './odometer-alert';
+import { BrokenImagesAlert } from './broken-images-alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useFavoriteStatus } from '@/hooks/use-favorites';
-import { cn, formatCurrency, formatNumber } from '@/lib/utils';
+import { cn, formatCurrency, formatNumber, getAlternateCurrencyDisplay } from '@/lib/utils';
 import type { Vehicle } from '@/types';
 
 interface VehicleHeaderProps {
   vehicle: Vehicle;
+  /** Callback to open the OKLA Score report purchase modal */
+  onPurchaseReportClick?: () => void;
   className?: string;
 }
 
-export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
+export function VehicleHeader({ vehicle, className, onPurchaseReportClick }: VehicleHeaderProps) {
   const { isAuthenticated } = useAuth();
   const { isFavorite, toggle, isLoading: isFavoriteLoading } = useFavoriteStatus(vehicle.id);
 
@@ -91,6 +94,9 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
           />
         )}
 
+        {/* Broken Images Alert — visible to buyers when CDN images are unreachable */}
+        {vehicle.hasBrokenImages && <BrokenImagesAlert />}
+
         {/* Title */}
         <h1 className="text-foreground text-2xl font-bold lg:text-3xl">{title}</h1>
 
@@ -123,19 +129,31 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             {vehicle.oklaScore != null && vehicle.oklaScore > 0 && (
               <ScoreBadge score={vehicle.oklaScore} variant="full" />
             )}
+            {vehicle.oklaScore != null && vehicle.oklaScore > 0 && (
+              <button
+                onClick={onPurchaseReportClick}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Ver informe completo OKLA Score™ — RD$420
+              </button>
+            )}
           </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
             <span className="text-primary text-3xl font-extrabold lg:text-4xl">
-              {formatCurrency(vehicle.price)}
+              {formatCurrency(vehicle.price, { currency: vehicle.currency || 'DOP' })}
             </span>
             {vehicle.originalPrice && vehicle.originalPrice > vehicle.price && (
               <span className="text-muted-foreground text-lg line-through">
-                {formatCurrency(vehicle.originalPrice)}
+                {formatCurrency(vehicle.originalPrice, { currency: vehicle.currency || 'DOP' })}
               </span>
             )}
           </div>
+          <p className="text-muted-foreground mt-1 text-sm">
+            ≈ {getAlternateCurrencyDisplay(vehicle.price, (vehicle.currency as 'DOP' | 'USD') || 'DOP').text}
+          </p>
 
           {/* Monthly Payment Estimate */}
           <p className="text-muted-foreground mt-2 text-sm">

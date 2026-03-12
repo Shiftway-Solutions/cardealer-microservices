@@ -3,4 +3,4 @@ using MediatR;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.LinkExternalAccount;
 
-public record LinkExternalAccountCommand(string UserId, string Provider, string IdToken): IRequest<ExternalAuthResponse>;
+public record LinkExternalAccountCommand(string UserId, string Provider, string IdToken) : IRequest<ExternalAuthResponse>;

@@ -30,10 +30,10 @@ public class VerifyIdentityWithJCEHandler : IRequestHandler<VerifyIdentityWithJC
     }
 
     public async Task<JCEVerificationResultDto> Handle(
-        VerifyIdentityWithJCECommand request, 
+        VerifyIdentityWithJCECommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Verifying identity with JCE for cedula {Cedula}", 
+        _logger.LogInformation("Verifying identity with JCE for cedula {Cedula}",
             MaskCedula(request.CedulaNumber));
 
         try
@@ -42,9 +42,9 @@ public class VerifyIdentityWithJCEHandler : IRequestHandler<VerifyIdentityWithJC
             var localValidation = CedulaValidator.ValidateDetailed(request.CedulaNumber);
             if (!localValidation.IsValid)
             {
-                _logger.LogWarning("Cedula failed local validation: {Errors}", 
+                _logger.LogWarning("Cedula failed local validation: {Errors}",
                     string.Join(", ", localValidation.Errors));
-                
+
                 return new JCEVerificationResultDto
                 {
                     Success = false,
@@ -86,10 +86,10 @@ public class VerifyIdentityWithJCEHandler : IRequestHandler<VerifyIdentityWithJC
 
             // 4. Verificar que datos coinciden con lo proporcionado
             var nameMatch = CompareNames(
-                request.ProvidedFullName, 
+                request.ProvidedFullName,
                 $"{citizenData.FirstName} {citizenData.LastName}");
 
-            var dobMatch = request.ProvidedDateOfBirth.HasValue && 
+            var dobMatch = request.ProvidedDateOfBirth.HasValue &&
                            citizenData.DateOfBirth.Date == request.ProvidedDateOfBirth.Value.Date;
 
             // 5. Construir respuesta exitosa
@@ -121,14 +121,14 @@ public class VerifyIdentityWithJCEHandler : IRequestHandler<VerifyIdentityWithJC
             };
 
             _logger.LogInformation(
-                "JCE verification completed for cedula {Cedula}: Valid={IsValid}, NameMatch={NameMatch}", 
+                "JCE verification completed for cedula {Cedula}: Valid={IsValid}, NameMatch={NameMatch}",
                 MaskCedula(request.CedulaNumber), result.IsValid, nameMatch);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during JCE verification for cedula {Cedula}", 
+            _logger.LogError(ex, "Error during JCE verification for cedula {Cedula}",
                 MaskCedula(request.CedulaNumber));
 
             return new JCEVerificationResultDto
@@ -168,7 +168,7 @@ public class VerifyIdentityWithJCEHandler : IRequestHandler<VerifyIdentityWithJC
         // Al menos 80% de las palabras deben coincidir
         var matchingWords = providedWords.Intersect(jceWords).Count();
         var totalWords = Math.Max(providedWords.Count, jceWords.Count);
-        
+
         return (double)matchingWords / totalWords >= 0.8;
     }
 
@@ -206,10 +206,10 @@ public class ProcessDocumentOCRHandler : IRequestHandler<ProcessDocumentOCRComma
     }
 
     public async Task<OCRProcessingResultDto> Handle(
-        ProcessDocumentOCRCommand request, 
+        ProcessDocumentOCRCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing OCR for document side {Side}, session {SessionId}", 
+        _logger.LogInformation("Processing OCR for document side {Side}, session {SessionId}",
             request.Side, request.SessionId);
 
         try
@@ -231,7 +231,7 @@ public class ProcessDocumentOCRHandler : IRequestHandler<ProcessDocumentOCRComma
 
             // 2. Procesar OCR según el lado del documento
             CedulaOCRResult ocrResult;
-            
+
             if (request.Side == DocumentSide.Front)
             {
                 ocrResult = await _ocrService.ExtractCedulaFrontAsync(
@@ -270,7 +270,7 @@ public class ProcessDocumentOCRHandler : IRequestHandler<ProcessDocumentOCRComma
             }
 
             _logger.LogInformation(
-                "OCR completed for session {SessionId}: Confidence={Confidence}, CedulaExtracted={HasCedula}", 
+                "OCR completed for session {SessionId}: Confidence={Confidence}, CedulaExtracted={HasCedula}",
                 request.SessionId, ocrResult.Confidence, !string.IsNullOrEmpty(ocrResult.CedulaNumber));
 
             return new OCRProcessingResultDto
@@ -293,7 +293,7 @@ public class ProcessDocumentOCRHandler : IRequestHandler<ProcessDocumentOCRComma
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing OCR for session {SessionId}", request.SessionId);
-            
+
             return new OCRProcessingResultDto
             {
                 Success = false,
@@ -320,7 +320,7 @@ public class CompareFacesHandler : IRequestHandler<CompareFacesCommand, FaceComp
     }
 
     public async Task<FaceComparisonResultDto> Handle(
-        CompareFacesCommand request, 
+        CompareFacesCommand request,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Comparing faces for session {SessionId}", request.SessionId);
@@ -368,8 +368,8 @@ public class CompareFacesHandler : IRequestHandler<CompareFacesCommand, FaceComp
 
             // 3. Comparar rostros
             var comparisonResult = await _faceService.CompareFacesAsync(
-                request.DocumentImage, 
-                request.SelfieImage, 
+                request.DocumentImage,
+                request.SelfieImage,
                 cancellationToken);
 
             // 4. Procesar liveness si se proporcionaron datos
@@ -406,7 +406,7 @@ public class CompareFacesHandler : IRequestHandler<CompareFacesCommand, FaceComp
             }
 
             _logger.LogInformation(
-                "Face comparison completed for session {SessionId}: Match={IsMatch}, Score={Score}", 
+                "Face comparison completed for session {SessionId}: Match={IsMatch}, Score={Score}",
                 request.SessionId, comparisonResult.IsMatch, comparisonResult.SimilarityScore);
 
             return new FaceComparisonResultDto
@@ -436,7 +436,7 @@ public class CompareFacesHandler : IRequestHandler<CompareFacesCommand, FaceComp
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error comparing faces for session {SessionId}", request.SessionId);
-            
+
             return new FaceComparisonResultDto
             {
                 Success = false,

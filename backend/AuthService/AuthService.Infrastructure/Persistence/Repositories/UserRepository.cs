@@ -197,7 +197,7 @@ public class UserRepository : IUserRepository
         // Generar token de reset para cambiar sin contraseña actual
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-        
+
         if (!result.Succeeded)
         {
             throw new DomainException($"Failed to change password: {string.Join(", ", result.Errors.Select(e => e.Description))}");

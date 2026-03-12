@@ -60,7 +60,7 @@ public class GetSessionMessagesQueryHandler : IRequestHandler<GetSessionMessages
         if (session == null) return new List<MessageDto>();
 
         var messages = await _messageRepository.GetBySessionIdAsync(session.Id, ct);
-        
+
         return messages.Select(m => new MessageDto
         {
             Id = m.Id,
@@ -89,7 +89,7 @@ public class GetUserSessionsQueryHandler : IRequestHandler<GetUserSessionsQuery,
     public async Task<List<SessionDto>> Handle(GetUserSessionsQuery request, CancellationToken ct)
     {
         var sessions = await _sessionRepository.GetByUserIdAsync(request.UserId, ct);
-        
+
         return sessions.Select(s => new SessionDto
         {
             SessionId = s.Id,
@@ -158,13 +158,13 @@ public class GetInteractionUsageQueryHandler : IRequestHandler<GetInteractionUsa
 
         var today = DateTime.UtcNow.Date;
         var monthStart = new DateTime(today.Year, today.Month, 1);
-        
+
         var todayMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, today, today.AddDays(1), ct);
         var monthMessages = await _messageRepository.GetLlmCallsCountAsync(request.ConfigurationId, monthStart, today.AddDays(1), ct);
 
         var freeInteractionsPerMonth = config.FreeInteractionsPerMonth;
         var costPerInteraction = config.CostPerInteraction;
-        
+
         var paidInteractions = Math.Max(0, monthMessages - freeInteractionsPerMonth);
         var totalCost = paidInteractions * costPerInteraction;
         var overageCost = paidInteractions > 0

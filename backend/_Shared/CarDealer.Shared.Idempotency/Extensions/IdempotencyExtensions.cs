@@ -34,7 +34,7 @@ public static class IdempotencyExtensions
                 return ConnectionMultiplexer.Connect(options.RedisConnection);
             });
         }
-        
+
         services.AddScoped<IIdempotencyClient, RedisIdempotencyClient>();
 
         return services;
@@ -49,14 +49,14 @@ public static class IdempotencyExtensions
         IConnectionMultiplexer existingRedisConnection)
     {
         services.Configure<IdempotencyOptions>(configuration.GetSection(IdempotencyOptions.SectionName));
-        
+
         // Only add if not already registered
         var existingRedis = services.FirstOrDefault(s => s.ServiceType == typeof(IConnectionMultiplexer));
         if (existingRedis == null)
         {
             services.AddSingleton(existingRedisConnection);
         }
-        
+
         services.AddScoped<IIdempotencyClient, RedisIdempotencyClient>();
 
         return services;
@@ -70,7 +70,7 @@ public static class IdempotencyExtensions
         Action<IdempotencyOptions> configureOptions)
     {
         services.Configure(configureOptions);
-        
+
         var options = new IdempotencyOptions();
         configureOptions(options);
 
@@ -83,7 +83,7 @@ public static class IdempotencyExtensions
                 return ConnectionMultiplexer.Connect(options.RedisConnection);
             });
         }
-        
+
         services.AddScoped<IIdempotencyClient, RedisIdempotencyClient>();
 
         return services;

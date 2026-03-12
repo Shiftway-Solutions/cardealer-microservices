@@ -1,0 +1,280 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using BillingService.Domain.Entities;
+using BillingService.Domain.Interfaces;
+using BillingService.Infrastructure.Messaging;
+using CarDealer.Contracts.Abstractions;
+using CarDealer.Contracts.Events.Billing;
+
+namespace BillingService.Api.Controllers;
+
+/// <summary>
+/// Controller for OKLA Score™ report purchases.
+/// Supports both authenticated and guest (unauthenticated) buyers.
+/// Guest purchases are keyed by email and linked to user accounts post-registration.
+///
+/// Endpoints:
+/// - POST /api/billing/reports/payment-intent — Create Stripe PaymentIntent
+/// - POST /api/billing/reports/confirm-purchase — Confirm after Stripe payment succeeds
+/// - GET  /api/billing/reports/check-purchase   — Check if a report was already purchased
+/// </summary>
+[ApiController]
+[Route("api/billing/reports")]
+public class ReportPurchaseController : ControllerBase
+{
+    private readonly IStripeService _stripeService;
+    private readonly IReportPurchaseRepository _reportPurchaseRepo;
+    private readonly IEventPublisher _eventPublisher;
+    private readonly ILogger<ReportPurchaseController> _logger;
+
+    // OKLA Score report price: $7 USD = 700 cents
+    private const long ReportPriceCents = 700;
+    private const string ReportCurrency = "usd";
+    private const string ProductId = "okla-score-report";
+
+    public ReportPurchaseController(
+        IStripeService stripeService,
+        IReportPurchaseRepository reportPurchaseRepo,
+        IEventPublisher eventPublisher,
+        ILogger<ReportPurchaseController> logger)
+    {
+        _stripeService = stripeService;
+        _reportPurchaseRepo = reportPurchaseRepo;
+        _eventPublisher = eventPublisher;
+        _logger = logger;
+    }
+
+    // ─────────────────────────────────────────────────
+    // POST /api/billing/reports/payment-intent
+    // ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Creates a Stripe PaymentIntent for an OKLA Score™ report purchase.
+    /// Accessible without authentication (guest purchases).
+    /// If the buyer already purchased this report, returns the existing purchase info.
+    /// </summary>
+    [HttpPost("payment-intent")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CreatePaymentIntent([FromBody] CreateReportPaymentIntentRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.VehicleId))
+            return BadRequest(new { error = "vehicleId is required" });
+        if (string.IsNullOrWhiteSpace(request.BuyerEmail) || !request.BuyerEmail.Contains('@'))
+            return BadRequest(new { error = "A valid buyerEmail is required" });
+
+        var email = request.BuyerEmail.Trim().ToLowerInvariant();
+
+        _logger.LogInformation(
+            "Creating report PaymentIntent for vehicle {VehicleId}, email {Email}",
+            request.VehicleId, email);
+
+        // Duplicate purchase prevention: check if already purchased
+        var existing = await _reportPurchaseRepo.GetCompletedPurchaseAsync(request.VehicleId, email);
+        if (existing != null)
+        {
+            return Ok(new
+            {
+                alreadyPurchased = true,
+                purchaseId = existing.Id.ToString(),
+                message = "Ya compraste este informe. El acceso está disponible."
+            });
+        }
+
+        try
+        {
+            // Extract optional userId from JWT if authenticated
+            Guid? userId = null;
+            var dealerIdClaim = User.FindFirst("dealerId")?.Value;
+            if (!string.IsNullOrEmpty(dealerIdClaim) && Guid.TryParse(dealerIdClaim, out var parsedId))
+                userId = parsedId;
+
+            // Create Stripe PaymentIntent
+            var paymentIntent = await _stripeService.CreatePaymentIntentAsync(
+                ReportPriceCents,
+                ReportCurrency,
+                $"Informe OKLA Score™ — {request.VehicleId}",
+                new Dictionary<string, string>
+                {
+                    ["product_id"] = ProductId,
+                    ["vehicle_id"] = request.VehicleId,
+                    ["buyer_email"] = email,
+                },
+                email,
+                cancellationToken: HttpContext.RequestAborted);
+
+            // Record pending purchase in DB
+            var purchase = new ReportPurchase(
+                vehicleId: request.VehicleId,
+                productId: request.ProductId ?? ProductId,
+                buyerEmail: email,
+                stripePaymentIntentId: paymentIntent.PaymentIntentId,
+                amountCents: ReportPriceCents,
+                currency: ReportCurrency,
+                userId: userId);
+
+            await _reportPurchaseRepo.AddAsync(purchase, HttpContext.RequestAborted);
+
+            _logger.LogInformation(
+                "PaymentIntent {PaymentIntentId} created for report purchase {PurchaseId}",
+                paymentIntent.PaymentIntentId, purchase.Id);
+
+            return Ok(new
+            {
+                clientSecret = paymentIntent.ClientSecret,
+                paymentIntentId = paymentIntent.PaymentIntentId,
+                amount = ReportPriceCents,
+                currency = ReportCurrency
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create PaymentIntent for report purchase");
+            return StatusCode(500, new { error = "Error al crear el intento de pago" });
+        }
+    }
+
+    // ─────────────────────────────────────────────────
+    // POST /api/billing/reports/confirm-purchase
+    // ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Confirms a report purchase after Stripe payment succeeds.
+    /// Records the completed purchase and publishes an event for receipt email.
+    /// </summary>
+    [HttpPost("confirm-purchase")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmPurchase([FromBody] ConfirmReportPurchaseRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PaymentIntentId))
+            return BadRequest(new { error = "paymentIntentId is required" });
+
+        _logger.LogInformation(
+            "Confirming report purchase for PaymentIntent {PaymentIntentId}",
+            request.PaymentIntentId);
+
+        var purchase = await _reportPurchaseRepo.GetByPaymentIntentIdAsync(
+            request.PaymentIntentId, HttpContext.RequestAborted);
+
+        if (purchase == null)
+        {
+            _logger.LogWarning("No pending purchase found for PaymentIntent {PaymentIntentId}", request.PaymentIntentId);
+            return NotFound(new { error = "No se encontró una compra pendiente para este pago" });
+        }
+
+        if (purchase.Status == ReportPurchaseStatus.Completed)
+        {
+            return Ok(new
+            {
+                success = true,
+                purchaseId = purchase.Id.ToString(),
+                message = "La compra ya fue confirmada anteriormente."
+            });
+        }
+
+        try
+        {
+            purchase.MarkCompleted();
+            await _reportPurchaseRepo.UpdateAsync(purchase, HttpContext.RequestAborted);
+
+            _logger.LogInformation(
+                "Report purchase {PurchaseId} confirmed for vehicle {VehicleId}",
+                purchase.Id, purchase.VehicleId);
+
+            // Publish event for receipt email via NotificationService
+            try
+            {
+                await _eventPublisher.PublishAsync(
+                    new ReportPurchaseCompletedEvent
+                    {
+                        PurchaseId = purchase.Id,
+                        VehicleId = purchase.VehicleId,
+                        BuyerEmail = purchase.BuyerEmail,
+                        ProductId = purchase.ProductId,
+                        AmountCents = purchase.AmountCents,
+                        Currency = purchase.Currency,
+                        StripePaymentIntentId = purchase.StripePaymentIntentId,
+                        CompletedAt = purchase.CompletedAt ?? DateTime.UtcNow
+                    },
+                    HttpContext.RequestAborted);
+            }
+            catch (Exception pubEx)
+            {
+                // Don't fail the purchase confirmation if event publishing fails
+                _logger.LogError(pubEx, "Failed to publish ReportPurchaseCompletedEvent for {PurchaseId}", purchase.Id);
+            }
+
+            return Ok(new
+            {
+                success = true,
+                purchaseId = purchase.Id.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to confirm report purchase {PurchaseId}", purchase.Id);
+            return StatusCode(500, new { error = "Error al confirmar la compra" });
+        }
+    }
+
+    // ─────────────────────────────────────────────────
+    // GET /api/billing/reports/check-purchase
+    // ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Checks if a report has been purchased for a vehicle.
+    /// Works by email (guest) or by JWT (authenticated user).
+    /// </summary>
+    [HttpGet("check-purchase")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CheckPurchase(
+        [FromQuery] string vehicleId,
+        [FromQuery] string? email = null)
+    {
+        if (string.IsNullOrWhiteSpace(vehicleId))
+            return BadRequest(new { error = "vehicleId query parameter is required" });
+
+        // Try by email first
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var purchase = await _reportPurchaseRepo.GetCompletedPurchaseAsync(
+                vehicleId, email, HttpContext.RequestAborted);
+
+            if (purchase != null)
+            {
+                return Ok(new { purchased = true, purchaseId = purchase.Id.ToString() });
+            }
+        }
+
+        // Try by JWT userId if authenticated
+        var dealerIdClaim = User.FindFirst("dealerId")?.Value;
+        if (!string.IsNullOrEmpty(dealerIdClaim) && Guid.TryParse(dealerIdClaim, out var userId))
+        {
+            var purchase = await _reportPurchaseRepo.GetCompletedPurchaseByUserAsync(
+                vehicleId, userId, HttpContext.RequestAborted);
+
+            if (purchase != null)
+            {
+                return Ok(new { purchased = true, purchaseId = purchase.Id.ToString() });
+            }
+        }
+
+        return Ok(new { purchased = false });
+    }
+}
+
+// ── Request DTOs ──
+
+public record CreateReportPaymentIntentRequest(
+    string VehicleId,
+    string BuyerEmail,
+    string? ProductId = "okla-score-report"
+);
+
+public record ConfirmReportPurchaseRequest(
+    string PaymentIntentId,
+    string VehicleId,
+    string BuyerEmail,
+    string? ProductId = "okla-score-report"
+);
+
+// ReportPurchaseCompletedEvent is defined in CarDealer.Contracts.Events.Billing

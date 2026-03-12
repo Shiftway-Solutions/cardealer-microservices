@@ -15,11 +15,13 @@ import Image from 'next/image';
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { getNavigationForUser, getUserBadge } from '@/config/navigation';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 
 interface AccountLayoutProps {
   children: React.ReactNode;
@@ -37,6 +39,7 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { currentPlan } = usePlanAccess();
 
   // Redirect accounts to their own portal:
   // - Dealers → /dealer/dashboard (they have their own portal)
@@ -119,21 +122,42 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
                     <p className="text-muted-foreground px-3 py-2 text-xs font-medium tracking-wider uppercase">
                       {section.title}
                     </p>
-                    {section.items.map(item => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="text-foreground hover:bg-muted hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
-                      >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
-                        <span className="truncate">{item.label}</span>
-                        {item.badge && (
-                          <span className="bg-primary/10 text-primary ml-auto rounded-full px-2 py-0.5 text-xs font-medium">
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    ))}
+                    {section.items.map(item => {
+                      const isLocked = item.requiredPlan && currentPlan === 'libre';
+                      const navLink = (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`text-foreground hover:bg-muted hover:text-foreground flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${isLocked ? 'opacity-60' : ''}`}
+                        >
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                          {isLocked && (
+                            <Lock className="ml-auto h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                          )}
+                          {!isLocked && item.badge && (
+                            <span className="bg-primary/10 text-primary ml-auto rounded-full px-2 py-0.5 text-xs font-medium">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+
+                      if (isLocked) {
+                        return (
+                          <TooltipProvider key={item.href}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>{navLink}</TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p className="text-xs">Requiere plan {item.requiredPlan}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      }
+
+                      return navLink;
+                    })}
                   </div>
                 ))}
 

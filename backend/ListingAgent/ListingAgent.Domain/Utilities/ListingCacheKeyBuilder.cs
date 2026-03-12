@@ -13,9 +13,9 @@ public static class ListingCacheKeyBuilder
     /// </summary>
     public static string Build(string make, string model, int year, string? trim)
     {
-        var normalizedMake  = Normalize(make);
+        var normalizedMake = Normalize(make);
         var normalizedModel = Normalize(model);
-        var normalizedTrim  = Normalize(trim);
+        var normalizedTrim = Normalize(trim);
 
         return $"listing:v2:{normalizedMake}:{normalizedModel}:{year}:{normalizedTrim}";
     }

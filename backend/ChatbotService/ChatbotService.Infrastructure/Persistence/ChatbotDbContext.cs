@@ -48,7 +48,7 @@ public class ChatbotDbContext : DbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
-            
+
             entity.Property(e => e.SessionToken).IsRequired().HasMaxLength(100);
             entity.Property(e => e.UserName).HasMaxLength(200);
             entity.Property(e => e.UserEmail).HasMaxLength(255);

@@ -21,7 +21,7 @@ public class GetUserFullDataQueryHandler : IRequestHandler<GetUserFullDataQuery,
     {
         // TODO: Implementar query real agregando datos de múltiples servicios
         await Task.CompletedTask;
-        
+
         return new UserFullDataDto(
             ExportDate: DateTime.UtcNow,
             ExportVersion: "1.0",

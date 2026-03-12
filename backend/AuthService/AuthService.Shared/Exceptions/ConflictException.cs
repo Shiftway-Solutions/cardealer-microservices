@@ -6,12 +6,12 @@ namespace AuthService.Shared.Exceptions;
 /// </summary>
 public class ConflictException : AuthServiceException
 {
-    public ConflictException(string message = "Resource already exists") 
+    public ConflictException(string message = "Resource already exists")
         : base(message, 409, "CONFLICT")
     {
     }
 
-    public ConflictException(string message, Exception innerException) 
+    public ConflictException(string message, Exception innerException)
         : base(message, 409, "CONFLICT", innerException)
     {
     }

@@ -18,13 +18,13 @@ public class AlertsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<AlertsController> _logger;
-    
+
     public AlertsController(IMediator mediator, ILogger<AlertsController> logger)
     {
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Obtener alertas activas del dealer
     /// </summary>
@@ -50,7 +50,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving alerts" });
         }
     }
-    
+
     /// <summary>
     /// Obtener conteo de alertas sin leer
     /// </summary>
@@ -73,7 +73,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving unread count" });
         }
     }
-    
+
     /// <summary>
     /// Obtener alertas por tipo
     /// </summary>
@@ -98,7 +98,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error retrieving alerts by type" });
         }
     }
-    
+
     /// <summary>
     /// Marcar alerta como leída
     /// </summary>
@@ -120,7 +120,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error marking alert as read" });
         }
     }
-    
+
     /// <summary>
     /// Marcar todas las alertas como leídas
     /// </summary>
@@ -143,7 +143,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error marking alerts as read" });
         }
     }
-    
+
     /// <summary>
     /// Descartar una alerta
     /// </summary>
@@ -165,7 +165,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error dismissing alert" });
         }
     }
-    
+
     /// <summary>
     /// Marcar alerta como actuada
     /// </summary>
@@ -187,7 +187,7 @@ public class AlertsController : ControllerBase
             return StatusCode(500, new { Message = "Error marking alert as acted upon" });
         }
     }
-    
+
     /// <summary>
     /// Crear una alerta (usado por admin o sistema)
     /// </summary>
@@ -207,7 +207,7 @@ public class AlertsController : ControllerBase
                 request.ActionLabel,
                 request.ExpiresInDays
             );
-            
+
             var result = await _mediator.Send(command);
             return Created($"/api/dealer-analytics/alerts/{result}", result);
         }

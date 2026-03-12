@@ -29,6 +29,14 @@ public interface IImageProcessor
     /// Creates a thumbnail from an image
     /// </summary>
     Task<Stream> CreateThumbnailAsync(Stream imageStream, int width, int height, string resizeMode = "Max");
+
+    /// <summary>
+    /// Creates a WebP variant with optional resize and max file size enforcement.
+    /// When maxWidth/maxHeight are 0, the original dimensions are preserved (format conversion only).
+    /// Quality is reduced iteratively until the output fits within maxSizeBytes.
+    /// </summary>
+    Task<Stream> CreateWebpVariantAsync(Stream imageStream, int maxWidth, int maxHeight,
+        int quality, long maxSizeBytes, string resizeMode = "Max");
 }
 
 /// <summary>

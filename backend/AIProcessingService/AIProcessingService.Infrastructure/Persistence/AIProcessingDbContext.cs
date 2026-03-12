@@ -23,7 +23,7 @@ public class AIProcessingDbContext : DbContext
         {
             entity.ToTable("image_processing_jobs");
             entity.HasKey(e => e.Id);
-            
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.VehicleId).HasColumnName("vehicle_id").IsRequired();
             entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -41,7 +41,7 @@ public class AIProcessingDbContext : DbContext
             entity.Property(e => e.ProcessingTimeMs).HasColumnName("processing_time_ms");
             entity.Property(e => e.WorkerId).HasColumnName("worker_id").HasMaxLength(100);
             entity.Property(e => e.ModelVersion).HasColumnName("model_version").HasMaxLength(50);
-            
+
             // JSON columns
             entity.Property(e => e.Options).HasColumnName("options")
                 .HasColumnType("jsonb")
@@ -49,7 +49,7 @@ public class AIProcessingDbContext : DbContext
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<ProcessingOptions>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new ProcessingOptions()
                 );
-            
+
             entity.Property(e => e.Result).HasColumnName("result")
                 .HasColumnType("jsonb")
                 .HasConversion(
@@ -69,7 +69,7 @@ public class AIProcessingDbContext : DbContext
         {
             entity.ToTable("spin360_jobs");
             entity.HasKey(e => e.Id);
-            
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.VehicleId).HasColumnName("vehicle_id").IsRequired();
             entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -119,7 +119,7 @@ public class AIProcessingDbContext : DbContext
         {
             entity.ToTable("background_presets");
             entity.HasKey(e => e.Id);
-            
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Code).HasColumnName("code").HasMaxLength(50).IsRequired();
             entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();

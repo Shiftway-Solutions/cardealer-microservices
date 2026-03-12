@@ -53,9 +53,9 @@ public class EarlyBirdController : ControllerBase
             FreeUntil = member.FreeUntil,
             HasUsedBenefit = member.HasUsedBenefit,
             BenefitUsedAt = member.BenefitUsedAt,
-            Message = member.IsInFreePeriod() 
+            Message = member.IsInFreePeriod()
                 ? $"¡Tienes {member.GetRemainingFreeDays()} días gratis restantes!"
-                : member.HasUsedBenefit 
+                : member.HasUsedBenefit
                     ? "Beneficio usado - Tienes el badge de Miembro Fundador"
                     : "Período gratuito expirado"
         });

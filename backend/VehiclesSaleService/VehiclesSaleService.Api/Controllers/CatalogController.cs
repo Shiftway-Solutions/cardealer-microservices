@@ -376,15 +376,15 @@ public class CatalogController : ControllerBase
         {
             // Call NHTSA VPIC API (uses IHttpClientFactory for DNS rotation + resilience)
             var nhtsaUrl = $"https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json";
-            
+
             _logger.LogInformation("Decoding VIN: {VIN} via NHTSA API", vin);
-            
+
             var httpClient = _httpClientFactory.CreateClient("NHTSA");
             var response = await httpClient.GetAsync(nhtsaUrl);
             response.EnsureSuccessStatusCode();
-            
+
             var content = await response.Content.ReadAsStringAsync();
-            var nhtsaResponse = System.Text.Json.JsonSerializer.Deserialize<NhtsaVinResponse>(content, 
+            var nhtsaResponse = System.Text.Json.JsonSerializer.Deserialize<NhtsaVinResponse>(content,
                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (nhtsaResponse?.Results == null || !nhtsaResponse.Results.Any())
@@ -397,13 +397,13 @@ public class CatalogController : ControllerBase
             // Check for error codes
             if (!string.IsNullOrEmpty(result.ErrorCode) && result.ErrorCode != "0")
             {
-                _logger.LogWarning("VIN decode returned error: {ErrorCode} - {ErrorText}", 
+                _logger.LogWarning("VIN decode returned error: {ErrorCode} - {ErrorText}",
                     result.ErrorCode, result.ErrorText);
             }
 
             // Parse year
             int.TryParse(result.ModelYear, out var year);
-            
+
             // Parse engine info
             int.TryParse(result.EngineHP, out var horsepower);
             int.TryParse(result.EngineCylinders, out var cylinders);
@@ -419,39 +419,39 @@ public class CatalogController : ControllerBase
             {
                 VIN = vin,
                 IsValid = string.IsNullOrEmpty(result.ErrorCode) || result.ErrorCode == "0",
-                
+
                 // Basic Info
                 Make = result.Make ?? string.Empty,
                 Model = result.Model ?? string.Empty,
                 Year = year,
                 Trim = result.Trim,
-                
+
                 // Type & Body
                 VehicleType = vehicleType,
                 BodyStyle = bodyStyle,
                 Doors = ParseInt(result.Doors),
-                
+
                 // Engine
                 EngineSize = result.DisplacementL != null ? $"{result.DisplacementL}L" : result.EngineModel,
                 Cylinders = cylinders > 0 ? cylinders : null,
                 Horsepower = horsepower > 0 ? horsepower : null,
                 FuelType = fuelType,
-                
+
                 // Transmission & Drive
                 Transmission = transmission,
                 DriveType = driveType,
-                
+
                 // Manufacturing
                 PlantCity = result.PlantCity,
                 PlantCountry = result.PlantCountry,
                 Manufacturer = result.Manufacturer,
-                
+
                 // Additional
                 Series = result.Series,
                 GVWR = result.GVWR,
                 ErrorCode = result.ErrorCode,
                 ErrorMessage = result.ErrorText,
-                
+
                 // Suggested data for form auto-fill
                 SuggestedData = new VinSuggestedData
                 {
@@ -470,7 +470,7 @@ public class CatalogController : ControllerBase
                 }
             };
 
-            _logger.LogInformation("VIN decoded successfully: {VIN} -> {Year} {Make} {Model}", 
+            _logger.LogInformation("VIN decoded successfully: {VIN} -> {Year} {Make} {Model}",
                 vin, year, result.Make, result.Model);
 
             return Ok(vinResponse);
@@ -795,9 +795,29 @@ public class CatalogController : ControllerBase
 
         var transliteration = new Dictionary<char, int>
         {
-            ['A'] = 1, ['B'] = 2, ['C'] = 3, ['D'] = 4, ['E'] = 5, ['F'] = 6, ['G'] = 7, ['H'] = 8,
-            ['J'] = 1, ['K'] = 2, ['L'] = 3, ['M'] = 4, ['N'] = 5, ['P'] = 7, ['R'] = 9,
-            ['S'] = 2, ['T'] = 3, ['U'] = 4, ['V'] = 5, ['W'] = 6, ['X'] = 7, ['Y'] = 8, ['Z'] = 9,
+            ['A'] = 1,
+            ['B'] = 2,
+            ['C'] = 3,
+            ['D'] = 4,
+            ['E'] = 5,
+            ['F'] = 6,
+            ['G'] = 7,
+            ['H'] = 8,
+            ['J'] = 1,
+            ['K'] = 2,
+            ['L'] = 3,
+            ['M'] = 4,
+            ['N'] = 5,
+            ['P'] = 7,
+            ['R'] = 9,
+            ['S'] = 2,
+            ['T'] = 3,
+            ['U'] = 4,
+            ['V'] = 5,
+            ['W'] = 6,
+            ['X'] = 7,
+            ['Y'] = 8,
+            ['Z'] = 9,
         };
         var weights = new[] { 8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2 };
 
@@ -910,7 +930,7 @@ public class CatalogController : ControllerBase
     private static string MapFuelType(string? nhtsaFuelType)
     {
         if (string.IsNullOrEmpty(nhtsaFuelType)) return "gasoline";
-        
+
         return nhtsaFuelType.ToLowerInvariant() switch
         {
             // Check plug-in hybrid first (before generic hybrid check)
@@ -928,7 +948,7 @@ public class CatalogController : ControllerBase
     private static string MapTransmission(string? nhtsaTransmission)
     {
         if (string.IsNullOrEmpty(nhtsaTransmission)) return "automatic";
-        
+
         return nhtsaTransmission.ToLowerInvariant() switch
         {
             var t when t.Contains("cvt") || t.Contains("continuously variable") => "cvt",
@@ -942,7 +962,7 @@ public class CatalogController : ControllerBase
     private static string MapDriveType(string? nhtsaDriveType)
     {
         if (string.IsNullOrEmpty(nhtsaDriveType)) return "FWD";
-        
+
         // Drive type is displayed as a text field in the frontend, so we keep
         // human-readable short forms (FWD, RWD, AWD, 4WD) instead of catalog keys.
         return nhtsaDriveType.ToLowerInvariant() switch
@@ -963,46 +983,46 @@ public class CatalogController : ControllerBase
     /// <summary>Parses the mapped vehicle-type string back to the domain enum.</summary>
     private static VehicleType ParseVehicleTypeEnum(string vehicleTypeStr) => vehicleTypeStr switch
     {
-        "Truck"      => VehicleType.Truck,
-        "SUV"        => VehicleType.SUV,
-        "Van"        => VehicleType.Van,
+        "Truck" => VehicleType.Truck,
+        "SUV" => VehicleType.SUV,
+        "Van" => VehicleType.Van,
         "Motorcycle" => VehicleType.Motorcycle,
         "Commercial" => VehicleType.Commercial,
-        _            => VehicleType.Car
+        _ => VehicleType.Car
     };
 
     /// <summary>Parses the mapped body-style string back to the domain enum (nullable).</summary>
     private static BodyStyle? ParseBodyStyleEnum(string bodyStyleStr) => bodyStyleStr switch
     {
         // New lowercase catalog keys
-        "suv"         => BodyStyle.SUV,
-        "pickup"      => BodyStyle.Pickup,
-        "minivan"     => BodyStyle.Minivan,
-        "van"         => BodyStyle.Van,
-        "coupe"       => BodyStyle.Coupe,
+        "suv" => BodyStyle.SUV,
+        "pickup" => BodyStyle.Pickup,
+        "minivan" => BodyStyle.Minivan,
+        "van" => BodyStyle.Van,
+        "coupe" => BodyStyle.Coupe,
         "convertible" => BodyStyle.Convertible,
-        "hatchback"   => BodyStyle.Hatchback,
-        "wagon"       => BodyStyle.Wagon,
-        "crossover"   => BodyStyle.Crossover,
-        "sedan"       => BodyStyle.Sedan,
+        "hatchback" => BodyStyle.Hatchback,
+        "wagon" => BodyStyle.Wagon,
+        "crossover" => BodyStyle.Crossover,
+        "sedan" => BodyStyle.Sedan,
         // Legacy PascalCase keys (backwards compat)
-        "SUV"         => BodyStyle.SUV,
-        "Pickup"      => BodyStyle.Pickup,
-        "Minivan"     => BodyStyle.Minivan,
-        "Van"         => BodyStyle.Van,
-        "Coupe"       => BodyStyle.Coupe,
+        "SUV" => BodyStyle.SUV,
+        "Pickup" => BodyStyle.Pickup,
+        "Minivan" => BodyStyle.Minivan,
+        "Van" => BodyStyle.Van,
+        "Coupe" => BodyStyle.Coupe,
         "Convertible" => BodyStyle.Convertible,
-        "Hatchback"   => BodyStyle.Hatchback,
-        "Wagon"       => BodyStyle.Wagon,
-        "Crossover"   => BodyStyle.Crossover,
-        "Sedan"       => BodyStyle.Sedan,
-        _             => null
+        "Hatchback" => BodyStyle.Hatchback,
+        "Wagon" => BodyStyle.Wagon,
+        "Crossover" => BodyStyle.Crossover,
+        "Sedan" => BodyStyle.Sedan,
+        _ => null
     };
 
     private static string MapBodyStyle(string? nhtsaBodyClass)
     {
         if (string.IsNullOrEmpty(nhtsaBodyClass)) return "sedan";
-        
+
         return nhtsaBodyClass.ToLowerInvariant() switch
         {
             var b when b.Contains("suv") || b.Contains("sport utility") || b.Contains("multipurpose") => "suv",
@@ -1021,7 +1041,7 @@ public class CatalogController : ControllerBase
     private static string MapVehicleType(string? nhtsaVehicleType)
     {
         if (string.IsNullOrEmpty(nhtsaVehicleType)) return "Car";
-        
+
         return nhtsaVehicleType.ToLowerInvariant() switch
         {
             var v when v.Contains("truck") => "Truck",
@@ -1515,39 +1535,39 @@ public record VinDecodeResponse
 {
     public string VIN { get; init; } = string.Empty;
     public bool IsValid { get; init; }
-    
+
     // Basic Info
     public string Make { get; init; } = string.Empty;
     public string Model { get; init; } = string.Empty;
     public int Year { get; init; }
     public string? Trim { get; init; }
-    
+
     // Type & Body
     public string VehicleType { get; init; } = "Car";
     public string BodyStyle { get; init; } = "Sedan";
     public int? Doors { get; init; }
-    
+
     // Engine
     public string? EngineSize { get; init; }
     public int? Cylinders { get; init; }
     public int? Horsepower { get; init; }
     public string FuelType { get; init; } = "Gasoline";
-    
+
     // Transmission & Drive
     public string Transmission { get; init; } = "Automatic";
     public string DriveType { get; init; } = "FWD";
-    
+
     // Manufacturing
     public string? PlantCity { get; init; }
     public string? PlantCountry { get; init; }
     public string? Manufacturer { get; init; }
-    
+
     // Additional
     public string? Series { get; init; }
     public string? GVWR { get; init; }
     public string? ErrorCode { get; init; }
     public string? ErrorMessage { get; init; }
-    
+
     // Suggested data for form auto-fill
     public VinSuggestedData? SuggestedData { get; init; }
 }

@@ -22,13 +22,13 @@ public class EmbeddingSettings
     /// - OpenAI: "https://api.openai.com"
     /// </remarks>
     public string ServerUrl { get; set; } = "http://llm-server:8000";
-    
+
     /// <summary>Modelo de embeddings a usar</summary>
     public string Model { get; set; } = "all-MiniLM-L6-v2";
-    
+
     /// <summary>Dimensiones del vector de embedding</summary>
     public int Dimensions { get; set; } = 384;
-    
+
     /// <summary>Timeout en segundos para generar embeddings</summary>
     public int TimeoutSeconds { get; set; } = 30;
 
@@ -280,7 +280,7 @@ public class VectorSearchService : IVectorSearchService
 
         // 1. Generar embedding del query del usuario
         var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, ct);
-        
+
         var embeddingMs = stopwatch.ElapsedMilliseconds;
 
         if (queryEmbedding.Length == 0)
@@ -326,10 +326,10 @@ public class VectorSearchService : IVectorSearchService
     {
         // Construir texto para embedding
         var text = BuildVehicleEmbeddingText(vehicle);
-        
+
         // Generar embedding
         var embedding = await _embeddingService.GenerateEmbeddingAsync(text, ct);
-        
+
         if (embedding.Length == 0)
         {
             _logger.LogWarning("Failed to generate embedding for vehicle {VehicleId}", vehicle.VehicleId);
@@ -360,7 +360,7 @@ public class VectorSearchService : IVectorSearchService
         };
 
         await _embeddingRepository.UpsertAsync(vehicleEmbedding, ct);
-        
+
         _logger.LogDebug("Upserted embedding for vehicle {VehicleId} ({Year} {Make} {Model})",
             vehicle.VehicleId, vehicle.Year, vehicle.Make, vehicle.Model);
     }
@@ -379,7 +379,7 @@ public class VectorSearchService : IVectorSearchService
 
         // Generar textos para todos los vehículos
         var texts = vehicleList.Select(BuildVehicleEmbeddingText).ToList();
-        
+
         // Generar embeddings en batch
         var embeddings = await _embeddingService.GenerateEmbeddingsBatchAsync(texts, ct);
 

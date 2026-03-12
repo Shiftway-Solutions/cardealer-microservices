@@ -28,7 +28,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         _cacheMock = new Mock<IDistributedCache>();
         _notificationServiceMock = new Mock<INotificationService>();
         _loggerMock = new Mock<ILogger<VerifyRevokedDeviceLoginCommandHandler>>();
-        
+
         _handler = new VerifyRevokedDeviceLoginCommandHandler(
             _cacheMock.Object,
             _notificationServiceMock.Object,
@@ -44,7 +44,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         var codeHash = HashCode(verificationCode);
         var userId = Guid.NewGuid().ToString();
         var deviceFingerprint = "device-fingerprint-123";
-        
+
         var cacheData = new
         {
             CodeHash = codeHash,
@@ -58,12 +58,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
             ExpiresAt = DateTime.UtcNow.AddMinutes(5),
             RemainingAttempts = 3
         };
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: verificationCode,
             IpAddress: "192.168.1.100");
-        
+
         var cacheKey = $"revoked_device_login:{verificationToken}";
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cacheData)));
@@ -85,7 +85,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         var correctCodeHash = HashCode("123456");
         var userId = Guid.NewGuid().ToString();
         var deviceFingerprint = "device-fingerprint-123";
-        
+
         var cacheData = new
         {
             CodeHash = correctCodeHash,
@@ -99,12 +99,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
             ExpiresAt = DateTime.UtcNow.AddMinutes(5),
             RemainingAttempts = 3
         };
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: "999999",
             IpAddress: "192.168.1.100");
-        
+
         var cacheKey = $"revoked_device_login:{verificationToken}";
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cacheData)));
@@ -122,12 +122,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
     {
         // Arrange
         var verificationToken = Guid.NewGuid().ToString();
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: "123456",
             IpAddress: "192.168.1.100");
-        
+
         _cacheMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[]?)null);
 
@@ -147,7 +147,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         var verificationCode = "123456";
         var codeHash = HashCode(verificationCode);
         var userId = Guid.NewGuid().ToString();
-        
+
         var cacheData = new
         {
             CodeHash = codeHash,
@@ -161,12 +161,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
             ExpiresAt = DateTime.UtcNow.AddMinutes(-1), // Expired
             RemainingAttempts = 3
         };
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: verificationCode,
             IpAddress: "192.168.1.100");
-        
+
         var cacheKey = $"revoked_device_login:{verificationToken}";
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cacheData)));
@@ -185,7 +185,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         var verificationToken = Guid.NewGuid().ToString();
         var correctCodeHash = HashCode("123456");
         var userId = Guid.NewGuid().ToString();
-        
+
         var cacheData = new
         {
             CodeHash = correctCodeHash,
@@ -199,12 +199,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
             ExpiresAt = DateTime.UtcNow.AddMinutes(5),
             RemainingAttempts = 1 // Last attempt
         };
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: "999999", // Wrong code
             IpAddress: "192.168.1.100");
-        
+
         var cacheKey = $"revoked_device_login:{verificationToken}";
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cacheData)));
@@ -225,7 +225,7 @@ public class VerifyRevokedDeviceLoginHandlerTests
         var verificationCode = "123456";
         var codeHash = HashCode(verificationCode);
         var userId = Guid.NewGuid().ToString();
-        
+
         var cacheData = new
         {
             CodeHash = codeHash,
@@ -239,12 +239,12 @@ public class VerifyRevokedDeviceLoginHandlerTests
             ExpiresAt = DateTime.UtcNow.AddMinutes(5),
             RemainingAttempts = 3
         };
-        
+
         var command = new VerifyRevokedDeviceLoginCommand(
             VerificationToken: verificationToken,
             Code: verificationCode,
             IpAddress: "192.168.1.100");
-        
+
         var cacheKey = $"revoked_device_login:{verificationToken}";
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cacheData)));

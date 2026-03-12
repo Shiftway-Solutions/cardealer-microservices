@@ -7,7 +7,7 @@ namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkExternalA
 /// </summary>
 /// <param name="UserId">The ID of the user requesting the unlink</param>
 /// <param name="Provider">The OAuth provider to unlink (Google, Microsoft, Facebook, Apple)</param>
-public record UnlinkExternalAccountCommand(string UserId, string Provider) 
+public record UnlinkExternalAccountCommand(string UserId, string Provider)
     : IRequest<UnlinkExternalAccountResponse>;
 
 /// <summary>

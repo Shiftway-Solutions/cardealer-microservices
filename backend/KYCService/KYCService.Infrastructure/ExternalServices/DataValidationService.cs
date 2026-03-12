@@ -92,8 +92,8 @@ public class DataValidationService : IDataValidationService
             IsValid = detailedResult.IsValid,
             CleanedNumber = detailedResult.CleanedNumber,
             FormattedNumber = CedulaValidator.FormatCedula(detailedResult.CleanedNumber),
-            MunicipalityCode = detailedResult.CleanedNumber.Length >= 3 
-                ? detailedResult.CleanedNumber[..3] 
+            MunicipalityCode = detailedResult.CleanedNumber.Length >= 3
+                ? detailedResult.CleanedNumber[..3]
                 : null,
             Errors = detailedResult.Errors.ToList()
         };
@@ -213,9 +213,9 @@ public class DataValidationService : IDataValidationService
     {
         var distance = LevenshteinDistance(s1, s2);
         var maxLength = Math.Max(s1.Length, s2.Length);
-        
+
         if (maxLength == 0) return 100;
-        
+
         return (1 - (double)distance / maxLength) * 100;
     }
 

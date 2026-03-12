@@ -50,28 +50,28 @@ public record InventoryStatsDto
 {
     public Guid DealerId { get; init; }
     public DateTime AsOfDate { get; init; }
-    
+
     // Counts
     public int TotalVehicles { get; init; }
     public int ActiveVehicles { get; init; }
     public int PendingVehicles { get; init; }
     public int SoldVehicles { get; init; }
     public int DraftVehicles { get; init; }
-    
+
     // Values
     public decimal TotalValue { get; init; }
     public decimal AvgPrice { get; init; }
     public decimal MinPrice { get; init; }
     public decimal MaxPrice { get; init; }
-    
+
     // Timing
     public double AvgDaysOnMarket { get; init; }
     public double MedianDaysOnMarket { get; init; }
-    
+
     // Categories
     public List<CategoryBreakdownDto> ByCategory { get; init; } = new();
     public List<PriceRangeBreakdownDto> ByPriceRange { get; init; } = new();
-    
+
     // Changes
     public int ListedThisWeek { get; init; }
     public int SoldThisWeek { get; init; }
@@ -100,19 +100,19 @@ public record InventoryTurnoverDto
     public Guid DealerId { get; init; }
     public DateTime FromDate { get; init; }
     public DateTime ToDate { get; init; }
-    
+
     // Turnover Metrics
     public double TurnoverRate { get; init; }
     public int VehiclesSold { get; init; }
     public int AvgInventory { get; init; }
     public double AvgDaysToSell { get; init; }
-    
+
     // By Category
     public List<TurnoverByCategoryDto> ByCategory { get; init; } = new();
-    
+
     // Trend
     public List<TrendDataPointDto> TurnoverTrend { get; init; } = new();
-    
+
     // Comparison
     public double MarketAvgTurnover { get; init; }
     public bool IsBetterThanMarket { get; init; }

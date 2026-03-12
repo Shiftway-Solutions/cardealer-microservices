@@ -156,8 +156,8 @@ public class GetDashboardActivityQueryHandler : IRequestHandler<GetDashboardActi
             SubjectType = MapTargetTypeToSubjectType(a.TargetType),
             SubjectId = a.TargetId ?? string.Empty,
             Timestamp = a.Timestamp,
-            Metadata = string.IsNullOrEmpty(a.Metadata) 
-                ? null 
+            Metadata = string.IsNullOrEmpty(a.Metadata)
+                ? null
                 : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(a.Metadata)
         }).ToList();
     }

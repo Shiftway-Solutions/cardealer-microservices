@@ -24,7 +24,7 @@ namespace AuthService.Application.Features.TwoFactor.Commands.RecoveryAccountWit
 /// - Individual recovery codes in Redis (expired)
 /// BUT still has the original 10 codes that were shown when enabling 2FA.
 /// </summary>
-public class RecoveryAccountWithAllCodesCommandHandler 
+public class RecoveryAccountWithAllCodesCommandHandler
     : IRequestHandler<RecoveryAccountWithAllCodesCommand, RecoveryAccountWithAllCodesResponse>
 {
     private readonly IUserRepository _userRepository;
@@ -55,7 +55,7 @@ public class RecoveryAccountWithAllCodesCommandHandler
     }
 
     public async Task<RecoveryAccountWithAllCodesResponse> Handle(
-        RecoveryAccountWithAllCodesCommand request, 
+        RecoveryAccountWithAllCodesCommand request,
         CancellationToken cancellationToken)
     {
         // 1. Validate temp token
@@ -124,14 +124,14 @@ public class RecoveryAccountWithAllCodesCommandHandler
         {
             // Log the mismatch for security audit
             var matchingCodes = providedSet.Intersect(storedSet).Count();
-            
+
             _logger.LogWarning(
                 "Full recovery failed for user {UserId}. Provided {ProvidedCount} codes, {MatchingCount} matched out of {StoredCount} stored codes",
                 userId, normalizedProvidedCodes.Count, matchingCodes, normalizedStoredCodes.Count);
-            
+
             // Track failed attempt with lockout
             await TrackFailedFullRecoveryAttemptAsync(userId, lockoutKey, cancellationToken);
-            
+
             throw new UnauthorizedException(
                 "Recovery codes do not match. Please provide all original recovery codes exactly as they were given to you.");
         }
@@ -191,7 +191,7 @@ public class RecoveryAccountWithAllCodesCommandHandler
     {
         var failedAttemptsKey = $"full_recovery_failed:{userId}";
         var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
-        
+
         int attempts = 1;
         if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
         {
@@ -219,8 +219,8 @@ public class RecoveryAccountWithAllCodesCommandHandler
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(LOCKOUT_MINUTES)
             }, cancellationToken);
-            
-            _logger.LogWarning("Full recovery attempt {Attempts}/{Max} failed for user {UserId}", 
+
+            _logger.LogWarning("Full recovery attempt {Attempts}/{Max} failed for user {UserId}",
                 attempts, MAX_FAILED_ATTEMPTS, userId);
         }
     }

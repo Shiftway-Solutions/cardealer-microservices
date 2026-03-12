@@ -37,7 +37,7 @@ public class SubscribeModuleCommandHandler : IRequestHandler<SubscribeModuleComm
 
     public async Task<Guid> Handle(SubscribeModuleCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Subscribing dealer {DealerId} to module {ModuleId}", 
+        _logger.LogInformation("Subscribing dealer {DealerId} to module {ModuleId}",
             request.DealerId, request.ModuleId);
 
         // Verify dealer exists
@@ -82,7 +82,7 @@ public class SubscribeModuleCommandHandler : IRequestHandler<SubscribeModuleComm
 
         await _dealerModuleRepository.AddAsync(dealerModule);
 
-        _logger.LogInformation("Dealer {DealerId} successfully subscribed to module {ModuleName}", 
+        _logger.LogInformation("Dealer {DealerId} successfully subscribed to module {ModuleName}",
             request.DealerId, module.Name);
 
         return dealerModule.Id;

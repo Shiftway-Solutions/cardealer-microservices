@@ -64,7 +64,7 @@ public static class AdminSeeder
                 }
                 else
                 {
-                    logger.LogWarning("Failed to create role {RoleName}: {Errors}", 
+                    logger.LogWarning("Failed to create role {RoleName}: {Errors}",
                         roleName, string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
@@ -81,7 +81,7 @@ public static class AdminSeeder
         if (existingAdmin != null)
         {
             logger.LogInformation("Default admin user already exists, skipping creation");
-            
+
             // Ensure admin has correct roles and AccountType even if already exists
             await EnsureAdminConfigurationAsync(userManager, existingAdmin, context, logger);
             return;
@@ -90,34 +90,34 @@ public static class AdminSeeder
         // Create the default admin user using UserManager (handles password hashing)
         // UserManager internally creates the user, so we need to set properties after creation
         var adminUser = new ApplicationUser(DefaultAdminEmail, DefaultAdminEmail, "temp-hash-will-be-replaced");
-        
+
         // Reset the password hash since UserManager will set it properly
         // We use reflection or direct SQL to work around the protected constructor
         var createResult = await userManager.CreateAsync(adminUser, DefaultAdminPassword);
-        
+
         if (!createResult.Succeeded)
         {
             // If constructor-based creation fails, try direct database insertion
             logger.LogWarning("UserManager creation failed, attempting direct database seed: {Errors}",
                 string.Join(", ", createResult.Errors.Select(e => e.Description)));
-            
+
             await SeedAdminDirectlyAsync(context, userManager, logger);
             return;
         }
 
         logger.LogInformation("Created default admin user: {Email}", DefaultAdminEmail);
-        
+
         // Update AccountType and profile info
         adminUser.AccountType = AccountType.Admin;
         adminUser.FirstName = DefaultAdminFirstName;
         adminUser.LastName = DefaultAdminLastName;
         adminUser.EmailConfirmed = true;
-        
+
         await userManager.UpdateAsync(adminUser);
-        
+
         // Assign roles
         await EnsureAdminRolesAsync(userManager, adminUser, logger);
-        
+
         logger.LogWarning(
             "⚠️  DEFAULT ADMIN CREATED - Email: {Email}. " +
             "IMPORTANT: Create a real admin account and delete this default user!",
@@ -218,7 +218,7 @@ public static class AdminSeeder
         ILogger logger)
     {
         var requiredRoles = new[] { "Admin", "Compliance", "SuperAdmin" };
-        
+
         foreach (var role in requiredRoles)
         {
             if (!await userManager.IsInRoleAsync(adminUser, role))

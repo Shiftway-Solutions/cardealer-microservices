@@ -28,7 +28,7 @@ public class TwoFactorLoginHandlerTests
         _jwtGeneratorMock = new Mock<IJwtGenerator>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
-        
+
         _handler = new TwoFactorLoginCommandHandler(
             _userRepositoryMock.Object,
             _jwtGeneratorMock.Object,
@@ -44,7 +44,7 @@ public class TwoFactorLoginHandlerTests
         var user = CreateUserWithTwoFactor(userId);
         var twoFactorAuth = CreateTwoFactorAuth(userId);
         var command = new TwoFactorLoginCommand("valid_temp_token", "123456");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("valid_temp_token"))
             .Returns((userId, "test@test.com"));
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -72,7 +72,7 @@ public class TwoFactorLoginHandlerTests
     {
         // Arrange
         var command = new TwoFactorLoginCommand("invalid_token", "123456");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("invalid_token"))
             .Returns((ValueTuple<string, string>?)null);
 
@@ -92,7 +92,7 @@ public class TwoFactorLoginHandlerTests
         var user = CreateUserWithTwoFactor(userId);
         var twoFactorAuth = CreateTwoFactorAuth(userId);
         var command = new TwoFactorLoginCommand("valid_temp_token", "000000");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("valid_temp_token"))
             .Returns((userId, "test@test.com"));
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -117,7 +117,7 @@ public class TwoFactorLoginHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId); // No 2FA
         var command = new TwoFactorLoginCommand("valid_temp_token", "123456");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("valid_temp_token"))
             .Returns((userId, "test@test.com"));
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -137,7 +137,7 @@ public class TwoFactorLoginHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var command = new TwoFactorLoginCommand("valid_temp_token", "123456");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("valid_temp_token"))
             .Returns((userId, "test@test.com"));
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -158,7 +158,7 @@ public class TwoFactorLoginHandlerTests
         var user = CreateUserWithTwoFactor(userId);
         var twoFactorAuth = CreateTwoFactorAuth(userId);
         var command = new TwoFactorLoginCommand("valid_temp_token", "123456");
-        
+
         _jwtGeneratorMock.Setup(x => x.ValidateTempToken("valid_temp_token"))
             .Returns((userId, "test@test.com"));
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -195,14 +195,14 @@ public class TwoFactorLoginHandlerTests
     private static ApplicationUser CreateUserWithTwoFactor(string userId)
     {
         var user = CreateTestUser(userId);
-        
+
         // Create and enable TwoFactorAuth
         var twoFactorAuth = CreateTwoFactorAuth(userId);
-        
+
         // Use reflection to set the private TwoFactorAuth property
         var property = typeof(ApplicationUser).GetProperty("TwoFactorAuth");
         property?.SetValue(user, twoFactorAuth);
-        
+
         return user;
     }
 

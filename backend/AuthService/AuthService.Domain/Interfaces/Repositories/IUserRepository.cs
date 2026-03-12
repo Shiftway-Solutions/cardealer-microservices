@@ -18,7 +18,7 @@ public interface IUserRepository
     Task RemoveTwoFactorAuthAsync(string userId);
     Task<ApplicationUser?> GetByExternalIdAsync(ExternalAuthProvider provider, string externalUserId);
     Task<List<ApplicationUser>> GetAllAsync(CancellationToken cancellationToken = default);
-    
+
     // Security methods for password management
     Task<bool> VerifyPasswordAsync(ApplicationUser user, string password);
     Task ChangePasswordAsync(ApplicationUser user, string newPassword, CancellationToken cancellationToken = default);

@@ -8,7 +8,7 @@ namespace UserService.Domain.Events;
 public class DealerRegisteredEvent : EventBase
 {
     public override string EventType => "dealer.registered";
-    
+
     public Guid DealerId { get; set; }
     public Guid UserId { get; set; }
     public string BusinessName { get; set; } = string.Empty;
@@ -16,11 +16,11 @@ public class DealerRegisteredEvent : EventBase
     public string RNC { get; set; } = string.Empty;
     public string RequestedPlan { get; set; } = string.Empty;
     public bool IsEarlyBirdEligible { get; set; }
-    
+
     public static DealerRegisteredEvent Create(
-        Guid dealerId, 
-        Guid userId, 
-        string businessName, 
+        Guid dealerId,
+        Guid userId,
+        string businessName,
         string email,
         string rnc,
         string requestedPlan,
@@ -45,11 +45,11 @@ public class DealerRegisteredEvent : EventBase
 public class DealerEmailVerifiedEvent : EventBase
 {
     public override string EventType => "dealer.email_verified";
-    
+
     public Guid DealerId { get; set; }
     public string Email { get; set; } = string.Empty;
     public DateTime VerifiedAt { get; set; }
-    
+
     public static DealerEmailVerifiedEvent Create(Guid dealerId, string email, DateTime verifiedAt)
     {
         return new DealerEmailVerifiedEvent
@@ -67,15 +67,15 @@ public class DealerEmailVerifiedEvent : EventBase
 public class DealerDocumentsSubmittedEvent : EventBase
 {
     public override string EventType => "dealer.documents_submitted";
-    
+
     public Guid DealerId { get; set; }
     public string BusinessName { get; set; } = string.Empty;
     public int DocumentCount { get; set; }
     public DateTime SubmittedAt { get; set; }
-    
+
     public static DealerDocumentsSubmittedEvent Create(
-        Guid dealerId, 
-        string businessName, 
+        Guid dealerId,
+        string businessName,
         int documentCount,
         DateTime submittedAt)
     {
@@ -95,17 +95,17 @@ public class DealerDocumentsSubmittedEvent : EventBase
 public class DealerApprovedEvent : EventBase
 {
     public override string EventType => "dealer.approved";
-    
+
     public Guid DealerId { get; set; }
     public string BusinessName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public Guid ApprovedBy { get; set; }
     public DateTime ApprovedAt { get; set; }
     public string RequestedPlan { get; set; } = string.Empty;
-    
+
     public static DealerApprovedEvent Create(
-        Guid dealerId, 
-        string businessName, 
+        Guid dealerId,
+        string businessName,
         string email,
         Guid approvedBy,
         DateTime approvedAt,
@@ -129,17 +129,17 @@ public class DealerApprovedEvent : EventBase
 public class DealerRejectedEvent : EventBase
 {
     public override string EventType => "dealer.rejected";
-    
+
     public Guid DealerId { get; set; }
     public string BusinessName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public Guid RejectedBy { get; set; }
     public string Reason { get; set; } = string.Empty;
     public DateTime RejectedAt { get; set; }
-    
+
     public static DealerRejectedEvent Create(
-        Guid dealerId, 
-        string businessName, 
+        Guid dealerId,
+        string businessName,
         string email,
         Guid rejectedBy,
         string reason,
@@ -163,14 +163,14 @@ public class DealerRejectedEvent : EventBase
 public class DealerPaymentSetupEvent : EventBase
 {
     public override string EventType => "dealer.payment_setup";
-    
+
     public Guid DealerId { get; set; }
     public string AzulCustomerId { get; set; } = string.Empty;
     public string? AzulSubscriptionId { get; set; }
     public string RequestedPlan { get; set; } = string.Empty;
     public bool IsEarlyBirdEnrolled { get; set; }
     public DateTime SetupAt { get; set; }
-    
+
     public static DealerPaymentSetupEvent Create(
         Guid dealerId,
         string azulCustomerId,
@@ -197,7 +197,7 @@ public class DealerPaymentSetupEvent : EventBase
 public class DealerActivatedEvent : EventBase
 {
     public override string EventType => "dealer.activated";
-    
+
     public Guid OnboardingId { get; set; }
     public Guid DealerId { get; set; }
     public Guid SubscriptionId { get; set; }
@@ -206,7 +206,7 @@ public class DealerActivatedEvent : EventBase
     public string Plan { get; set; } = string.Empty;
     public bool IsEarlyBird { get; set; }
     public DateTime ActivatedAt { get; set; }
-    
+
     public static DealerActivatedEvent Create(
         Guid onboardingId,
         Guid dealerId,

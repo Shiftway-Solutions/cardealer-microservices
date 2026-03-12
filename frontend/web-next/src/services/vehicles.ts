@@ -240,6 +240,8 @@ function mapStatus(status: string | number | undefined): Vehicle['status'] {
     archived: 'paused',
     '6': 'rejected',
     rejected: 'rejected',
+    '8': 'pending_media',
+    pendingmedia: 'pending_media',
     expired: 'expired',
     paused: 'paused',
   };
@@ -1054,7 +1056,16 @@ export interface PublishVehicleResponse {
  * Update vehicle request - extends CreateVehicleRequest with status management
  */
 export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
-  status?: 'draft' | 'pending' | 'active' | 'paused' | 'sold' | 'reserved' | 'expired' | 'rejected';
+  status?:
+    | 'draft'
+    | 'pending'
+    | 'active'
+    | 'paused'
+    | 'sold'
+    | 'reserved'
+    | 'expired'
+    | 'rejected'
+    | 'pending_media';
 }
 
 // ============================================================

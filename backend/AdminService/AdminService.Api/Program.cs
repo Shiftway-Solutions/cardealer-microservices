@@ -74,271 +74,271 @@ try
     // Add secret provider for secure configuration
     builder.Services.AddSecretProvider();
 
-// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
-try
-{
-    var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
+    // ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+    try
+    {
+        var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
 
-    builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+        builder.Services.AddAuthentication(options =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
-        };
-
-        options.Events = new JwtBearerEvents
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
         {
-            OnAuthenticationFailed = context =>
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                Log.Warning("JWT Authentication failed: {Error}", context.Exception.Message);
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+            };
+
+            options.Events = new JwtBearerEvents
             {
-                Log.Debug("JWT Token validated for user: {User}",
-                    context.Principal?.Identity?.Name ?? "Unknown");
-                return Task.CompletedTask;
-            }
+                OnAuthenticationFailed = context =>
+                {
+                    Log.Warning("JWT Authentication failed: {Error}", context.Exception.Message);
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    Log.Debug("JWT Token validated for user: {User}",
+                        context.Principal?.Identity?.Name ?? "Unknown");
+                    return Task.CompletedTask;
+                }
+            };
+        });
+
+        Log.Information("JWT Authentication configured successfully for {ServiceName}", ServiceName);
+    }
+    catch (InvalidOperationException ex)
+    {
+        Log.Fatal("JWT Authentication FAILED to configure for {ServiceName}: {Message}. Service will NOT start without proper JWT configuration.", ServiceName, ex.Message);
+        throw; // Fail fast — do NOT start without auth (NIST IA-5)
+    }
+
+    // ============= RATE LIMITING (defense-in-depth) =============
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+        // Fixed window: 100 requests per minute per user/IP
+        options.AddFixedWindowLimiter("fixed", opt =>
+        {
+            opt.PermitLimit = 100;
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 5;
+        });
+
+        // Strict policy for sensitive admin operations (approve, reject, delete)
+        options.AddFixedWindowLimiter("strict", opt =>
+        {
+            opt.PermitLimit = 20;
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            opt.QueueLimit = 2;
+        });
+
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
+                context.HttpContext.Connection.RemoteIpAddress,
+                context.HttpContext.Request.Path);
+
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            await context.HttpContext.Response.WriteAsync(
+                "Too many requests. Please try again later.", cancellationToken);
         };
     });
 
-    Log.Information("JWT Authentication configured successfully for {ServiceName}", ServiceName);
-}
-catch (InvalidOperationException ex)
-{
-    Log.Fatal("JWT Authentication FAILED to configure for {ServiceName}: {Message}. Service will NOT start without proper JWT configuration.", ServiceName, ex.Message);
-    throw; // Fail fast — do NOT start without auth (NIST IA-5)
-}
+    // Add services to the container.
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        });
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-// ============= RATE LIMITING (defense-in-depth) =============
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    // Register MediatR
+    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
+        typeof(AdminService.Application.UseCases.Vehicles.ApproveVehicle.ApproveVehicleCommand).Assembly));
 
-    // Fixed window: 100 requests per minute per user/IP
-    options.AddFixedWindowLimiter("fixed", opt =>
+    // Register FluentValidation validators
+    builder.Services.AddValidatorsFromAssembly(
+        typeof(AdminService.Application.Validators.SecurityValidators).Assembly);
+
+    // ValidationBehavior — ensures FluentValidation validators (NoSqlInjection, NoXss) run automatically in MediatR pipeline
+    builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(AdminService.Application.Behaviors.ValidationBehavior<,>));
+
+    // Register Repositories
+    builder.Services.AddScoped<IStatisticsRepository, EfStatisticsRepository>();
+    builder.Services.AddScoped<IAdminActionLogRepository, EfAdminActionLogRepository>();
+    builder.Services.AddScoped<IModerationRepository, EfModerationRepository>();
+    builder.Services.AddScoped<IPlatformEmployeeRepository, EfPlatformEmployeeRepository>();
+    builder.Services.AddScoped<IAdminUserRepository, EfAdminUserRepository>();
+    // Banner repository — singleton so in-memory data survives across requests in the same pod
+    builder.Services.AddSingleton<AdminService.Domain.Interfaces.IBannerRepository,
+        AdminService.Infrastructure.Persistence.InMemoryBannerRepository>();
+
+    // Reports Service Client (for admin content moderation reports → ReportsService)
+    builder.Services.AddHttpClient<IReportsServiceClient, ReportsServiceClient>(client =>
     {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 5;
-    });
+        var baseAddress = builder.Configuration["ServiceUrls:ReportsService"] ?? "http://reportsservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-    // Strict policy for sensitive admin operations (approve, reject, delete)
-    options.AddFixedWindowLimiter("strict", opt =>
+    // Service Discovery Configuration - with fallback to NoOp when Consul is disabled
+    var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
+    if (consulEnabled)
     {
-        opt.PermitLimit = 20;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 2;
-    });
+        builder.Services.AddSingleton<IConsulClient>(sp =>
+        {
+            var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+            return new ConsulClient(config => config.Address = new Uri(consulAddress));
+        });
 
-    options.OnRejected = async (context, cancellationToken) =>
+        builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+        builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+        builder.Services.AddHttpClient("HealthCheck");
+        builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    }
+    else
     {
-        Log.Warning("Rate limit exceeded for {RemoteIp} on {Path}",
-            context.HttpContext.Connection.RemoteIpAddress,
-            context.HttpContext.Request.Path);
+        // Use NoOp implementations when Consul is disabled
+        builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
+        builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
+    }
 
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        await context.HttpContext.Response.WriteAsync(
-            "Too many requests. Please try again later.", cancellationToken);
-    };
-});
-
-// Add services to the container.
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+    // Configure HttpClients for external services
+    builder.Services.AddHttpClient<IAuditServiceClient, AuditServiceClient>(client =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    });
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+        var baseAddress = builder.Configuration["ServiceUrls:AuditService"] ?? "https://localhost:7287";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-// Register MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
-    typeof(AdminService.Application.UseCases.Vehicles.ApproveVehicle.ApproveVehicleCommand).Assembly));
-
-// Register FluentValidation validators
-builder.Services.AddValidatorsFromAssembly(
-    typeof(AdminService.Application.Validators.SecurityValidators).Assembly);
-
-// ValidationBehavior — ensures FluentValidation validators (NoSqlInjection, NoXss) run automatically in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(AdminService.Application.Behaviors.ValidationBehavior<,>));
-
-// Register Repositories
-builder.Services.AddScoped<IStatisticsRepository, EfStatisticsRepository>();
-builder.Services.AddScoped<IAdminActionLogRepository, EfAdminActionLogRepository>();
-builder.Services.AddScoped<IModerationRepository, EfModerationRepository>();
-builder.Services.AddScoped<IPlatformEmployeeRepository, EfPlatformEmployeeRepository>();
-builder.Services.AddScoped<IAdminUserRepository, EfAdminUserRepository>();
-// Banner repository — singleton so in-memory data survives across requests in the same pod
-builder.Services.AddSingleton<AdminService.Domain.Interfaces.IBannerRepository,
-    AdminService.Infrastructure.Persistence.InMemoryBannerRepository>();
-
-// Reports Service Client (for admin content moderation reports → ReportsService)
-builder.Services.AddHttpClient<IReportsServiceClient, ReportsServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:ReportsService"] ?? "http://reportsservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
-
-// Service Discovery Configuration - with fallback to NoOp when Consul is disabled
-var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
-if (consulEnabled)
-{
-    builder.Services.AddSingleton<IConsulClient>(sp =>
+    builder.Services.AddHttpClient<INotificationServiceClient, NotificationServiceClient>(client =>
     {
-        var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
-        return new ConsulClient(config => config.Address = new Uri(consulAddress));
-    });
+        var baseAddress = builder.Configuration["ServiceUrls:NotificationService"] ?? "https://localhost:45954";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-    builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-    builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-    builder.Services.AddHttpClient("HealthCheck");
-    builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
-}
-else
-{
-    // Use NoOp implementations when Consul is disabled
-    builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
-    builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
-}
+    builder.Services.AddHttpClient<IErrorServiceClient, ErrorServiceClient>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:ErrorService"] ?? "https://localhost:45952";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-// Configure HttpClients for external services
-builder.Services.AddHttpClient<IAuditServiceClient, AuditServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:AuditService"] ?? "https://localhost:7287";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Platform User Service (for admin user management)
+    builder.Services.AddHttpClient<IPlatformUserService, PlatformUserService>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:UserService"] ?? "http://userservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-builder.Services.AddHttpClient<INotificationServiceClient, NotificationServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:NotificationService"] ?? "https://localhost:45954";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Auth Service Client (for admin user creation and security operations)
+    builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:AuthService"] ?? "http://authservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-builder.Services.AddHttpClient<IErrorServiceClient, ErrorServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:ErrorService"] ?? "https://localhost:45952";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Vehicle Service Client (for admin vehicle management → VehiclesSaleService)
+    builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-// Platform User Service (for admin user management)
-builder.Services.AddHttpClient<IPlatformUserService, PlatformUserService>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:UserService"] ?? "http://userservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Dealer Service Client (for admin dealer management → DealerManagementService)
+    builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://dealermanagementservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-// Auth Service Client (for admin user creation and security operations)
-builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:AuthService"] ?? "http://authservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Review Service Client (for admin review management → ReviewService)
+    builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
-// Vehicle Service Client (for admin vehicle management → VehiclesSaleService)
-builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Financial Data Provider — CONTRA #5 FIX: Unified financial dashboard
+    // Aggregates costs from Gateway (LLM), BillingService (marketing), and config (infra/dev)
+    builder.Services.AddScoped<IFinancialDataProvider, FinancialDataProvider>();
 
-// Dealer Service Client (for admin dealer management → DealerManagementService)
-builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://dealermanagementservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Revenue Projection + Threshold Alert — CONTRA #7 FIX
+    // Monitors projected monthly revenue against OPEX $2,215 threshold
+    builder.Services.AddScoped<IRevenueProjectionService, RevenueProjectionService>();
 
-// Review Service Client (for admin review management → ReviewService)
-builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Infrastructure Cost Monitor — CONTRA #8 FIX
+    // Monitors projected DigitalOcean costs against $210 monthly budget
+    builder.Services.AddScoped<IInfrastructureCostMonitorService, InfrastructureCostMonitorService>();
 
-// Financial Data Provider — CONTRA #5 FIX: Unified financial dashboard
-// Aggregates costs from Gateway (LLM), BillingService (marketing), and config (infra/dev)
-builder.Services.AddScoped<IFinancialDataProvider, FinancialDataProvider>();
+    // RabbitMQ Event Publisher (for revenue threshold alerts → NotificationService)
+    var rabbitMqEnabled = configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+    if (rabbitMqEnabled)
+        builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
+            AdminService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+    else
+        builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
+            AdminService.Infrastructure.Messaging.NoOpEventPublisher>();
 
-// Revenue Projection + Threshold Alert — CONTRA #7 FIX
-// Monitors projected monthly revenue against OPEX $2,215 threshold
-builder.Services.AddScoped<IRevenueProjectionService, RevenueProjectionService>();
+    // Revenue Threshold Alert Background Job — runs every 6h
+    builder.Services.AddHostedService<AdminService.Api.Workers.RevenueThresholdAlertJob>();
 
-// Infrastructure Cost Monitor — CONTRA #8 FIX
-// Monitors projected DigitalOcean costs against $210 monthly budget
-builder.Services.AddScoped<IInfrastructureCostMonitorService, InfrastructureCostMonitorService>();
+    // Infrastructure Cost Alert Background Job — CONTRA #8, runs every 4h
+    builder.Services.AddHostedService<AdminService.Api.Workers.InfrastructureCostAlertJob>();
 
-// RabbitMQ Event Publisher (for revenue threshold alerts → NotificationService)
-var rabbitMqEnabled = configuration.GetValue<bool>("RabbitMQ:Enabled", false);
-if (rabbitMqEnabled)
-    builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
-        AdminService.Infrastructure.Messaging.RabbitMqEventPublisher>();
-else
-    builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
-        AdminService.Infrastructure.Messaging.NoOpEventPublisher>();
-
-// Revenue Threshold Alert Background Job — runs every 6h
-builder.Services.AddHostedService<AdminService.Api.Workers.RevenueThresholdAlertJob>();
-
-// Infrastructure Cost Alert Background Job — CONTRA #8, runs every 4h
-builder.Services.AddHostedService<AdminService.Api.Workers.InfrastructureCostAlertJob>();
-
-// Named HTTP clients for financial data aggregation
-builder.Services.AddHttpClient("Gateway", client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:Gateway"] ?? "http://gateway:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(15);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
-builder.Services.AddHttpClient("BillingService", client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:BillingService"] ?? "http://billingservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(15);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
-builder.Services.AddHttpClient("ContactService", client =>
-{
-    var baseAddress = builder.Configuration["ServiceUrls:ContactService"] ?? "http://contactservice:8080";
-    client.BaseAddress = new Uri(baseAddress);
-    client.Timeout = TimeSpan.FromSeconds(15);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddStandardResilience(configuration);
+    // Named HTTP clients for financial data aggregation
+    builder.Services.AddHttpClient("Gateway", client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:Gateway"] ?? "http://gateway:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
+    builder.Services.AddHttpClient("BillingService", client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:BillingService"] ?? "http://billingservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
+    builder.Services.AddHttpClient("ContactService", client =>
+    {
+        var baseAddress = builder.Configuration["ServiceUrls:ContactService"] ?? "http://contactservice:8080";
+        client.BaseAddress = new Uri(baseAddress);
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    }).AddStandardResilience(configuration);
 
     // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
     builder.Services.AddResponseCompression(options =>

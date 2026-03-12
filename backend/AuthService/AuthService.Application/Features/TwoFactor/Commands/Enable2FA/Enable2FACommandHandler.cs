@@ -34,7 +34,7 @@ public class Enable2FACommandHandler : IRequestHandler<Enable2FACommand, Enable2
 
         // Check if there's an existing 2FA setup (possibly in PendingVerification state)
         var existingTwoFactorAuth = await _userRepository.GetTwoFactorAuthAsync(request.UserId);
-        
+
         // If exists and in PendingVerification, we'll regenerate the setup
         // If exists and Enabled, we already threw above via IsTwoFactorEnabled
         // This allows users to restart the setup process if they didn't complete verification

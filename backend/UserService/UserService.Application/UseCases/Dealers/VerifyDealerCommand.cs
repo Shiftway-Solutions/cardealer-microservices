@@ -52,8 +52,8 @@ public class VerifyDealerCommandHandler : IRequestHandler<VerifyDealerCommand, D
             dealer.VerificationNotes = request.Notes;
             dealer.RejectionReason = null;
             dealer.IsActive = true;
-            
-            _logger.LogInformation("Dealer {DealerId} verified by admin {VerifiedByUserId}", 
+
+            _logger.LogInformation("Dealer {DealerId} verified by admin {VerifiedByUserId}",
                 dealer.Id, request.VerifiedByUserId);
 
             // Publish DealerCreatedEvent on approval
@@ -82,8 +82,8 @@ public class VerifyDealerCommandHandler : IRequestHandler<VerifyDealerCommand, D
             dealer.VerifiedAt = null;
             dealer.VerifiedByUserId = null;
             dealer.IsActive = false;
-            
-            _logger.LogInformation("Dealer {DealerId} rejected. Reason: {Reason}", 
+
+            _logger.LogInformation("Dealer {DealerId} rejected. Reason: {Reason}",
                 dealer.Id, request.Notes);
 
             _metrics.RecordDealerRejected();

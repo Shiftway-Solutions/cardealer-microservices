@@ -13,7 +13,7 @@ public record RecoveryCodeLoginCommand(
     /// Temporary token from initial login attempt
     /// </summary>
     string TempToken,
-    
+
     /// <summary>
     /// 8-character alphanumeric recovery code (e.g., "H29S41MV")
     /// Each code is ONE-TIME USE only

@@ -83,9 +83,9 @@ public class AdminManagementController : ControllerBase
 
         // Create the admin user
         var user = new ApplicationUser(request.Email, request.Email, "temp-hash");
-        
+
         var createResult = await _userManager.CreateAsync(user, request.Password);
-        
+
         if (!createResult.Succeeded)
         {
             var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
@@ -99,7 +99,7 @@ public class AdminManagementController : ControllerBase
         user.LastName = request.LastName;
         user.PhoneNumber = request.PhoneNumber;
         user.EmailConfirmed = true; // Admin emails are pre-verified via invitation
-        
+
         await _userManager.UpdateAsync(user);
 
         // Assign role
@@ -225,7 +225,7 @@ public class AdminManagementController : ControllerBase
 
         // Delete the default admin
         var result = await _userManager.DeleteAsync(defaultAdmin);
-        
+
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -234,7 +234,7 @@ public class AdminManagementController : ControllerBase
         }
 
         _logger.LogWarning("Default admin account {Email} has been deleted by {RequestedBy}", DefaultAdminEmail, requestedBy);
-        
+
         return NoContent();
     }
 }

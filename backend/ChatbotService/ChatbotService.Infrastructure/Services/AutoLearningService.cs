@@ -30,7 +30,7 @@ public class AutoLearningService : IAutoLearningService
     public async Task<AutoLearningAnalysisResult> AnalyzeAndSuggestAsync(Guid configurationId, CancellationToken ct = default)
     {
         var result = new AutoLearningAnalysisResult { ChatbotConfigurationId = configurationId };
-        
+
         try
         {
             _logger.LogInformation("Starting auto-learning analysis for configuration {ConfigId}", configurationId);
@@ -256,13 +256,13 @@ public class AutoLearningService : IAutoLearningService
     private static List<FallbackPattern> AnalyzeFallbackPatterns(IEnumerable<ChatMessage> messages)
     {
         var patterns = new Dictionary<string, FallbackPattern>();
-        
+
         foreach (var msg in messages)
         {
             var category = DetermineCategory(msg.Content);
             if (!patterns.ContainsKey(category))
                 patterns[category] = new FallbackPattern { Category = category };
-            
+
             patterns[category].Count++;
             var words = msg.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Where(w => w.Length > 3);

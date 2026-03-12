@@ -20,9 +20,9 @@ public class DemandPredictionRepository : IDemandPredictionRepository
     }
 
     public async Task<DemandPrediction?> GetLatestByMakeModelYearAsync(
-        string make, 
-        string model, 
-        int year, 
+        string make,
+        string model,
+        int year,
         CancellationToken cancellationToken = default)
     {
         return await _context.DemandPredictions
@@ -32,8 +32,8 @@ public class DemandPredictionRepository : IDemandPredictionRepository
     }
 
     public async Task<List<DemandPrediction>> GetAllAsync(
-        int page = 1, 
-        int pageSize = 20, 
+        int page = 1,
+        int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         return await _context.DemandPredictions
@@ -47,7 +47,7 @@ public class DemandPredictionRepository : IDemandPredictionRepository
     {
         prediction.CreatedAt = DateTime.UtcNow;
         prediction.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.DemandPredictions.Add(prediction);
         await _context.SaveChangesAsync(cancellationToken);
         return prediction;
@@ -56,7 +56,7 @@ public class DemandPredictionRepository : IDemandPredictionRepository
     public async Task<DemandPrediction> UpdateAsync(DemandPrediction prediction, CancellationToken cancellationToken = default)
     {
         prediction.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.DemandPredictions.Update(prediction);
         await _context.SaveChangesAsync(cancellationToken);
         return prediction;

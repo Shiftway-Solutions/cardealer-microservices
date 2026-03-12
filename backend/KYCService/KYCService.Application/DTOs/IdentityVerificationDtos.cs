@@ -281,13 +281,13 @@ public class VerificationSessionStatusDto
     public DateTime ExpiresAt { get; set; }
     public bool IsExpired { get; set; }
     public string CurrentStep { get; set; } = string.Empty;
-    
+
     // Progreso
     public bool DocumentFrontCaptured { get; set; }
     public bool DocumentBackCaptured { get; set; }
     public bool SelfieCapture { get; set; }
     public bool LivenessCompleted { get; set; }
-    
+
     // Scores (si completado)
     public decimal? LivenessScore { get; set; }
     public decimal? FaceMatchScore { get; set; }

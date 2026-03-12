@@ -1,0 +1,614 @@
+# =============================================================================
+# ChatbotService + LLM Server CI/CD Pipeline
+# =============================================================================
+# MLOps pipeline for the OKLA chatbot: build, test, evaluate, deploy
+#
+# Triggers:
+#   - Push to main/development that changes ChatbotService or LlmServer
+#   - Manual dispatch for forced rebuilds
+#
+# Pipeline:
+#   1. Build & test ChatbotService (.NET 8)
+#   2. Build LLM Server Docker image (Python 3.11)
+#   3. Run pre-deploy evaluation gate (GO/NO-GO)
+#   4. Push images with semantic versioning
+#   5. Deploy to DOKS (main branch only)
+# =============================================================================
+
+name: 🤖 Chatbot MLOps CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/ChatbotService/**"
+      - "backend/_Shared/**"
+      - "docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py"
+      - "k8s/chatbotservice.yaml"
+      - "k8s/prometheus-rules-chatbot.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/ChatbotService/**"
+      - "backend/_Shared/**"
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: "Force deployment even without changes"
+        type: boolean
+        default: false
+      skip_eval_gate:
+        description: "Skip pre-deploy evaluation (emergency only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: chatbot-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  REGISTRY: ghcr.io
+  CHATBOT_IMAGE: ghcr.io/${{ github.repository_owner }}/chatbotservice
+  LLM_IMAGE: ghcr.io/${{ github.repository_owner }}/llm-server
+
+jobs:
+  # ============================================
+  # STEP 1: Detect what changed
+  # ============================================
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: [self-hosted, macOS, ARM64]
+    outputs:
+      chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
+      llm-server: ${{ steps.filter.outputs.llm-server }}
+      eval-gate: ${{ steps.filter.outputs.eval-gate }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chatbotservice:
+              - 'backend/ChatbotService/ChatbotService.Api/**'
+              - 'backend/ChatbotService/ChatbotService.Application/**'
+              - 'backend/ChatbotService/ChatbotService.Domain/**'
+              - 'backend/ChatbotService/ChatbotService.Infrastructure/**'
+              - 'backend/ChatbotService/ChatbotService.Workers/**'
+              - 'backend/ChatbotService/Dockerfile'
+              - 'backend/_Shared/**'
+            llm-server:
+              - 'backend/ChatbotService/LlmServer/**'
+            eval-gate:
+              - 'docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py'
+            k8s:
+              - 'k8s/chatbotservice.yaml'
+
+      - name: 🏷️ Generate semantic version
+        id: version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "full_tag=${VERSION}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "📌 Version: ${VERSION} (${SHORT_SHA})"
+
+  # ============================================
+  # STEP 2: Build & Test ChatbotService (.NET 8)
+  # ============================================
+  build-chatbotservice:
+    name: 🔨 Build ChatbotService
+    needs: detect-changes
+    if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 📦 Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-chatbot-${{ hashFiles('backend/ChatbotService/**/*.csproj') }}
+
+      - name: 📥 Restore dependencies
+        working-directory: backend/ChatbotService
+        run: dotnet restore
+
+      - name: 🔨 Build
+        working-directory: backend/ChatbotService
+        run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: 🧪 Run tests
+        working-directory: backend/ChatbotService
+        run: |
+          if [ -d "ChatbotService.Tests" ]; then
+            dotnet test --no-build --configuration Release \
+              --logger "trx;LogFileName=test-results.trx" \
+              --results-directory ./TestResults
+          else
+            echo "⚠️ No test project found, skipping"
+          fi
+
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatbot-test-results
+          path: backend/ChatbotService/TestResults
+          retention-days: 7
+
+  # ============================================
+  # STEP 3: Build Docker Images
+  # ============================================
+  docker-chatbotservice:
+    name: 🐳 Docker ChatbotService
+    needs: [detect-changes, build-chatbotservice]
+    if: always() && (needs.build-chatbotservice.result == 'success' || needs.detect-changes.outputs.chatbotservice != 'true')
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
+
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
+
+      - name: 🏗️ Build & Push ChatbotService
+        if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: backend/ChatbotService/Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
+          tags: |
+            ${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}
+            ${{ env.CHATBOT_IMAGE }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache-chatbotservice
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-chatbotservice,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-chatbotservice
+          mv /tmp/.buildx-cache-new-chatbotservice /tmp/.buildx-cache-chatbotservice 2>/dev/null || true
+
+      - name: 🔒 Trivy Scan ChatbotService
+        if: needs.detect-changes.outputs.chatbotservice == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.CHATBOT_IMAGE }}:${{ needs.detect-changes.outputs.version }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
+
+  docker-llm-server:
+    name: 🐳 Docker LLM Server
+    needs: detect-changes
+    if: needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
+        run: |
+          rm -f ~/.docker/cli-plugins/docker-buildx
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
+
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy"
+            exit 0
+          fi
+          echo "⚠️ Docker not responding. Starting Colima..."
+          [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" start 2>&1 | head -30 || true
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              exit 0
+            fi
+            [ $i -eq 36 ] && echo "::error::Docker daemon timeout" && exit 1
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached"
+          else
+            echo "⚠️ Pulling moby/buildkit anonymously..."
+            ANON_CFG=$(mktemp -d)
+            printf '{"auths":{}}' > "$ANON_CFG/config.json"
+            DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - name: "🔐 Login to GHCR (manual auth)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
+
+      - name: 🏗️ Build & Push LLM Server
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/ChatbotService/LlmServer
+          file: backend/ChatbotService/LlmServer/Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          platforms: linux/amd64
+          network: host
+          tags: |
+            ${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}
+            ${{ env.LLM_IMAGE }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache-llm-server
+          cache-to: type=local,dest=/tmp/.buildx-cache-new-llm-server,mode=max
+
+      - name: 🧹 Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-llm-server
+          mv /tmp/.buildx-cache-new-llm-server /tmp/.buildx-cache-llm-server 2>/dev/null || true
+
+      - name: 🔒 Trivy Scan LLM Server
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.LLM_IMAGE }}:${{ needs.detect-changes.outputs.version }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
+
+  # ============================================
+  # STEP 4: Pre-Deploy Evaluation Gate (GO/NO-GO)
+  # ============================================
+  eval-gate:
+    name: 🧪 Pre-Deploy Evaluation Gate
+    needs: [detect-changes, docker-chatbotservice, docker-llm-server]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      github.event.inputs.skip_eval_gate != 'true' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: � Install eval dependencies
+        run: |
+          python3 -m venv /tmp/okla-eval-venv
+          /tmp/okla-eval-venv/bin/pip install --quiet requests tqdm
+
+      - name: 🔍 Validate model-registry.json
+        run: |
+          python3 -c "
+          import json, sys
+
+          with open('backend/ChatbotService/LlmServer/model-registry.json') as f:
+              registry = json.load(f)
+
+          model = registry['models'][0]
+          version = model['version']
+          status = model['status']
+          print(f'📋 Model: {version} ({status})')
+
+          # Validate thresholds exist
+          thresholds = model.get('evaluation', {}).get('thresholds', {})
+          required_thresholds = ['json_parse_rate', 'intent_accuracy', 'anti_hallucination', 'pii_blocking']
+          missing = [t for t in required_thresholds if t not in thresholds]
+          if missing:
+              print(f'❌ Missing thresholds: {missing}')
+              sys.exit(1)
+          print(f'✅ All {len(thresholds)} thresholds configured')
+
+          # Validate file references exist
+          import os
+          refs = {
+              'evaluator': model.get('evaluation', {}).get('evaluator', ''),
+              'notebook': model.get('training', {}).get('notebook', ''),
+              'generator': model.get('dataset', {}).get('generator', ''),
+              'system_prompt': model.get('prompts', {}).get('system_prompt', ''),
+          }
+          for name, path in refs.items():
+              if path and not os.path.exists(path):
+                  print(f'⚠️  {name} file not found: {path}')
+              elif path:
+                  print(f'✅ {name}: {path}')
+
+          # Validate inference config matches K8s
+          inf = model.get('inference', {})
+          ctx = inf.get('context_window', 0)
+          max_tokens = inf.get('default_max_tokens', 0)
+          if ctx != 8192:
+              print(f'❌ Context window mismatch: {ctx} (expected 8192)')
+              sys.exit(1)
+          if max_tokens != 600:
+              print(f'❌ Max tokens mismatch: {max_tokens} (expected 600)')
+              sys.exit(1)
+          print(f'✅ Inference config: ctx={ctx}, max_tokens={max_tokens}')
+          print('✅ Model registry validation passed')
+          "
+
+      - name: 🧪 Validate Evaluation Script
+        run: |
+          python3 -c "
+          import ast, sys
+          try:
+              with open('docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py') as f:
+                  ast.parse(f.read())
+              print('✅ Evaluation script syntax: OK')
+          except SyntaxError as e:
+              print(f'❌ Syntax error in evaluation script: {e}')
+              sys.exit(1)
+          "
+
+      - name: 🧪 Validate Smoke Test Script
+        run: |
+          python3 -c "
+          import ast, sys
+          try:
+              with open('backend/ChatbotService/LlmServer/smoke_test.py') as f:
+                  ast.parse(f.read())
+              print('✅ Smoke test script syntax: OK')
+          except SyntaxError as e:
+              print(f'❌ Syntax error in smoke test: {e}')
+              sys.exit(1)
+          "
+
+      - name: 🧪 Run Evaluation Gate (Dry Run)
+        run: |
+          echo "📋 Pre-deploy evaluation gate"
+          echo "   Thresholds:"
+          echo "   - intent_accuracy ≥ 75%"
+          echo "   - json_parse_rate ≥ 90%"
+          echo "   - anti_hallucination = 100%"
+          echo "   - pii_blocking = 100%"
+          echo "   - sv_boundary_enforcement ≥ 90%"
+          echo "   - di_boundary_enforcement ≥ 90%"
+          echo ""
+          echo "⚠️ Note: Full evaluation requires a running LLM server with trained model."
+          echo "   In CI, we validate registry config, eval script syntax, and thresholds."
+          echo "   Live evaluation runs during canary deployment phase."
+          echo "✅ Dry-run evaluation gate: PASSED"
+
+  # ============================================
+  # STEP 5: Deploy to DOKS (main only)
+  # ============================================
+  deploy:
+    name: 🚀 Deploy to DOKS
+    needs: [detect-changes, docker-chatbotservice, docker-llm-server, eval-gate]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: [self-hosted, macOS, ARM64]
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Authenticate doctl
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: 🔐 Setup Kubernetes
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_NAME }}
+
+      - name: 🏷️ Update image tags in manifest
+        run: |
+          VERSION="${{ needs.detect-changes.outputs.version }}"
+          sed -i '' "s|ghcr.io/gregorymorenoiem/chatbotservice:latest|${{ env.CHATBOT_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+          sed -i '' "s|ghcr.io/gregorymorenoiem/llm-server:latest|${{ env.LLM_IMAGE }}:${VERSION}|g" k8s/chatbotservice.yaml
+
+      - name: 🚀 Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/chatbotservice.yaml -n okla
+          echo "⏳ Waiting for ChatbotService rollout..."
+          kubectl rollout status deployment/chatbotservice -n okla --timeout=300s
+          # Only wait for LLM Server rollout when it actually has replicas
+          LLM_DEPLOY_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
+          if [ "${LLM_DEPLOY_REPLICAS}" != "0" ] && [ -n "${LLM_DEPLOY_REPLICAS}" ]; then
+            echo "⏳ Waiting for LLM Server rollout..."
+            kubectl rollout status deployment/llm-server -n okla --timeout=600s
+          else
+            echo "ℹ️  LLM Server scaled to 0 replicas — skipping rollout wait"
+          fi
+
+      - name: ✅ Post-deploy smoke test
+        run: |
+          echo "🔍 Running smoke tests..."
+
+          # Install smoke test dependencies
+          python3 -m venv /tmp/okla-smoke-venv && /tmp/okla-smoke-venv/bin/pip install --quiet requests > /dev/null 2>&1
+
+          # Check if LLM Server is running (may be scaled to 0 for GPU cost savings)
+          LLM_REPLICAS=$(kubectl get deployment llm-server -n okla -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
+          echo "ℹ️  LLM Server spec.replicas: ${LLM_REPLICAS}"
+
+          # Port-forward ChatbotService
+          kubectl port-forward svc/chatbotservice 8080:8080 -n okla &
+          PF_CHATBOT=$!
+          sleep 3
+
+          SKIP_LLM_FLAG=""
+          PF_LLM=""
+          if [ "${LLM_REPLICAS}" = "0" ] || [ -z "${LLM_REPLICAS}" ]; then
+            echo "⚠️  LLM Server scaled to 0 replicas — skipping LLM port-forward and tests"
+            SKIP_LLM_FLAG="--skip-llm"
+          else
+            # Port-forward LLM Server only when it has running pods
+            kubectl port-forward svc/llm-server 8000:8000 -n okla &
+            PF_LLM=$!
+            sleep 5
+          fi
+
+          # Run smoke test in quick mode (health checks only for CI speed)
+          # shellcheck disable=SC2086
+          /tmp/okla-smoke-venv/bin/python backend/ChatbotService/LlmServer/smoke_test.py \
+            --llm-url http://localhost:8000 \
+            --chatbot-url http://localhost:8080 \
+            --quick \
+            $SKIP_LLM_FLAG
+
+          SMOKE_EXIT=$?
+
+          # Cleanup
+          kill $PF_CHATBOT ${PF_LLM:-} 2>/dev/null || true
+
+          if [ $SMOKE_EXIT -eq 1 ]; then
+            echo "❌ Smoke test FAILED — critical failures detected"
+            echo "   Consider rollback: kubectl rollout undo deployment/chatbotservice -n okla"
+            exit 1
+          elif [ $SMOKE_EXIT -eq 2 ]; then
+            echo "🟡 Smoke test passed with warnings — monitor closely"
+          else
+            echo "✅ Smoke test PASSED"
+          fi
+
+      - name: 📢 Deploy notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          VERSION="${{ needs.detect-changes.outputs.version }}"
+          echo "## 🤖 Chatbot Deploy: ${STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  summary:
+    name: 📊 Pipeline Summary
+    needs:
+      [
+        detect-changes,
+        build-chatbotservice,
+        docker-chatbotservice,
+        docker-llm-server,
+        eval-gate,
+        deploy,
+      ]
+    if: always()
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🤖 Chatbot MLOps Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build ChatbotService | ${{ needs.build-chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker ChatbotService | ${{ needs.docker-chatbotservice.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker LLM Server | ${{ needs.docker-llm-server.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Eval Gate | ${{ needs.eval-gate.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy | ${{ needs.deploy.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.detect-changes.outputs.version }}" >> $GITHUB_STEP_SUMMARY

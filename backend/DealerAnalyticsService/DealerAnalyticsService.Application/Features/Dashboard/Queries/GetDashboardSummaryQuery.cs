@@ -13,7 +13,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
     private readonly IConversionFunnelRepository _funnelRepository;
     private readonly IMarketBenchmarkRepository _benchmarkRepository;
     private readonly IDealerInsightRepository _insightRepository;
-    
+
     public GetDashboardSummaryQueryHandler(
         IDealerAnalyticsRepository analyticsRepository,
         IConversionFunnelRepository funnelRepository,
@@ -25,32 +25,32 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         _benchmarkRepository = benchmarkRepository;
         _insightRepository = insightRepository;
     }
-    
+
     public async Task<DashboardSummaryDto> Handle(GetDashboardSummaryQuery request, CancellationToken cancellationToken)
     {
         // Obtener analytics actuales
         var analytics = await _analyticsRepository.GetDealerAnalyticsSummaryAsync(
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         // Obtener funnel de conversión
         var funnel = await _funnelRepository.CalculateFunnelMetricsAsync(
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         // Obtener benchmarks del mercado
         var benchmarks = await _benchmarkRepository.GetBenchmarksAsync(DateTime.UtcNow);
-        
+
         // Obtener top insights
         var insights = await _insightRepository.GetDealerInsightsAsync(request.DealerId, onlyUnread: true);
         var topInsights = insights.OrderByDescending(i => i.Priority)
                                  .ThenByDescending(i => i.PotentialImpact)
                                  .Take(5)
                                  .ToList();
-        
+
         // Calcular comparaciones con período anterior
         var previousFromDate = request.FromDate.AddDays(-(request.ToDate - request.FromDate).Days);
         var previousAnalytics = await _analyticsRepository.GetDealerAnalyticsSummaryAsync(
             request.DealerId, previousFromDate, request.FromDate);
-        
+
         return new DashboardSummaryDto
         {
             DealerId = request.DealerId,
@@ -66,19 +66,19 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             RevenueGrowth = CalculateGrowth(analytics.TotalRevenue, previousAnalytics.TotalRevenue)
         };
     }
-    
+
     private static decimal CalculateGrowth(decimal current, decimal previous)
     {
         if (previous == 0) return current > 0 ? 100 : 0;
         return Math.Round(((current - previous) / previous) * 100, 2);
     }
-    
+
     private static int CalculateGrowth(int current, int previous)
     {
         if (previous == 0) return current > 0 ? 100 : 0;
         return (int)Math.Round(((decimal)(current - previous) / previous) * 100);
     }
-    
+
     private static DealerAnalyticsDto MapAnalyticsToDto(DealerAnalytic analytics)
     {
         return new DealerAnalyticsDto
@@ -106,7 +106,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             UpdatedAt = analytics.UpdatedAt
         };
     }
-    
+
     private static ConversionFunnelDto MapFunnelToDto(ConversionFunnel funnel)
     {
         return new ConversionFunnelDto
@@ -125,7 +125,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             AverageTimeToSale = funnel.AverageTimeToSale
         };
     }
-    
+
     private static MarketBenchmarkDto MapBenchmarkToDto(MarketBenchmark benchmark)
     {
         return new MarketBenchmarkDto
@@ -145,7 +145,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             TotalVehiclesInSample = benchmark.TotalVehiclesInSample
         };
     }
-    
+
     private static DealerInsightDto MapInsightToDto(DealerInsight insight)
     {
         return new DealerInsightDto

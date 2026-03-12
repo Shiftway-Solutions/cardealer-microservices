@@ -18,7 +18,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
     private readonly IDealerAlertRepository _alertRepository;
     private readonly IInventoryAgingRepository _agingRepository;
     private readonly ILogger<GetAnalyticsOverviewQueryHandler> _logger;
-    
+
     public GetAnalyticsOverviewQueryHandler(
         IDealerSnapshotRepository snapshotRepository,
         IVehiclePerformanceRepository vehiclePerformanceRepository,
@@ -36,48 +36,48 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
         _agingRepository = agingRepository;
         _logger = logger;
     }
-    
+
     public async Task<AnalyticsOverviewDto> Handle(GetAnalyticsOverviewQuery request, CancellationToken ct)
     {
         _logger.LogInformation(
             "Getting analytics overview for dealer {DealerId} from {From} to {To}",
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         // Get current and previous snapshots for comparison
         var (currentSnapshot, previousSnapshot) = await _snapshotRepository.GetComparisonAsync(
-            request.DealerId, 
-            request.ToDate, 
+            request.DealerId,
+            request.ToDate,
             (int)(request.ToDate - request.FromDate).TotalDays,
             ct);
-        
+
         // Get aggregated snapshot for the period
         var periodSnapshot = await _snapshotRepository.AggregateAsync(
             request.DealerId, request.FromDate, request.ToDate, ct);
-        
+
         // Get top performing vehicles
         var topPerformers = await _vehiclePerformanceRepository.GetTopPerformersAsync(
             request.DealerId, 5, ct);
-        
+
         // Get funnel metrics
         var funnel = await _funnelRepository.AggregateAsync(
             request.DealerId, request.FromDate, request.ToDate, ct);
-        
+
         // Get benchmark
         var benchmark = await _benchmarkRepository.GetLatestAsync(request.DealerId, ct);
-        
+
         // Get inventory aging
         var aging = await _agingRepository.GetLatestAsync(request.DealerId, ct);
-        
+
         // Get active alerts
         var alerts = await _alertRepository.GetActiveAlertsAsync(request.DealerId, ct);
         var unreadCount = await _alertRepository.GetUnreadCountAsync(request.DealerId, ct);
-        
+
         // Build KPIs with changes
         var kpis = BuildKpis(periodSnapshot, currentSnapshot, previousSnapshot);
-        
+
         // Build comparison
         var comparison = BuildComparison(periodSnapshot, currentSnapshot, previousSnapshot);
-        
+
         return new AnalyticsOverviewDto
         {
             DealerId = request.DealerId,
@@ -99,7 +99,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             LastUpdated = DateTime.UtcNow
         };
     }
-    
+
     private KpiSummaryDto BuildKpis(
         Domain.Entities.DealerSnapshot period,
         Domain.Entities.DealerSnapshot? current,
@@ -125,7 +125,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             InventoryValue = period?.TotalInventoryValue ?? 0
         };
     }
-    
+
     private SnapshotComparisonDto BuildComparison(
         Domain.Entities.DealerSnapshot period,
         Domain.Entities.DealerSnapshot? current,
@@ -144,19 +144,19 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             InventoryValueChange = CalculateChange((double)(previous?.TotalInventoryValue ?? 0), (double)(current?.TotalInventoryValue ?? 0))
         };
     }
-    
+
     private static double CalculateChange(double previous, double current)
     {
         if (previous == 0) return current > 0 ? 100 : 0;
         return ((current - previous) / previous) * 100;
     }
-    
+
     private static double CalculateChange(int previous, int current)
     {
         if (previous == 0) return current > 0 ? 100 : 0;
         return ((double)(current - previous) / previous) * 100;
     }
-    
+
     private static DealerSnapshotDto MapSnapshot(Domain.Entities.DealerSnapshot snapshot)
     {
         return new DealerSnapshotDto
@@ -189,7 +189,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             AgingRate = snapshot.AgingRate
         };
     }
-    
+
     private static VehiclePerformanceDto MapVehiclePerformance(Domain.Entities.VehiclePerformance perf)
     {
         return new VehiclePerformanceDto
@@ -219,7 +219,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             PerformanceLabel = GetPerformanceLabel(perf.PerformanceScore)
         };
     }
-    
+
     private static string GetPerformanceLabel(double score)
     {
         return score switch
@@ -230,7 +230,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             _ => "Needs Attention"
         };
     }
-    
+
     private static LeadFunnelDto MapFunnel(Domain.Entities.LeadFunnelMetrics? funnel)
     {
         if (funnel == null)
@@ -248,7 +248,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
                 }
             };
         }
-        
+
         return new LeadFunnelDto
         {
             DealerId = funnel.DealerId,
@@ -278,7 +278,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             }
         };
     }
-    
+
     private static DealerBenchmarkDto MapBenchmark(Domain.Entities.DealerBenchmark benchmark)
     {
         return new DealerBenchmarkDto
@@ -320,7 +320,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             ImprovementAreas = benchmark.ImprovementAreas
         };
     }
-    
+
     private static string GetTierColor(Domain.Entities.DealerTier tier)
     {
         return tier switch
@@ -332,7 +332,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             _ => "#92400E"
         };
     }
-    
+
     private static string GetTierIcon(Domain.Entities.DealerTier tier)
     {
         return tier switch
@@ -344,7 +344,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             _ => "🥉"
         };
     }
-    
+
     private static DealerBenchmarkDto CreateEmptyBenchmark(Guid dealerId)
     {
         return new DealerBenchmarkDto
@@ -360,12 +360,12 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             ImprovementAreas = new List<string> { "Complete más ventas para mejorar su ranking" }
         };
     }
-    
+
     private static InventoryAgingDto MapAging(Domain.Entities.InventoryAging aging)
     {
         var buckets = aging.GetBuckets();
         var total = aging.TotalVehicles;
-        
+
         return new InventoryAgingDto
         {
             DealerId = aging.DealerId,
@@ -388,7 +388,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             }).ToList()
         };
     }
-    
+
     private static InventoryAgingDto CreateEmptyAging(Guid dealerId)
     {
         return new InventoryAgingDto
@@ -406,7 +406,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             }
         };
     }
-    
+
     private static DealerAlertDto MapAlert(Domain.Entities.DealerAlert alert)
     {
         return new DealerAlertDto
@@ -431,7 +431,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             TimeAgo = GetTimeAgo(alert.CreatedAt)
         };
     }
-    
+
     private static string GetAlertTypeLabel(DealerAlertType type)
     {
         return type switch
@@ -445,7 +445,7 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             _ => type.ToString()
         };
     }
-    
+
     private static string GetSeverityColor(AlertSeverity severity)
     {
         return severity switch
@@ -458,16 +458,16 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
             _ => "#22C55E"
         };
     }
-    
+
     private static string GetTimeAgo(DateTime date)
     {
         var diff = DateTime.UtcNow - date;
-        
+
         if (diff.TotalMinutes < 1) return "Ahora";
         if (diff.TotalMinutes < 60) return $"Hace {(int)diff.TotalMinutes} min";
         if (diff.TotalHours < 24) return $"Hace {(int)diff.TotalHours} h";
         if (diff.TotalDays < 7) return $"Hace {(int)diff.TotalDays} días";
-        
+
         return date.ToString("dd/MM");
     }
 }

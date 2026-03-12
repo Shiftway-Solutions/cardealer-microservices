@@ -21,7 +21,7 @@ public class VehicleComparison
         VehicleIds = vehicleIds ?? new List<Guid>();
         IsPublic = isPublic;
         CreatedAt = DateTime.UtcNow;
-        
+
         if (VehicleIds.Count > 3)
             throw new ArgumentException("Cannot compare more than 3 vehicles");
     }
@@ -43,12 +43,12 @@ public class VehicleComparison
         VehicleIds.Remove(vehicleId);
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void UpdateVehicles(List<Guid> vehicleIds)
     {
         if (vehicleIds.Count > 3)
             throw new ArgumentException("Cannot compare more than 3 vehicles");
-        
+
         VehicleIds = vehicleIds;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -58,14 +58,14 @@ public class VehicleComparison
         Name = name;
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void MakePublic()
     {
         IsPublic = true;
         ShareToken = Guid.NewGuid().ToString("N")[..16]; // 16 character token
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void MakePrivate()
     {
         IsPublic = false;

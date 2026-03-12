@@ -79,7 +79,7 @@ public class AzulCallbackController : ControllerBase
         {
             var transaction = await CreateTransactionFromResponse(response, "Approved");
             await _transactionRepository.CreateAsync(transaction);
-            
+
             _logger.LogInformation("Transacción AZUL guardada exitosamente - Id: {TransactionId}", transaction.Id);
         }
         catch (Exception ex)
@@ -123,7 +123,7 @@ public class AzulCallbackController : ControllerBase
             var transaction = await CreateTransactionFromResponse(response, "Declined");
             transaction.DeclineReasonLocalized = response.GetDeclineReasonSpanish();
             await _transactionRepository.CreateAsync(transaction);
-            
+
             _logger.LogInformation("Transacción AZUL declinada guardada - Id: {TransactionId}, IsoCode: {IsoCode}, Razón: {Reason}",
                 transaction.Id, response.IsoCode, transaction.DeclineReasonLocalized);
         }
@@ -171,9 +171,9 @@ public class AzulCallbackController : ControllerBase
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = Request.Headers["User-Agent"].ToString()
             };
-            
+
             await _transactionRepository.CreateAsync(transaction);
-            
+
             _logger.LogInformation("Transacción AZUL cancelada guardada - Id: {TransactionId}", transaction.Id);
         }
         catch (Exception ex)

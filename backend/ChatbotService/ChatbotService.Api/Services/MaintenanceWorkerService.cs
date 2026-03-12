@@ -60,7 +60,7 @@ public class MaintenanceWorkerService : BackgroundService
             try
             {
                 await CheckAndRunDueTasksAsync(stoppingToken);
-                
+
                 // Check every minute
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
@@ -82,7 +82,7 @@ public class MaintenanceWorkerService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var maintenanceRepo = scope.ServiceProvider.GetRequiredService<IMaintenanceTaskRepository>();
-        
+
         // Get all due tasks from database
         var dueTasks = await maintenanceRepo.GetDueTasksAsync(ct);
 
@@ -90,11 +90,11 @@ public class MaintenanceWorkerService : BackgroundService
         {
             try
             {
-                _logger.LogInformation("Running maintenance task: {TaskName} ({TaskType})", 
+                _logger.LogInformation("Running maintenance task: {TaskName} ({TaskType})",
                     task.Name, task.TaskType);
 
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                
+
                 var command = new RunMaintenanceTaskCommand(task.Id, false, "Automated run");
 
                 await mediator.Send(command, ct);

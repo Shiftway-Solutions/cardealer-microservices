@@ -27,7 +27,7 @@ import Link from 'next/link';
 // =============================================================================
 
 const DISMISS_KEY = 'okla_missed_opp_dismissed';
-const DISMISS_DURATION_DAYS = 3;
+const DISMISS_DURATION_DAYS = 7;
 
 // Platform multiplier: on average, LIBRE dealers see only ~15-20% of total
 // search impressions for their vehicle types. The rest goes to VISIBLE/PRO/ELITE.

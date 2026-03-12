@@ -54,7 +54,7 @@ public class DealerBillingController : BillingBaseController
         {
             var summary = await _billingService.GetBillingSummaryAsync(dealerId, cancellationToken);
             var plans = await _billingService.GetPlanPricingAsync(dealerId, cancellationToken);
-            
+
             // Calcular usage metrics
             var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
             var usage = await CalculateUsageMetrics(dealerId, subscription, cancellationToken);
@@ -178,7 +178,7 @@ public class DealerBillingController : BillingBaseController
         var dealerId = GetDealerIdFromJwt();
         // For now, return mock data - in production, this would come from Stripe
         var customer = await _billingService.GetCustomerByDealerIdAsync(dealerId, cancellationToken);
-        
+
         if (customer?.PaymentMethods != null && customer.PaymentMethods.Any())
         {
             return Ok(customer.PaymentMethods.Select(pm => new PaymentMethodDto(
@@ -210,12 +210,12 @@ public class DealerBillingController : BillingBaseController
     {
         var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Adding payment method for dealer {DealerId}", dealerId);
-        
+
         // In production, this would:
         // 1. Call Stripe/Azul to create the payment method
         // 2. Store the token reference in our database
         // 3. Return the created payment method
-        
+
         var newPaymentMethod = new PaymentMethodDto(
             Id: Guid.NewGuid().ToString(),
             Type: request.Type,
@@ -229,7 +229,7 @@ public class DealerBillingController : BillingBaseController
             BankAccount: null,
             CreatedAt: DateTime.UtcNow.ToString("o")
         );
-        
+
         return Ok(newPaymentMethod);
     }
 
@@ -244,11 +244,11 @@ public class DealerBillingController : BillingBaseController
         var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Setting default payment method {PaymentMethodId} for dealer {DealerId}",
             paymentMethodId, dealerId);
-        
+
         // In production, this would:
         // 1. Update the default payment method in Stripe/Azul
         // 2. Update our database records
-        
+
         return Ok(new { Success = true, Message = "Default payment method updated" });
     }
 
@@ -263,12 +263,12 @@ public class DealerBillingController : BillingBaseController
         var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Removing payment method {PaymentMethodId} for dealer {DealerId}",
             paymentMethodId, dealerId);
-        
+
         // In production, this would:
         // 1. Detach the payment method from Stripe/Azul
         // 2. Remove from our database
         // 3. Verify it's not the only payment method if subscription is active
-        
+
         return Ok(new { Success = true, Message = "Payment method removed" });
     }
 

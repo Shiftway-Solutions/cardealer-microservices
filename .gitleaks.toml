@@ -15,15 +15,15 @@ title = "OKLA Gitleaks Config"
     '''obj/''',
     '''_DESCARTADOS/''',
     '''\.github/copilot-instructions\.md''',
-    '''docs/''',
-    '''\.md$''',
-    '''deploy/''',
+    '''\.gitleaks\.toml''',
+    '''\.gitleaksignore''',
+    '''docs/SAST-FALSE-POSITIVES\.md''',
     '''appsettings\.Production\.json''',
     '''appsettings\.Staging\.json''',
     '''k8s/''',
     '''helm/''',
-    '''docker-compose''',
-    '''compose\.''',
+    '''\.bak_\d{8}_\d{6}$''',
+    '''pnpm-lock\.yaml''',
   ]
   regexTarget = "match"
   regexes = [
@@ -67,6 +67,9 @@ title = "OKLA Gitleaks Config"
   regex = '''["']([A-Za-z0-9+/=]{32,})["']'''
   tags = ["jwt", "secret"]
   [rules.allowlist]
+    paths = [
+      '''pyproject\.toml''',
+    ]
     regexes = [
       '''\$\{''',
       '''clave-super-secreta''',
@@ -89,4 +92,47 @@ title = "OKLA Gitleaks Config"
       '''Password=devpassword''',
       '''Password=guest''',
       '''\$\{[A-Z_]+\}''',
+    ]
+
+[[rules]]
+  id = "digitalocean-token"
+  description = "DigitalOcean Personal Access Token"
+  regex = '''dop_v1_[a-f0-9]{64}'''
+  tags = ["api-key", "digitalocean"]
+
+[[rules]]
+  id = "anthropic-api-key"
+  description = "Anthropic/Claude API Key"
+  regex = '''sk-ant-[a-zA-Z0-9_-]{80,}'''
+  tags = ["api-key", "anthropic"]
+
+[[rules]]
+  id = "openai-api-key"
+  description = "OpenAI API Key"
+  regex = '''sk-[a-zA-Z0-9]{40,}'''
+  tags = ["api-key", "openai"]
+  [rules.allowlist]
+    regexes = [
+      '''sk_(live|test)_''',
+      '''sk-ant-''',
+    ]
+
+[[rules]]
+  id = "generic-high-entropy-secret"
+  description = "Generic secret assignment with high-entropy value"
+  regex = '''(?i)(secret|api_key|apikey|token|password|passwd)[\s]*[=:]+[\s]*["']([A-Za-z0-9+/=_-]{20,})["']'''
+  tags = ["generic", "secret"]
+  [rules.allowlist]
+    regexes = [
+      '''\$\{''',
+      '''clave-super-secreta''',
+      '''Password=postgres''',
+      '''Password=password''',
+      '''Password=devpassword''',
+      '''Password=guest''',
+    ]
+    paths = [
+      '''appsettings\.Development\.json''',
+      '''appsettings\.Docker\.json''',
+      '''\.env\.example''',
     ]

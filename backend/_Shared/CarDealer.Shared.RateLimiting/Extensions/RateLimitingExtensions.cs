@@ -66,7 +66,7 @@ public static class RateLimitingExtensions
         Action<RateLimitOptions> configureOptions)
     {
         services.Configure(configureOptions);
-        
+
         var options = new RateLimitOptions();
         configureOptions(options);
 

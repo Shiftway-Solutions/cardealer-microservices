@@ -1,0 +1,176 @@
+# =============================================================================
+# SYNTHETIC CDN MONITOR — Image Performance & Availability
+# =============================================================================
+# Runs every 30 minutes to measure CDN image performance from a simulated
+# 4G connection in Santo Domingo, DR (100ms latency, 20Mbps).
+#
+# Alerts on:
+#   - Image LCP > 3 seconds (Google's "good" threshold)
+#   - Image error rate > 20%
+#   - CDN carousel load time > 8 seconds
+#
+# Results are available as GitHub Actions artifacts for trend analysis.
+# =============================================================================
+
+name: 📸 Synthetic CDN Monitor
+
+on:
+  # Every 30 minutes
+  schedule:
+    - cron: "*/30 * * * *"
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      simulate_4g:
+        description: "Simulate 4G network (100ms latency, 20Mbps)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cdn-monitor:
+    name: 📊 CDN Image Performance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 📦 Install dependencies
+        working-directory: frontend/web-next
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎭 Install Playwright
+        working-directory: frontend/web-next
+        run: pnpm exec playwright install chromium
+
+      - name: 📸 Run synthetic CDN monitor
+        id: monitor
+        working-directory: frontend/web-next
+        env:
+          PLAYWRIGHT_BASE_URL: "https://okla.do"
+          API_BASE_URL: "https://api.okla.do"
+          SIMULATE_4G: ${{ github.event.inputs.simulate_4g || 'true' }}
+        run: |
+          echo "📸 Running synthetic CDN monitor at $(date -u '+%Y-%m-%d %H:%M:%S UTC')..."
+          pnpm exec playwright test e2e/synthetic-cdn-monitor.spec.ts \
+            --config=playwright.prod.config.ts \
+            --reporter=json \
+            --output=test-results/cdn-monitor/ \
+            2>&1 | tee cdn-monitor-output.txt || true
+
+          # Extract results from output
+          if grep -q "EXCEEDS THRESHOLD" cdn-monitor-output.txt; then
+            echo "alert_needed=true" >> $GITHUB_OUTPUT
+            echo "alert_type=lcp_exceeded" >> $GITHUB_OUTPUT
+          elif grep -q "CRITICAL" cdn-monitor-output.txt; then
+            echo "alert_needed=true" >> $GITHUB_OUTPUT
+            echo "alert_type=error_rate_critical" >> $GITHUB_OUTPUT
+          else
+            echo "alert_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check exit code
+          if [ -f test-results/cdn-monitor/.last-run.json ]; then
+            STATUS=$(jq -r '.status' test-results/cdn-monitor/.last-run.json 2>/dev/null || echo "unknown")
+            echo "test_status=$STATUS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📤 Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdn-monitor-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            frontend/web-next/test-results/
+            frontend/web-next/cdn-monitor-output.txt
+          retention-days: 30
+
+      - name: 🚨 Create alert issue on LCP threshold breach
+        if: steps.monitor.outputs.alert_needed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const alertType = '${{ steps.monitor.outputs.alert_type }}';
+            const timestamp = new Date().toISOString();
+
+            let title, body;
+
+            if (alertType === 'lcp_exceeded') {
+              title = `🚨 CDN Alert: Image LCP exceeds 3s threshold — ${timestamp}`;
+              body = `## CDN Image Performance Degradation Detected\n\n` +
+                `**Alert Type:** Image LCP > 3 seconds\n` +
+                `**Threshold:** 3000ms (Google's "good" LCP)\n` +
+                `**Time:** ${timestamp}\n` +
+                `**Network:** 4G simulation (100ms latency, 20Mbps from Santo Domingo)\n\n` +
+                `### Possible Causes\n` +
+                `- CDN cache miss or cache invalidation\n` +
+                `- DO Spaces origin server slow response\n` +
+                `- Image not optimized (too large, not WebP)\n` +
+                `- CDN edge node in Caribbean region degraded\n\n` +
+                `### Recommended Actions\n` +
+                `1. Check DO Spaces dashboard for latency spikes\n` +
+                `2. Verify CDN cache headers (Cache-Control, ETag)\n` +
+                `3. Check if recent deploy changed image processing pipeline\n` +
+                `4. Run \`pnpm exec playwright test e2e/synthetic-cdn-monitor.spec.ts --config=playwright.prod.config.ts\` locally to reproduce\n\n` +
+                `### Run Details\n` +
+                `- Workflow: ${context.workflow}\n` +
+                `- Run ID: ${context.runId}\n`;
+            } else {
+              title = `🚨 CDN Alert: >20% of listing images broken — ${timestamp}`;
+              body = `## Critical CDN Image Availability Issue\n\n` +
+                `**Alert Type:** Image error rate exceeds 20%\n` +
+                `**Time:** ${timestamp}\n\n` +
+                `### Immediate Actions Required\n` +
+                `1. Check DO Spaces health status\n` +
+                `2. Verify CDN configuration has not changed\n` +
+                `3. Check for CORS/CSP policy changes\n` +
+                `4. Verify recent deployments did not break image URLs\n\n` +
+                `### Run Details\n` +
+                `- Workflow: ${context.workflow}\n` +
+                `- Run ID: ${context.runId}\n`;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['performance', 'cdn', 'automated', 'alert'],
+            });
+
+      - name: 📊 Job Summary
+        if: always()
+        run: |
+          echo "## 📸 Synthetic CDN Monitor Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Network:** ${SIMULATE_4G:-true} (4G: 100ms latency, 20Mbps)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.monitor.outputs.alert_needed }}" == "true" ]; then
+            echo "### 🚨 ALERT TRIGGERED" >> $GITHUB_STEP_SUMMARY
+            echo "Alert type: ${{ steps.monitor.outputs.alert_type }}" >> $GITHUB_STEP_SUMMARY
+            echo "A GitHub issue has been created for the technical team." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ All metrics within thresholds" >> $GITHUB_STEP_SUMMARY
+          fi

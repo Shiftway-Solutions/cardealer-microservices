@@ -26,7 +26,7 @@ public class Disable2FAHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _twoFactorServiceMock = new Mock<ITwoFactorService>();
-        
+
         _handler = new Disable2FACommandHandler(
             _userRepositoryMock.Object,
             _passwordHasherMock.Object,
@@ -40,7 +40,7 @@ public class Disable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateUserWithTwoFactor(userId, "hashedPassword");
         var command = new Disable2FACommand(userId, "correctPassword");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("correctPassword", "hashedPassword"))
@@ -65,7 +65,7 @@ public class Disable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateUserWithTwoFactor(userId, "hashedPassword");
         var command = new Disable2FACommand(userId, "wrongPassword");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("wrongPassword", "hashedPassword"))
@@ -86,7 +86,7 @@ public class Disable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateTestUser(userId, "hashedPassword"); // No 2FA
         var command = new Disable2FACommand(userId, "password");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(x => x.Verify("password", "hashedPassword"))
@@ -106,7 +106,7 @@ public class Disable2FAHandlerTests
         // Arrange
         var userId = Guid.NewGuid().ToString();
         var command = new Disable2FACommand(userId, "password");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApplicationUser?)null);
 
@@ -124,7 +124,7 @@ public class Disable2FAHandlerTests
         var userId = Guid.NewGuid().ToString();
         var user = CreateUserWithTwoFactor(userId, null!); // OAuth user without password
         var command = new Disable2FACommand(userId, "password");
-        
+
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -144,28 +144,28 @@ public class Disable2FAHandlerTests
             Id = userId,
             EmailConfirmed = true
         };
-        
+
         // If passwordHash is null, use reflection to set it
         if (passwordHash == null)
         {
             typeof(ApplicationUser).GetProperty("PasswordHash")?.SetValue(user, null);
         }
-        
+
         return user;
     }
 
     private static ApplicationUser CreateUserWithTwoFactor(string userId, string? passwordHash)
     {
         var user = CreateTestUser(userId, passwordHash);
-        
+
         // Create and enable TwoFactorAuth
         var twoFactorAuth = new TwoFactorAuth(userId, TwoFactorAuthType.Authenticator);
         twoFactorAuth.Enable("SECRET", new List<string> { "RECOVERY1" });
-        
+
         // Use reflection to set the private TwoFactorAuth property
         var property = typeof(ApplicationUser).GetProperty("TwoFactorAuth");
         property?.SetValue(user, twoFactorAuth);
-        
+
         return user;
     }
 

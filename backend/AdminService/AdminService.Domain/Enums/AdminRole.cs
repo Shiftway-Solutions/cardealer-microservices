@@ -106,16 +106,16 @@ public static class AdminRoleExtensions
     /// Verifica si el rol puede ver analytics.
     /// </summary>
     public static bool CanViewAnalytics(this AdminRole role) =>
-        role == AdminRole.SuperAdmin || 
-        role == AdminRole.PlatformAdmin || 
+        role == AdminRole.SuperAdmin ||
+        role == AdminRole.PlatformAdmin ||
         role == AdminRole.AnalyticsAdmin;
 
     /// <summary>
     /// Verifica si el rol puede exportar reportes.
     /// </summary>
     public static bool CanExportReports(this AdminRole role) =>
-        role == AdminRole.SuperAdmin || 
-        role == AdminRole.PlatformAdmin || 
+        role == AdminRole.SuperAdmin ||
+        role == AdminRole.PlatformAdmin ||
         role == AdminRole.AnalyticsAdmin;
 
     /// <summary>

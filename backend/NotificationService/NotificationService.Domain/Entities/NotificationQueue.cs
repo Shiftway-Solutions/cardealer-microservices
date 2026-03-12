@@ -51,7 +51,7 @@ public class NotificationQueue
         Status = QueueStatus.Failed;
         ErrorMessage = errorMessage;
         RetryCount++;
-        
+
         // Calculate next retry time (exponential backoff)
         if (RetryCount < 5)
         {

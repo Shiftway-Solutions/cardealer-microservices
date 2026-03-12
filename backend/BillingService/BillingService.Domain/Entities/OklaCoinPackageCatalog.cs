@@ -10,10 +10,10 @@ public static class OklaCoinPackageCatalog
     // ═══════════════════════════════════════════════════════════════
     // Deterministic IDs
     // ═══════════════════════════════════════════════════════════════
-    public static readonly Guid BasicId        = new("cc000000-0000-0000-0000-000000000001");
-    public static readonly Guid IntermediateId  = new("cc000000-0000-0000-0000-000000000002");
-    public static readonly Guid ProfessionalId  = new("cc000000-0000-0000-0000-000000000003");
-    public static readonly Guid DealerId        = new("cc000000-0000-0000-0000-000000000004");
+    public static readonly Guid BasicId = new("cc000000-0000-0000-0000-000000000001");
+    public static readonly Guid IntermediateId = new("cc000000-0000-0000-0000-000000000002");
+    public static readonly Guid ProfessionalId = new("cc000000-0000-0000-0000-000000000003");
+    public static readonly Guid DealerId = new("cc000000-0000-0000-0000-000000000004");
 
     /// <summary>
     /// Returns all available OKLA Coins packages
@@ -102,28 +102,28 @@ public class OklaCoinPackage
     public Guid Id { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>Créditos base (sin bonus)</summary>
     public int BaseCredits { get; set; }
-    
+
     /// <summary>Créditos bonus por volumen</summary>
     public int BonusCredits { get; set; }
-    
+
     /// <summary>Total = Base + Bonus</summary>
     public int TotalCredits { get; set; }
-    
+
     /// <summary>Porcentaje de bonus (0, 10, 20, 30)</summary>
     public int BonusPercentage { get; set; }
-    
+
     /// <summary>Precio en USD</summary>
     public decimal PriceUsd { get; set; }
-    
+
     /// <summary>Costo efectivo por coin</summary>
     public decimal CostPerCoin { get; set; }
-    
+
     /// <summary>Texto del badge (e.g., "+10% bonus")</summary>
     public string? BadgeText { get; set; }
-    
+
     public int DisplayOrder { get; set; }
     public bool IsActive { get; set; } = true;
 }

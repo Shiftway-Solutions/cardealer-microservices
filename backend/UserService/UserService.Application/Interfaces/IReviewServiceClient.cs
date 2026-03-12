@@ -17,7 +17,7 @@ public interface IReviewServiceClient
         int page = 1,
         int pageSize = 10,
         int? rating = null);
-    
+
     /// <summary>
     /// Obtiene el resumen de ratings de un vendedor
     /// </summary>

@@ -17,7 +17,7 @@ public class DailySnapshotService : BackgroundService
     private readonly ILogger<DailySnapshotService> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeSpan _runTime = new(0, 0, 0); // Midnight
-    
+
     public DailySnapshotService(
         ILogger<DailySnapshotService> logger,
         IServiceScopeFactory scopeFactory)
@@ -79,7 +79,7 @@ public class DailySnapshotService : BackgroundService
             // Get dealers from existing snapshots (in production, this would query DealerManagementService)
             var today = DateTime.UtcNow.Date;
             var yesterday = today.AddDays(-1);
-            
+
             // For demo, we use existing dealer IDs from the last 30 days
             var existingSnapshots = await snapshotRepository.GetRangeAsync(
                 Guid.Empty, // This would need a proper implementation
@@ -121,7 +121,7 @@ public class DailySnapshotService : BackgroundService
 
                     // Create new snapshot based on yesterday's data with small changes
                     var snapshot = DealerSnapshot.CreateEmpty(dealerId, today);
-                    
+
                     if (yesterdaySnapshot != null)
                     {
                         // Copy over metrics from yesterday as baseline
@@ -137,7 +137,7 @@ public class DailySnapshotService : BackgroundService
 
                     await snapshotRepository.CreateAsync(snapshot, cancellationToken);
                     createdCount++;
-                    
+
                     // Publish event for other services
                     await mediator.Publish(
                         new DealerSnapshotCreatedNotification(dealerId, snapshot.Id, snapshot.SnapshotDate),

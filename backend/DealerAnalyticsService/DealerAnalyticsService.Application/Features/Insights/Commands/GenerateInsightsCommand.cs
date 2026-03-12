@@ -12,7 +12,7 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
     private readonly IDealerInsightRepository _insightRepository;
     private readonly IDealerAnalyticsRepository _analyticsRepository;
     private readonly IMarketBenchmarkRepository _benchmarkRepository;
-    
+
     public GenerateInsightsCommandHandler(
         IDealerInsightRepository insightRepository,
         IDealerAnalyticsRepository analyticsRepository,
@@ -22,22 +22,22 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
         _analyticsRepository = analyticsRepository;
         _benchmarkRepository = benchmarkRepository;
     }
-    
+
     public async Task<List<DealerInsightDto>> Handle(GenerateInsightsCommand request, CancellationToken cancellationToken)
     {
         var insights = new List<DealerInsight>();
         var today = DateTime.UtcNow;
         var thirtyDaysAgo = today.AddDays(-30);
-        
+
         // Obtener analytics del dealer
         var analytics = await _analyticsRepository.GetDealerAnalyticsSummaryAsync(
             request.DealerId, thirtyDaysAgo, today);
-        
+
         // Generar insights basados en performance
         await GeneratePricingInsights(request.DealerId, analytics, insights);
         await GenerateInventoryInsights(request.DealerId, analytics, insights);
         await GenerateMarketingInsights(request.DealerId, analytics, insights);
-        
+
         // Guardar insights
         var savedInsights = new List<DealerInsightDto>();
         foreach (var insight in insights)
@@ -45,10 +45,10 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
             var saved = await _insightRepository.CreateInsightAsync(insight);
             savedInsights.Add(MapToDto(saved));
         }
-        
+
         return savedInsights;
     }
-    
+
     private async Task GeneratePricingInsights(Guid dealerId, DealerAnalytic analytics, List<DealerInsight> insights)
     {
         // Si el precio promedio está muy por encima del mercado
@@ -56,7 +56,7 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
         {
             var comparison = await _benchmarkRepository.CompareDealerToBenchmarkAsync(
                 dealerId, "price", DateTime.UtcNow);
-            
+
             if (comparison > 15) // 15% por encima del mercado
             {
                 insights.Add(new DealerInsight
@@ -77,7 +77,7 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
             }
         }
     }
-    
+
     private async Task GenerateInventoryInsights(Guid dealerId, DealerAnalytic analytics, List<DealerInsight> insights)
     {
         // Si los vehículos tardan mucho en venderse
@@ -100,7 +100,7 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
             });
         }
     }
-    
+
     private async Task GenerateMarketingInsights(Guid dealerId, DealerAnalytic analytics, List<DealerInsight> insights)
     {
         // Si la tasa de conversión es muy baja
@@ -123,7 +123,7 @@ public class GenerateInsightsCommandHandler : IRequestHandler<GenerateInsightsCo
             });
         }
     }
-    
+
     private static DealerInsightDto MapToDto(DealerInsight insight)
     {
         return new DealerInsightDto

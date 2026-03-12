@@ -102,7 +102,7 @@ public class UpdatePlatformUserStatusCommandHandler : IRequestHandler<UpdatePlat
 
     public async Task<Unit> Handle(UpdatePlatformUserStatusCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Updating platform user {UserId} status to {Status}", 
+        _logger.LogInformation("Updating platform user {UserId} status to {Status}",
             request.UserId, request.Status);
 
         await _userService.UpdateUserStatusAsync(request.UserId, request.Status, request.Reason, cancellationToken);

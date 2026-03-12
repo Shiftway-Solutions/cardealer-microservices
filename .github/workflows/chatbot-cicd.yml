@@ -261,10 +261,63 @@ jobs:
           severity: "CRITICAL,HIGH"
         continue-on-error: true
 
-  docker-llm-server:
-    name: 🐳 Docker LLM Server
+  # ============================================
+  # STEP 2.5: Python Lint (LlmServer)
+  # ============================================
+  python-lint:
+    name: 🐍 Python Lint (LlmServer)
     needs: detect-changes
     if: needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install lint tools
+        run: pip install -r backend/requirements-lint.txt
+
+      - name: 🔍 flake8 (PEP8)
+        run: flake8 backend/ChatbotService/LlmServer
+
+      - name: 🎨 black --check (formatting)
+        run: black --check --diff backend/ChatbotService/LlmServer
+
+      - name: 📦 isort --check (import order)
+        run: isort --check-only --diff backend/ChatbotService/LlmServer
+
+      - name: 🧪 Run Python tests with coverage
+        run: |
+          if [ -d "backend/ChatbotService/LlmServer/tests" ]; then
+            cd backend && pytest ChatbotService/LlmServer/tests/ \
+              --cov=ChatbotService/LlmServer \
+              --cov-report=xml:coverage-llmserver.xml \
+              --cov-report=term \
+              --cov-fail-under=80 \
+              -v
+          else
+            echo "⚠️ No Python tests found yet, skipping"
+          fi
+
+      - name: 📊 Upload Python coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        continue-on-error: true
+        with:
+          files: backend/coverage-llmserver.xml
+          flags: python-llmserver
+          name: llmserver-coverage
+          fail_ci_if_error: false
+
+  docker-llm-server:
+    name: 🐳 Docker LLM Server
+    needs: [detect-changes, python-lint]
+    if: always() && (needs.detect-changes.outputs.llm-server == 'true' || github.event.inputs.force_deploy == 'true') && needs.python-lint.result != 'failure'
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
@@ -591,6 +644,7 @@ jobs:
         detect-changes,
         build-chatbotservice,
         docker-chatbotservice,
+        python-lint,
         docker-llm-server,
         eval-gate,
         deploy,

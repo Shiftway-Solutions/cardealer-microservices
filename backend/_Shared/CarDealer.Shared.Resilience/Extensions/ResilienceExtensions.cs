@@ -28,7 +28,7 @@ public static class ResilienceExtensions
     {
         var options = new ResilienceOptions();
         configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
-        
+
         return services.AddResilientHttpClient<TClient, TImplementation>(
             clientName ?? typeof(TClient).Name,
             options,
@@ -73,7 +73,7 @@ public static class ResilienceExtensions
     {
         var options = new ResilienceOptions();
         configuration.GetSection(ResilienceOptions.SectionName).Bind(options);
-        
+
         return builder.AddStandardResilience(options);
     }
 
@@ -91,7 +91,7 @@ public static class ResilienceExtensions
         {
             BuildResiliencePipeline(resilienceBuilder, options, builder.Name, logger: null);
         });
-        
+
         return builder;
     }
 

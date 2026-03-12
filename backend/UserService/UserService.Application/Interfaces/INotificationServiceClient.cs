@@ -8,20 +8,20 @@ namespace UserService.Application.Interfaces
         Task SendWelcomeEmailAsync(string email, string firstName, string lastName);
         Task SendRoleAssignedNotificationAsync(string email, string roleName);
         Task SendPasswordResetEmailAsync(string email, string resetToken);
-        
+
         // ========================================
         // DEALER ONBOARDING EMAILS
         // ========================================
-        
+
         /// <summary>
         /// Envía email de verificación para dealer onboarding
         /// </summary>
         Task SendDealerVerificationEmailAsync(
-            string email, 
-            string businessName, 
+            string email,
+            string businessName,
             string verificationToken,
             DateTime tokenExpiry);
-        
+
         /// <summary>
         /// Envía notificación a admins cuando un dealer sube documentos
         /// </summary>
@@ -30,28 +30,28 @@ namespace UserService.Application.Interfaces
             string rnc,
             string email,
             Guid dealerId);
-        
+
         /// <summary>
         /// Envía email de aprobación al dealer
         /// </summary>
         Task SendDealerApprovalEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string requestedPlan);
-        
+
         /// <summary>
         /// Envía email de rechazo al dealer con razón
         /// </summary>
         Task SendDealerRejectionEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string rejectionReason);
-        
+
         /// <summary>
         /// Envía email de bienvenida cuando el dealer es activado
         /// </summary>
         Task SendDealerWelcomeEmailAsync(
-            string email, 
+            string email,
             string businessName,
             string plan,
             bool isEarlyBird);

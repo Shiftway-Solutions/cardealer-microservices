@@ -12,8 +12,8 @@ public interface IReviewRepository : IRepository<Review, Guid>
     /// Obtener reviews de un vendedor con paginación
     /// </summary>
     Task<(IEnumerable<Review> Reviews, int TotalCount)> GetBySellerIdAsync(
-        Guid sellerId, 
-        int page = 1, 
+        Guid sellerId,
+        int page = 1,
         int pageSize = 20,
         bool onlyApproved = true);
 

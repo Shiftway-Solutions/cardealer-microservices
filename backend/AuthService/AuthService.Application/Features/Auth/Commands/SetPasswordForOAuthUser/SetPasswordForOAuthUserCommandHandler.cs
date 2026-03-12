@@ -27,7 +27,7 @@ public class SetPasswordForOAuthUserCommandHandler : IRequestHandler<SetPassword
     private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
     private readonly IDistributedCache _cache;
     private readonly ILogger<SetPasswordForOAuthUserCommandHandler> _logger;
-    
+
     private const string TOKEN_PREFIX = "password_setup:token:";
     private static readonly TimeSpan TOKEN_TTL = TimeSpan.FromHours(1);
 
@@ -85,7 +85,7 @@ public class SetPasswordForOAuthUserCommandHandler : IRequestHandler<SetPassword
             {
                 // User already has password (race condition or already set)
                 await _cache.RemoveAsync(tokenKey, cancellationToken);
-                
+
                 return new SetPasswordForOAuthUserResponse(
                     Success: true,
                     Message: "Password is already configured for your account.",

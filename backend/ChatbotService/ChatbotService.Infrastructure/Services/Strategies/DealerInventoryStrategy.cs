@@ -84,17 +84,17 @@ public class DealerInventoryStrategy : IChatModeStrategy
             {
                 // Extraer filtros del mensaje del usuario
                 var filters = ExtractFiltersFromMessage(userMessage);
-                
+
                 var results = await _vectorSearch.SearchAsync(
                     dealerId, userMessage, filters, topK: 5, ct: ct);
-                
+
                 if (results.Any())
                 {
                     ragContext = "\n\n## 🔍 VEHÍCULOS RELEVANTES A LA CONSULTA\n" +
                         string.Join("\n", results.Select(r => r.ToPromptText())) +
                         "\n\nEstos son los vehículos más relevantes para la consulta actual. " +
                         "Si el usuario necesita ver más opciones, usa la función search_inventory.";
-                    
+
                     _logger.LogInformation("RAG: Found {Count} relevant vehicles for query in dealer {DealerId}",
                         results.Count, dealerId);
                 }
@@ -103,7 +103,7 @@ public class DealerInventoryStrategy : IChatModeStrategy
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "RAG search failed for dealer {DealerId}, falling back to static inventory", dealerId);
-            
+
             // Fallback: inyectar inventario estático como antes
             ragContext = await BuildStaticInventoryContextAsync(config.Id, ct);
         }
@@ -289,7 +289,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         ChatSession session, FunctionCall functionCall, CancellationToken ct = default)
     {
         var dealerId = session.DealerId ?? Guid.Empty;
-        
+
         return functionCall.Name switch
         {
             "search_inventory" => await ExecuteSearchInventoryAsync(session, functionCall.Arguments, ct),
@@ -308,18 +308,18 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         ChatSession session, string llmResponse, CancellationToken ct = default)
     {
         var result = new GroundingValidationResult { IsGrounded = true };
-        
+
         // En modo dealer inventory, verificar que no mencione precios 
         // que no correspondan a vehículos reales del inventario
         // (Simplificado: confiar en el RAG + instrucciones del prompt)
-        
+
         // Verificar que no contenga frases que indiquen invención
         var hallucinationPatterns = new[]
         {
             "podría tener", "posiblemente tiene", "creo que tiene",
             "generalmente incluye", "suele venir con", "normalmente trae"
         };
-        
+
         var lowerResponse = llmResponse.ToLowerInvariant();
         foreach (var pattern in hallucinationPatterns)
         {
@@ -328,14 +328,14 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
                 result.UngroundedClaims.Add($"Lenguaje especulativo detectado: '{pattern}'");
             }
         }
-        
+
         // Si hay claims no grounded pero no son graves, solo advertir
         if (result.UngroundedClaims.Any())
         {
             result.WarningMessage = "La respuesta contiene lenguaje especulativo. " +
                 "Se recomienda basar las respuestas en datos concretos del inventario.";
         }
-        
+
         return Task.FromResult(result);
     }
 
@@ -348,7 +348,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
     {
         var dealerId = session.DealerId ?? Guid.Empty;
         var query = args.GetValueOrDefault("query")?.ToString() ?? "";
-        
+
         var filters = new VehicleSearchFilters
         {
             Make = args.GetValueOrDefault("make")?.ToString(),
@@ -357,7 +357,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
             Transmission = args.GetValueOrDefault("transmission")?.ToString(),
             BodyType = args.GetValueOrDefault("body_type")?.ToString(),
         };
-        
+
         if (args.TryGetValue("year_min", out var yearMin) && int.TryParse(yearMin?.ToString(), out var ym))
             filters.YearMin = ym;
         if (args.TryGetValue("year_max", out var yearMax) && int.TryParse(yearMax?.ToString(), out var ymx))
@@ -370,7 +370,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         try
         {
             var results = await _vectorSearch.SearchAsync(dealerId, query, filters, topK: 5, ct: ct);
-            
+
             if (!results.Any())
             {
                 return new FunctionCallResult
@@ -382,7 +382,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 
             var resultText = "VEHÍCULOS ENCONTRADOS:\n" +
                 string.Join("\n", results.Select(r => r.ToPromptText()));
-            
+
             return new FunctionCallResult
             {
                 Success = true,
@@ -739,14 +739,14 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
 
         var vehicle = await _vehicleRepository.GetByVehicleIdAsync(
             session.ChatbotConfigurationId, vehicleId, ct);
-        
+
         if (vehicle == null)
         {
             return new FunctionCallResult { Success = false, ErrorMessage = "Vehículo no encontrado en el inventario." };
         }
 
         await _vehicleRepository.IncrementInquiryCountAsync(vehicle.Id, ct);
-        
+
         var details = $"DETALLES DEL VEHÍCULO:\n" +
             $"- {vehicle.Year} {vehicle.Make} {vehicle.Model} {vehicle.Trim ?? ""}\n" +
             $"- Precio: RD${vehicle.Price:N0}" +

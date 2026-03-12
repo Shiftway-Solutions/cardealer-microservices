@@ -1,0 +1,319 @@
+# =============================================================================
+# Security Scanning Workflow - OKLA Microservices
+# Runs on PR and weekly to detect secrets, vulnerable NuGet packages, and
+# common security misconfigurations.
+# =============================================================================
+
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly scan on Mondays at 6:00 AM UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  # ========================================
+  # 1. Secret Scanning with Gitleaks
+  # ========================================
+  secret-scan:
+    name: 🔑 Secret Scanning
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --verbose --redact
+
+  # ========================================
+  # 2. NuGet Vulnerability Scan
+  # ========================================
+  nuget-vuln-scan:
+    name: 📦 NuGet Vulnerability Scan
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore all packages
+        run: dotnet restore cardealer.sln
+
+      - name: Check for vulnerable packages
+        run: |
+          echo "## 📦 NuGet Vulnerability Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          VULN_FOUND=0
+
+          for proj in $(find backend -name "*.csproj" -not -path "*/_DESCARTADOS/*" -not -path "*/bin/*" -not -path "*/obj/*"); do
+            OUTPUT=$(dotnet list "$proj" package --vulnerable --include-transitive 2>/dev/null || true)
+            if echo "$OUTPUT" | grep -qi "has the following vulnerable"; then
+              echo "### ⚠️ $proj" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              VULN_FOUND=1
+            fi
+          done
+
+          if [ "$VULN_FOUND" -eq 0 ]; then
+            echo "✅ No vulnerable packages found." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::warning::Vulnerable NuGet packages detected. Review the job summary."
+          fi
+
+  # ========================================
+  # 3. Security Configuration Checks
+  # ========================================
+  config-audit:
+    name: 🔒 Configuration Audit
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for hardcoded secrets in appsettings
+        run: |
+          echo "## 🔒 Configuration Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          ISSUES=0
+
+          # Check for common secret patterns in tracked files
+          echo "### Checking for hardcoded secrets..." >> $GITHUB_STEP_SUMMARY
+
+          # API keys (but not placeholder patterns like ${...})
+          MATCHES=$(grep -rn --include="*.json" --include="*.cs" --include="*.yml" --include="*.yaml" \
+            -E "(sk_live_|sk_test_|SG\.[a-zA-Z0-9]{20,}|re_[a-zA-Z0-9]{20,}|AC[a-f0-9]{32})" \
+            backend/ 2>/dev/null | grep -v "bin/" | grep -v "obj/" | grep -v "_DESCARTADOS/" | grep -v '\$\{' || true)
+
+          if [ -n "$MATCHES" ]; then
+            echo "⚠️ Potential API keys found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$MATCHES" | head -20 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            ISSUES=1
+          fi
+
+          # Check for AllowAnyOrigin (CORS misconfiguration)
+          CORS_ISSUES=$(grep -rn "AllowAnyOrigin" --include="*.cs" backend/ 2>/dev/null \
+            | grep -v "bin/" | grep -v "obj/" | grep -v "_DESCARTADOS/" || true)
+
+          if [ -n "$CORS_ISSUES" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ CORS: AllowAnyOrigin detected" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$CORS_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            ISSUES=1
+          fi
+
+          # Check for Swagger exposed without IsDevelopment guard
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Swagger Exposure Check" >> $GITHUB_STEP_SUMMARY
+
+          # Check production ocelot for swagger routes
+          SWAGGER_PROD=$(grep -c "swagger" backend/Gateway/Gateway.Api/ocelot.prod.json 2>/dev/null || echo "0")
+          if [ "$SWAGGER_PROD" -gt 0 ]; then
+            echo "⚠️ Swagger routes found in production gateway config" >> $GITHUB_STEP_SUMMARY
+            ISSUES=1
+          else
+            echo "✅ No Swagger routes in production gateway config" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$ISSUES" -eq 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ All configuration checks passed." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for security headers middleware
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Headers Coverage" >> $GITHUB_STEP_SUMMARY
+
+          TOTAL=0
+          COVERED=0
+          MISSING=""
+
+          for prog in $(find backend -path "*/Api/Program.cs" -not -path "*/_DESCARTADOS/*" -not -path "*/bin/*"); do
+            TOTAL=$((TOTAL + 1))
+            if grep -q "UseApiSecurityHeaders" "$prog" 2>/dev/null; then
+              COVERED=$((COVERED + 1))
+            else
+              SVC=$(echo "$prog" | sed 's|backend/||;s|/.*||')
+              MISSING="$MISSING $SVC"
+            fi
+          done
+
+          echo "- Total services: $TOTAL" >> $GITHUB_STEP_SUMMARY
+          echo "- With security headers: $COVERED" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$MISSING" ]; then
+            echo "- ⚠️ Missing:$MISSING" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ All services have security headers" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ========================================
+  # 4. Bandit — Python SAST
+  # ========================================
+  bandit-python:
+    name: 🐍 Bandit (Python SAST)
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install Bandit
+        run: pip install bandit bandit-sarif-formatter
+
+      - name: 🔒 Run Bandit scan
+        run: |
+          bandit -r backend/AIProcessingService/workers backend/ChatbotService/LlmServer \
+            -c backend/pyproject.toml \
+            -f sarif -o bandit-results.sarif \
+            -ll -ii || true
+
+      - name: 📤 Upload Bandit SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit-results.sarif
+          category: bandit-python
+
+      - name: 🚫 Fail on HIGH/CRITICAL findings
+        run: |
+          # Run bandit again checking only HIGH severity + HIGH confidence
+          RESULT=$(bandit -r backend/AIProcessingService/workers backend/ChatbotService/LlmServer \
+            -c backend/pyproject.toml \
+            -ll -ii -f json 2>/dev/null || true)
+          HIGH_COUNT=$(echo "$RESULT" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          high_crit = [r for r in data.get('results', []) if r.get('issue_severity') in ('HIGH', 'CRITICAL')]
+          print(len(high_crit))
+          " 2>/dev/null || echo "0")
+          if [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "::error::Bandit found $HIGH_COUNT HIGH/CRITICAL security findings. Fix before merging."
+            exit 1
+          fi
+          echo "✅ No HIGH/CRITICAL Bandit findings"
+
+  # ========================================
+  # 4b. pip-audit — Python Dependency Vulnerabilities
+  # ========================================
+  pip-audit-python:
+    name: 🐍 pip-audit (Python Deps)
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install pip-audit
+        run: pip install pip-audit
+
+      - name: 🔍 Audit AI Workers dependencies
+        run: |
+          pip-audit -r backend/AIProcessingService/workers/requirements.txt \
+            --desc --output pip-audit-ai.json --format json || true
+          # Check HIGH/CRITICAL
+          python3 -c "
+          import json
+          with open('pip-audit-ai.json') as f:
+              data = json.load(f)
+          vulns = data.get('dependencies', [])
+          high_crit = [v for v in vulns if v.get('vulns')]
+          if high_crit:
+              for dep in high_crit:
+                  for vuln in dep.get('vulns', []):
+                      fix = vuln.get('fix_versions', ['no fix'])
+                      print(f'::warning::{dep[\"name\"]}=={dep[\"version\"]}: {vuln[\"id\"]} (fix: {\", \".join(fix)})')
+          print(f'Total vulnerable packages: {len(high_crit)}')
+          " || true
+
+      - name: 🔍 Audit LlmServer dependencies
+        run: |
+          pip-audit -r backend/ChatbotService/LlmServer/requirements.txt \
+            --desc --output pip-audit-llm.json --format json || true
+          python3 -c "
+          import json
+          with open('pip-audit-llm.json') as f:
+              data = json.load(f)
+          vulns = [v for v in data.get('dependencies', []) if v.get('vulns')]
+          if vulns:
+              for dep in vulns:
+                  for vuln in dep.get('vulns', []):
+                      fix = vuln.get('fix_versions', ['no fix'])
+                      print(f'::warning::{dep[\"name\"]}=={dep[\"version\"]}: {vuln[\"id\"]} (fix: {\", \".join(fix)})')
+              print(f'::error::Found {len(vulns)} vulnerable Python packages. Review and update.')
+              exit(1)
+          print('No vulnerable packages found')
+          " || true
+
+  # ========================================
+  # 5. Semgrep — Frontend SAST
+  # ========================================
+  semgrep-frontend:
+    name: 🛡️ Semgrep (Frontend SAST)
+    runs-on: [self-hosted, macOS, ARM64]
+    container:
+      image: semgrep/semgrep
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔒 Run Semgrep scan
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --sarif --output semgrep-results.sarif \
+            frontend/web-next/src/ \
+            || true
+
+      - name: 📤 Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep-frontend
+
+      - name: 🚫 Fail on HIGH/CRITICAL findings
+        run: |
+          # Run semgrep in strict mode — exit 1 if any match found with error severity
+          semgrep scan \
+            --config p/security-audit \
+            --severity ERROR \
+            --error \
+            frontend/web-next/src/ \
+            2>/dev/null && echo "✅ No HIGH/CRITICAL Semgrep findings" \
+            || { echo "::error::Semgrep found HIGH/CRITICAL security findings. Fix before merging."; exit 1; }

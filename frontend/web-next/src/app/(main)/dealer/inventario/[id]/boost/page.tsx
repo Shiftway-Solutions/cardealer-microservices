@@ -34,6 +34,7 @@ import { useKpis } from '@/hooks/use-dealer-analytics';
 import { useCreateCampaign } from '@/hooks/use-advertising';
 import { toast } from 'sonner';
 import type { AdPlacementType, CampaignPricingModel } from '@/types/advertising';
+import { PlanGate } from '@/components/plan/plan-gate';
 
 function useDealerBoostPlans() {
   const { pricing, formatPrice, isLoading } = usePlatformPricing();
@@ -84,6 +85,14 @@ function useDealerBoostPlans() {
 }
 
 export default function DealerVehicleBoostPage() {
+  return (
+    <PlanGate feature="featuredListings">
+      <DealerVehicleBoostContent />
+    </PlanGate>
+  );
+}
+
+function DealerVehicleBoostContent() {
   const params = useParams();
   const router = useRouter();
   const vehicleId = params.id as string;

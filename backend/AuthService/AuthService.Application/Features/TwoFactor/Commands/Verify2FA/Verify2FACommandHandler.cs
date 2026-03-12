@@ -60,16 +60,16 @@ public class Verify2FACommandHandler : IRequestHandler<Verify2FACommand, Verify2
             if (user.TwoFactorAuth.Status == TwoFactorAuthStatus.PendingVerification)
             {
                 user.TwoFactorAuth.ConfirmEnable();
-                
+
                 // Ahora sí enviar los códigos de recuperación por email
                 if (user.TwoFactorAuth.RecoveryCodes.Any())
                 {
                     await _notificationService.SendTwoFactorBackupCodesAsync(
-                        user.Email!, 
+                        user.Email!,
                         user.TwoFactorAuth.RecoveryCodes);
                 }
             }
-            
+
             // Marcar como usado
             user.TwoFactorAuth.MarkAsUsed();
             await _userRepository.UpdateAsync(user, cancellationToken);

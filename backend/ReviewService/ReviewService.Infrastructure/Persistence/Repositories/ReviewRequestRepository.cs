@@ -36,9 +36,9 @@ public class ReviewRequestRepository : Repository<ReviewRequest, Guid>, IReviewR
     public async Task<List<ReviewRequest>> GetPendingRequestsAsync(int daysAfterPurchase = 7, int limit = 100, CancellationToken cancellationToken = default)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-daysAfterPurchase);
-        
+
         return await _context.ReviewRequests
-            .Where(x => x.Status == ReviewRequestStatus.Sent && 
+            .Where(x => x.Status == ReviewRequestStatus.Sent &&
                        x.PurchaseDate <= cutoffDate &&
                        x.ExpiresAt > DateTime.UtcNow)
             .OrderBy(x => x.PurchaseDate)
@@ -51,7 +51,7 @@ public class ReviewRequestRepository : Repository<ReviewRequest, Guid>, IReviewR
         var reminderCutoff = DateTime.UtcNow.AddDays(-daysAfterRequest);
 
         return await _context.ReviewRequests
-            .Where(x => x.Status == ReviewRequestStatus.Sent && 
+            .Where(x => x.Status == ReviewRequestStatus.Sent &&
                        x.ExpiresAt > DateTime.UtcNow &&
                        x.RemindersSent < maxReminders &&
                        x.RequestSentAt <= reminderCutoff &&

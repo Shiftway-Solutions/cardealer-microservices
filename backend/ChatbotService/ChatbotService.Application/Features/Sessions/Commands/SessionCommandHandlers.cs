@@ -53,7 +53,7 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
 
         // Determinar el modo de chat
         var chatMode = ParseChatMode(request.ChatMode, request.VehicleId, request.DealerId);
-        
+
         // Crear nueva sesión
         var session = new ChatSession
         {
@@ -85,7 +85,7 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         };
 
         await _sessionRepository.CreateAsync(session, ct);
-        
+
         _logger.LogInformation(
             "Created chat session {SessionId} — Mode: {ChatMode}, Vehicle: {VehicleId}, Dealer: {DealerId}",
             session.Id, chatMode, request.VehicleId, request.DealerId);
@@ -93,9 +93,9 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         // Personalizar mensaje de bienvenida según el modo
         var welcomeMessage = chatMode switch
         {
-            ChatMode.SingleVehicle => config.WelcomeMessage ?? 
+            ChatMode.SingleVehicle => config.WelcomeMessage ??
                 "¡Hola! 👋 Soy tu asistente virtual. ¿Qué te gustaría saber sobre este vehículo?",
-            ChatMode.DealerInventory => config.WelcomeMessage ?? 
+            ChatMode.DealerInventory => config.WelcomeMessage ??
                 "¡Hola! 👋 Soy tu asistente virtual. Tengo acceso a todo el inventario del dealer. " +
                 "¿Buscas algo en particular? Puedo buscar, comparar y recomendarte vehículos.",
             _ => config.WelcomeMessage
@@ -431,7 +431,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         decimal confidenceScore = 0;
         bool isFallback = false;
         bool consumedInteraction = false;
-        
+
         // DealerChatAgent intent scoring fields
         int intentScore = 1;
         string clasificacion = "curioso";
@@ -449,7 +449,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         {
             // ── 7. STRATEGY PATTERN: Construir system prompt según el modo ──
             var strategy = _strategyFactory.GetStrategy(session.ChatMode);
-            
+
             var systemPrompt = await strategy.BuildSystemPromptAsync(
                 session, config, messageForLlm, ct);
 
@@ -502,74 +502,74 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             }
             else
             {
-            // ── 8. Llamar al LLM ─────────────────────────────────────
-            var llmResult = await _llmService.GenerateResponseAsync(
-                session.SessionToken,
-                messageForLlm,
-                session.Language ?? "es",
-                systemPrompt,
-                ct);
+                // ── 8. Llamar al LLM ─────────────────────────────────────
+                var llmResult = await _llmService.GenerateResponseAsync(
+                    session.SessionToken,
+                    messageForLlm,
+                    session.Language ?? "es",
+                    systemPrompt,
+                    ct);
 
-            // ── 9. Sanitizar respuesta del LLM (anti-PII echo-back) ──
-            botResponse = PiiDetector.SanitizeResponse(
-                llmResult.FulfillmentText ?? "Lo siento, no entendí tu mensaje.");
-            intentName = llmResult.DetectedIntent;
-            confidenceScore = (decimal)llmResult.ConfidenceScore;
-            isFallback = llmResult.IsFallback;
-            consumedInteraction = true;
+                // ── 9. Sanitizar respuesta del LLM (anti-PII echo-back) ──
+                botResponse = PiiDetector.SanitizeResponse(
+                    llmResult.FulfillmentText ?? "Lo siento, no entendí tu mensaje.");
+                intentName = llmResult.DetectedIntent;
+                confidenceScore = (decimal)llmResult.ConfidenceScore;
+                isFallback = llmResult.IsFallback;
+                consumedInteraction = true;
 
-            // ── 9b. CACHE SET: Store response for future hits ─────────
-            _ = _cacheService.SetAsync(
-                messageForLlm, botResponse, intentName,
-                llmResult.ConfidenceScore, isFallback, systemPrompt, ct: ct);
+                // ── 9b. CACHE SET: Store response for future hits ─────────
+                _ = _cacheService.SetAsync(
+                    messageForLlm, botResponse, intentName,
+                    llmResult.ConfidenceScore, isFallback, systemPrompt, ct: ct);
 
-            // ── 10. Grounding validation (anti-hallucination) ─────────
-            var groundingResult = await strategy.ValidateResponseGroundingAsync(
-                session, botResponse, ct);
+                // ── 10. Grounding validation (anti-hallucination) ─────────
+                var groundingResult = await strategy.ValidateResponseGroundingAsync(
+                    session, botResponse, ct);
 
-            if (!groundingResult.IsGrounded && groundingResult.SanitizedResponse != null)
-            {
-                _logger.LogWarning("Response not grounded in session {SessionId}: {Claims}",
-                    session.Id, string.Join(", ", groundingResult.UngroundedClaims));
-                botResponse = groundingResult.SanitizedResponse;
-                _metrics.RecordHallucinationDetected("fresh_response");
-                foreach (var claim in groundingResult.UngroundedClaims)
-                    _metrics.RecordGroundingViolation("fresh");
-            }
+                if (!groundingResult.IsGrounded && groundingResult.SanitizedResponse != null)
+                {
+                    _logger.LogWarning("Response not grounded in session {SessionId}: {Claims}",
+                        session.Id, string.Join(", ", groundingResult.UngroundedClaims));
+                    botResponse = groundingResult.SanitizedResponse;
+                    _metrics.RecordHallucinationDetected("fresh_response");
+                    foreach (var claim in groundingResult.UngroundedClaims)
+                        _metrics.RecordGroundingViolation("fresh");
+                }
 
-            // ── 10b. SEGURIDAD: Content moderation on bot output ──────
-            var outputModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
-            if (!outputModeration.IsSafe)
-            {
-                _metrics.RecordModerationBlocked(outputModeration.Category.ToString(), "post_llm");
-                _logger.LogWarning(
-                    "Bot output moderated. Category={Category}, Reason={Reason}, Session={SessionId}",
-                    outputModeration.Category, outputModeration.Reason, session.Id);
-                botResponse = outputModeration.SuggestedAction
-                    ?? "¿Hay algo más sobre el vehículo en lo que pueda ayudarte?";
-            }
+                // ── 10b. SEGURIDAD: Content moderation on bot output ──────
+                var outputModeration = ContentModerationFilter.ModerateBotResponse(botResponse);
+                if (!outputModeration.IsSafe)
+                {
+                    _metrics.RecordModerationBlocked(outputModeration.Category.ToString(), "post_llm");
+                    _logger.LogWarning(
+                        "Bot output moderated. Category={Category}, Reason={Reason}, Session={SessionId}",
+                        outputModeration.Category, outputModeration.Reason, session.Id);
+                    botResponse = outputModeration.SuggestedAction
+                        ?? "¿Hay algo más sobre el vehículo en lo que pueda ayudarte?";
+                }
 
-            // ── 10c. DealerChatAgent: capture intent scoring fields ───
-            intentScore = llmResult.IntentScore;
-            clasificacion = llmResult.Clasificacion;
-            moduloActivo = llmResult.ModuloActivo;
-            handoffActivado = llmResult.HandoffActivado;
+                // ── 10c. DealerChatAgent: capture intent scoring fields ───
+                intentScore = llmResult.IntentScore;
+                clasificacion = llmResult.Clasificacion;
+                moduloActivo = llmResult.ModuloActivo;
+                handoffActivado = llmResult.HandoffActivado;
 
-            // ── 10d. Auto-trigger handoff if Claude activated it ──────
-            if (llmResult.HandoffActivado && session.IsBotActive)
-            {
-                session.HandoffStatus = HandoffStatus.PendingHuman;
-                session.HandoffReason = llmResult.RazonHandoff ?? "Solicitado por el usuario";
+                // ── 10d. Auto-trigger handoff if Claude activated it ──────
+                if (llmResult.HandoffActivado && session.IsBotActive)
+                {
+                    session.HandoffStatus = HandoffStatus.PendingHuman;
+                    session.HandoffReason = llmResult.RazonHandoff ?? "Solicitado por el usuario";
+                    _logger.LogInformation(
+                        "DealerChatAgent triggered handoff in session {SessionId}: {Reason}",
+                        session.Id, session.HandoffReason);
+                }
+
                 _logger.LogInformation(
-                    "DealerChatAgent triggered handoff in session {SessionId}: {Reason}",
-                    session.Id, session.HandoffReason);
-            }
-
-            _logger.LogInformation(
-                "DealerChatAgent response — Session: {SessionId}, IntentScore: {Score}, " +
-                "Clasificacion: {Clasificacion}, Modulo: {Modulo}, Handoff: {Handoff}",
-                session.Id, llmResult.IntentScore, llmResult.Clasificacion,
-                llmResult.ModuloActivo, llmResult.HandoffActivado);
+                    "DealerChatAgent response — Session: {SessionId}, IntentScore: {Score}, " +
+                    "Clasificacion: {Clasificacion}, Modulo: {Modulo}, Handoff: {Handoff}",
+                    session.Id, llmResult.IntentScore, llmResult.Clasificacion,
+                    llmResult.ModuloActivo, llmResult.HandoffActivado);
             } // end of cache-miss else block
 
             // ── 11. Incrementar contadores ────────────────────────────
@@ -780,7 +780,7 @@ public class TransferToAgentCommandHandler : IRequestHandler<TransferToAgentComm
 
         _logger.LogInformation("Session {SessionId} transferred to agent (mode: {Mode})",
             session.Id, session.ChatMode);
-        
+
         return new TransferToAgentResult(
             true, null,
             "Your request has been transferred to a human agent. Please wait.",

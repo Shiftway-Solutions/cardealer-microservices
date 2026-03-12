@@ -42,13 +42,13 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
             // Crear y guardar token de reset en la base de datos
             _logger.LogInformation("Creating password reset token for user {UserId}", user.Id);
-            
+
             var verificationToken = VerificationToken.CreatePasswordResetToken(
-                request.Email, 
-                user.Id.ToString(), 
+                request.Email,
+                user.Id.ToString(),
                 expiryHours: 1  // Token válido por 1 hora
             );
-            
+
             _logger.LogInformation("Saving token to database: {TokenId}", verificationToken.Id);
             await _verificationTokenRepository.AddAsync(verificationToken);
             _logger.LogInformation("Token saved successfully with ID: {TokenId}", verificationToken.Id);

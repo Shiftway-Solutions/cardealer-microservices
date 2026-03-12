@@ -39,6 +39,13 @@ jobs:
         with:
           args: --verbose --redact
 
+      - name: 🔔 Notify on Secret Detection
+        if: failure()
+        uses: ./.github/actions/slack-notify-failure
+        with:
+          stage-name: "🔑 Secret Scanning — Gitleaks"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   # ========================================
   # 2. NuGet Vulnerability Scan
   # ========================================
@@ -172,3 +179,148 @@ jobs:
           else
             echo "- ✅ All services have security headers" >> $GITHUB_STEP_SUMMARY
           fi
+
+  # ========================================
+  # 4. Bandit — Python SAST
+  # ========================================
+  bandit-python:
+    name: 🐍 Bandit (Python SAST)
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: � Install Bandit
+        run: |
+          python3 -m venv /tmp/bandit-venv
+          /tmp/bandit-venv/bin/pip install --quiet bandit bandit-sarif-formatter
+          echo "/tmp/bandit-venv/bin" >> $GITHUB_PATH
+
+      - name: 🔒 Run Bandit scan
+        run: |
+          bandit -r backend/AIProcessingService/workers backend/ChatbotService/LlmServer \
+            -c backend/pyproject.toml \
+            -f sarif -o bandit-results.sarif \
+            -ll -ii || true
+
+      - name: 📤 Upload Bandit SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit-results.sarif
+          category: bandit-python
+
+      - name: 🚫 Fail on HIGH/CRITICAL findings
+        run: |
+          # Run bandit again checking only HIGH severity + HIGH confidence
+          RESULT=$(bandit -r backend/AIProcessingService/workers backend/ChatbotService/LlmServer \
+            -c backend/pyproject.toml \
+            -ll -ii -f json 2>/dev/null || true)
+          HIGH_COUNT=$(echo "$RESULT" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          high_crit = [r for r in data.get('results', []) if r.get('issue_severity') in ('HIGH', 'CRITICAL')]
+          print(len(high_crit))
+          " 2>/dev/null || echo "0")
+          if [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "::error::Bandit found $HIGH_COUNT HIGH/CRITICAL security findings. Fix before merging."
+            exit 1
+          fi
+          echo "✅ No HIGH/CRITICAL Bandit findings"
+
+  # ========================================
+  # 4b. pip-audit — Python Dependency Vulnerabilities
+  # ========================================
+  pip-audit-python:
+    name: 🐍 pip-audit (Python Deps)
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: � Install pip-audit
+        run: |
+          python3 -m venv /tmp/pipaudit-venv
+          /tmp/pipaudit-venv/bin/pip install --quiet pip-audit
+          echo "/tmp/pipaudit-venv/bin" >> $GITHUB_PATH
+
+      - name: 🔍 Audit AI Workers dependencies
+        run: |
+          pip-audit -r backend/AIProcessingService/workers/requirements.txt \
+            --desc --output pip-audit-ai.json --format json || true
+          # Check HIGH/CRITICAL
+          python3 -c "
+          import json
+          with open('pip-audit-ai.json') as f:
+              data = json.load(f)
+          vulns = data.get('dependencies', [])
+          high_crit = [v for v in vulns if v.get('vulns')]
+          if high_crit:
+              for dep in high_crit:
+                  for vuln in dep.get('vulns', []):
+                      fix = vuln.get('fix_versions', ['no fix'])
+                      print(f'::warning::{dep[\"name\"]}=={dep[\"version\"]}: {vuln[\"id\"]} (fix: {\", \".join(fix)})')
+          print(f'Total vulnerable packages: {len(high_crit)}')
+          " || true
+
+      - name: 🔍 Audit LlmServer dependencies
+        run: |
+          pip-audit -r backend/ChatbotService/LlmServer/requirements.txt \
+            --desc --output pip-audit-llm.json --format json || true
+          python3 -c "
+          import json
+          with open('pip-audit-llm.json') as f:
+              data = json.load(f)
+          vulns = [v for v in data.get('dependencies', []) if v.get('vulns')]
+          if vulns:
+              for dep in vulns:
+                  for vuln in dep.get('vulns', []):
+                      fix = vuln.get('fix_versions', ['no fix'])
+                      print(f'::warning::{dep[\"name\"]}=={dep[\"version\"]}: {vuln[\"id\"]} (fix: {\", \".join(fix)})')
+              print(f'::error::Found {len(vulns)} vulnerable Python packages. Review and update.')
+              exit(1)
+          print('No vulnerable packages found')
+          " || true
+
+  # ========================================
+  # 5. Semgrep — Frontend SAST
+  # ========================================
+  semgrep-frontend:
+    name: 🛡️ Semgrep (Frontend SAST)
+    runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 🛡️ Install Semgrep
+        run: |
+          python3 -m venv /tmp/semgrep-venv
+          /tmp/semgrep-venv/bin/pip install --quiet semgrep
+          echo "/tmp/semgrep-venv/bin" >> $GITHUB_PATH
+
+      - name: 🔒 Run Semgrep scan
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --sarif --output semgrep-results.sarif \
+            frontend/web-next/src/ \
+            || true
+
+      - name: 📤 Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep-frontend
+
+      - name: 🚫 Fail on HIGH/CRITICAL findings
+        run: |
+          # Run semgrep in strict mode — exit 1 if any match found with error severity
+          semgrep scan \
+            --config p/security-audit \
+            --severity ERROR \
+            --error \
+            frontend/web-next/src/ \
+            2>/dev/null && echo "✅ No HIGH/CRITICAL Semgrep findings" \
+            || { echo "::error::Semgrep found HIGH/CRITICAL security findings. Fix before merging."; exit 1; }

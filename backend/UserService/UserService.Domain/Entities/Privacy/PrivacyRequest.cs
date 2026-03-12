@@ -46,34 +46,34 @@ public class PrivacyRequest
     public Guid UserId { get; set; }
     public PrivacyRequestType Type { get; set; }
     public PrivacyRequestStatus Status { get; set; } = PrivacyRequestStatus.Pending;
-    
+
     // Para exportación de datos
     public ExportFormat? ExportFormat { get; set; }
     public string? DownloadToken { get; set; }
     public DateTime? DownloadTokenExpiresAt { get; set; }
     public string? FilePath { get; set; }
     public long? FileSizeBytes { get; set; }
-    
+
     // Para eliminación de cuenta
     public string? DeletionReason { get; set; }
     public string? DeletionReasonOther { get; set; }
     public DateTime? GracePeriodEndsAt { get; set; } // 15 días de gracia
     public string? ConfirmationCode { get; set; }
     public bool IsConfirmed { get; set; } = false;
-    
+
     // Metadatos
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public string? Description { get; set; }
     public string? AdminNotes { get; set; }
     public Guid? ProcessedBy { get; set; }
-    
+
     // Timestamps
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ProcessedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
-    
+
     // Navegación
     public User? User { get; set; }
 }

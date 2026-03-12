@@ -1,0 +1,350 @@
+# =============================================================================
+# REUSABLE WORKFLOW: .NET Microservice CI/CD
+# =============================================================================
+# Template reutilizable para todos los microservicios .NET
+# Incluye: Build, Test, Docker Build/Push, Security Scan
+#
+# Uso:
+#   jobs:
+#     ci-cd:
+#       uses: ./.github/workflows/_reusable-dotnet-service.yml
+#       with:
+#         service-name: authservice
+#         service-path: backend/AuthService
+# =============================================================================
+
+name: Reusable .NET Service CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        description: "Nombre del servicio (lowercase, ej: authservice)"
+        required: true
+        type: string
+      service-path:
+        description: "Path al servicio (ej: backend/AuthService)"
+        required: true
+        type: string
+      dotnet-version:
+        description: "Versión de .NET SDK"
+        required: false
+        type: string
+        default: "8.0.x"
+      run-tests:
+        description: "Ejecutar tests"
+        required: false
+        type: boolean
+        default: true
+      run-docker-build:
+        description: "Construir imagen Docker"
+        required: false
+        type: boolean
+        default: true
+      run-docker-push:
+        description: "Push imagen a registry"
+        required: false
+        type: boolean
+        default: false
+      docker-registry:
+        description: "Docker registry URL"
+        required: false
+        type: string
+        default: "ghcr.io"
+      api-folder-name:
+        description: "Nombre del folder .Api (PascalCase, ej: AuthService.Api)"
+        required: false
+        type: string
+        default: ""
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  # ============================================
+  # JOB 1: Build & Test
+  # ============================================
+  build-and-test:
+    name: 🔨 Build & Test
+    runs-on: [self-hosted, macOS, ARM64]
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      # Cache NuGet packages
+      - name: 📦 Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: 📥 Restore dependencies
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet restore
+
+      - name: 🔨 Build (TreatWarningsAsErrors)
+        working-directory: ${{ inputs.service-path }}
+        run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: 🔍 Code Format Check
+        working-directory: ${{ inputs.service-path }}
+        run: |
+          echo "🔍 Checking code formatting..."
+          dotnet format --no-restore --verify-no-changes --severity warn
+          echo "✅ Code formatting check passed"
+
+      - name: 🛡️ NuGet Vulnerability Audit
+        working-directory: ${{ inputs.service-path }}
+        run: |
+          echo "🔍 Scanning for direct package vulnerabilities..."
+          dotnet list package --vulnerable 2>&1 | tee /tmp/nuget-audit-direct.txt || true
+          echo ""
+          echo "🔍 Scanning for transitive package vulnerabilities..."
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee /tmp/nuget-audit-all.txt || true
+        continue-on-error: true
+
+      - name: 🚨 Check for Critical Direct Vulnerabilities
+        run: |
+          # Only fail on DIRECT package vulnerabilities that are Critical
+          # Transitive vulnerabilities are reported but don't block (require upstream fixes)
+          if grep -q "^\s*>" /tmp/nuget-audit-direct.txt 2>/dev/null && grep -qi "Critical" /tmp/nuget-audit-direct.txt; then
+            echo "::error::Critical DIRECT NuGet vulnerabilities detected!"
+            cat /tmp/nuget-audit-direct.txt
+            exit 1
+          fi
+
+          if grep -q "^\s*>" /tmp/nuget-audit-all.txt 2>/dev/null; then
+            echo "⚠️ Transitive vulnerabilities detected (from upstream packages):"
+            grep "^   >" /tmp/nuget-audit-all.txt || true
+            echo ""
+            echo "ℹ️ Transitive vulnerabilities require updates from package maintainers"
+          else
+            echo "✅ No vulnerable packages detected"
+          fi
+
+      - name: 🧪 Run tests
+        if: inputs.run-tests
+        timeout-minutes: 3
+        working-directory: ${{ inputs.service-path }}
+        run: |
+          if [ -d "${{ inputs.service-name }}.Tests" ] || [ -d "*.Tests" ]; then
+            dotnet test --no-build --configuration Release \
+              --logger "trx;LogFileName=test-results.trx" \
+              --collect:"XPlat Code Coverage" \
+              --results-directory ./TestResults \
+              --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~E2ETests&FullyQualifiedName!~StartupTests&FullyQualifiedName!~E2E"
+          else
+            echo "⚠️ No test project found, skipping tests"
+          fi
+
+      - name: 📊 Upload test results
+        if: inputs.run-tests && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.service-name }}
+          path: ${{ inputs.service-path }}/TestResults
+          retention-days: 7
+
+      - name: 🏷️ Generate version
+        id: version
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION"
+
+      - name: 🔔 Notify failure to Slack
+        if: failure()
+        uses: ./.github/actions/slack-notify-failure
+        continue-on-error: true
+        with:
+          stage-name: "${{ inputs.service-name }} — Build & Test"
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # JOB 2: Docker Build & Push
+  # ============================================
+  docker:
+    name: 🐳 Docker Build
+    needs: build-and-test
+    runs-on: [self-hosted, macOS, ARM64]
+    if: inputs.run-docker-build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # macOS ARM64 runner: Colima como Docker runtime headless.
+      # FIX: No depender de `docker context use` (propenso a race conditions con jobs paralelos
+      # que comparten el mismo runner). En su lugar, exportar DOCKER_HOST explícitamente
+      # apuntando al socket de Colima — esto es atómico, no toca ~/.docker/config.json.
+
+      - name: 🩺 Ensure Docker daemon is running (Colima)
+        timeout-minutes: 6
+        run: |
+          COLIMA_BIN="/opt/homebrew/bin/colima"
+          COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+
+          # FIX: Apuntar DOCKER_HOST directamente al socket de Colima.
+          # Esto evita race conditions cuando múltiples jobs paralelos intentan
+          # cambiar el contexto global de Docker al mismo tiempo.
+          export DOCKER_HOST="unix://$COLIMA_SOCKET"
+          echo "DOCKER_HOST=unix://$COLIMA_SOCKET" >> "$GITHUB_ENV"
+
+          # Fast path: Docker ya está respondiendo
+          if docker version > /dev/null 2>&1; then
+            echo "✅ Docker daemon is healthy (Colima already running)"
+            docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+            exit 0
+          fi
+
+          echo "⚠️ Docker not responding via Colima socket. Checking Colima status..."
+          if [ -x "$COLIMA_BIN" ]; then
+            "$COLIMA_BIN" status 2>&1 || true
+            echo "▶️ Starting Colima..."
+            "$COLIMA_BIN" start 2>&1 | head -30 || true
+          else
+            echo "::error::Colima not found at $COLIMA_BIN — instalar con: brew install colima"
+            exit 1
+          fi
+
+          # Esperar hasta 3 minutos para que Docker responda
+          for i in $(seq 1 36); do
+            sleep 5
+            if docker version > /dev/null 2>&1; then
+              echo "✅ Docker ready after $((i*5))s"
+              docker version --format '  Engine: {{.Server.Version}} | Context: {{.Client.Context}}'
+              exit 0
+            fi
+            if [ $i -eq 36 ]; then
+              echo "::error::Docker daemon no respondió en 3 minutos"
+              [ -x "$COLIMA_BIN" ] && "$COLIMA_BIN" status 2>&1 || true
+              echo "Socket existe: $(test -S "$COLIMA_SOCKET" && echo 'SÍ' || echo 'NO')"
+              exit 1
+            fi
+            echo "  Waiting... $((i*5))s / 180s"
+          done
+
+      - name: "🗑️ Remove Docker Desktop buildx symlink & create CI Docker config"
+        run: |
+          # 1. Remove Docker Desktop buildx symlink so setup-buildx-action can
+          #    install its binary as a regular file (symlink to Docker.app = EPERM).
+          rm -f ~/.docker/cli-plugins/docker-buildx
+
+          # 2. Create a clean CI-specific DOCKER_CONFIG with credsStore:"" (empty).
+          #    Docker CLI on macOS falls back to osxkeychain when credsStore is absent.
+          #    Setting it to "" explicitly disables all credential helpers, so Docker
+          #    uses auths{} in config.json — no macOS Keychain interaction.
+          CI_CFG=$(mktemp -d)
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$HOME/.docker/config.json" \
+            > "$CI_CFG/config.json" 2>/dev/null \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$CI_CFG/config.json"
+          echo "CI DOCKER_CONFIG: $(cat "$CI_CFG/config.json")"
+          echo "DOCKER_CONFIG=$CI_CFG" >> "$GITHUB_ENV"
+
+      - name: "🐳 Pre-pull buildkit image (avoids Docker Hub auth in buildx create)"
+        run: |
+          # moby/buildkit:buildx-stable-1 is needed by docker buildx create.
+          # If not in local cache, the daemon calls the credential helper which
+          # is docker-credential-osxkeychain — locked in background CI sessions.
+          # Pre-pulling from the interactive terminal (when keychain is available)
+          # caches the image so CI finds it locally and skips credential lookup.
+          # If not cached (fresh runner restart), the pull falls back to anonymous.
+          if docker image inspect moby/buildkit:buildx-stable-1 > /dev/null 2>&1; then
+            echo "✅ moby/buildkit:buildx-stable-1 already cached — no pull needed"
+          else
+            echo "⚠️ moby/buildkit:buildx-stable-1 not in cache — pulling anonymously"
+            DOCKER_CONFIG=/tmp/docker-anon-cfg \
+              && mkdir -p "$DOCKER_CONFIG" \
+              && printf '{"auths":{}}' > "$DOCKER_CONFIG/config.json" \
+              && DOCKER_CONFIG="$DOCKER_CONFIG" docker pull moby/buildkit:buildx-stable-1
+          fi
+
+      - name: "🔧 Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: |
+            network=host
+
+      - name: "🔐 Reset Docker config post-buildx (ensure credsStore stays empty)"
+        if: inputs.run-docker-push
+        run: |
+          echo "DOCKER_CONFIG=$DOCKER_CONFIG"
+          echo "Config before reset: $(cat "$DOCKER_CONFIG/config.json" 2>/dev/null || echo '(not found)')"
+          jq '. + {"credsStore": "", "credHelpers": {}}' "$DOCKER_CONFIG/config.json" \
+            > /tmp/dc_reset.json \
+            && mv /tmp/dc_reset.json "$DOCKER_CONFIG/config.json" \
+            || printf '{"auths":{},"credsStore":"","credHelpers":{}}' > "$DOCKER_CONFIG/config.json"
+          echo "Config after reset: $(cat "$DOCKER_CONFIG/config.json")"
+
+      - name: "🔐 Login to Container Registry"
+        if: inputs.run-docker-push
+        timeout-minutes: 2
+        run: |
+          # Write GHCR credentials directly to auths{} without calling docker login.
+          # docker/login-action calls `docker login` which on macOS always falls back
+          # to docker-credential-osxkeychain, even when credsStore is set to "".
+          # Writing to auths{} directly avoids credential helpers completely.
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          USER="${{ github.actor }}"
+          AUTH=$(printf "%s:%s" "$USER" "$TOKEN" | base64 | tr -d '\n')
+          jq --arg auth "$AUTH" '.auths["ghcr.io"] = {"auth": $auth}' \
+            "$DOCKER_CONFIG/config.json" > /tmp/dc_auth.json \
+            && mv /tmp/dc_auth.json "$DOCKER_CONFIG/config.json"
+          echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
+
+      - name: 🏗️ Build Docker image
+        timeout-minutes: 20
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ${{ inputs.service-path }}/Dockerfile
+          push: ${{ inputs.run-docker-push }}
+          platforms: linux/amd64
+          network: host
+          # FIX: Disable provenance & SBOM attestations to prevent 403 Forbidden
+          # errors when pushing to GHCR. build-push-action v5 enables provenance
+          # by default, which pushes OCI attestation blobs that GHCR can reject
+          # with 403 on the initial HEAD blob-existence check.
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:sha-${{ github.sha }}
+            ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+          cache-from: type=gha,scope=${{ inputs.service-name }}
+          cache-to: type=gha,scope=${{ inputs.service-name }},mode=max
+          build-args: |
+            BUILD_VERSION=${{ needs.build-and-test.outputs.version }}
+
+      - name: 🔒 Run Trivy vulnerability scanner
+        if: inputs.run-docker-build
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
+
+      - name: 📤 Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+        continue-on-error: true

@@ -9,17 +9,17 @@ public record GetConversionFunnelQuery(Guid DealerId, DateTime FromDate, DateTim
 public class GetConversionFunnelQueryHandler : IRequestHandler<GetConversionFunnelQuery, ConversionFunnelDto>
 {
     private readonly IConversionFunnelRepository _funnelRepository;
-    
+
     public GetConversionFunnelQueryHandler(IConversionFunnelRepository funnelRepository)
     {
         _funnelRepository = funnelRepository;
     }
-    
+
     public async Task<ConversionFunnelDto> Handle(GetConversionFunnelQuery request, CancellationToken cancellationToken)
     {
         var funnel = await _funnelRepository.CalculateFunnelMetricsAsync(
             request.DealerId, request.FromDate, request.ToDate);
-        
+
         return new ConversionFunnelDto
         {
             Id = funnel.Id,

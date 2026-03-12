@@ -6,31 +6,31 @@ public class DemandPrediction
     public string Make { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
     public int Year { get; set; }
-    
+
     // Demanda actual
     public DemandLevel CurrentDemand { get; set; }
     public decimal DemandScore { get; set; }          // 0-100
-    
+
     // Tendencia
     public TrendDirection Trend { get; set; }
     public decimal TrendStrength { get; set; }        // 0-1
-    
+
     // Predicción futura
     public DemandLevel PredictedDemand30Days { get; set; }
     public DemandLevel PredictedDemand90Days { get; set; }
-    
+
     // Estadísticas de mercado
     public int SearchesPerDay { get; set; }
     public int AvailableInventory { get; set; }
     public decimal AvgDaysToSale { get; set; }
-    
+
     // Recomendación de compra para dealers
     public BuyRecommendation BuyRecommendation { get; set; }
     public string BuyRecommendationReason { get; set; } = string.Empty;
-    
+
     // Insights como JSON
     public string Insights { get; set; } = "[]";      // JSON array
-    
+
     public DateTime PredictionDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

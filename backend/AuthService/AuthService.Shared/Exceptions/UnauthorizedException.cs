@@ -6,12 +6,12 @@ namespace AuthService.Shared.Exceptions;
 /// </summary>
 public class UnauthorizedException : AuthServiceException
 {
-    public UnauthorizedException(string message = "Unauthorized access") 
+    public UnauthorizedException(string message = "Unauthorized access")
         : base(message, 401, "UNAUTHORIZED")
     {
     }
 
-    public UnauthorizedException(string message, Exception innerException) 
+    public UnauthorizedException(string message, Exception innerException)
         : base(message, 401, "UNAUTHORIZED", innerException)
     {
     }

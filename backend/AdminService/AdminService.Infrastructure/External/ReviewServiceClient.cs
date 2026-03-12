@@ -58,7 +58,7 @@ public class ReviewServiceClient : IReviewServiceClient
         try
         {
             var qs = HttpUtility.ParseQueryString(string.Empty);
-            qs["page"]     = page.ToString();
+            qs["page"] = page.ToString();
             qs["pageSize"] = pageSize.ToString();
             if (!string.IsNullOrEmpty(search)) qs["search"] = search;
             if (!string.IsNullOrEmpty(status)) qs["status"] = status;
@@ -205,17 +205,17 @@ public class ReviewServiceClient : IReviewServiceClient
 
     private static AdminReviewItemDto MapToDto(ReviewServiceItemDto r) => new()
     {
-        Id           = r.Id ?? string.Empty,
-        AuthorName   = r.AuthorName ?? string.Empty,
+        Id = r.Id ?? string.Empty,
+        AuthorName = r.AuthorName ?? string.Empty,
         AuthorAvatar = r.AuthorAvatar,
-        TargetName   = r.TargetName ?? string.Empty,
-        TargetType   = r.TargetType ?? "seller",
-        Rating       = r.Rating,
-        Title        = r.Title ?? string.Empty,
-        Comment      = r.Comment ?? string.Empty,
-        CreatedAt    = r.CreatedAt ?? string.Empty,
-        Status       = r.Status ?? "pending",
-        Reports      = r.Reports ?? Array.Empty<string>()
+        TargetName = r.TargetName ?? string.Empty,
+        TargetType = r.TargetType ?? "seller",
+        Rating = r.Rating,
+        Title = r.Title ?? string.Empty,
+        Comment = r.Comment ?? string.Empty,
+        CreatedAt = r.CreatedAt ?? string.Empty,
+        Status = r.Status ?? "pending",
+        Reports = r.Reports ?? Array.Empty<string>()
     };
 }
 

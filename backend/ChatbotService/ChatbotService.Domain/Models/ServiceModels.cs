@@ -16,7 +16,7 @@ public class LlmDetectionResult
     public string? QueryText { get; set; }
     public List<string>? OutputContexts { get; set; }
     public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
-    
+
     // Campos adicionales del LLM
     public int TokensUsed { get; set; }
     public double ResponseTimeMs { get; set; }
@@ -53,7 +53,8 @@ public class LlmDetectionResult
     public List<string> TemasConsulta { get; set; } = new();
 
     /// <summary>Appointment proposal from the agent</summary>
-    public object? CitaPropuesta { get; set; }}
+    public object? CitaPropuesta { get; set; }
+}
 
 /// <summary>
 /// Señales de lead detectadas por el modelo LLM.
@@ -227,29 +228,29 @@ public class CostAnalysisReport
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public DateTime PeriodStart { get; set; }
     public DateTime PeriodEnd { get; set; }
-    
+
     // Métricas de uso
     public int TotalInteractions { get; set; }
     public int FreeInteractionsUsed { get; set; }
     public int PaidInteractions { get; set; }
     public int QuickResponseInteractions { get; set; }
     public int LlmInteractions { get; set; }
-    
+
     // Costos
     public decimal TotalCost { get; set; }
     public decimal CostPerInteraction { get; set; }
     public decimal ProjectedMonthlyCost { get; set; }
     public decimal CostSavingsFromQuickResponses { get; set; }
     public decimal CostSavingsFromAutoLearning { get; set; }
-    
+
     // Comparaciones
     public decimal PreviousPeriodCost { get; set; }
     public decimal CostChangePercent { get; set; }
-    
+
     // Desglose por categoría
     public Dictionary<string, int> InteractionsByCategory { get; set; } = new();
     public Dictionary<string, decimal> CostsByCategory { get; set; } = new();
-    
+
     // Recomendaciones
     public List<CostRecommendation> Recommendations { get; set; } = new();
 }

@@ -176,7 +176,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             DealerId = dealer.Id,
             DealerName = dealer.BusinessName ?? dealer.TradeName ?? "Dealer",
             Role = invitation.DealerRole.ToString(),
-            Message = isNewUser 
+            Message = isNewUser
                 ? "¡Bienvenido! Tu cuenta ha sido creada y ya eres parte del equipo."
                 : "¡Excelente! Ya eres parte del equipo.",
             IsNewUser = isNewUser

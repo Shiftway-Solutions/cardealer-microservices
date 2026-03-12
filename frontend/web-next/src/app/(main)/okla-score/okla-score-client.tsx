@@ -1,11 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
+
+function getInitialVin(searchParams: ReturnType<typeof useSearchParams>): string {
+  const vinParam = searchParams.get('vin');
+  if (vinParam && vinParam.length === 17) {
+    const sanitized = vinParam
+      .toUpperCase()
+      .replace(/[^A-HJ-NPR-Z0-9]/g, '')
+      .slice(0, 17);
+    if (sanitized.length === 17) return sanitized;
+  }
+  return '';
+}
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScoreReport } from '@/components/okla-score/score-report';
+import { ReportPurchaseModal } from '@/components/okla-score/report-purchase-modal';
+import { useReportPurchase } from '@/hooks/use-report-purchase';
 import { useCalculateScore, useVinDecode } from '@/hooks/use-okla-score';
 import type { OklaScoreReport } from '@/types/okla-score';
 import { Search, ShieldCheck, AlertTriangle, DollarSign, Loader2, Info, Car } from 'lucide-react';
@@ -15,10 +31,19 @@ import { Search, ShieldCheck, AlertTriangle, DollarSign, Loader2, Info, Car } fr
 // =============================================================================
 
 export default function OklaScoreClient() {
-  const [vin, setVin] = useState('');
+  const searchParams = useSearchParams();
+  const [vin, setVin] = useState(() => getInitialVin(searchParams));
   const [price, setPrice] = useState('');
   const [mileage, setMileage] = useState('');
   const [report, setReport] = useState<OklaScoreReport | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+
+  // Track purchase state — vehicleId is the VIN for this page since there's no listing ID
+  const { isPurchased, markPurchased } = useReportPurchase(vin.length === 17 ? vin : undefined);
+
+  const handlePurchaseClick = useCallback(() => {
+    if (!isPurchased) setShowPurchaseModal(true);
+  }, [isPurchased]);
 
   const vinDecode = useVinDecode(vin.length === 17 ? vin : null);
   const calculateScore = useCalculateScore();
@@ -151,10 +176,29 @@ export default function OklaScoreClient() {
         </Card>
       </section>
 
-      {/* Score Report */}
+      {/* Score Report — free tier: shows score gauge + vehicle info, but gates dimension breakdown + price analysis */}
       {report && (
         <section className="container mx-auto mt-8 max-w-4xl px-4 pb-16">
-          <ScoreReport report={report} layout="full" />
+          <ScoreReport
+            report={report}
+            layout="full"
+            showFullReport={isPurchased}
+            vehicleId={vin}
+            vehicleTitle={`${report.vinDecode.year} ${report.vinDecode.make} ${report.vinDecode.model}`}
+            onPurchaseClick={handlePurchaseClick}
+          />
+
+          {/* Purchase Modal */}
+          <ReportPurchaseModal
+            open={showPurchaseModal}
+            onClose={() => setShowPurchaseModal(false)}
+            vehicleId={vin}
+            vehicleTitle={`${report.vinDecode.year} ${report.vinDecode.make} ${report.vinDecode.model}`}
+            onPurchaseComplete={(purchaseId, buyerEmail) => {
+              markPurchased(purchaseId, buyerEmail);
+              setShowPurchaseModal(false);
+            }}
+          />
         </section>
       )}
 

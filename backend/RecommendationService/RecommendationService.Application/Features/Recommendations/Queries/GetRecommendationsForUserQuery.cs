@@ -24,7 +24,7 @@ public class GetRecommendationsForUserQueryHandler : IRequestHandler<GetRecommen
     public async Task<List<RecommendationDto>> Handle(GetRecommendationsForUserQuery request, CancellationToken cancellationToken)
     {
         var recommendations = await _repository.GetByUserIdAsync(request.UserId, request.Limit);
-        
+
         return recommendations.Select(MapToDto).ToList();
     }
 

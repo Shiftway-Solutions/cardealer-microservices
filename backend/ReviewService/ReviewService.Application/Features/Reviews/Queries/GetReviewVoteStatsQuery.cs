@@ -25,7 +25,7 @@ public class GetReviewVoteStatsQueryHandler : IRequestHandler<GetReviewVoteStats
     private readonly ILogger<GetReviewVoteStatsQueryHandler> _logger;
 
     public GetReviewVoteStatsQueryHandler(
-        IReviewRepository reviewRepository, 
+        IReviewRepository reviewRepository,
         IReviewHelpfulVoteRepository voteRepository,
         ILogger<GetReviewVoteStatsQueryHandler> logger)
     {
@@ -51,12 +51,12 @@ public class GetReviewVoteStatsQueryHandler : IRequestHandler<GetReviewVoteStats
             {
                 var userVote = await _voteRepository.GetByReviewAndUserAsync(
                     request.ReviewId, request.CurrentUserId.Value, cancellationToken);
-                
+
                 currentUserVotedHelpful = userVote?.IsHelpful;
             }
 
-            var percentage = review.TotalVotes > 0 
-                ? Math.Round((decimal)review.HelpfulVotes / review.TotalVotes * 100, 1) 
+            var percentage = review.TotalVotes > 0
+                ? Math.Round((decimal)review.HelpfulVotes / review.TotalVotes * 100, 1)
                 : 0;
 
             return Result<ReviewVoteStatsDto>.Success(new ReviewVoteStatsDto

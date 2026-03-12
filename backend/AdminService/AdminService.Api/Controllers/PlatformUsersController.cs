@@ -68,7 +68,7 @@ public class PlatformUsersController : ControllerBase
         _logger.LogInformation("Getting platform user {UserId}", id);
 
         var result = await _mediator.Send(new GetPlatformUserQuery(id));
-        
+
         if (result == null)
             return NotFound(new { error = "User not found" });
 

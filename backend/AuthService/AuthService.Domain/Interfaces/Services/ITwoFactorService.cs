@@ -18,7 +18,7 @@ public interface ITwoFactorService
     // Recovery Codes
     Task<List<string>> GenerateRecoveryCodesAsync(string userId);
     Task<bool> VerifyRecoveryCodeAsync(string userId, string code);
-    
+
     /// <summary>
     /// Gets the count of remaining unused recovery codes for a user.
     /// Used to warn users when they're running low.

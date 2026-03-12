@@ -7,7 +7,7 @@ import { ScoreBadge } from './score-badge';
 import { DimensionBreakdown, DimensionCard } from './dimension-breakdown';
 import { PriceAnalysisCard } from './price-analysis-card';
 import { ScoreAlerts } from './score-alerts';
-import { Car, Calendar, Hash, Gauge, Fuel, Settings } from 'lucide-react';
+import { Car, Calendar, Hash, Gauge, Fuel, Settings, Lock } from 'lucide-react';
 
 // =============================================================================
 // OKLA Score™ Full Report — Complete score report view
@@ -16,10 +16,26 @@ import { Car, Calendar, Hash, Gauge, Fuel, Settings } from 'lucide-react';
 interface ScoreReportProps {
   report: OklaScoreReport;
   layout?: 'full' | 'compact';
+  /** Whether to show the full detailed breakdown (paid) or just the summary (free) */
+  showFullReport?: boolean;
+  /** Vehicle ID for the paywall CTA link */
+  vehicleId?: string;
+  /** Vehicle title for the purchase modal */
+  vehicleTitle?: string;
+  /** Callback to open the purchase modal (injected by parent) */
+  onPurchaseClick?: () => void;
   className?: string;
 }
 
-export function ScoreReport({ report, layout = 'full', className }: ScoreReportProps) {
+export function ScoreReport({
+  report,
+  layout = 'full',
+  showFullReport = true,
+  vehicleId,
+  vehicleTitle,
+  onPurchaseClick,
+  className,
+}: ScoreReportProps) {
   const vin = report.vinDecode;
 
   if (layout === 'compact') {
@@ -35,7 +51,15 @@ export function ScoreReport({ report, layout = 'full', className }: ScoreReportP
           </div>
         </div>
         {report.alerts.length > 0 && <ScoreAlerts alerts={report.alerts} />}
-        <DimensionBreakdown dimensions={report.dimensions} />
+        {showFullReport ? (
+          <DimensionBreakdown dimensions={report.dimensions} />
+        ) : (
+          <PaywallOverlay
+            vehicleId={vehicleId}
+            section="Desglose de las 7 Dimensiones"
+            onPurchaseClick={onPurchaseClick}
+          />
+        )}
       </div>
     );
   }
@@ -71,17 +95,33 @@ export function ScoreReport({ report, layout = 'full', className }: ScoreReportP
       </div>
 
       {/* Price analysis */}
-      <PriceAnalysisCard analysis={report.priceAnalysis} />
+      {showFullReport ? (
+        <PriceAnalysisCard analysis={report.priceAnalysis} />
+      ) : (
+        <PaywallOverlay
+          vehicleId={vehicleId}
+          section="Análisis de Precio vs. Mercado"
+          onPurchaseClick={onPurchaseClick}
+        />
+      )}
 
       {/* Dimension breakdown */}
-      <div>
-        <h3 className="mb-4 text-lg font-bold">📊 Desglose por Dimensión</h3>
-        <div className="grid gap-3 md:grid-cols-2">
-          {report.dimensions.map(d => (
-            <DimensionCard key={d.dimension} dimension={d} />
-          ))}
+      {showFullReport ? (
+        <div>
+          <h3 className="mb-4 text-lg font-bold">📊 Desglose por Dimensión</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            {report.dimensions.map(d => (
+              <DimensionCard key={d.dimension} dimension={d} />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <PaywallOverlay
+          vehicleId={vehicleId}
+          section="Desglose de las 7 Dimensiones"
+          onPurchaseClick={onPurchaseClick}
+        />
+      )}
 
       {/* Safety / Recalls */}
       {report.recalls && report.recalls.length > 0 && (
@@ -160,6 +200,46 @@ function SafetyStar({ label, rating }: { label: string; rating?: number }) {
       <p className="text-muted-foreground mb-1 text-xs">{label}</p>
       <div className="text-xl">{rating ? '⭐'.repeat(rating) + '☆'.repeat(5 - rating) : 'N/A'}</div>
       {rating && <p className="mt-1 text-xs font-semibold">{rating}/5</p>}
+    </div>
+  );
+}
+
+function PaywallOverlay({
+  vehicleId,
+  section,
+  onPurchaseClick,
+}: {
+  vehicleId?: string;
+  section: string;
+  onPurchaseClick?: () => void;
+}) {
+  const checkoutUrl = vehicleId
+    ? `/checkout?product=okla-score-report&vehicleId=${vehicleId}`
+    : '/checkout?product=okla-score-report';
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-dashed border-emerald-300 bg-gradient-to-b from-emerald-50/60 to-white p-8 text-center dark:from-emerald-950/30 dark:to-gray-950">
+      <Lock className="mx-auto mb-3 h-8 w-8 text-emerald-500/60" />
+      <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-300">{section}</h4>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Este contenido está disponible en el informe completo OKLA Score™
+      </p>
+      {onPurchaseClick ? (
+        <button
+          onClick={onPurchaseClick}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+        >
+          Ver informe completo — RD$420
+        </button>
+      ) : (
+        <a
+          href={checkoutUrl}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+        >
+          Ver informe completo — RD$420
+        </a>
+      )}
+      <p className="text-muted-foreground mt-2 text-xs">≈ US$7 · Pago único por vehículo</p>
     </div>
   );
 }

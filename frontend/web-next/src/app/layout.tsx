@@ -6,6 +6,7 @@ import { GoogleAnalytics } from '@/components/analytics/google-analytics';
 import { SiteJsonLd } from '@/lib/seo';
 import { PWAComponents } from '@/components/pwa/pwa-wrapper';
 import { CookieConsentBanner, CookieSettingsButton } from '@/components/legal/cookie-consent';
+import WebVitals from '@/components/monitoring/web-vitals';
 import './globals.css';
 
 const inter = Inter({
@@ -225,6 +226,7 @@ export default function RootLayout({
         <Providers>
           <PWAComponents>
             {children}
+            <WebVitals />
             <Toaster
               position="top-right"
               toastOptions={{
