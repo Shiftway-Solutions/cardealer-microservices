@@ -57,7 +57,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-dropzone": "^15.0.0",
-    "react-hook-form": "^7.71.1",
+    "react-hook-form": "^7.71.2",
     "react-image-crop": "^11.0.10",
     "react-webcam": "^7.2.0",
     "recharts": "^3.7.0",
