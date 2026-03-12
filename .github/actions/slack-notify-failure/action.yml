@@ -73,6 +73,11 @@ runs:
             }]
           }')
 
+        if [ -z "$WEBHOOK_URL" ]; then
+          echo "⚠️ WEBHOOK_URL is empty — skipping Slack notification"
+          exit 0
+        fi
+
         curl -sf -X POST "$WEBHOOK_URL" \
           -H 'Content-Type: application/json' \
           -d "$PAYLOAD"

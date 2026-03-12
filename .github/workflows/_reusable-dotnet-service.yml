@@ -76,13 +76,25 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: ✅ Validate service path exists
+        id: validate
+        run: |
+          if [ ! -d "${{ inputs.service-path }}" ]; then
+            echo "⚠️ Service path '${{ inputs.service-path }}' does not exist yet. Skipping."
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "skip=false" >> $GITHUB_OUTPUT
+
       - name: 🔧 Setup .NET
+        if: steps.validate.outputs.skip != 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
 
       # Cache NuGet packages
       - name: 📦 Cache NuGet packages
+        if: steps.validate.outputs.skip != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -91,14 +103,17 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: 📥 Restore dependencies
+        if: steps.validate.outputs.skip != 'true'
         working-directory: ${{ inputs.service-path }}
         run: dotnet restore
 
       - name: 🔨 Build (TreatWarningsAsErrors)
+        if: steps.validate.outputs.skip != 'true'
         working-directory: ${{ inputs.service-path }}
         run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=true
 
       - name: 🔍 Code Format Check
+        if: steps.validate.outputs.skip != 'true'
         working-directory: ${{ inputs.service-path }}
         run: |
           echo "🔍 Checking code formatting..."
@@ -106,6 +121,7 @@ jobs:
           echo "✅ Code formatting check passed"
 
       - name: 🛡️ NuGet Vulnerability Audit
+        if: steps.validate.outputs.skip != 'true'
         working-directory: ${{ inputs.service-path }}
         run: |
           echo "🔍 Scanning for direct package vulnerabilities..."
@@ -116,6 +132,7 @@ jobs:
         continue-on-error: true
 
       - name: 🚨 Check for Critical Direct Vulnerabilities
+        if: steps.validate.outputs.skip != 'true'
         run: |
           # Only fail on DIRECT package vulnerabilities that are Critical
           # Transitive vulnerabilities are reported but don't block (require upstream fixes)
@@ -135,7 +152,7 @@ jobs:
           fi
 
       - name: 🧪 Run tests
-        if: inputs.run-tests
+        if: inputs.run-tests && steps.validate.outputs.skip != 'true'
         timeout-minutes: 3
         working-directory: ${{ inputs.service-path }}
         run: |
@@ -150,7 +167,7 @@ jobs:
           fi
 
       - name: 📊 Upload test results
-        if: inputs.run-tests && always()
+        if: inputs.run-tests && always() && steps.validate.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ inputs.service-name }}
@@ -158,7 +175,7 @@ jobs:
           retention-days: 7
 
       - name: 📊 Upload .NET coverage to Codecov
-        if: inputs.run-tests && always()
+        if: inputs.run-tests && always() && steps.validate.outputs.skip != 'true'
         uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
@@ -168,6 +185,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: 🏷️ Generate version
+        if: steps.validate.outputs.skip != 'true'
         id: version
         run: |
           VERSION="1.0.${{ github.run_number }}"
@@ -175,7 +193,7 @@ jobs:
           echo "📌 Version: $VERSION"
 
       - name: 🔔 Notify failure to Slack
-        if: failure()
+        if: failure() && steps.validate.outputs.skip != 'true'
         uses: ./.github/actions/slack-notify-failure
         continue-on-error: true
         with:
@@ -189,7 +207,7 @@ jobs:
     name: 🐳 Docker Build
     needs: build-and-test
     runs-on: [self-hosted, macOS, ARM64]
-    if: inputs.run-docker-build
+    if: inputs.run-docker-build && needs.build-and-test.outputs.version != ''
     permissions:
       contents: read
       packages: write
