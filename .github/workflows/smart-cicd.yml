@@ -987,7 +987,25 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🐳 Start infrastructure (Docker Compose)
+      - name: � Create CI secrets for Docker Compose
+        run: |
+          mkdir -p secrets
+          echo "ci_test_password_123" > secrets/db_password.txt
+          echo "ci_test_jwt_secret_key_abcdef123456" > secrets/jwt_secret_key.txt
+          echo "ci_test_rabbitmq_pass" > secrets/rabbitmq_password.txt
+          echo "ci_test_redis_pass" > secrets/redis_password.txt
+          echo "ci_test_sendgrid_key" > secrets/sendgrid_api_key.txt
+          echo "ci_test_twilio_sid" > secrets/twilio_account_sid.txt
+          echo "ci_test_twilio_token" > secrets/twilio_auth_token.txt
+          echo '{}' > secrets/firebase_service_account.json
+          echo "ci_test_google_id" > secrets/google_client_id.txt
+          echo "ci_test_google_secret" > secrets/google_client_secret.txt
+          echo "ci_test_ms_id" > secrets/microsoft_client_id.txt
+          echo "ci_test_ms_secret" > secrets/microsoft_client_secret.txt
+          echo "ci_test_aws_key" > secrets/aws_access_key.txt
+          echo "ci_test_aws_secret" > secrets/aws_secret_key.txt
+
+      - name: �🐳 Start infrastructure (Docker Compose)
         run: |
           echo "🚀 Starting infrastructure services..."
           docker compose -f compose.docker.yaml up -d postgres redis rabbitmq

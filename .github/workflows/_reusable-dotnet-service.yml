@@ -355,6 +355,10 @@ jobs:
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ needs.build-and-test.outputs.version }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:sha-${{ github.sha }}
             ${{ inputs.docker-registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=${{ inputs.service-name }}
+            org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=${{ inputs.service-name }}
           cache-to: type=gha,scope=${{ inputs.service-name }},mode=max
           build-args: |
