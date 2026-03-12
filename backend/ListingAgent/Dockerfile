@@ -13,6 +13,10 @@ ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 COPY ["_Shared/CarDealer.Shared.Caching/CarDealer.Shared.Caching.csproj", "_Shared/CarDealer.Shared.Caching/"]
+COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj", "_Shared/CarDealer.Shared.ErrorHandling/"]
+COPY ["_Shared/CarDealer.Shared.LlmGateway/CarDealer.Shared.LlmGateway.csproj", "_Shared/CarDealer.Shared.LlmGateway/"]
+COPY ["_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj", "_Shared/CarDealer.Shared.Logging/"]
+COPY ["_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj", "_Shared/CarDealer.Shared.Observability/"]
 
 # Copy csproj files and restore
 COPY ["ListingAgent/ListingAgent.Api/ListingAgent.Api.csproj", "ListingAgent/ListingAgent.Api/"]
