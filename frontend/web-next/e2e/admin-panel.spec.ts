@@ -1,7 +1,7 @@
 /**
  * E2E Tests - Admin Panel
  * Tests admin dashboard and all admin pages with admin credentials
- * Tests seller flow with gmoreno@okla.com.do
+ * Tests seller flow with nmateo@okla.com.do
  * Tests buyer flow with buyer002@okla-test.com
  */
 
@@ -9,8 +9,8 @@ import { test, expect } from '@playwright/test';
 
 const ADMIN_EMAIL = 'admin@okla.local';
 const ADMIN_PASSWORD = 'Admin123!@#';
-const SELLER_EMAIL = 'gmoreno@okla.com.do';
-const SELLER_PASSWORD = '$Gregory1';
+const SELLER_EMAIL = 'nmateo@okla.com.do';
+const SELLER_PASSWORD = 'Dealer2026!@#';
 const BUYER_EMAIL = 'buyer002@okla-test.com';
 const BUYER_PASSWORD = 'BuyerTest2026!';
 

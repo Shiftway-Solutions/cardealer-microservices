@@ -13,7 +13,7 @@
  *   • All API calls go through the gateway at BASE_URL (/api/*).
  *
  * Credentials:
- *   Seller : gmoreno@okla.com.do  / $Gregory1
+ *   Seller : nmateo@okla.com.do  / Dealer2026!@#
  *   Buyer  : buyer002@okla-test.com / BuyerTest2026!
  *
  * Run:
@@ -34,8 +34,8 @@ import { randomUUID } from 'crypto';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://okla.com.do';
 
 // ─── Credentials ─────────────────────────────────────────────────────────────
-const SELLER_EMAIL = 'gmoreno@okla.com.do';
-const SELLER_PASSWORD = '$Gregory1';
+const SELLER_EMAIL = 'nmateo@okla.com.do';
+const SELLER_PASSWORD = 'Dealer2026!@#';
 const BUYER_EMAIL = 'buyer002@okla-test.com';
 const BUYER_PASSWORD = 'BuyerTest2026!';
 

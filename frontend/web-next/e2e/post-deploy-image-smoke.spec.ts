@@ -14,12 +14,12 @@
  *   pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts --config=playwright.prod.config.ts
  *
  * Run against staging:
- *   PLAYWRIGHT_BASE_URL=https://staging.okla.do pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts --config=playwright.prod.config.ts
+ *   PLAYWRIGHT_BASE_URL=https://staging.okla.com.do pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts --config=playwright.prod.config.ts
  */
 
 import { test, expect, type APIRequestContext } from '@playwright/test';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'https://api.okla.do';
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.okla.com.do';
 const FAILURE_THRESHOLD = 0.2; // 20% — if more than this % of images fail, deploy is bad
 const MIN_IMAGE_SIZE_BYTES = 1024; // 1KB — anything smaller is corrupted/empty
 const MAX_LISTINGS = 5;

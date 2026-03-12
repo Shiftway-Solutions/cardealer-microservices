@@ -13,7 +13,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'https://okla.com.do';
 
-const SELLER = { email: 'gmoreno@okla.com.do', password: '$Gregory1' };
+const SELLER = { email: 'nmateo@okla.com.do', password: 'Dealer2026!@#' };
 const BUYER = { email: 'buyer002@okla-test.com', password: 'BuyerTest2026!' };
 const ADMIN = { email: 'admin@okla.local', password: 'Admin123!@#' };
 

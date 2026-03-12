@@ -17,8 +17,8 @@ import { randomUUID } from 'crypto';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://okla.com.do';
 
-const SELLER_EMAIL = 'gmoreno@okla.com.do';
-const SELLER_PASSWORD = '$Gregory1';
+const SELLER_EMAIL = 'nmateo@okla.com.do';
+const SELLER_PASSWORD = 'Dealer2026!@#';
 const BUYER_EMAIL = 'buyer002@okla-test.com';
 const BUYER_PASSWORD = 'BuyerTest2026!';
 const ADMIN_EMAIL = 'admin@okla.local';

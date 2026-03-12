@@ -395,11 +395,11 @@ jobs:
           ENV="${{ needs.prepare.outputs.environment }}"
 
           if [ "$ENV" == "production" ]; then
-            FRONTEND_URL="https://okla.do"
-            API_URL="https://api.okla.do"
+            FRONTEND_URL="https://okla.com.do"
+            API_URL="https://api.okla.com.do"
           else
-            FRONTEND_URL="https://staging.okla.do"
-            API_URL="https://api-staging.okla.do"
+            FRONTEND_URL="https://staging.okla.com.do"
+            API_URL="https://api-staging.okla.com.do"
           fi
 
           echo "🔍 Checking $FRONTEND_URL..."
@@ -418,11 +418,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### URLs" >> $GITHUB_STEP_SUMMARY
           if [ "${{ needs.prepare.outputs.environment }}" == "production" ]; then
-            echo "- Frontend: https://okla.do" >> $GITHUB_STEP_SUMMARY
-            echo "- API: https://api.okla.do" >> $GITHUB_STEP_SUMMARY
+            echo "- Frontend: https://okla.com.do" >> $GITHUB_STEP_SUMMARY
+            echo "- API: https://api.okla.com.do" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- Frontend: https://staging.okla.do" >> $GITHUB_STEP_SUMMARY
-            echo "- API: https://api-staging.okla.do" >> $GITHUB_STEP_SUMMARY
+            echo "- Frontend: https://staging.okla.com.do" >> $GITHUB_STEP_SUMMARY
+            echo "- API: https://api-staging.okla.com.do" >> $GITHUB_STEP_SUMMARY
           fi
 
   # ============================================
@@ -441,7 +441,7 @@ jobs:
     uses: ./.github/workflows/load-test.yml
     with:
       test_type: smoke
-      base_url: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
+      base_url: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.com.do' || 'https://api-staging.okla.com.do' }}
     secrets: inherit
 
   # ============================================
@@ -483,8 +483,8 @@ jobs:
       - name: 🎭 Run E2E test suite against staging
         working-directory: frontend/web-next
         env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.do' || 'https://staging.okla.do' }}
-          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
+          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.com.do' || 'https://staging.okla.com.do' }}
+          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.com.do' || 'https://api-staging.okla.com.do' }}
           CI: "true"
         run: |
           echo "🎭 Running E2E tests against $PLAYWRIGHT_BASE_URL..."
@@ -546,8 +546,8 @@ jobs:
       - name: 📸 Run image integrity smoke test
         working-directory: frontend/web-next
         env:
-          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
-          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.do' || 'https://staging.okla.do' }}
+          API_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.com.do' || 'https://api-staging.okla.com.do' }}
+          PLAYWRIGHT_BASE_URL: ${{ needs.prepare.outputs.environment == 'production' && 'https://okla.com.do' || 'https://staging.okla.com.do' }}
         run: |
           echo "📸 Running image integrity smoke test against $API_BASE_URL..."
           pnpm exec playwright test e2e/post-deploy-image-smoke.spec.ts \

@@ -27,8 +27,8 @@
 
 import { test, expect, type Page } from '@playwright/test';
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'https://okla.do';
-const API_BASE_URL = process.env.API_BASE_URL || 'https://api.okla.do';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'https://okla.com.do';
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.okla.com.do';
 const SIMULATE_4G = process.env.SIMULATE_4G === 'true';
 
 // Thresholds

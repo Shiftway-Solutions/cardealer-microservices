@@ -16,7 +16,7 @@
  *
  * Credentials:
  *   Buyer  : buyer002@okla-test.com  / BuyerTest2026!
- *   Seller : gmoreno@okla.com.do     / $Gregory1
+ *   Seller : nmateo@okla.com.do     / Dealer2026!@#
  *
  * Run:
  *   cd frontend/web-next
@@ -32,8 +32,8 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://okla.com.do';
 // ─── Credentials ─────────────────────────────────────────────────────────────
 const BUYER_EMAIL = 'buyer002@okla-test.com';
 const BUYER_PASSWORD = 'BuyerTest2026!';
-const SELLER_EMAIL = 'gmoreno@okla.com.do';
-const SELLER_PASSWORD = '$Gregory1';
+const SELLER_EMAIL = 'nmateo@okla.com.do';
+const SELLER_PASSWORD = 'Dealer2026!@#';
 
 // ─── Shared state ─────────────────────────────────────────────────────────────
 const csrfToken = randomUUID().replace(/-/g, '');
