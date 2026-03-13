@@ -456,7 +456,7 @@ jobs:
     needs: [prepare, smoke-test]
     if: success()
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 75
+    timeout-minutes: 90
 
     steps:
       - name: 📥 Checkout
