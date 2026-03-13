@@ -176,7 +176,7 @@ jobs:
 
       - name: 📊 Upload .NET coverage to Codecov
         if: inputs.run-tests && always() && steps.validate.outputs.skip != 'true'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           directory: ${{ inputs.service-path }}/TestResults
