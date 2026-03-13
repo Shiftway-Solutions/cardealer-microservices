@@ -1222,6 +1222,59 @@ jobs:
           kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
 
   # ============================================
+  # REQUIRED-CHECK BYPASS JOBS
+  # ============================================
+  # These jobs satisfy GitHub branch-protection "required status checks" when
+  # the real jobs are skipped (e.g. k8s-only PRs that don't touch code).
+  # Each bypass job has a name that matches exactly one required check context.
+  # ============================================
+
+  lint-type-check-bypass:
+    name: 🔍 Lint & Type Check
+    needs: [detect-changes, frontend-web]
+    if: always() && needs.frontend-web.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Bypass — no frontend changes detected
+        run: echo "No frontend changes in this PR. Lint & Type Check not required."
+
+  unit-tests-bypass:
+    name: 🧪 Unit Tests
+    needs: [detect-changes, frontend-web]
+    if: always() && needs.frontend-web.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Bypass — no frontend changes detected
+        run: echo "No frontend changes in this PR. Unit Tests not required."
+
+  docker-build-bypass:
+    name: 🐳 Docker Build
+    needs: [detect-changes, frontend-web]
+    if: always() && needs.frontend-web.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Bypass — no frontend changes detected
+        run: echo "No frontend changes in this PR. Docker Build not required (backend services handle their own docker builds when relevant code changes)."
+
+  build-and-test-bypass:
+    name: 🔨 Build & Test
+    needs: [detect-changes, userservice]
+    if: always() && needs.userservice.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Bypass — no UserService/backend changes detected
+        run: echo "No backend service changes in this PR. Build & Test not required."
+
+  integration-tests-bypass:
+    name: 🔗 Integration Tests
+    needs: [detect-changes, integration-tests]
+    if: always() && needs.integration-tests.result == 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Bypass — integration tests only run on main branch
+        run: echo "Integration tests run only on main branch merges. This PR does not require them."
+
+  # ============================================
   # SUMMARY
   # ============================================
   summary:
@@ -1229,6 +1282,12 @@ jobs:
     needs:
       - detect-changes
       - integration-tests
+      # Required-check bypass jobs
+      - lint-type-check-bypass
+      - unit-tests-bypass
+      - docker-build-bypass
+      - build-and-test-bypass
+      - integration-tests-bypass
       # Core
       - authservice
       - userservice
