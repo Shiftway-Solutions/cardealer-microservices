@@ -163,9 +163,9 @@ export default function FeaturedVehicles({
   const gridClass =
     placementType === 'FeaturedSpot'
       ? 'grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
-      : (columns === 4
-        ? 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-        : 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4');
+      : columns === 4
+        ? 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'
+        : 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4';
 
   // Complies with Ley 358-05 — must disclose paid/sponsored content
   const sponsoredBadgeClass =
