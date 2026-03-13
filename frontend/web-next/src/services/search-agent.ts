@@ -31,6 +31,10 @@ export interface SearchFilters {
   combustible: string | null;
   condicion: string | null;
   kilometraje_max: number | null;
+  provincia: string | null;
+  ciudad: string | null;
+  color: string | null;
+  traccion: string | null;
 }
 
 export interface SponsoredConfig {
@@ -151,6 +155,14 @@ export async function updateSearchAgentConfig(
  * Keys match VehicleSearchFilters interface (camelCase).
  * For URL params, use aiFiltersToUrlParams() which outputs snake_case keys.
  */
+// Map backend traccion values to frontend drivetrain values
+const TRACCION_TO_DRIVETRAIN: Record<string, string> = {
+  '4x4': '4wd',
+  fwd: 'fwd',
+  rwd: 'rwd',
+  awd: 'awd',
+};
+
 export function aiFiltersToSearchParams(
   filters: SearchFilters
 ): Record<string, string | number | undefined> {
@@ -167,6 +179,12 @@ export function aiFiltersToSearchParams(
     fuelType: filters.combustible ?? undefined,
     condition: filters.condicion ?? undefined,
     mileageMax: filters.kilometraje_max ?? undefined,
+    province: filters.provincia ?? undefined,
+    city: filters.ciudad ?? undefined,
+    color: filters.color ?? undefined,
+    drivetrain: filters.traccion
+      ? (TRACCION_TO_DRIVETRAIN[filters.traccion] ?? filters.traccion)
+      : undefined,
   };
 }
 

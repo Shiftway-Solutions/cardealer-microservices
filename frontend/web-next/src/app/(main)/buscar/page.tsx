@@ -115,7 +115,8 @@ function SearchContent() {
           {/* AI Search Bar */}
           <AiSearchBar
             onFiltersApplied={aiFilters => {
-              setFilters({ ...filters, ...aiFilters } as typeof filters);
+              // query: undefined ensures raw NL text never persists as a filter chip
+              setFilters({ ...filters, query: undefined, ...aiFilters } as typeof filters);
             }}
             className="[&_input]:text-foreground [&_input]:placeholder:text-muted-foreground [&_.text-muted-foreground]:text-primary-foreground/70 mb-6 [&_.text-amber-600]:text-amber-200 [&_.text-destructive]:text-red-300 [&_input]:bg-white/95"
           />
