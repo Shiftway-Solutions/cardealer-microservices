@@ -26,6 +26,9 @@ public class ClaudeSearchService : IClaudeSearchService
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    /// <summary>Docker secret file path for the Claude API key (mounted by compose/K8s).</summary>
+    private const string DockerSecretPath = "/run/secrets/claude_api_key";
+
     public ClaudeSearchService(
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
@@ -33,8 +36,21 @@ public class ClaudeSearchService : IClaudeSearchService
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _apiKey = configuration["Claude:ApiKey"]
-            ?? throw new InvalidOperationException("Claude API key not configured. Set 'Claude:ApiKey' in configuration.");
+
+        // Priority: 1) env var Claude__ApiKey / appsettings  2) Docker secret file
+        var apiKey = configuration["Claude:ApiKey"];
+
+        if (string.IsNullOrWhiteSpace(apiKey) && File.Exists(DockerSecretPath))
+        {
+            apiKey = File.ReadAllText(DockerSecretPath).Trim();
+            logger.LogInformation("Claude API key loaded from Docker secret file.");
+        }
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException(
+                "Claude API key not configured. Set 'Claude:ApiKey' env var or mount secret at /run/secrets/claude_api_key.");
+
+        _apiKey = apiKey;
     }
 
     public async Task<SearchAgentResponse> ProcessQueryAsync(

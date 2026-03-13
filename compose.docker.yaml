@@ -22,7 +22,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_MULTIPLE_DATABASES: authservice,userservice,roleservice,errorservice,productservice,notificationservice,billingservice,auditservice,crmservice,mediaservice
+      POSTGRES_MULTIPLE_DATABASES: authservice,userservice,roleservice,errorservice,productservice,notificationservice,billingservice,auditservice,crmservice,mediaservice,searchagent
     secrets:
       - db_password
     ports:
@@ -424,6 +424,48 @@ services:
     networks:
       - cardealer-net
 
+  searchagent:
+    build:
+      context: ./backend
+      dockerfile: SearchAgent/Dockerfile
+    container_name: searchagent
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: searchagent
+      DB_USERNAME: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: cardealer
+      CONSUL_ADDRESS: http://consul:8500
+      # Claude AI API key injected from Docker secret file /run/secrets/claude_api_key
+      # ClaudeSearchService reads from that file when configuration["Claude:ApiKey"] is empty
+    secrets:
+      - db_password
+      - jwt_secret_key
+      - redis_password
+      - rabbitmq_password
+      - claude_api_key
+    ports:
+      - "15096:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cardealer-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   auditservice:
     build:
       context: ./backend
@@ -535,3 +577,5 @@ secrets:
     file: ./secrets/aws_access_key.txt
   aws_secret_key:
     file: ./secrets/aws_secret_key.txt
+  claude_api_key:
+    file: ./secrets/claude_api_key.txt

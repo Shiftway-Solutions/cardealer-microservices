@@ -1810,7 +1810,7 @@ metadata:
     app: appointmentservice
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # STAGING: non-essential
   selector:
     matchLabels:
       app: appointmentservice
@@ -2095,7 +2095,7 @@ metadata:
     app: comparisonservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: comparisonservice
@@ -2190,7 +2190,7 @@ metadata:
     app: configurationservice
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # STAGING: non-essential
   selector:
     matchLabels:
       app: configurationservice
@@ -2380,7 +2380,7 @@ metadata:
     app: crmservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: crmservice
@@ -2475,7 +2475,7 @@ metadata:
     app: dataprotectionservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: dataprotectionservice
@@ -2570,7 +2570,7 @@ metadata:
     app: dealeranalyticsservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: dealeranalyticsservice
@@ -2665,7 +2665,7 @@ metadata:
     app: dealermanagementservice
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # STAGING: non-essential
   selector:
     matchLabels:
       app: dealermanagementservice
@@ -2760,7 +2760,7 @@ metadata:
     app: integrationservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: integrationservice
@@ -2855,7 +2855,7 @@ metadata:
     app: inventorymanagementservice
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # STAGING: non-essential
   selector:
     matchLabels:
       app: inventorymanagementservice
@@ -2950,7 +2950,7 @@ metadata:
     app: leadscoringservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: leadscoringservice
@@ -3045,7 +3045,7 @@ metadata:
     app: maintenanceservice
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # STAGING: non-essential
   selector:
     matchLabels:
       app: maintenanceservice
@@ -3140,7 +3140,7 @@ metadata:
     app: marketingservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: marketingservice
@@ -3235,7 +3235,7 @@ metadata:
     app: messagebusservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: messagebusservice
@@ -3330,7 +3330,7 @@ metadata:
     app: paymentservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: paymentservice
@@ -3425,7 +3425,7 @@ metadata:
     app: ratelimitingservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: ratelimitingservice
@@ -3520,7 +3520,7 @@ metadata:
     app: recommendationservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: recommendationservice
@@ -3615,7 +3615,7 @@ metadata:
     app: reportsservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # DISABLED: cluster capacity
   selector:
     matchLabels:
       app: reportsservice
@@ -3710,7 +3710,7 @@ metadata:
     app: schedulerservice
     tier: backend
 spec:
-  replicas: 0 # DISABLED: cluster capacity
+  replicas: 1 # ENABLED: core feature required for production
   selector:
     matchLabels:
       app: schedulerservice
@@ -4385,7 +4385,7 @@ metadata:
     app: searchagent
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # ENABLED: core search feature required for production
   selector:
     matchLabels:
       app: searchagent
