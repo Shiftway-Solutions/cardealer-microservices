@@ -208,7 +208,7 @@ jobs:
             DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
           fi
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: |
@@ -366,7 +366,7 @@ jobs:
             DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
           fi
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: |

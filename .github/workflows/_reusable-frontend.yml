@@ -285,7 +285,7 @@ jobs:
       - name: 🔧 Set up Docker Buildx
         # Colima on macOS ARM64 supports linux/amd64 via Rosetta 2 (vz) or QEMU (binfmt_misc).
         # setup-qemu-action is not needed and causes exit code 1 on Mac runners.
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: |
