@@ -20,10 +20,10 @@ public class SearchAgentWebApplicationFactory : WebApplicationFactory<Program>
                 ["Claude:Model"] = "claude-haiku-4-5-20251001",
                 ["Claude:MaxTokens"] = "1024",
                 ["Claude:Temperature"] = "0.2",
-                // JWT config
-                ["JwtSettings:SecretKey"] = "test-secret-key-for-unit-testing-only-must-be-long-enough",
-                ["JwtSettings:Issuer"] = "okla-api",
-                ["JwtSettings:Audience"] = "okla-clients",
+                // JWT config — keys must match MicroserviceSecretsConfiguration.GetJwtConfig() which reads Jwt:Key
+                ["Jwt:Key"] = "test-secret-key-for-unit-testing-only-must-be-long-enough",
+                ["Jwt:Issuer"] = "okla-api",
+                ["Jwt:Audience"] = "okla-clients",
                 // Disable external services
                 ["RabbitMQ:Enabled"] = "false",
             });

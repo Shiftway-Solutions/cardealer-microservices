@@ -395,33 +395,6 @@ spec:
 # No definir HPA aquí para evitar conflicto de escaladores duales.
 
 ---
-# IdempotencyService — Control de duplicados
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: idempotencyservice-hpa
-  namespace: okla
-  labels:
-    tier: internal
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: idempotencyservice
-  minReplicas: 1
-  maxReplicas: 3
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 75
-  behavior:
-    scaleDown:
-      stabilizationWindowSeconds: 300
-
----
 # ═══════════════════════════════════════════════════════════════════════════
 # 🤖 TIER AI/ML — Chatbot & LLM inference
 # ═══════════════════════════════════════════════════════════════════════════

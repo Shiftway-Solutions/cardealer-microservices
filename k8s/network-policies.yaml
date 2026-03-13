@@ -135,7 +135,6 @@ spec:
           - errorservice
           - kycservice
           - auditservice
-          - idempotencyservice
           - contactservice
           - adminservice
   policyTypes:
@@ -151,7 +150,7 @@ spec:
 
 ---
 # Inter-service communication - Allow services to talk to shared services
-# (AuditService, IdempotencyService, ErrorService, NotificationService)
+# (AuditService, ErrorService, NotificationService)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -164,7 +163,6 @@ spec:
         operator: In
         values:
           - auditservice
-          - idempotencyservice
           - errorservice
           - notificationservice
   policyTypes:

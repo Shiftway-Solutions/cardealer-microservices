@@ -219,17 +219,3 @@ spec:
   selector:
     matchLabels:
       app: auditservice
-
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: idempotencyservice-pdb
-  namespace: okla
-  labels:
-    tier: internal
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app: idempotencyservice
