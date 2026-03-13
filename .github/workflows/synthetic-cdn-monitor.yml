@@ -15,9 +15,9 @@
 name: 📸 Synthetic CDN Monitor
 
 on:
-  # Every 30 minutes
+  # Every 6 hours (4 times per day)
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */6 * * *"
 
   # Manual trigger for testing
   workflow_dispatch:

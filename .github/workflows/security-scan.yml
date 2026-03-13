@@ -19,6 +19,10 @@ permissions:
   security-events: write
   pull-requests: write
 
+concurrency:
+  group: security-scan-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ========================================
   # 1. Secret Scanning with Gitleaks
