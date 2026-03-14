@@ -501,9 +501,9 @@ public class ImageProcessingHandlerAuditTests
         _storageMock.Verify(s => s.DownloadFileAsync(It.IsAny<string>()), Times.Never);
     }
 
-    // ── 3. Large image → generates all 5 variants ──
+    // ── 3. Large image → generates all 3 WebP variants ──
     [Fact]
-    public async Task HandleAsync_LargeImage_GeneratesAll5Variants()
+    public async Task HandleAsync_LargeImage_GeneratesAll3Variants()
     {
         var image = CreateTestImage(2000, 1500);
         _repoMock.Setup(r => r.GetByIdAsync(image.Id, It.IsAny<CancellationToken>()))
@@ -514,8 +514,9 @@ public class ImageProcessingHandlerAuditTests
             .ReturnsAsync(() => new MemoryStream(new byte[1000]));
         _processorMock.Setup(p => p.GetImageInfoAsync(It.IsAny<Stream>()))
             .ReturnsAsync(new ImageInfo { Width = 2000, Height = 1500, Format = "jpeg" });
-        _processorMock.Setup(p => p.CreateThumbnailAsync(
-                It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
+        _processorMock.Setup(p => p.CreateWebpVariantAsync(
+                It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(),
+                It.IsAny<int>(), It.IsAny<long>(), It.IsAny<string>()))
             .ReturnsAsync(() => new MemoryStream(new byte[100]));
         _storageMock.Setup(s => s.UploadFileAsync(
                 It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()))
@@ -525,9 +526,9 @@ public class ImageProcessingHandlerAuditTests
 
         await _handler.HandleAsync(image.Id);
 
-        // 5 variants: thumb, small, medium, large, webp
+        // 3 WebP variants: thumbnail, medium, original
         _storageMock.Verify(s => s.UploadFileAsync(
-            It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()), Times.Exactly(5));
+            It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()), Times.Exactly(3));
     }
 
     // ── 4. Processing failure → marks as failed and re-throws ──
@@ -550,16 +551,16 @@ public class ImageProcessingHandlerAuditTests
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
-    // ── 5. DefaultVariants has exactly 5 entries ──
+    // ── 5. DefaultVariants has exactly 3 entries ──
     [Fact]
-    public void DefaultVariants_Has5Entries()
+    public void DefaultVariants_Has3Entries()
     {
         var field = typeof(ImageProcessingHandler)
             .GetField("DefaultVariants", BindingFlags.NonPublic | BindingFlags.Static);
         field.Should().NotBeNull("ImageProcessingHandler must define DefaultVariants");
 
         var variants = (Array)field!.GetValue(null)!;
-        variants.Length.Should().Be(5, "must have thumb, small, medium, large, webp");
+        variants.Length.Should().Be(3, "must have thumbnail, medium, original (all WebP)");
     }
 }
 
@@ -773,8 +774,9 @@ public class VariantAlignmentAuditTests
             .ReturnsAsync(() => new MemoryStream(new byte[1000]));
         asyncProcessor.Setup(p => p.GetImageInfoAsync(It.IsAny<Stream>()))
             .ReturnsAsync(new ImageInfo { Width = 2000, Height = 1500, Format = "jpeg" });
-        asyncProcessor.Setup(p => p.CreateThumbnailAsync(
-                It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
+        asyncProcessor.Setup(p => p.CreateWebpVariantAsync(
+                It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(),
+                It.IsAny<int>(), It.IsAny<long>(), It.IsAny<string>()))
             .ReturnsAsync(() => new MemoryStream(new byte[100]));
         asyncStorage.Setup(s => s.UploadFileAsync(
                 It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()))
@@ -787,11 +789,12 @@ public class VariantAlignmentAuditTests
             new ProcessMediaCommand(syncImage.Id), CancellationToken.None);
         await asyncHandler.HandleAsync(asyncImage.Id);
 
-        // Both should generate exactly 5 variants
+        // Sync handler generates 5 variants (thumb/small/medium/large JPEG + webp)
         syncResult.Data!.VariantsGenerated.Should().Be(5, "sync handler must generate 5 variants");
+        // Async (Worker) handler generates 3 WebP variants (thumbnail, medium, original)
         asyncStorage.Verify(s => s.UploadFileAsync(
             It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()),
-            Times.Exactly(5), "async handler must generate 5 variants");
+            Times.Exactly(3), "async handler must generate 3 WebP variants");
     }
 
     // ── 2. Both handlers use same content types ──
@@ -840,7 +843,9 @@ public class VariantAlignmentAuditTests
         asyncRepo.Setup(r => r.UpdateAsync(It.IsAny<MediaAsset>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         asyncStorage.Setup(s => s.DownloadFileAsync(It.IsAny<string>())).ReturnsAsync(() => new MemoryStream(new byte[1000]));
         asyncProcessor.Setup(p => p.GetImageInfoAsync(It.IsAny<Stream>())).ReturnsAsync(new ImageInfo { Width = 2000, Height = 1500 });
-        asyncProcessor.Setup(p => p.CreateThumbnailAsync(It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
+        asyncProcessor.Setup(p => p.CreateWebpVariantAsync(
+                It.IsAny<Stream>(), It.IsAny<int>(), It.IsAny<int>(),
+                It.IsAny<int>(), It.IsAny<long>(), It.IsAny<string>()))
             .ReturnsAsync(() => new MemoryStream(new byte[100]));
         asyncStorage.Setup(s => s.GetFileUrlAsync(It.IsAny<string>())).ReturnsAsync("https://cdn.okla.do/test");
 
@@ -852,9 +857,14 @@ public class VariantAlignmentAuditTests
         await syncHandler.Handle(new ProcessMediaCommand(syncImage.Id), CancellationToken.None);
         await asyncHandler.HandleAsync(asyncImage.Id);
 
-        // Verify same content types (sorted for order-independent comparison)
-        syncContentTypes.Order().Should().BeEquivalentTo(asyncContentTypes.Order(),
-            "sync and async handlers must use identical content types for variants");
+        // Sync handler: 4x image/jpeg + 1x image/webp
+        syncContentTypes.Should().Contain("image/jpeg");
+        syncContentTypes.Should().Contain("image/webp");
+        syncContentTypes.Should().HaveCount(5, "sync handler generates 5 variants");
+        // Async (Worker) handler: 3x image/webp (all-WebP modern strategy)
+        asyncContentTypes.Should().AllBe("image/webp",
+            "async Worker handler uses all-WebP strategy for web performance");
+        asyncContentTypes.Should().HaveCount(3, "async Worker handler generates 3 WebP variants");
     }
 
     // ── 3. Expected variant names match the canonical list ──

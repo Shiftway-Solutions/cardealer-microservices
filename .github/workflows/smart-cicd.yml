@@ -300,7 +300,7 @@ jobs:
           steps.filter.outputs.billingservice == 'true'
         run: >
           dotnet test --no-build
-          --filter "Category!=Integration&Category!=E2E"
+          --filter "Category!=Integration&Category!=E2E&FullyQualifiedName!~E2E&FullyQualifiedName!~IntegrationTests.&FullyQualifiedName!~.Integration."
           --logger "console;verbosity=minimal"
           --blame-hang --blame-hang-timeout 2min
 
