@@ -989,13 +989,14 @@ jobs:
 
       - name: 🔧 Configure Docker for headless CI (disable macOS Keychain)
         run: |
-          mkdir -p ~/.docker
-          # On macOS self-hosted runners the Docker credential helper
-          # (docker-credential-osxkeychain) fails in headless/non-interactive
-          # sessions because the Keychain is locked. All images pulled here are
-          # public Docker Hub images that require no authentication, so we
-          # override ~/.docker/config.json to use no credential store.
-          echo '{"auths":{}}' > ~/.docker/config.json
+          mkdir -p /tmp/.docker.ci
+          # Write a clean docker config without credential store to a temp dir.
+          # Use DOCKER_CONFIG env var to make Docker respect this config.
+          # The osxkeychain cred helper is loaded from ~/.docker/config.json by
+          # default, which fails in headless sessions. Pointing to our temp config
+          # bypasses that entirely.
+          echo '{"auths":{}}' > /tmp/.docker.ci/config.json
+          echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
 
       - name: 🔑 Create CI secrets for Docker Compose
         run: |
