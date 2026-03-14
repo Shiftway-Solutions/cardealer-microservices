@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Runner identity"
         run: |
@@ -28,7 +28,7 @@ jobs:
           echo "Runner: $RUNNER_NAME | OS: $RUNNER_OS | Arch: $(uname -m)"
 
       - name: "Setup .NET"
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
@@ -38,7 +38,7 @@ jobs:
           echo "| .NET SDK | $(dotnet --version) |" >> $GITHUB_STEP_SUMMARY
 
       - name: "Setup Node.js"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20.x"
 

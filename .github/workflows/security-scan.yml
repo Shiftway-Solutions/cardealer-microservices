@@ -32,7 +32,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -59,10 +59,10 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
@@ -102,7 +102,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check for hardcoded secrets in appsettings
         run: |
@@ -193,7 +193,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: � Install Bandit
         run: |
@@ -209,7 +209,7 @@ jobs:
             -ll -ii || true
 
       - name: 📤 Upload Bandit SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: bandit-results.sarif
@@ -241,7 +241,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: � Install pip-audit
         run: |
@@ -296,7 +296,7 @@ jobs:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🛡️ Install Semgrep
         run: |
@@ -313,7 +313,7 @@ jobs:
             || true
 
       - name: 📤 Upload Semgrep SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: semgrep-results.sarif

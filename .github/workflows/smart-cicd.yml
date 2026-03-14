@@ -106,10 +106,10 @@ jobs:
 
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔍 Detect file changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           # Explicitly compare against the SHA before this push.
@@ -671,7 +671,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: � Install lint tools
         run: |
@@ -985,7 +985,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 Configure Docker for headless CI (disable macOS Keychain)
         run: |
@@ -1146,7 +1146,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 Install doctl
         uses: digitalocean/action-doctl@v2
@@ -1455,7 +1455,7 @@ jobs:
 
       - name: 🚨 Create GitHub Issue on critical failure
         if: env.PIPELINE_STATUS == 'failure' && github.ref == 'refs/heads/main'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const failedServices = process.env.FAILED_LIST || 'unknown';
