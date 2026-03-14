@@ -72,10 +72,10 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: 🔍 Detect file changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -113,15 +113,15 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: 🔧 Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
       - name: 📦 Cache NuGet
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-chatbot-${{ hashFiles('backend/ChatbotService/**/*.csproj') }}
@@ -147,7 +147,7 @@ jobs:
 
       - name: 📊 Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: chatbot-test-results
           path: backend/ChatbotService/TestResults
@@ -163,7 +163,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
         run: |
@@ -208,7 +208,7 @@ jobs:
             DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
           fi
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: |
@@ -234,7 +234,7 @@ jobs:
 
       - name: 🏗️ Build & Push ChatbotService
         if: needs.detect-changes.outputs.chatbotservice == 'true' || github.event.inputs.force_deploy == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           file: backend/ChatbotService/Dockerfile
@@ -272,10 +272,10 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: 🐍 Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -306,7 +306,7 @@ jobs:
 
       - name: 📊 Upload Python coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           files: backend/coverage-llmserver.xml
@@ -321,7 +321,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: "🗑️ Create CI Docker config (bypass macOS Keychain)"
         run: |
@@ -366,7 +366,7 @@ jobs:
             DOCKER_CONFIG="$ANON_CFG" docker pull moby/buildkit:buildx-stable-1
           fi
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: |
@@ -391,7 +391,7 @@ jobs:
           echo "✅ Logged into ghcr.io (credentials written to config.json auths)"
 
       - name: 🏗️ Build & Push LLM Server
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./backend/ChatbotService/LlmServer
           file: backend/ChatbotService/LlmServer/Dockerfile
@@ -430,7 +430,7 @@ jobs:
       !contains(needs.*.result, 'failure')
     runs-on: [self-hosted, macOS, ARM64]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: � Install eval dependencies
         run: |
@@ -543,7 +543,7 @@ jobs:
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: 🔧 Authenticate doctl
         run: |
