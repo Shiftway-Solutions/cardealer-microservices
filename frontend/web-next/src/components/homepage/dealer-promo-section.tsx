@@ -63,14 +63,14 @@ function DealerCard({ dealer }: { dealer: DealerPromoItem }) {
       </div>
 
       {/* Logo */}
-      <div className="relative mb-3 flex h-20 w-full items-center justify-center">
+      <div className="relative mb-3 h-20 w-full overflow-hidden rounded-xl">
         {dealer.logoUrl ? (
           <Image
             src={dealer.logoUrl}
             alt={dealer.name}
             fill
-            sizes="(max-width: 640px) 80px, 120px"
-            className="object-contain px-2 grayscale transition-all duration-300 group-hover:grayscale-0"
+            sizes="(max-width: 640px) 160px, 220px"
+            className="object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
           />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30">
