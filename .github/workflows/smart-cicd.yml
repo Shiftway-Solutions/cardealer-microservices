@@ -311,16 +311,26 @@ jobs:
       # Fix: write the auth token directly into a custom Docker config file,
       # bypassing the credential helper entirely. DOCKER_CONFIG is then set
       # to that directory so that docker build-push-action picks up the auth.
-      - name: "� Set up Docker Buildx"
+      - name: "Disable Docker credential helper (macOS keychain fix)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p /tmp/.docker.ci
+          # Setting credsStore to empty string disables osxkeychain for ALL docker ops,
+          # including setup-buildx pulling moby/buildkit:buildx-stable-1 from Docker Hub.
+          printf '{"auths":{},"credsStore":""}' > /tmp/.docker.ci/config.json
+          echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
+          echo "osxkeychain bypassed — DOCKER_CONFIG=/tmp/.docker.ci"
+
+      - name: "Set up Docker Buildx"
         if: github.ref == 'refs/heads/main'
         uses: docker/setup-buildx-action@v3
 
-      - name: "�🔐 Docker login to GHCR (credential-helper-free)"
+      - name: "Docker login to GHCR (credential-helper-free)"
         if: github.ref == 'refs/heads/main'
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p /tmp/.docker.ci
+          # DOCKER_CONFIG=/tmp/.docker.ci already set by keychain fix step above
           # Build base64 auth token (same format docker login stores internally)
           AUTH=$(printf '%s:%s' "${{ github.actor }}" "$GHCR_TOKEN" | base64 | tr -d '\n')
           # Write directly to config — no credential helper, no Keychain
