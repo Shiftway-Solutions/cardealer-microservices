@@ -314,25 +314,26 @@ jobs:
       - name: "Disable Docker credential helper (macOS keychain fix)"
         if: github.ref == 'refs/heads/main'
         run: |
-          mkdir -p /tmp/.docker.ci
-          # Omitting credsStore entirely means Docker will NOT call docker-credential-osxkeychain.
-          # An empty string credsStore causes Docker to call a binary named "docker-credential-"
-          # which does not exist, resulting in the same keychain error. Using {"auths":{}} (no
-          # credsStore key) tells Docker to use inline auths only — anonymous for public registries.
-          printf '{"auths":{}}' > /tmp/.docker.ci/config.json
+          mkdir -p /tmp/.docker.ci /tmp/.docker.helpers
+          # Write a no-op credential helper using base64 to avoid YAML/heredoc parse issues.
+          # The helper returns empty credentials for 'get', noop for all other commands.
+          # This prevents docker-credential-osxkeychain/desktop from being consulted for
+          # docker.io (which would fail on headless macOS runners with keychain locked).
+          echo 'IyEvYmluL2Jhc2gKaWYgWyAiJDEiID0gImdldCIgXTsgdGhlbgogIGVjaG8gJ3siVXNlcm5hbWUiOiIiLCJTZWNyZXQiOiIifScKZmkKZXhpdCAwCg==' \
+            | base64 -d > /tmp/.docker.helpers/docker-credential-none
+          chmod +x /tmp/.docker.helpers/docker-credential-none
+          # Add helper to PATH so Docker CLI finds 'docker-credential-none' in future steps
+          echo "/tmp/.docker.helpers" >> "$GITHUB_PATH"
+          # Use credHelpers dict to map docker.io lookups to our no-op helper.
+          # This prevents any system credential store (osxkeychain, desktop) from being called.
+          printf '{"auths":{},"credHelpers":{"docker.io":"none","index.docker.io":"none"}}' \
+            > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
-          echo "osxkeychain bypassed — DOCKER_CONFIG=/tmp/.docker.ci"
+          echo "No-op credential helper installed at /tmp/.docker.helpers/docker-credential-none"
 
       - name: "Set up Docker Buildx"
         if: github.ref == 'refs/heads/main'
         uses: docker/setup-buildx-action@v3
-        with:
-          # driver: docker uses the existing Docker daemon instead of creating a new
-          # docker-container builder. With docker-container, setup-buildx pulls
-          # moby/buildkit:buildx-stable-1 from Docker Hub which triggers
-          # osxkeychain on macOS self-hosted runners even with DOCKER_CONFIG overridden.
-          # driver: docker has no such pull step — it reuses the running daemon directly.
-          driver: docker
 
       - name: "Docker login to GHCR (credential-helper-free)"
         if: github.ref == 'refs/heads/main'
@@ -355,6 +356,7 @@ jobs:
         with:
           context: backend
           file: backend/AuthService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/authservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/authservice:latest
 
@@ -364,6 +366,7 @@ jobs:
         with:
           context: backend
           file: backend/ErrorService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/errorservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/errorservice:latest
 
@@ -373,6 +376,7 @@ jobs:
         with:
           context: backend
           file: backend/NotificationService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/notificationservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/notificationservice:latest
 
@@ -382,6 +386,7 @@ jobs:
         with:
           context: backend
           file: backend/VehiclesSaleService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:latest
 
@@ -391,6 +396,7 @@ jobs:
         with:
           context: backend
           file: backend/MediaService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mediaservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mediaservice:latest
 
@@ -400,6 +406,7 @@ jobs:
         with:
           context: backend
           file: backend/AdminService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/adminservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/adminservice:latest
 
@@ -409,6 +416,7 @@ jobs:
         with:
           context: backend
           file: backend/ContactService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/contactservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/contactservice:latest
 
@@ -418,6 +426,7 @@ jobs:
         with:
           context: backend
           file: backend/ReviewService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/reviewservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/reviewservice:latest
 
@@ -427,6 +436,7 @@ jobs:
         with:
           context: backend
           file: backend/DealerManagementService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/dealermanagementservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/dealermanagementservice:latest
 
@@ -436,6 +446,7 @@ jobs:
         with:
           context: backend
           file: backend/Gateway/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/gateway:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/gateway:latest
 
@@ -445,6 +456,7 @@ jobs:
         with:
           context: backend
           file: backend/ChatbotService/Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/chatbotservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/chatbotservice:latest
 
@@ -453,6 +465,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: backend/ChatbotService/LlmServer
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/llm-server:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/llm-server:latest
 
@@ -461,6 +474,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: frontend/web-next
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/frontend-web:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/frontend-web:latest
 
