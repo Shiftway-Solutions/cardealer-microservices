@@ -304,6 +304,14 @@ jobs:
           --logger "console;verbosity=minimal"
           --blame-hang --blame-hang-timeout 2min
 
+      # --- macOS Keychain Fix for Docker --------------------------
+      - name: "🔧 Configure Docker for headless CI (disable macOS Keychain)"
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p /tmp/.docker.ci
+          echo '{"auths":{}}' > /tmp/.docker.ci/config.json
+          echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
+
       # --- Docker Login -------------------------------------------
       - name: "🔐 Docker login to GHCR"
         if: github.ref == 'refs/heads/main'
@@ -312,21 +320,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      # --- macOS Keychain Fix for Docker --------------------------
-      - name: "🔧 Configure Docker for headless CI (disable macOS Keychain)"
-        if: github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p /tmp/.docker.ci
-          echo '{"auths":{}}' > /tmp/.docker.ci/config.json
-          echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
-          for service in com.docker.service com.docker.vmnetd; do
-            launchctl stop $service 2>/dev/null || true
-            sleep 2
-            launchctl start $service 2>/dev/null || true
-            sleep 5
-          done
-          echo "Docker daemon restarted"
 
       # --- Docker Build & Push (one step per service) -------------
       - name: "🐳 Build & Push AuthService"
