@@ -353,7 +353,8 @@ jobs:
         if: steps.filter.outputs.authservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/AuthService
+          context: backend
+          file: backend/AuthService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/authservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/authservice:latest
 
@@ -361,7 +362,8 @@ jobs:
         if: steps.filter.outputs.errorservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/ErrorService
+          context: backend
+          file: backend/ErrorService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/errorservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/errorservice:latest
 
@@ -369,7 +371,8 @@ jobs:
         if: steps.filter.outputs.notificationservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/NotificationService
+          context: backend
+          file: backend/NotificationService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/notificationservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/notificationservice:latest
 
@@ -377,7 +380,8 @@ jobs:
         if: steps.filter.outputs.vehiclessaleservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/VehiclesSaleService
+          context: backend
+          file: backend/VehiclesSaleService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:latest
 
@@ -385,7 +389,8 @@ jobs:
         if: steps.filter.outputs.mediaservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/MediaService
+          context: backend
+          file: backend/MediaService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mediaservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mediaservice:latest
 
@@ -393,7 +398,8 @@ jobs:
         if: steps.filter.outputs.adminservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/AdminService
+          context: backend
+          file: backend/AdminService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/adminservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/adminservice:latest
 
@@ -401,7 +407,8 @@ jobs:
         if: steps.filter.outputs.contactservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/ContactService
+          context: backend
+          file: backend/ContactService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/contactservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/contactservice:latest
 
@@ -409,7 +416,8 @@ jobs:
         if: steps.filter.outputs.reviewservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/ReviewService
+          context: backend
+          file: backend/ReviewService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/reviewservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/reviewservice:latest
 
@@ -417,7 +425,8 @@ jobs:
         if: steps.filter.outputs.dealermanagementservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/DealerManagementService
+          context: backend
+          file: backend/DealerManagementService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/dealermanagementservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/dealermanagementservice:latest
 
@@ -425,7 +434,8 @@ jobs:
         if: steps.filter.outputs.gateway == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/Gateway
+          context: backend
+          file: backend/Gateway/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/gateway:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/gateway:latest
 
@@ -433,7 +443,8 @@ jobs:
         if: steps.filter.outputs.chatbotservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: backend/ChatbotService
+          context: backend
+          file: backend/ChatbotService/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/chatbotservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/chatbotservice:latest
 
