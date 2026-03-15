@@ -305,24 +305,25 @@ jobs:
           --blame-hang --blame-hang-timeout 2min
 
       # --- macOS Keychain Fix for Docker --------------------------
-      - name: "🔧 Configure Docker for headless CI (disable macOS Keychain)"
+      # docker/login-action uses 'docker login' which tries to save credentials
+      # via docker-credential-osxkeychain on macOS, failing with
+      # "User interaction is not allowed. (-25308)" on headless CI runners.
+      # Fix: write the auth token directly into a custom Docker config file,
+      # bypassing the credential helper entirely. DOCKER_CONFIG is then set
+      # to that directory so that docker build-push-action picks up the auth.
+      - name: "🔐 Docker login to GHCR (credential-helper-free)"
         if: github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/.docker.ci
-          # Explicitly set credsStore to "" to prevent Docker from using osxkeychain
-          # Without this, Docker CLI still tries to use the system credential helper
-          # even when DOCKER_CONFIG points to a custom directory
-          printf '{"auths":{},"credsStore":""}' > /tmp/.docker.ci/config.json
+          # Build base64 auth token (same format docker login stores internally)
+          AUTH=$(printf '%s:%s' "${{ github.actor }}" "$GHCR_TOKEN" | base64 | tr -d '\n')
+          # Write directly to config — no credential helper, no Keychain
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}},"credsStore":""}' "$AUTH" \
+            > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
-
-      # --- Docker Login -------------------------------------------
-      - name: "🔐 Docker login to GHCR"
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          echo "Logged into ghcr.io as ${{ github.actor }} (credential-helper-free)"
 
       # --- Docker Build & Push (one step per service) -------------
       - name: "🐳 Build & Push AuthService"
