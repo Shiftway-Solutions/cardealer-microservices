@@ -309,7 +309,10 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p /tmp/.docker.ci
-          echo '{"auths":{}}' > /tmp/.docker.ci/config.json
+          # Explicitly set credsStore to "" to prevent Docker from using osxkeychain
+          # Without this, Docker CLI still tries to use the system credential helper
+          # even when DOCKER_CONFIG points to a custom directory
+          printf '{"auths":{},"credsStore":""}' > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
 
       # --- Docker Login -------------------------------------------
