@@ -315,9 +315,11 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p /tmp/.docker.ci
-          # Setting credsStore to empty string disables osxkeychain for ALL docker ops,
-          # including setup-buildx pulling moby/buildkit:buildx-stable-1 from Docker Hub.
-          printf '{"auths":{},"credsStore":""}' > /tmp/.docker.ci/config.json
+          # Omitting credsStore entirely means Docker will NOT call docker-credential-osxkeychain.
+          # An empty string credsStore causes Docker to call a binary named "docker-credential-"
+          # which does not exist, resulting in the same keychain error. Using {"auths":{}} (no
+          # credsStore key) tells Docker to use inline auths only — anonymous for public registries.
+          printf '{"auths":{}}' > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
           echo "osxkeychain bypassed — DOCKER_CONFIG=/tmp/.docker.ci"
 
@@ -333,8 +335,8 @@ jobs:
           # DOCKER_CONFIG=/tmp/.docker.ci already set by keychain fix step above
           # Build base64 auth token (same format docker login stores internally)
           AUTH=$(printf '%s:%s' "${{ github.actor }}" "$GHCR_TOKEN" | base64 | tr -d '\n')
-          # Write directly to config — no credential helper, no Keychain
-          printf '{"auths":{"ghcr.io":{"auth":"%s"}},"credsStore":""}' "$AUTH" \
+          # Write directly to config — no credsStore key, no credential helper, no Keychain
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "$AUTH" \
             > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
           echo "Logged into ghcr.io as ${{ github.actor }} (credential-helper-free)"
