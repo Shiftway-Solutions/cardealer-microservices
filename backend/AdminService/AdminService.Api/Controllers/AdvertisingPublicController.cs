@@ -1,4 +1,5 @@
 // AdvertisingPublicController — public advertising API (campaigns, rotation, tracking)
+// v2: CreateCampaignApiRequest includes VehicleTitle, VehicleSlug, VehicleImageUrl, VehiclePrice, etc.
 using AdminService.Application.Interfaces;
 using AdminService.Domain.Entities.Advertising;
 using Microsoft.AspNetCore.Authorization;
