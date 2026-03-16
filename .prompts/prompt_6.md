@@ -1,3 +1,3 @@
 Lanza sin demora el prompt 6. Simula que es la primera vez y realiza una auditoría de Unit tests — Importador desde Facebook Marketplace (ListingAgent): Auditar que existen unit tests con fixtures de HTML real de Facebook Marketplace que verifican: extracción correcta de precio en pesos dominicanos, extracción de título con marca/modelo/año, extracción de descripción limpia sin elementos de UI de Facebook, descarga de todas las fotos del listing, manejo graceful cuando Facebook bloquea el scraping (rate limiting), y que el listing creado en OKLA tiene todos los campos obligatorios populados correctamente y ejecuta correcciones y ejecuta inmediatamente sus recomendaciones. Sigue vigilando el archivo .prompts/prompt_6.md.
 Ejecutar el comando "/compact" al comienzo de cada auditoria
-<!-- monitor: 2026-03-14 07:18:29 -->
+<!-- monitor: 2026-03-15 23:59:31 -->

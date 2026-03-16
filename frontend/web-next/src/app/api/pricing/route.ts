@@ -77,8 +77,8 @@ const DEFAULT_PRICING: PlatformPricing = {
   // Planes Dealer (DOP mensuales) - LIBRE/VISIBLE/PRO/ÉLITE
   dealerLibre: 0,
   dealerVisible: 1699,
-  dealerPro: 5199,
-  dealerElite: 11599,
+  dealerPro: 5799,
+  dealerElite: 14599,
   // Planes Seller Individual (DOP mensuales) - GRATIS/PREMIUM/PRO
   sellerGratis: 0,
   sellerPremium: 1699,
@@ -94,10 +94,10 @@ const DEFAULT_PRICING: PlatformPricing = {
   basicListingDays: 30,
   individualListingDays: 45,
   // Límites por plan (fotos por vehículo)
-  freeMaxPhotos: 10,
-  visibleMaxPhotos: 25,
-  proMaxPhotos: 40,
-  eliteMaxPhotos: 50,
+  freeMaxPhotos: 5,
+  visibleMaxPhotos: 10,
+  proMaxPhotos: 15,
+  eliteMaxPhotos: 20,
   // Comisiones
   platformCommission: 2.5,
   itbisPercentage: 18,

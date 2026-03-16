@@ -62,7 +62,9 @@ export async function GET(
   const campaignVehicleIds = new Set(campaignItems.map(v => String(v.vehicleId || '')));
 
   const fillItems =
-    slotsNeeded > 0 ? await fetchFillVehicles(section, isPremium, slotsNeeded * 3, campaignVehicleIds) : [];
+    slotsNeeded > 0
+      ? await fetchFillVehicles(section, isPremium, slotsNeeded * 3, campaignVehicleIds)
+      : [];
 
   // Campaigns always first, then fill
   const allItems = [...campaignItems, ...fillItems].slice(0, targetCount);
@@ -105,10 +107,11 @@ function transformRotatedVehicle(item: Record<string, unknown>): Record<string, 
     price: item.price || item.vehiclePrice || 0,
     slug:
       item.slug ||
-      `${String(item.vehicleYear || '')}-${String(item.vehicleMake || '').toLowerCase()}-${String(item.vehicleModel || '').toLowerCase()}-${String(item.vehicleId || '').replace(/-/g, '').slice(0, 8)}`.replace(
-        /\s+/g,
-        '-'
-      ),
+      `${String(item.vehicleYear || '')}-${String(item.vehicleMake || '').toLowerCase()}-${String(item.vehicleModel || '').toLowerCase()}-${String(
+        item.vehicleId || ''
+      )
+        .replace(/-/g, '')
+        .slice(0, 8)}`.replace(/\s+/g, '-'),
     isFeatured: item.isFeatured ?? !isPremium,
     isPremium: item.isPremium ?? isPremium,
   };
@@ -168,7 +171,10 @@ async function fetchFillVehicles(
       let idx = 0;
       for (let i = 0; i < weights.length; i++) {
         r -= weights[i];
-        if (r <= 0) { idx = i; break; }
+        if (r <= 0) {
+          idx = i;
+          break;
+        }
       }
       selected.push(pool[idx]);
       pool.splice(idx, 1);
@@ -176,15 +182,18 @@ async function fetchFillVehicles(
 
     return selected.map(({ v, qualityScore, images }, i) => {
       const sorted = [...images].sort((a, b) => {
-        const aO = (a as Record<string,unknown>).sortOrder as number ?? 99;
-        const bO = (b as Record<string,unknown>).sortOrder as number ?? 99;
+        const aO = ((a as Record<string, unknown>).sortOrder as number) ?? 99;
+        const bO = ((b as Record<string, unknown>).sortOrder as number) ?? 99;
         return aO - bO;
       });
-      const imgUrl = String((sorted[0] as Record<string,unknown>)?.url ?? '') || '/placeholder-car.jpg';
+      const imgUrl =
+        String((sorted[0] as Record<string, unknown>)?.url ?? '') || '/placeholder-car.jpg';
       const year = v.year || '';
       const make = String(v.make || '').toLowerCase();
       const model = String(v.model || '').toLowerCase();
-      const shortId = String(v.id || '').replace(/-/g, '').slice(0, 8);
+      const shortId = String(v.id || '')
+        .replace(/-/g, '')
+        .slice(0, 8);
       return {
         campaignId: `fill-${isPremium ? 'p' : 'f'}${i + 1}`,
         vehicleId: v.id || '',
@@ -208,7 +217,11 @@ async function fetchFillVehicles(
 }
 
 /** Minimal demo fallback so the section is never blank in dev/staging. */
-function getDemoItems(section: string, isPremium: boolean, count: number): Record<string, unknown>[] {
+function getDemoItems(
+  section: string,
+  isPremium: boolean,
+  count: number
+): Record<string, unknown>[] {
   const demos = [
     { make: 'Toyota', model: 'RAV4', year: 2024, price: 2_850_000 },
     { make: 'Honda', model: 'CR-V', year: 2023, price: 1_950_000 },

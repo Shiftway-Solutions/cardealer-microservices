@@ -37,6 +37,7 @@ export interface DealerPlanFeatures {
   badgeType: 'none' | 'verified' | 'verified-gold' | 'verified-premium';
   chatAgentWeb: number; // conversations/month, -1 = unlimited
   chatAgentWhatsApp: number;
+  chatAgentOverageCostUsd: number; // USD per conversation above monthly limit (0 = no overage)
   autoScheduling: boolean;
   whatsAppReminders: boolean;
   pricingAgentFree: number;
@@ -52,14 +53,14 @@ export interface DealerPlanFeatures {
 export const DEALER_PLAN_PRICES: Record<DealerPlan, number> = {
   [DealerPlan.LIBRE]: 0,
   [DealerPlan.VISIBLE]: 29,
-  [DealerPlan.PRO]: 89,
-  [DealerPlan.ELITE]: 199,
+  [DealerPlan.PRO]: 99,
+  [DealerPlan.ELITE]: 249,
 };
 
 export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
   [DealerPlan.LIBRE]: {
     maxListings: 999999,
-    maxImages: 10,
+    maxImages: 5,
     analyticsAccess: false,
     marketPriceAnalysis: false,
     bulkUpload: false,
@@ -75,6 +76,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     badgeType: 'none',
     chatAgentWeb: 0,
     chatAgentWhatsApp: 0,
+    chatAgentOverageCostUsd: 0,
     autoScheduling: false,
     whatsAppReminders: false,
     pricingAgentFree: 1,
@@ -88,7 +90,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
   },
   [DealerPlan.VISIBLE]: {
     maxListings: 999999,
-    maxImages: 20,
+    maxImages: 10,
     analyticsAccess: true,
     marketPriceAnalysis: false,
     bulkUpload: true,
@@ -104,6 +106,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     badgeType: 'verified',
     chatAgentWeb: 0,
     chatAgentWhatsApp: 0,
+    chatAgentOverageCostUsd: 0,
     autoScheduling: false,
     whatsAppReminders: false,
     pricingAgentFree: 0,
@@ -117,7 +120,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
   },
   [DealerPlan.PRO]: {
     maxListings: 999999,
-    maxImages: 30,
+    maxImages: 15,
     analyticsAccess: true,
     marketPriceAnalysis: true,
     bulkUpload: true,
@@ -131,8 +134,9 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     searchPriority: 'high',
     monthlyOklaCoinsCredits: 45,
     badgeType: 'verified-gold',
-    chatAgentWeb: 500,
-    chatAgentWhatsApp: 500,
+    chatAgentWeb: 300,
+    chatAgentWhatsApp: 300,
+    chatAgentOverageCostUsd: 0.08,
     autoScheduling: true,
     whatsAppReminders: false,
     pricingAgentFree: 0,
@@ -146,7 +150,7 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
   },
   [DealerPlan.ELITE]: {
     maxListings: 999999,
-    maxImages: 40,
+    maxImages: 20,
     analyticsAccess: true,
     marketPriceAnalysis: true,
     bulkUpload: true,
@@ -160,8 +164,9 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     searchPriority: 'top',
     monthlyOklaCoinsCredits: 120,
     badgeType: 'verified-premium',
-    chatAgentWeb: -1,
-    chatAgentWhatsApp: -1,
+    chatAgentWeb: 2000,
+    chatAgentWhatsApp: 2000,
+    chatAgentOverageCostUsd: 0.06,
     autoScheduling: true,
     whatsAppReminders: true,
     pricingAgentFree: 0,

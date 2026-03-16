@@ -242,8 +242,8 @@ public static class StripePriceMapping
     {
         { SubscriptionPlan.Free, (0m, 0m) },
         { SubscriptionPlan.Basic, (29m, 290m) },        // ~17% descuento anual
-        { SubscriptionPlan.Professional, (89m, 890m) }, // ~17% descuento anual
-        { SubscriptionPlan.Enterprise, (199m, 1990m) }  // ~17% descuento anual
+        { SubscriptionPlan.Professional, (99m, 990m) }, // ~17% descuento anual
+        { SubscriptionPlan.Enterprise, (249m, 2490m) }  // ~17% descuento anual
     };
 
     private static readonly Dictionary<SubscriptionPlan, (int Users, int Vehicles)> Limits = new()
@@ -271,7 +271,7 @@ public static class StripePriceMapping
         { SubscriptionPlan.Basic, new List<string>
             {
                 "Publicaciones ilimitadas de vehículos",
-                "Hasta 20 fotos por vehículo",
+                "Hasta 10 fotos por vehículo",
                 "Prioridad media en búsquedas",
                 "3 vehículos destacados/mes",
                 "$15 créditos publicitarios/mes",
@@ -286,13 +286,13 @@ public static class StripePriceMapping
         { SubscriptionPlan.Professional, new List<string>
             {
                 "Publicaciones ilimitadas de vehículos",
-                "Hasta 30 fotos por vehículo",
+                "Hasta 15 fotos por vehículo",
                 "Alta prioridad en búsquedas",
                 "10 vehículos destacados/mes",
                 "$45 créditos publicitarios/mes",
                 "Badge 'Dealer Verificado OKLA'",
-                "ChatAgent Web 500 conv/mes",
-                "ChatAgent WhatsApp 500 conv/mes",
+                "ChatAgent Web 300 conv/mes",
+                "ChatAgent WhatsApp 300 conv/mes",
                 "Agendamiento de citas automático",
                 "Human handoff email alert",
                 "Valoración IA ilimitada",
@@ -305,13 +305,13 @@ public static class StripePriceMapping
         { SubscriptionPlan.Enterprise, new List<string>
             {
                 "Publicaciones ilimitadas de vehículos",
-                "Hasta 40 fotos + video tour",
+                "Hasta 20 fotos + video tour",
                 "Top prioridad en búsquedas",
                 "25 vehículos destacados/mes",
                 "$120 créditos publicitarios/mes",
                 "Badge Premium dorado",
-                "ChatAgent Web ILIMITADO",
-                "ChatAgent WhatsApp ILIMITADO",
+                "ChatAgent Web 2,000 conv/mes",
+                "ChatAgent WhatsApp 2,000 conv/mes",
                 "Agendamiento + recordatorios WA",
                 "Live chat + CRM handoff",
                 "Valoración IA ilimitada + informe PDF",

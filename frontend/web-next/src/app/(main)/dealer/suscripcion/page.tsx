@@ -60,7 +60,7 @@ function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
       'Todo de PRO +',
       'Manager dedicado',
       'Acceso a API',
-      '50 publicaciones destacadas/mes',
+      '25 publicaciones destacadas/mes',
       'Múltiples ubicaciones',
       'Empleados ilimitados',
       'Marca blanca',
@@ -366,7 +366,7 @@ export default function DealerSubscriptionPage() {
                       ? 3
                       : dealer.plan === 'pro'
                         ? 10
-                        : 50)}
+                        : 25)}
               </span>
             </div>
             <div className="bg-muted h-3 overflow-hidden rounded-full">
@@ -519,7 +519,7 @@ export default function DealerSubscriptionPage() {
                     pro: String(pricing.proMaxPhotos),
                     elite: String(pricing.eliteMaxPhotos),
                   },
-                  { feature: 'Destacados/mes', libre: '0', visible: '3', pro: '10', elite: '50' },
+                  { feature: 'Destacados/mes', libre: '0', visible: '3', pro: '10', elite: '25' },
                   {
                     feature: 'Estadísticas',
                     libre: 'Básicas',

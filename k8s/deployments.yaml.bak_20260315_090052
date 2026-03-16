@@ -658,10 +658,8 @@ spec:
             # and CdnBaseUrl to https://{bucket}.{region}.cdn.digitaloceanspaces.com
             - name: Storage__S3__ServiceUrl
               value: ""
-            # Permanent public S3 URL base — objects are uploaded with CannedACL=PublicRead
-            # Using permanent URL avoids pre-signed URL expiration (previous 24h issue)
             - name: Storage__S3__CdnBaseUrl
-              value: "https://okla-images-2026.s3.us-east-2.amazonaws.com"
+              value: ""
             - name: Storage__S3__AccessKey
               valueFrom:
                 secretKeyRef:

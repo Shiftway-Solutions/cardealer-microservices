@@ -43,7 +43,7 @@ describe('Dealer Plan Features', () => {
     });
 
     it('should have basic image limit', () => {
-      expect(features.maxImages).toBe(10);
+      expect(features.maxImages).toBe(5);
     });
 
     it('should NOT have advanced features', () => {
@@ -169,9 +169,9 @@ describe('Dealer Plan Features', () => {
       expect(features.whatsappIntegration).toBe(true);
     });
 
-    it('should have unlimited ChatAgent (-1)', () => {
-      expect(features.chatAgentWeb).toBe(-1);
-      expect(features.chatAgentWhatsApp).toBe(-1);
+    it('should have 2000 ChatAgent conversations/month', () => {
+      expect(features.chatAgentWeb).toBe(2000);
+      expect(features.chatAgentWhatsApp).toBe(2000);
     });
 
     it('should have the most OKLA Coins credits', () => {
