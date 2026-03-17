@@ -21,6 +21,7 @@ public class PaymentMethodsController : ControllerBase
 {
     private readonly IStripeService _stripeService;
     private readonly StripeSettings _stripeSettings;
+    private readonly PayPalSettings _paypalSettings;
     private readonly ILogger<PaymentMethodsController> _logger;
 
     private static readonly ConcurrentDictionary<string, TokenizationSessionData> _tokenSessions = new();
@@ -33,10 +34,12 @@ public class PaymentMethodsController : ControllerBase
     public PaymentMethodsController(
         IStripeService stripeService,
         IOptions<StripeSettings> stripeSettings,
+        IOptions<PayPalSettings> paypalSettings,
         ILogger<PaymentMethodsController> logger)
     {
         _stripeService = stripeService;
         _stripeSettings = stripeSettings.Value;
+        _paypalSettings = paypalSettings.Value;
         _logger = logger;
     }
 
@@ -110,6 +113,34 @@ public class PaymentMethodsController : ControllerBase
                 return await InitiateStripeTokenization(userId, request);
 
             case "PayPal":
+            {
+                var payPalSessionId = Guid.NewGuid().ToString("N");
+                _tokenSessions[payPalSessionId] = new TokenizationSessionData
+                {
+                    SessionId = payPalSessionId,
+                    UserId = userId,
+                    Gateway = "PayPal",
+                    Status = "pending",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                    SetAsDefault = request.SetAsDefault ?? false,
+                    NickName = request.NickName
+                };
+
+                return Ok(new TokenizationInitResponse
+                {
+                    SessionId = payPalSessionId,
+                    Gateway = "PayPal",
+                    IntegrationType = "sdk",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(30).ToString("o"),
+                    SdkConfig = new SdkConfiguration
+                    {
+                        ClientId = _paypalSettings.ClientId,
+                        Environment = _paypalSettings.Sandbox ? "sandbox" : "production"
+                    }
+                });
+            }
+
             case "Azul":
             case "CardNET":
             case "PixelPay":
@@ -118,12 +149,12 @@ public class PaymentMethodsController : ControllerBase
                 {
                     SessionId = Guid.NewGuid().ToString("N"),
                     Gateway = request.Gateway,
-                    IntegrationType = request.Gateway == "PayPal" ? "sdk" : "redirect",
+                    IntegrationType = "redirect",
                     ExpiresAt = DateTime.UtcNow.AddMinutes(30).ToString("o"),
                     ProviderData = new Dictionary<string, object>
                     {
                         ["status"] = "not_configured",
-                        ["message"] = $"El gateway {request.Gateway} estará disponible próximamente. Por favor use Stripe."
+                        ["message"] = $"El gateway {request.Gateway} estará disponible próximamente. Por favor use Stripe o PayPal."
                     }
                 });
 
@@ -163,6 +194,11 @@ public class PaymentMethodsController : ControllerBase
         if (session.Gateway == "Stripe")
         {
             return await CompleteStripeTokenization(userId, session, request);
+        }
+
+        if (session.Gateway == "PayPal")
+        {
+            return CompletePayPalTokenization(userId, session, request);
         }
 
         return Ok(new
@@ -245,6 +281,38 @@ public class PaymentMethodsController : ControllerBase
     // ========================================
     // STRIPE TOKENIZATION HELPERS
     // ========================================
+
+    private IActionResult CompletePayPalTokenization(
+        Guid userId, TokenizationSessionData session, TokenizationCompleteRequest request)
+    {
+        var payPalOrderId = request.PayPalVaultId ?? request.ProviderToken;
+
+        if (string.IsNullOrWhiteSpace(payPalOrderId))
+        {
+            return BadRequest(new { error = "PayPal order ID no proporcionado." });
+        }
+
+        session.Status = "completed";
+        _tokenSessions[session.SessionId] = session;
+
+        _logger.LogInformation(
+            "PayPal tokenization completed: user={UserId}, orderId={OrderId}, setAsDefault={Default}",
+            userId, payPalOrderId, session.SetAsDefault);
+
+        return Ok(new
+        {
+            success = true,
+            paymentMethod = new
+            {
+                id = payPalOrderId,
+                gateway = "PayPal",
+                type = "paypal",
+                isDefault = session.SetAsDefault,
+                nickName = session.NickName ?? "PayPal",
+                createdAt = DateTime.UtcNow.ToString("o")
+            }
+        });
+    }
 
     private async Task<IActionResult> InitiateStripeTokenization(Guid userId, TokenizationInitRequest request)
     {
@@ -465,6 +533,8 @@ public sealed class TokenizationCompleteRequest
     public string? Gateway { get; init; }
     public bool? SetAsDefault { get; init; }
     public Dictionary<string, string>? ProviderResponse { get; init; }
+    // PayPal-specific
+    public string? PayPalVaultId { get; init; }
 }
 
 public sealed class TokenizationSessionData

@@ -144,14 +144,14 @@ const nextConfig: NextConfig = {
     // Content Security Policy
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://js.stripe.com",
+      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https://fonts.gstatic.com",
       // BFF pattern: browser calls same-origin (/api/*), Next.js rewrites proxy to internal Gateway
       // No need for https://api.okla.com.do — Gateway is NOT exposed externally
-      "connect-src 'self' http://localhost:* https://www.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://api.stripe.com wss: ws:",
-      "frame-src 'self' https://js.stripe.com https://www.google.com",
+      "connect-src 'self' http://localhost:* https://www.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://api.stripe.com https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com wss: ws:",
+      "frame-src 'self' https://js.stripe.com https://www.google.com https://www.paypal.com https://www.sandbox.paypal.com",
       "frame-ancestors 'self'",
       "form-action 'self'",
       "base-uri 'self'",
