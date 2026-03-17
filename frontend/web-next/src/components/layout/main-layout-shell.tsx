@@ -34,7 +34,8 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Dealer portal has its own header, sidebar, and layout — skip global Navbar/Footer
-  const isDealerPortal = pathname.startsWith('/dealer');
+  // Only exclude /dealer/* (with trailing /) to avoid matching /dealers landing page
+  const isDealerPortal = pathname === '/dealer' || pathname.startsWith('/dealer/');
 
   // Support chatbot should appear on ALL pages (except dealer portal which has its own layout)
   // Vehicle pages also get the support chatbot — it coexists with the vehicle-specific chatbot
