@@ -25,6 +25,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@19.2.3))
+      '@paypal/react-paypal-js':
+        specifier: ^9.0.1
+        version: 9.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1065,6 +1068,18 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@paypal/paypal-js@9.4.0':
+    resolution: {integrity: sha512-iPJIkEgzuUt9AW9d41xcltLYdcJvQ0qf+wWWuJ+wnJYnx4H6Yf1Pm98eBRnTNej4XHMSEDDb33ERsB4v/siORQ==}
+
+  '@paypal/react-paypal-js@9.0.1':
+    resolution: {integrity: sha512-cqX0l0wSOlWlovH0dnbVksZNfkoVxoQ5qYSoOQrqiXyibgrNCNT+loYqQ26F3rdCz+qPEQwf4+euKxgw8M1bNQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+      react-dom: ^16.8.0 || ^17 || ^18 || ^19
+
+  '@paypal/sdk-constants@1.0.157':
+    resolution: {integrity: sha512-BjxWT9rK6dM1AOffSpvHYY47/8BY775jgEYYiwH6eL4YaqU5Epcw7zOtwQ8L4UaEn4FCAjZ2EWxaS83dCN7SpA==}
 
   '@playwright/test@1.58.1':
     resolution: {integrity: sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w==}
@@ -3115,6 +3130,9 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  hi-base32@0.5.1:
+    resolution: {integrity: sha512-EmBBpvdYh/4XxsnUybsPag6VikPYnN30td+vQk+GI3qpahVEG9+gTkG0aXVxTjBqQ5T6ijbWIu77O+C5WFWsnA==}
+
   html-encoding-sniffer@6.0.0:
     resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
@@ -3858,6 +3876,9 @@ packages:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
 
+  promise-polyfill@8.3.0:
+    resolution: {integrity: sha512-H5oELycFml5yto/atYqmjyigJoAo3+OXwolYiH7OfQuYlAqhxNvTfiNMbV9hsC6Yp83yE5r2KTVmtrG6R9i6Pg==}
+
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
@@ -4066,6 +4087,9 @@ packages:
     resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
     engines: {node: '>=10'}
     hasBin: true
+
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -5437,6 +5461,22 @@ snapshots:
       outvariant: 1.4.3
 
   '@open-draft/until@2.1.0': {}
+
+  '@paypal/paypal-js@9.4.0':
+    dependencies:
+      promise-polyfill: 8.3.0
+
+  '@paypal/react-paypal-js@9.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@paypal/paypal-js': 9.4.0
+      '@paypal/sdk-constants': 1.0.157
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      server-only: 0.0.1
+
+  '@paypal/sdk-constants@1.0.157':
+    dependencies:
+      hi-base32: 0.5.1
 
   '@playwright/test@1.58.1':
     dependencies:
@@ -7578,6 +7618,8 @@ snapshots:
     dependencies:
       hermes-estree: 0.25.1
 
+  hi-base32@0.5.1: {}
+
   html-encoding-sniffer@6.0.0:
     dependencies:
       '@exodus/bytes': 1.10.0
@@ -8239,6 +8281,8 @@ snapshots:
       ansi-styles: 5.2.0
       react-is: 17.0.2
 
+  promise-polyfill@8.3.0: {}
+
   prop-types@15.8.1:
     dependencies:
       loose-envify: 1.4.0
@@ -8471,6 +8515,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.3: {}
+
+  server-only@0.0.1: {}
 
   set-function-length@1.2.2:
     dependencies:

@@ -1,1 +1,17 @@
-Disena pruebas e2e en produccion para determinar que ambios hacer. y Audita si el modelo de negocio de okla esta implementado en la plataforma. Reflexiona sobre el proyecto y pregúntate: ¿Cómo determinar si es más prioritario realizar una auditoría de código o investigar nuevas funcionalidades? Y lo que determines ejecutalo. Con base en ello, actualiza el plan de tareas, elabora un plan de sprint y ponlo en marcha. Por último, ejecuta el prompt que se encuentra en la ruta ".prompts/prompt_4.md".
+Validame si el proceso de comprar publicidad este funcionando correctamente, y validad que esten todos los paquetes publicitario.
+
+OKLA Local ACCOUNT Admin
+Username: admin@okla.local
+Password: Admin123!@#
+
+OKLA Buyer Account
+Username: buyer002@okla-test.com
+Password: BuyerTest2026!
+
+OKLA Dealer
+Username: nmateo@okla.com.do
+Pass: Dealer2026!@#
+
+OKLA Seller
+Username: gmoreno@okla.com.do
+Pass: $Gregory1

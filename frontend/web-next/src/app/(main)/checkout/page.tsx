@@ -41,6 +41,13 @@ import {
   type AvailableProvider,
 } from '@/services/checkout';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
+import { StripePaymentForm } from '@/components/checkout/StripePaymentForm';
+import { PayPalPaymentButton } from '@/components/checkout/PayPalPaymentButton';
+import {
+  serverCreatePaymentIntent,
+  serverCreatePayPalOrder,
+  serverCapturePayPalOrder,
+} from '@/actions/checkout';
 
 // =============================================================================
 // LOADING STATE
@@ -143,10 +150,14 @@ const GATEWAY_DISPLAY: Record<
 };
 
 /** Gateways that redirect the user to an external payment page */
-const REDIRECT_GATEWAYS = new Set(['azul', 'paypal', 'fygaro']);
+const REDIRECT_GATEWAYS = new Set(['azul', 'fygaro']);
 
-/** Gateways that accept card input directly in the form */
-const CARD_INPUT_GATEWAYS = new Set(['cardnet', 'pixelpay', 'stripe']);
+/** Gateways that accept card input directly in the form (legacy — non-Stripe) */
+const CARD_INPUT_GATEWAYS = new Set(['cardnet', 'pixelpay']);
+
+/** Gateways with dedicated SDK components */
+const STRIPE_GATEWAY = 'stripe';
+const PAYPAL_GATEWAY = 'paypal';
 
 function getGatewayDisplayInfo(gw: AvailableProvider) {
   const key = gw.gateway.toLowerCase();
@@ -232,10 +243,11 @@ function CheckoutContent() {
     discountType: 'percentage' | 'fixed';
     discountValue: number;
   } | null>(null);
-  // ⚠️ PCI SECURITY NOTE: Storing raw card data in React state is NOT PCI-DSS compliant.
-  // TODO: Replace with provider-hosted SDK fields (Azul WebPay, Stripe Elements, etc.)
-  // that tokenize card data directly — card numbers should NEVER touch our frontend state.
-  // This is a temporary implementation for development/staging only.
+  // Stripe Elements state — card data never touches our frontend state
+  const [stripeClientSecret, setStripeClientSecret] = React.useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = React.useState(false);
+  // Legacy card data for non-SDK gateways (CardNET, PixelPay)
+  // ⚠️ PCI SECURITY NOTE: These gateways should migrate to their own hosted SDKs
   const [cardData, setCardData] = React.useState({
     number: '',
     name: '',
@@ -249,6 +261,57 @@ function CheckoutContent() {
       setPaymentMethod(availableGateways[0].gateway.toLowerCase());
     }
   }, [availableGateways, paymentMethod]);
+
+  // Calculate prices (must be before Stripe effect that depends on total)
+  const subtotal = product?.price ?? 0;
+  const discount = promoApplied?.discountAmount ?? 0;
+  const subtotalAfterDiscount = subtotal - discount;
+  const tax = checkoutService.calculateTax(subtotalAfterDiscount);
+  const total = subtotalAfterDiscount + tax;
+
+  // Create Stripe PaymentIntent when Stripe is selected
+  React.useEffect(() => {
+    if (paymentMethod !== STRIPE_GATEWAY || !product || total <= 0) {
+      setStripeClientSecret(null);
+      return;
+    }
+    let cancelled = false;
+    async function createIntent() {
+      setStripeLoading(true);
+      try {
+        // First create a checkout session to get session ID
+        const request: CreateCheckoutRequest = {
+          productId,
+          vehicleId,
+          dealerId,
+          promoCode: promoApplied ? promoCode : undefined,
+          paymentMethod: STRIPE_GATEWAY,
+          returnUrl: `${window.location.origin}/checkout/exito`,
+          cancelUrl: `${window.location.origin}/checkout?product=${productId}`,
+        };
+        const session = await checkoutService.createCheckoutSession(request);
+        if (cancelled) return;
+
+        // Then create PaymentIntent via server action
+        const result = await serverCreatePaymentIntent(session.sessionId, '');
+        if (cancelled) return;
+
+        if (result.success && result.data?.clientSecret) {
+          setStripeClientSecret(result.data.clientSecret);
+        } else {
+          toast.error(result.error || 'Error al inicializar Stripe');
+        }
+      } catch {
+        if (!cancelled) toast.error('Error al conectar con Stripe');
+      } finally {
+        if (!cancelled) setStripeLoading(false);
+      }
+    }
+    createIntent();
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentMethod, product, total, productId, vehicleId, dealerId, promoApplied, promoCode]);
 
   // Validate promo code mutation
   const promoMutation = useMutation({
@@ -319,13 +382,6 @@ function CheckoutContent() {
     },
   });
 
-  // Calculate prices
-  const subtotal = product?.price ?? 0;
-  const discount = promoApplied?.discountAmount ?? 0;
-  const subtotalAfterDiscount = subtotal - discount;
-  const tax = checkoutService.calculateTax(subtotalAfterDiscount);
-  const total = subtotalAfterDiscount + tax;
-
   const handleApplyPromo = () => {
     if (promoCode.trim()) {
       promoMutation.mutate(promoCode.trim());
@@ -335,13 +391,14 @@ function CheckoutContent() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation for card-type gateways
-    const selectedGateway = availableGateways.find(
-      g => g.gateway.toLowerCase() === paymentMethod
-    );
+    // Stripe and PayPal are handled by their own SDK components — skip validation
+    if (paymentMethod === STRIPE_GATEWAY || paymentMethod === PAYPAL_GATEWAY) return;
+
+    // Basic validation for legacy card-type gateways
+    const selectedGateway = availableGateways.find(g => g.gateway.toLowerCase() === paymentMethod);
     const isCardType = selectedGateway?.type === 'CreditCard';
 
-    if (isCardType && paymentMethod !== 'azul') {
+    if (isCardType && !isRedirectGateway(paymentMethod)) {
       if (!cardData.number || !cardData.name || !cardData.expiry || !cardData.cvv) {
         toast.error('Por favor completa todos los campos de la tarjeta');
         return;
@@ -381,7 +438,7 @@ function CheckoutContent() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver
             </Button>
-            <div className="flex items-center gap-2 text-primary">
+            <div className="text-primary flex items-center gap-2">
               <Shield className="h-5 w-5" />
               <span className="text-sm font-medium">Pago Seguro</span>
             </div>
@@ -437,7 +494,7 @@ function CheckoutContent() {
                             >
                               {info.icon}
                               <span className="font-medium">{info.label}</span>
-                              <span className="text-muted-foreground text-xs text-center">
+                              <span className="text-muted-foreground text-center text-xs">
                                 {info.description}
                               </span>
                             </Label>
@@ -449,7 +506,92 @@ function CheckoutContent() {
                 </CardContent>
               </Card>
 
-              {/* Card Details (for card-type gateways like CardNET, PixelPay) */}
+              {/* Stripe Elements — PCI-compliant card input */}
+              {paymentMethod === STRIPE_GATEWAY && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pago con Tarjeta (Stripe)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {stripeLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                        <span className="text-muted-foreground ml-3">
+                          Inicializando pago seguro...
+                        </span>
+                      </div>
+                    ) : stripeClientSecret ? (
+                      <StripePaymentForm
+                        clientSecret={stripeClientSecret}
+                        amount={checkoutService.formatCurrency(total, product.currency)}
+                        onSuccess={paymentIntentId => {
+                          router.push(`/checkout/exito?paymentIntentId=${paymentIntentId}`);
+                        }}
+                        onError={message => {
+                          toast.error(message);
+                        }}
+                        returnUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/exito`}
+                        disabled={isProcessing}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <p>
+                          No se pudo inicializar el pago con Stripe. Intenta seleccionar otro
+                          método.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* PayPal Smart Buttons */}
+              {paymentMethod === PAYPAL_GATEWAY && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pago con PayPal</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PayPalPaymentButton
+                      clientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || ''}
+                      amount={total.toFixed(2)}
+                      currency={product.currency === 'DOP' ? 'USD' : product.currency}
+                      onCreateOrder={async () => {
+                        const result = await serverCreatePayPalOrder(
+                          total,
+                          product.currency === 'DOP' ? 'USD' : product.currency,
+                          product.name,
+                          '',
+                          `${window.location.origin}/checkout/exito`,
+                          `${window.location.origin}/checkout?product=${productId}`
+                        );
+                        if (!result.success || !result.data?.orderId) {
+                          throw new Error(result.error || 'Error al crear orden PayPal');
+                        }
+                        return result.data.orderId;
+                      }}
+                      onApprove={async orderId => {
+                        const result = await serverCapturePayPalOrder(orderId, '');
+                        if (result.success && result.data?.status === 'COMPLETED') {
+                          router.push(`/checkout/exito?orderId=${orderId}`);
+                        } else {
+                          toast.error(result.error || 'Error al procesar el pago de PayPal');
+                        }
+                      }}
+                      onError={message => {
+                        toast.error(message);
+                      }}
+                      onCancel={() => {
+                        toast.info('Pago cancelado');
+                      }}
+                      disabled={isProcessing}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Card Details (for legacy card-type gateways like CardNET, PixelPay) */}
               {isCardInputGateway(paymentMethod) && (
                 <Card>
                   <CardHeader>
@@ -513,7 +655,7 @@ function CheckoutContent() {
 
                       <Button
                         type="submit"
-                        className="h-12 w-full bg-primary text-lg hover:bg-primary/90"
+                        className="bg-primary hover:bg-primary/90 h-12 w-full text-lg"
                         disabled={isProcessing}
                       >
                         {isProcessing ? (
@@ -533,13 +675,11 @@ function CheckoutContent() {
                 </Card>
               )}
 
-              {/* Redirect-based gateway (Azul, PayPal, Fygaro, etc.) */}
+              {/* Redirect-based gateway (Azul, Fygaro, etc.) */}
               {isRedirectGateway(paymentMethod) && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>
-                      Pago con {getGatewayLabel(paymentMethod)}
-                    </CardTitle>
+                    <CardTitle>Pago con {getGatewayLabel(paymentMethod)}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">
@@ -570,7 +710,7 @@ function CheckoutContent() {
 
               {/* Security Notice */}
               <div className="text-muted-foreground flex items-start gap-3 text-sm">
-                <Shield className="h-5 w-5 shrink-0 text-primary" />
+                <Shield className="text-primary h-5 w-5 shrink-0" />
                 <p>
                   Tus datos de pago están protegidos con encriptación SSL de 256 bits. Nunca
                   almacenamos los datos completos de tu tarjeta.
@@ -590,7 +730,7 @@ function CheckoutContent() {
                     <h3 className="font-semibold">{product.name}</h3>
                     <p className="text-muted-foreground text-sm">{product.description}</p>
                     {product.originalPrice && (
-                      <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary mt-2">
                         Ahorra{' '}
                         {checkoutService.formatCurrency(
                           product.originalPrice - product.price,
@@ -604,7 +744,7 @@ function CheckoutContent() {
                   <ul className="space-y-1.5">
                     {product.features.map(feature => (
                       <li key={feature} className="flex items-start gap-2 text-sm">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                         {feature}
                       </li>
                     ))}
@@ -629,7 +769,7 @@ function CheckoutContent() {
                       </span>
                     </div>
                     {promoApplied && (
-                      <div className="flex justify-between text-primary">
+                      <div className="text-primary flex justify-between">
                         <span>Descuento ({promoCode})</span>
                         <span>-{checkoutService.formatCurrency(discount, product.currency)}</span>
                       </div>

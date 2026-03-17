@@ -151,6 +151,10 @@ try
     builder.Services.Configure<StripeSettings>(
         builder.Configuration.GetSection("Stripe"));
 
+    // Configure PayPal
+    builder.Services.Configure<PayPalSettings>(
+        builder.Configuration.GetSection("PayPal"));
+
     // Configure AZUL
     builder.Services.Configure<AzulConfiguration>(
         builder.Configuration.GetSection("Azul"));
@@ -180,6 +184,9 @@ try
     // Add Stripe Services
     builder.Services.AddScoped<IStripeService, StripeService>();
     builder.Services.AddScoped<BillingApplicationService>();
+
+    // Add PayPal Services
+    builder.Services.AddHttpClient<IPayPalService, PayPalService>();
 
     // ═══════════════════════════════════════════════════════════════
     // STRIPE CIRCUIT BREAKER — protects against Stripe API degradation
@@ -214,6 +221,33 @@ try
                         ex.HttpStatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
                         ex.HttpStatusCode == System.Net.HttpStatusCode.BadGateway ||
                         ex.HttpStatusCode == System.Net.HttpStatusCode.GatewayTimeout)
+                    .Handle<HttpRequestException>()
+                    .Handle<TaskCanceledException>()
+            });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // PAYPAL CIRCUIT BREAKER — protects against PayPal API degradation
+    // ═══════════════════════════════════════════════════════════════
+    builder.Services.AddResiliencePipeline("paypal-circuit-breaker", pipelineBuilder =>
+    {
+        pipelineBuilder
+            .AddRetry(new Polly.Retry.RetryStrategyOptions
+            {
+                MaxRetryAttempts = 2,
+                Delay = TimeSpan.FromSeconds(1),
+                BackoffType = DelayBackoffType.Exponential,
+                ShouldHandle = new PredicateBuilder()
+                    .Handle<HttpRequestException>()
+                    .Handle<TaskCanceledException>()
+            })
+            .AddCircuitBreaker(new Polly.CircuitBreaker.CircuitBreakerStrategyOptions
+            {
+                FailureRatio = 0.5,
+                SamplingDuration = TimeSpan.FromSeconds(60),
+                MinimumThroughput = 5,
+                BreakDuration = TimeSpan.FromSeconds(30),
+                ShouldHandle = new PredicateBuilder()
                     .Handle<HttpRequestException>()
                     .Handle<TaskCanceledException>()
             });

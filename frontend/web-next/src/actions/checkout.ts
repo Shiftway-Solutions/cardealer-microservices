@@ -269,3 +269,83 @@ export async function serverValidatePromoCode(
     };
   }
 }
+
+// =============================================================================
+// PAYPAL SERVER ACTIONS
+// =============================================================================
+
+interface PayPalOrderResult {
+  orderId: string;
+  status: string;
+  approvalUrl?: string;
+}
+
+interface PayPalCaptureResult {
+  orderId: string;
+  captureId: string;
+  status: string;
+  amount: number;
+  currency: string;
+}
+
+/**
+ * Create PayPal order — server-side
+ * Browser NEVER sees: /api/payments/paypal/create-order, PayPal credentials
+ */
+export async function serverCreatePayPalOrder(
+  amount: number,
+  currency: string,
+  description: string,
+  accessToken: string,
+  returnUrl?: string,
+  cancelUrl?: string
+): Promise<ActionResult<PayPalOrderResult>> {
+  try {
+    const response = await internalFetch<PayPalOrderResult>('/api/payments/paypal/create-order', {
+      method: 'POST',
+      body: {
+        amount,
+        currency,
+        description,
+        returnUrl,
+        cancelUrl,
+      },
+      token: accessToken,
+    });
+
+    return { success: true, data: response };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return {
+      success: false,
+      error: err.message || 'Error al crear la orden de PayPal',
+      code: 'PAYPAL_CREATE_ORDER_FAILED',
+    };
+  }
+}
+
+/**
+ * Capture PayPal order — server-side
+ * Browser NEVER sees: /api/payments/paypal/capture, capture details
+ */
+export async function serverCapturePayPalOrder(
+  orderId: string,
+  accessToken: string
+): Promise<ActionResult<PayPalCaptureResult>> {
+  try {
+    const response = await internalFetch<PayPalCaptureResult>('/api/payments/paypal/capture', {
+      method: 'POST',
+      body: { orderId },
+      token: accessToken,
+    });
+
+    return { success: true, data: response };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return {
+      success: false,
+      error: err.message || 'Error al capturar el pago de PayPal',
+      code: 'PAYPAL_CAPTURE_FAILED',
+    };
+  }
+}
