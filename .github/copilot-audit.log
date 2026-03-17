@@ -1616,3 +1616,7 @@ test
 [2026-03-17 06:27:42] [BACKUP] k8s/configmaps.yaml — Pre-payment routes addition
 [2026-03-17 06:28:15] [BACKUP] frontend/web-next/.env.production — Pre-payment env fix
 [2026-03-17 06:34:01] [GATE] Payment gateway fixes passed all gate steps
+[2026-03-17 07:14:33] [BACKUP] PaymentMethodsController.cs + configmaps.yaml — Antes de agregar tokenize endpoints y ocelot config route
+[2026-03-17 07:20:57] [GATE] Pre-commit gate PASSED — build 0W/0E, lint 0err, typecheck clean, 576/576 frontend tests, BillingService 87/87 unit tests
+[2026-03-17 07:20:57] [MODIFICACIÓN] PaymentMethodsController.cs — Added tokenize/init, tokenize/complete, tokenize/config/{gateway}, tokenize/session/{sessionId} endpoints + Stripe SetupIntent integration
+[2026-03-17 07:20:57] [MODIFICACIÓN] k8s/configmaps.yaml — Added /api/configurations/{everything} Ocelot route to AdminService
