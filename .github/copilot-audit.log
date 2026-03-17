@@ -1628,3 +1628,7 @@ test
 [2026-03-17 13:32:07] [GATE-3d] CI=true pnpm test --run — OK | 576/576 tests passed
 [2026-03-17 13:32:07] [GATE-3e] pnpm build — OK | Next.js compiled successfully
 [2026-03-17 13:32:07] [GATE-4] dotnet test — OK | Unit: PASS 100%, Integration: excluidos (requieren Docker)
+[2026-03-17 13:57:10] [GATE-1] dotnet restore — OK
+[2026-03-17 13:57:10] [GATE-2] dotnet build TreatWarningsAsErrors — OK | Build succeeded. 0 Warnings. 0 Errors.
+[2026-03-17 13:57:10] [GATE-4] dotnet test --blame-hang 2min — OK | Unit: PASS, Integration/E2E: excluidos (requieren Docker)
+[2026-03-17 13:57:10] [BACKUP] Gateway.Api/Program.cs — backup created before middleware pipeline reorder

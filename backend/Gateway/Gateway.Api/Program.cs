@@ -334,24 +334,12 @@ try
     // CORS debe ir primero antes de cualquier otro middleware de routing
     app.UseCors("ReactPolicy");
 
-    // Rate Limiting middleware (before all other processing)
-    if (rateLimitEnabled)
-    {
-        app.UseRateLimiting();
-        Log.Information("Rate Limiting middleware enabled");
-    }
-
-    // Health check middleware BEFORE Ocelot to intercept /health requests
-    app.UseHealthCheckMiddleware();
-
     // BFF Cookie → Bearer Authorization transformation
-    // The browser sends the JWT as an HttpOnly cookie (okla_access_token).
-    // Next.js rewrites forward this cookie to the Gateway, but downstream
-    // microservices expect `Authorization: Bearer {token}` — not a cookie.
-    // This middleware bridges the gap: if there is no Authorization header
-    // but the auth cookie is present, it is injected as a Bearer token so
-    // that ALL downstream services (UserService, VehiclesSaleService, etc.)
-    // can validate it with their standard [Authorize] middleware.
+    // MUST run before UseAuthentication so the JWT is present when auth runs.
+    // Also MUST run before UseRateLimiting so the rate limiter sees the correct
+    // user tier (authenticated/dealer/etc.) instead of always "anonymous".
+    // Root cause fix: previously this ran AFTER UseRateLimiting, causing all
+    // browser-session requests to hit TierLimits["anonymous"]=0 → instant 429.
     app.Use(async (context, next) =>
     {
         if (!context.Request.Headers.ContainsKey("Authorization"))
@@ -365,11 +353,26 @@ try
         await next();
     });
 
-    // Use routing for other endpoints
+    // Use routing — must come before UseAuthentication for route-based auth policies
     app.UseRouting();
 
-    // Authentication and Authorization middleware
+    // Authentication BEFORE rate limiting — the rate limiter reads context.User
+    // to determine the user tier. Without auth running first, every request is
+    // treated as "anonymous" and the payments policy (TierLimits["anonymous"]=0)
+    // immediately rate-limits all POST /api/payments/* requests with HTTP 429.
     app.UseAuthentication();
+
+    // Rate Limiting middleware (now runs after auth so user tier is known)
+    if (rateLimitEnabled)
+    {
+        app.UseRateLimiting();
+        Log.Information("Rate Limiting middleware enabled");
+    }
+
+    // Health check middleware BEFORE Ocelot to intercept /health requests
+    app.UseHealthCheckMiddleware();
+
+    // Authorization (must be after UseAuthentication and UseRouting)
     app.UseAuthorization();
 
     // CSRF Validation — after auth, before Ocelot routing (validates Double Submit Cookie for POST/PUT/DELETE)
