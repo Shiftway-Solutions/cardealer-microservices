@@ -12,9 +12,7 @@ import {
   CreditCard,
   Receipt,
   Star,
-  Clock,
   CheckCircle,
-  XCircle,
   AlertCircle,
   Loader2,
   ChevronRight,
@@ -52,17 +50,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   userBillingService,
   availableGateways,
-  type UserTransaction,
   type EarlyBirdStatus,
   type PaymentMethodInfo,
   type PaymentGateway,
@@ -139,7 +128,7 @@ function EarlyBirdCard({
         className={cn(
           'border-2',
           status.isInFreePeriod
-            ? 'border-green-200 bg-gradient-to-br from-green-50 to-primary/5'
+            ? 'to-primary/5 border-green-200 bg-gradient-to-br from-green-50'
             : 'border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50'
         )}
       >
@@ -468,6 +457,13 @@ function AddPaymentMethodDialog({
       integrationType: 'sdk',
       icon: '🌐',
     },
+    Stripe: {
+      name: 'Stripe',
+      description: 'Checkout seguro con Stripe Elements.',
+      note: 'Apple Pay, Google Pay y tarjetas internacionales.',
+      integrationType: 'sdk',
+      icon: '⚡',
+    },
   };
 
   // Reset state when dialog closes
@@ -489,6 +485,7 @@ function AddPaymentMethodDialog({
       PixelPay: ['https://pixel-pay.com', 'https://sandbox.pixel-pay.com'],
       Fygaro: ['https://fygaro.com', 'https://sandbox.fygaro.com'],
       PayPal: ['https://www.paypal.com', 'https://www.sandbox.paypal.com'],
+      Stripe: ['https://js.stripe.com', 'https://m.stripe.com'],
     };
 
     const handleMessage = async (event: MessageEvent) => {
@@ -881,80 +878,15 @@ function AddPaymentMethodDialog({
 }
 
 // ============================================================================
-// TRANSACTION ROW COMPONENT
-// ============================================================================
-
-function TransactionRow({ transaction }: { transaction: UserTransaction }) {
-  const statusIcon = {
-    Approved: CheckCircle,
-    Declined: XCircle,
-    Cancelled: AlertCircle,
-    Error: XCircle,
-  }[transaction.status];
-
-  const StatusIcon = statusIcon;
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <div className="flex items-center gap-2">
-          <Receipt className="text-muted-foreground h-4 w-4" />
-          <span className="font-mono text-sm">{transaction.orderNumber}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">
-            {userBillingService.formatCurrency(transaction.total, transaction.currency)}
-          </span>
-          <span className="text-muted-foreground text-xs">
-            ITBIS: {userBillingService.formatCurrency(transaction.itbis, transaction.currency)}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge
-          variant="secondary"
-          className={cn('gap-1', userBillingService.getStatusColor(transaction.status))}
-        >
-          <StatusIcon className="h-3 w-3" />
-          {transaction.statusDisplay}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4" />
-          {userBillingService.formatDateTime(transaction.transactionDate)}
-        </div>
-      </TableCell>
-      <TableCell>
-        {transaction.cardBrand ? (
-          <div className="flex items-center gap-1 text-sm">
-            <CreditCard className="text-muted-foreground h-4 w-4" />
-            <span>{transaction.cardBrand}</span>
-            {transaction.cardLast4 && (
-              <span className="text-muted-foreground">•••• {transaction.cardLast4}</span>
-            )}
-          </div>
-        ) : (
-          <span className="text-muted-foreground text-sm">—</span>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-// ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = React.useState(1);
   const [showAddPaymentMethod, setShowAddPaymentMethod] = React.useState(false);
   const [settingDefaultId, setSettingDefaultId] = React.useState<string | null>(null);
 
-  // Fetch billing summary
+  // Fetch billing summary (used for Early Bird status check)
   const {
     data: summary,
     isLoading: isLoadingSummary,
@@ -962,12 +894,6 @@ export default function PaymentsPage() {
   } = useQuery({
     queryKey: ['user-billing-summary'],
     queryFn: () => userBillingService.getBillingSummary(),
-  });
-
-  // Fetch transactions
-  const { data: transactions, isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['user-transactions', currentPage],
-    queryFn: () => userBillingService.getTransactions({ page: currentPage, pageSize: 10 }),
   });
 
   // Fetch Early Bird status
@@ -1033,17 +959,9 @@ export default function PaymentsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Pagos</h1>
-          <p className="text-muted-foreground">Historial de pagos y facturación</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="mt-2 h-8 w-32" />
-              </CardContent>
-            </Card>
-          ))}
+          <p className="text-muted-foreground">
+            Administra tus métodos de pago y programa Early Bird
+          </p>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -1077,45 +995,9 @@ export default function PaymentsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Pagos</h1>
-        <p className="text-muted-foreground">Historial de pagos y facturación</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total pagado"
-          value={
-            summary
-              ? userBillingService.formatCurrency(summary.totalAmount, summary.currency)
-              : 'RD$0.00'
-          }
-          description={summary ? `${summary.totalApproved} transacciones aprobadas` : undefined}
-          icon={CreditCard}
-        />
-        <StatCard
-          title="Transacciones"
-          value={summary?.totalTransactions ?? 0}
-          description="Total histórico"
-          icon={Receipt}
-        />
-        <StatCard
-          title="Aprobadas"
-          value={summary?.totalApproved ?? 0}
-          description="Pagos exitosos"
-          icon={CheckCircle}
-          className="border-green-100"
-        />
-        <StatCard
-          title="Early Bird"
-          value={summary?.isEarlyBirdMember ? 'Activo' : 'No inscrito'}
-          description={
-            summary?.earlyBirdStatus?.remainingFreeDays
-              ? `${summary.earlyBirdStatus.remainingFreeDays} días gratis`
-              : undefined
-          }
-          icon={Star}
-          className={summary?.isEarlyBirdMember ? 'border-amber-100' : undefined}
-        />
+        <p className="text-muted-foreground">
+          Administra tus métodos de pago y programa Early Bird
+        </p>
       </div>
 
       {/* Early Bird Section */}
@@ -1187,76 +1069,24 @@ export default function PaymentsPage() {
         onSuccess={() => refetchPaymentMethods()}
       />
 
-      {/* Transactions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
-            Historial de Transacciones
-          </CardTitle>
-          <CardDescription>Todas tus transacciones procesadas a través de Azul</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingTransactions ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            </div>
-          ) : transactions && transactions.length > 0 ? (
-            <>
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Orden</TableHead>
-                      <TableHead>Monto</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Método de pago</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map(transaction => (
-                      <TransactionRow key={transaction.id} transaction={transaction} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-muted-foreground text-sm">
-                  Mostrando {transactions.length} transacciones
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => p - 1)}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={transactions.length < 10}
-                    onClick={() => setCurrentPage(p => p + 1)}
-                  >
-                    Siguiente
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Receipt className="h-12 w-12 text-gray-300" />
-              <h3 className="text-foreground mt-4 text-lg font-medium">No hay transacciones</h3>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Aún no has realizado ningún pago. Cuando publiques un vehículo o compres un servicio
-                premium, tus transacciones aparecerán aquí.
+      {/* Link to transaction history */}
+      <Card className="border-dashed">
+        <CardContent className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-3">
+            <Receipt className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="font-medium">Ver historial de transacciones</p>
+              <p className="text-muted-foreground text-sm">
+                Consulta todas tus compras y pagos realizados
               </p>
             </div>
-          )}
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="/cuenta/historial">
+              Ver historial
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </a>
+          </Button>
         </CardContent>
       </Card>
 

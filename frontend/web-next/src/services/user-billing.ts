@@ -16,7 +16,7 @@ export { formatDate };
 export type TransactionStatus = 'Approved' | 'Declined' | 'Cancelled' | 'Error';
 
 // Payment Gateway types
-export type PaymentGateway = 'Azul' | 'CardNET' | 'PixelPay' | 'Fygaro' | 'PayPal';
+export type PaymentGateway = 'Azul' | 'CardNET' | 'PixelPay' | 'Fygaro' | 'PayPal' | 'Stripe';
 
 export interface PaymentGatewayInfo {
   id: PaymentGateway;
@@ -106,6 +106,13 @@ export const availableGateways: PaymentGatewayInfo[] = [
     id: 'PayPal',
     name: 'PayPal',
     description: 'Tarjetas internacionales y PayPal',
+    local: false,
+  },
+  {
+    id: 'Stripe',
+    name: 'Stripe',
+    description: 'Tarjetas internacionales, Apple Pay, Google Pay',
+    recommended: false,
     local: false,
   },
 ];
