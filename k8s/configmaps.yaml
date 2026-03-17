@@ -2744,6 +2744,149 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/payments/providers/{everything}",
+          "UpstreamHttpMethod": [
+            "GET"
+          ],
+          "DownstreamPathTemplate": "/api/payments/providers/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "Priority": 1
+        },
+        {
+          "UpstreamPathTemplate": "/api/payments/paypal/{everything}",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST",
+            "PUT"
+          ],
+          "DownstreamPathTemplate": "/api/payments/paypal/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "Priority": 1,
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/payments/{everything}",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "DownstreamPathTemplate": "/api/payments/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/stripewebhooks",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/stripewebhooks",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/stripewebhooks/{everything}",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/stripewebhooks/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/webhooks/paypal",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/webhooks/paypal",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
+          "UpstreamPathTemplate": "/api/webhooks/paypal/{everything}",
+          "UpstreamHttpMethod": [
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/webhooks/paypal/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
           "UpstreamPathTemplate": "/api/billing/health",
           "UpstreamHttpMethod": [
             "GET"

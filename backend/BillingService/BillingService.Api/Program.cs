@@ -148,6 +148,29 @@ try
     // Add HttpContextAccessor
     builder.Services.AddHttpContextAccessor();
 
+    // ========== MAP FLAT ENV VARS TO HIERARCHICAL CONFIG ==========
+    // K8s external-services-secrets injects STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, etc.
+    // but IOptions<StripeSettings> expects Stripe:SecretKey (hierarchical).
+    // Map them explicitly so Configure<T> picks them up.
+    var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+    if (!string.IsNullOrEmpty(stripeSecretKey))
+    {
+        builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
+        builder.Configuration["Stripe:PublishableKey"] = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY") ?? "";
+        builder.Configuration["Stripe:WebhookSecret"] = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? "";
+    }
+
+    var paypalClientId = Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID");
+    if (!string.IsNullOrEmpty(paypalClientId))
+    {
+        builder.Configuration["PayPal:ClientId"] = paypalClientId;
+        builder.Configuration["PayPal:ClientSecret"] = Environment.GetEnvironmentVariable("PAYPAL_CLIENT_SECRET") ?? "";
+        builder.Configuration["PayPal:WebhookId"] = Environment.GetEnvironmentVariable("PAYPAL_WEBHOOK_ID") ?? "";
+        var sandbox = Environment.GetEnvironmentVariable("PAYPAL_SANDBOX");
+        if (!string.IsNullOrEmpty(sandbox))
+            builder.Configuration["PayPal:Sandbox"] = sandbox;
+    }
+
     // Configure Stripe
     builder.Services.Configure<StripeSettings>(
         builder.Configuration.GetSection("Stripe"));
