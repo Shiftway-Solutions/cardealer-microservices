@@ -412,6 +412,35 @@ function AddPaymentMethodDialog({
     React.useState<TokenizationInitResponse | null>(null);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
+  // Currency display for PayPal (PayPal charges USD; we show estimated DOP equivalent)
+  const [paypalDisplayCurrency, setPaypalDisplayCurrency] = React.useState<'DOP' | 'USD'>('DOP');
+  const [dopRate, setDopRate] = React.useState<number | null>(null);
+  const [rateSource, setRateSource] = React.useState<'live' | 'fallback' | null>(null);
+  const PAYPAL_VERIFICATION_AMOUNT_USD = 1.0; // $1.00 verification charge
+
+  // Fetch live USD→DOP rate when reaching PayPal SDK step
+  React.useEffect(() => {
+    if (step !== 'sdk') return;
+    let cancelled = false;
+    fetch('/api/exchange-rate?from=USD&to=DOP')
+      .then(r => r.json())
+      .then((data: { rate: number; source: 'live' | 'fallback' }) => {
+        if (!cancelled) {
+          setDopRate(data.rate);
+          setRateSource(data.source);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDopRate(62.5); // Approximate fallback
+          setRateSource('fallback');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step]);
+
   // Gateway info with integration types
   const gatewayInfo: Record<
     PaymentGateway,
@@ -748,10 +777,11 @@ function AddPaymentMethodDialog({
   // Render SDK integration (for PayPal — official @paypal/react-paypal-js)
   const renderSdk = () => {
     const clientId = tokenizationResponse?.sdkConfig?.clientId;
-    const currency = tokenizationResponse?.sdkConfig?.styles?.currency as string | undefined;
+    const dopAmount = dopRate ? Math.round(PAYPAL_VERIFICATION_AMOUNT_USD * dopRate) : null;
 
     return (
       <div className="space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="font-medium">Pagar con PayPal</h3>
           <Button
@@ -766,25 +796,105 @@ function AddPaymentMethodDialog({
           </Button>
         </div>
 
-        <div className="bg-muted/50 rounded-lg border p-4">
-          <p className="text-muted-foreground mb-4 text-sm">
-            Autoriza el pago con tu cuenta PayPal o con tu tarjeta de crédito/débito.
-          </p>
+        {/* Currency display toggle */}
+        <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Monto de verificación</span>
+            {/* Toggle */}
+            <div className="flex overflow-hidden rounded-lg border bg-white text-xs shadow-sm">
+              <button
+                type="button"
+                className={cn(
+                  'px-3 py-1.5 font-semibold transition-colors',
+                  paypalDisplayCurrency === 'DOP'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-500 hover:bg-gray-50'
+                )}
+                onClick={() => setPaypalDisplayCurrency('DOP')}
+              >
+                🇩🇴 DOP
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  'px-3 py-1.5 font-semibold transition-colors',
+                  paypalDisplayCurrency === 'USD'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-500 hover:bg-gray-50'
+                )}
+                onClick={() => setPaypalDisplayCurrency('USD')}
+              >
+                🇺🇸 USD
+              </button>
+            </div>
+          </div>
 
+          {paypalDisplayCurrency === 'DOP' ? (
+            <div>
+              <div className="flex items-baseline gap-2">
+                {dopAmount != null ? (
+                  <p className="text-3xl font-bold tracking-tight text-gray-900">
+                    RD$ {dopAmount.toLocaleString('es-DO')}
+                  </p>
+                ) : (
+                  <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                ≈ $1.00 USD &middot; Tasa {rateSource === 'live' ? 'en vivo' : 'referencial'}: 1 USD
+                = RD$ {dopRate != null ? dopRate.toFixed(2) : '…'}
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-3xl font-bold tracking-tight text-gray-900">$1.00 USD</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Tu banco convertirá a DOP con su tipo de cambio
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* DCC explanation */}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <p className="mb-1.5 font-semibold">💱 Selección de moneda en el pago</p>
+          <p className="mb-2 leading-relaxed">
+            PayPal cobra en <strong>USD</strong>. Al aprobar el pago, PayPal te preguntará cómo
+            quieres la conversión a DOP:
+          </p>
+          <div className="space-y-1.5">
+            <div className="flex gap-2">
+              <span className="mt-0.5 shrink-0">•</span>
+              <span>
+                <strong>PayPal convierte:</strong> ves el monto exacto en DOP al instante (≈ 3–4 %
+                de margen sobre el tipo de cambio base).
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <span className="mt-0.5 shrink-0">•</span>
+              <span>
+                <strong>Tu banco convierte:</strong> posible mejor tasa; el monto DOP aparece en tu
+                estado de cuenta en 24–48 h.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* PayPal Smart Buttons */}
+        <div className="bg-muted/50 rounded-lg border p-4">
           {clientId ? (
             <PayPalPaymentButton
               clientId={clientId}
-              amount="0.01"
-              currency={currency || 'USD'}
+              amount={String(PAYPAL_VERIFICATION_AMOUNT_USD)}
+              currency="USD"
               onCreateOrder={async () => {
-                // Create a real PayPal order via backend
                 const res = await fetch('/api/payments/paypal/create-order', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    amount: 1,
+                    amount: PAYPAL_VERIFICATION_AMOUNT_USD,
                     currency: 'USD',
-                    description: 'Método de pago',
+                    description: 'Verificación de método de pago OKLA',
                   }),
                   credentials: 'include',
                 });
