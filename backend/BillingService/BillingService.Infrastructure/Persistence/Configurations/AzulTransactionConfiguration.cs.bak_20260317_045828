@@ -96,19 +96,6 @@ public class AzulTransactionConfiguration : IEntityTypeConfiguration<AzulTransac
             .HasMaxLength(500)
             .HasColumnName("user_agent");
 
-        // Columns added after initial migration — must have explicit snake_case
-        // names to avoid EF defaulting to PascalCase ("Currency", "DeclineReasonLocalized")
-        // which causes SqlState 42703 (column does not exist) on the production DB.
-        builder.Property(t => t.Currency)
-            .IsRequired()
-            .HasMaxLength(3)
-            .HasDefaultValue("DOP")
-            .HasColumnName("currency");
-
-        builder.Property(t => t.DeclineReasonLocalized)
-            .HasMaxLength(500)
-            .HasColumnName("decline_reason_localized");
-
         // Indexes
         builder.HasIndex(t => t.OrderNumber)
             .HasDatabaseName("idx_azul_transactions_order_number");
