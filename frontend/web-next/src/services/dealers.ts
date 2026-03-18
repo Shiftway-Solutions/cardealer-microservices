@@ -641,13 +641,13 @@ export function updateDealerPlansWithPricing(pricing: {
   // Update VISIBLE
   DEALER_PLANS[1].price = pricing.dealerVisible;
   // Update STARTER
-  DEALER_PLANS[2].price = pricing.dealerStarter ?? 3499;
+  DEALER_PLANS[2].price = pricing.dealerStarter ?? 3422;
   // Update PRO
   DEALER_PLANS[3].price = pricing.dealerPro;
   // Update ÉLITE
   DEALER_PLANS[4].price = pricing.dealerElite;
   // Update ENTERPRISE
-  DEALER_PLANS[5].price = pricing.dealerEnterprise ?? 34999;
+  DEALER_PLANS[5].price = pricing.dealerEnterprise ?? 34742;
 
   // Update early bird config
   _earlyBirdDiscount = pricing.earlyBirdDiscount;

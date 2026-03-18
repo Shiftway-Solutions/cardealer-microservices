@@ -146,20 +146,20 @@ public class PublicPricingController : ControllerBase
         PremiumListing = 2999,
         SellerPremiumPrice = 1699,
         IndividualListingPrice = 1699,
-        // Dealer plans v5.0 (DOP/month = USD × 58) — LIBRE/VISIBLE/STARTER/PRO/ÉLITE/ENTERPRISE
+        // Dealer plans (DOP/month) — LIBRE/VISIBLE/STARTER/PRO/ÉLITE/ENTERPRISE
         DealerLibre = 0,
-        DealerVisible = 1682,        // $29 USD
-        DealerStarter = 3422,        // $59 USD
-        DealerPro = 5742,            // $99 USD
-        DealerElite = 20242,         // $349 USD
-        DealerEnterprise = 34742,    // $599 USD
-        // Seller plans v5.0 — LIBRE/ESTÁNDAR($9.99/listing)/VERIFICADO($34.99/mes)
+        DealerVisible = 1699,
+        DealerStarter = 3499,
+        DealerPro = 5799,
+        DealerElite = 20299,
+        DealerEnterprise = 34999,
+        // Seller plans — LIBRE/ESTÁNDAR($9.99/listing)/VERIFICADO($34.99/mes)
         SellerGratis = 0,
-        SellerEstandar = 579,        // $9.99 USD → DOP 579
-        SellerVerificado = 2029,     // $34.99 USD → DOP 2029
+        SellerEstandar = 579,       // RD$9.99 ≈ DOP 579
+        SellerVerificado = 1999,    // RD$34.99/mes ≈ DOP 1999
         // Legacy compat fields
         SellerPremium = 579,
-        SellerProPlan = 2029,
+        SellerProPlan = 1999,
         // Boosts
         BoostBasicPrice = 499,
         BoostBasicDays = 3,

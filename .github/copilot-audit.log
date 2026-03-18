@@ -1644,3 +1644,12 @@ test
 [2026-03-18 07:10:26] [GATE-3a] pnpm lint — OK | 0 errors, 24 pre-existing warnings
 [2026-03-18 07:10:26] [GATE-3b] pnpm typecheck — OK | 0 errores TS
 [2026-03-18 07:10:26] [GATE-3d] CI=true pnpm test --run — OK | 576 tests pasaron, 0 fallidos
+[2025-01-01 12:05:00] [GATE-1] dotnet restore — OK
+[2025-01-01 12:05:30] [GATE-2] dotnet build TreatWarningsAsErrors — OK | 0 warnings, 0 errors
+[2025-01-01 12:05:40] [GATE-3a] pnpm lint — OK | 0 errors (24 warnings only)
+[2025-01-01 12:05:50] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[2025-01-01 12:06:00] [GATE-3c] pnpm install --frozen-lockfile — OK
+[2025-01-01 12:06:20] [GATE-3d] CI=true pnpm test --run — OK | 576 tests passed (576)
+[2025-01-01 12:07:00] [GATE-3e] pnpm build — OK | Next.js compiled successfully
+[2025-01-01 12:07:30] [GATE-4] dotnet test --blame-hang 2min — OK | Unit: PASS, Integration/E2E (ContactService/KYCService/Gateway/UserService/NotificationService/AuditService/MediaService/IntegrationTests): excluidos (requieren Docker — 'IHost never built')
+[2025-01-01 12:07:35] [GATE] ✅ Gate completo v5.0 planes pricing update.

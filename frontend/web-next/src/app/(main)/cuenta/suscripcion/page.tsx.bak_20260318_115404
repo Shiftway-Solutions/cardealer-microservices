@@ -26,37 +26,39 @@ import { formatPrice } from '@/lib/format';
 // HELPERS
 // =============================================================================
 
-// Plan features description — v5.0 — keys MUST match SellerPlan values (libre_seller / estandar / verificado)
+// Plan features description — keys MUST match SellerPlan values (libre_seller / estandar / verificado)
 function getPlanFeatures() {
   return {
     libre_seller: [
       '1 publicación activa',
-      'Hasta 5 fotos por vehículo',
+      'Hasta 10 fotos por vehículo',
       'Duración: 30 días',
-      '⬇ Posición al fondo en búsquedas',
-      '⚪ Sin badge de verificación',
-      'KYC: solo email',
+      'Contacto por WhatsApp',
+      'Panel de vendedor básico',
     ],
     estandar: [
-      '1 publicación por pago',
-      'Hasta 10 fotos por vehículo',
-      'Duración: 60 días',
-      '⬆ Posición media (bajo dealers)',
-      '🔵 Badge Vendedor OKLA',
-      'KYC: email + teléfono verificados',
-      'Renovación de listing: $6.99',
-      '1 valoración PricingAgent IA por listing',
+      'Hasta 5 publicaciones activas',
+      'Hasta 30 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Prioridad en búsquedas',
+      'Badge de vendedor verificado',
+      '2 publicaciones destacadas/mes',
+      'Estadísticas detalladas',
+      'Boosts disponibles',
+      'Compartir en redes con preview',
     ],
     verificado: [
-      '3 publicaciones simultáneas',
-      'Hasta 12 fotos por vehículo',
-      'Duración: 90 días',
-      '📈 Alta posición (bajo dealers VISIBLE)',
-      '✅ Badge Vendedor Verificado',
-      'KYC completo: cédula + selfie + teléfono',
-      'Renovación de listing incluida',
-      '2 valoraciones PricingAgent IA/mes',
-      'Analytics básico de tus publicaciones',
+      'Hasta 15 publicaciones activas',
+      'Hasta 50 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Máxima prioridad en búsquedas',
+      'Badge de vendedor verificado',
+      '5 publicaciones destacadas/mes',
+      'Analytics avanzados',
+      'Boosts disponibles',
+      'Compartir en redes con preview',
+      'Alertas automáticas de baja de precio',
+      'Soporte prioritario',
     ],
   };
 }
@@ -86,9 +88,7 @@ export default function SellerSubscriptionPage() {
     try {
       if (newPlan === 'libre_seller') {
         // Downgrade — inform user the change applies at end of period
-        toast.success(
-          'Plan cambiado a Libre. Los cambios aplican al final del período de facturación.'
-        );
+        toast.success('Plan cambiado a Libre. Los cambios aplican al final del período de facturación.');
         setChangingPlan(null);
         return;
       }
@@ -416,46 +416,18 @@ function getPlanOrder(plan: string): number {
 
 function ComparisonTable({ currentPlan }: { currentPlan: string }) {
   const features = [
-    {
-      label: 'Publicaciones activas',
-      libre_seller: '1',
-      estandar: '1 por pago',
-      verificado: '3 simultáneas',
-    },
-    { label: 'Fotos por vehículo', libre_seller: '5', estandar: '10', verificado: '12' },
-    {
-      label: 'Duración del listing',
-      libre_seller: '30 días',
-      estandar: '60 días',
-      verificado: '90 días',
-    },
+    { label: 'Publicaciones activas', libre_seller: '1', estandar: '5', verificado: '15' },
+    { label: 'Fotos por vehículo', libre_seller: '10', estandar: '30', verificado: '50' },
+    { label: 'Duración publicación', libre_seller: '30 días', estandar: 'Permanente', verificado: 'Permanente' },
     { label: 'Contacto WhatsApp', libre_seller: true, estandar: true, verificado: true },
-    {
-      label: 'Posición en búsquedas',
-      libre_seller: '⬇ Fondo',
-      estandar: '⬆ Media',
-      verificado: 'Alta',
-    },
-    {
-      label: 'Badge de confianza',
-      libre_seller: '⚪ Sin verificar',
-      estandar: '🔵 Vendedor OKLA',
-      verificado: '✅ Verificado',
-    },
-    {
-      label: 'Verificación KYC',
-      libre_seller: 'Solo email',
-      estandar: 'Email + teléfono',
-      verificado: 'Cédula + selfie + tel.',
-    },
-    {
-      label: 'Renovación listing',
-      libre_seller: 'No incluida',
-      estandar: '$6.99',
-      verificado: 'Incluida',
-    },
-    { label: 'PricingAgent IA', libre_seller: '—', estandar: '1 / listing', verificado: '2 / mes' },
-    { label: 'Analytics', libre_seller: false, estandar: false, verificado: true },
+    { label: 'Prioridad en búsquedas', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Badge verificado', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Destacadas/mes', libre_seller: '0', estandar: '2', verificado: '5' },
+    { label: 'Estadísticas detalladas', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Boosts disponibles', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Compartir en redes', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Alertas de baja de precio', libre_seller: false, estandar: false, verificado: true },
+    { label: 'Soporte prioritario', libre_seller: false, estandar: false, verificado: true },
   ];
 
   const planColumns = ['libre_seller', 'estandar', 'verificado'] as const;

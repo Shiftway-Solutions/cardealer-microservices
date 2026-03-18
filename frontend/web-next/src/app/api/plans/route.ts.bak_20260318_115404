@@ -67,24 +67,22 @@ let _cachedCatalog: PlansCatalog | null = null;
 // DEFAULT FEATURE LISTS
 // =============================================================================
 
-// v5.0 Dealer feature lists
 const DEFAULT_DEALER_FEATURES: Record<string, string[]> = {
   libre: [
     'Publicaciones ilimitadas',
     'Hasta 5 fotos por vehículo',
     'Posición estándar en búsquedas',
-    '1 valoración PricingAgent IA gratis',
+    '1 valoración PricingAgent gratis',
   ],
   visible: [
     'Publicaciones ilimitadas',
     'Hasta 10 fotos por vehículo',
     'Prioridad media en búsquedas',
     '3 publicaciones destacadas/mes',
-    '🔵 Badge Dealer Verificado OKLA',
-    '$15 OKLA Coins/mes',
-    '5 valoraciones PricingAgent IA/mes',
+    '🔵 Badge Dealer Verificado',
+    'RD$15 OKLA Coins/mes',
+    '5 valoraciones PricingAgent/mes',
     'Dashboard Analytics básico',
-    'Soporte email',
     '✅ Garantía: 10 consultas en 30 días o mes 2 gratis',
   ],
   starter: [
@@ -93,12 +91,11 @@ const DEFAULT_DEALER_FEATURES: Record<string, string[]> = {
     'Alta prioridad en búsquedas',
     '5 publicaciones destacadas/mes',
     '🔵 Badge Verificado+',
-    '$30 OKLA Coins/mes',
+    'RD$30 OKLA Coins/mes',
     'ChatAgent Web 100 conv/mes',
     'ChatAgent WhatsApp 100 conv/mes',
     'Overage $0.10/conv adicional',
-    '10 valoraciones PricingAgent IA/mes',
-    'Soporte email — respuesta 48h',
+    'Soporte email prioritario',
   ],
   pro: [
     'Publicaciones ilimitadas',
@@ -106,48 +103,41 @@ const DEFAULT_DEALER_FEATURES: Record<string, string[]> = {
     'Alta prioridad en búsquedas',
     '10 publicaciones destacadas/mes',
     '🥇 Badge Verificado Dorado',
-    '$45 OKLA Coins/mes',
+    'RD$45 OKLA Coins/mes',
     'ChatAgent Web 300 conv/mes',
     'ChatAgent WhatsApp 300 conv/mes',
-    'Overage $0.08/conv adicional',
     'Agendamiento automático',
-    'PricingAgent IA ilimitado',
+    'PricingAgent ilimitado',
     'Dashboard Analytics avanzado',
-    'Soporte email — 24h respuesta',
   ],
   elite: [
-    'Publicaciones ilimitadas',
     'Hasta 20 fotos + video tour',
-    'Top prioridad en búsquedas',
+    'Top prioridad (visible sobre dealers)',
     '25 publicaciones destacadas/mes',
     '💎 Badge Verificado Premium',
-    '$120 OKLA Coins/mes',
+    'RD$120 OKLA Coins/mes',
     'ChatAgent Web 5,000 conv/mes',
     'ChatAgent WhatsApp 5,000 conv/mes',
-    'Overage $0.06/conv adicional',
-    'Agendamiento + recordatorios WhatsApp',
-    'PricingAgent IA ilimitado + PDF',
+    'Agendamiento + recordatorios WA',
+    'PricingAgent ilimitado + PDF',
     'Dashboard Analytics completo + exportar',
     'Gerente de cuenta dedicado',
   ],
   enterprise: [
-    'Publicaciones ilimitadas',
-    'Hasta 20 fotos + video tour',
-    '#1 garantizado en posición de búsqueda',
+    'Todo lo del plan Élite',
+    '#1 GARANTIZADO en búsquedas',
     '50 publicaciones destacadas/mes',
     '👑 Badge Enterprise',
-    '$300 OKLA Coins/mes',
-    'ChatAgent IA SIN LÍMITE',
-    'Agendamiento + CRM + recordatorios WhatsApp',
-    'PricingAgent IA ilimitado + PDF + API',
+    'RD$300 OKLA Coins/mes',
+    'ChatAgent SIN LÍMITE',
+    'Agendamiento + CRM + recordatorios WA',
     'Acceso completo a API OKLA',
-    'Dashboard + API + reportes personalizados',
+    'Dashboard + API + reportes custom',
     'Empleados ilimitados',
     'SLA garantizado + Soporte 24/7',
   ],
 };
 
-// v5.0 Seller feature lists
 const DEFAULT_SELLER_FEATURES: Record<string, string[]> = {
   libre: [
     '1 publicación activa',
@@ -164,14 +154,14 @@ const DEFAULT_SELLER_FEATURES: Record<string, string[]> = {
     '⬆ Posición media (bajo dealers)',
     '🔵 Badge Vendedor OKLA',
     'KYC: email + teléfono verificados',
-    'Renovación de listing: $6.99',
+    'Renovación de listing: $4.99',
     '1 valoración PricingAgent IA por listing',
   ],
   verificado: [
     '3 publicaciones simultáneas',
     'Hasta 12 fotos por vehículo',
     'Duración: 90 días',
-    '📈 Alta posición (bajo dealers VISIBLE)',
+    '📈 Alta posición visible (bajo dealers)',
     '✅ Badge Vendedor Verificado',
     'KYC completo: cédula + selfie + teléfono',
     'Renovación de listing incluida',
@@ -388,16 +378,15 @@ export async function GET(request: NextRequest) {
     }
 
     const safePricing: PricingData = {
-      // v5.0 prices in DOP (USD × 58)
       dealerLibre: pricing?.dealerLibre ?? 0,
-      dealerVisible: pricing?.dealerVisible ?? 1682,
-      dealerStarter: pricing?.dealerStarter ?? 3422,
-      dealerPro: pricing?.dealerPro ?? 5742,
-      dealerElite: pricing?.dealerElite ?? 20242,
-      dealerEnterprise: pricing?.dealerEnterprise ?? 34742,
+      dealerVisible: pricing?.dealerVisible ?? 1699,
+      dealerStarter: pricing?.dealerStarter ?? 3499,
+      dealerPro: pricing?.dealerPro ?? 5799,
+      dealerElite: pricing?.dealerElite ?? 20299,
+      dealerEnterprise: pricing?.dealerEnterprise ?? 34999,
       sellerGratis: pricing?.sellerGratis ?? 0,
       sellerEstandar: pricing?.sellerEstandar ?? 579,
-      sellerVerificado: pricing?.sellerVerificado ?? 2029,
+      sellerVerificado: pricing?.sellerVerificado ?? 1999,
     };
 
     const catalog = buildCatalog(safePricing);

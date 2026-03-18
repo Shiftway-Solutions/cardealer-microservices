@@ -8,7 +8,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,37 +25,39 @@ import { formatPrice } from '@/lib/format';
 // HELPERS
 // =============================================================================
 
-// Plan features description — v5.0 — keys MUST match SellerPlan values (libre_seller / estandar / verificado)
+// Plan features description
 function getPlanFeatures() {
   return {
-    libre_seller: [
+    gratis: [
       '1 publicación activa',
-      'Hasta 5 fotos por vehículo',
-      'Duración: 30 días',
-      '⬇ Posición al fondo en búsquedas',
-      '⚪ Sin badge de verificación',
-      'KYC: solo email',
-    ],
-    estandar: [
-      '1 publicación por pago',
       'Hasta 10 fotos por vehículo',
-      'Duración: 60 días',
-      '⬆ Posición media (bajo dealers)',
-      '🔵 Badge Vendedor OKLA',
-      'KYC: email + teléfono verificados',
-      'Renovación de listing: $6.99',
-      '1 valoración PricingAgent IA por listing',
+      'Duración: 30 días',
+      'Contacto por WhatsApp',
+      'Panel de vendedor básico',
     ],
-    verificado: [
-      '3 publicaciones simultáneas',
-      'Hasta 12 fotos por vehículo',
-      'Duración: 90 días',
-      '📈 Alta posición (bajo dealers VISIBLE)',
-      '✅ Badge Vendedor Verificado',
-      'KYC completo: cédula + selfie + teléfono',
-      'Renovación de listing incluida',
-      '2 valoraciones PricingAgent IA/mes',
-      'Analytics básico de tus publicaciones',
+    premium: [
+      'Hasta 5 publicaciones activas',
+      'Hasta 30 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Prioridad en búsquedas',
+      'Badge de vendedor verificado',
+      '2 publicaciones destacadas/mes',
+      'Estadísticas detalladas',
+      'Boosts disponibles',
+      'Compartir en redes con preview',
+    ],
+    pro: [
+      'Hasta 15 publicaciones activas',
+      'Hasta 50 fotos por vehículo',
+      'Publicaciones permanentes',
+      'Máxima prioridad en búsquedas',
+      'Badge de vendedor verificado',
+      '5 publicaciones destacadas/mes',
+      'Analytics avanzados',
+      'Boosts disponibles',
+      'Compartir en redes con preview',
+      'Alertas automáticas de baja de precio',
+      'Soporte prioritario',
     ],
   };
 }
@@ -67,7 +68,6 @@ function getPlanFeatures() {
 
 export default function SellerSubscriptionPage() {
   useAuth();
-  const router = useRouter();
   const { currentPlan, maxListings, maxImages, featuredPerMonth, isLoading } = usePlanAccess();
   const { pricing } = usePlatformPricing();
   const [changingPlan, setChangingPlan] = useState<string | null>(null);
@@ -84,19 +84,15 @@ export default function SellerSubscriptionPage() {
     if (newPlan === currentPlan) return;
     setChangingPlan(newPlan);
     try {
-      if (newPlan === 'libre_seller') {
-        // Downgrade — inform user the change applies at end of period
-        toast.success(
-          'Plan cambiado a Libre. Los cambios aplican al final del período de facturación.'
-        );
-        setChangingPlan(null);
-        return;
-      }
-      // For paid plans redirect to the upgrade checkout
-      const planParam = newPlan === 'estandar' ? 'estandar' : 'verificado';
-      router.push(`/cuenta/upgrade?plan=${planParam}&type=seller`);
+      // In a real implementation, this would call the subscription API
+      toast.success(
+        newPlan === 'gratis'
+          ? 'Plan cambiado a Gratis. Los cambios aplican al final del período.'
+          : `¡Bienvenido al plan ${newPlan === 'premium' ? 'Premium' : 'PRO'}! Serás redirigido al checkout.`
+      );
     } catch {
       toast.error('Error al cambiar el plan. Intenta de nuevo.');
+    } finally {
       setChangingPlan(null);
     }
   };
@@ -159,49 +155,49 @@ export default function SellerSubscriptionPage() {
 
       {/* ── Plan Cards ─────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-3">
-        {/* LIBRE */}
+        {/* GRATIS */}
         <PlanCard
-          name="Libre"
-          planKey="libre_seller"
+          name="Gratis"
+          planKey="gratis"
           price={0}
           period=""
           description="Para vendedores ocasionales"
-          features={plans.libre_seller}
+          features={plans.gratis}
           icon={Zap}
-          isCurrent={currentPlan === 'libre_seller'}
-          isChanging={changingPlan === 'libre_seller'}
-          onSelect={() => handleChangePlan('libre_seller')}
+          isCurrent={currentPlan === 'gratis'}
+          isChanging={changingPlan === 'gratis'}
+          onSelect={() => handleChangePlan('gratis')}
           currentPlan={currentPlan}
         />
 
-        {/* ESTÁNDAR */}
+        {/* PREMIUM */}
         <PlanCard
-          name="Estándar"
-          planKey="estandar"
-          price={pricing.sellerEstandar}
-          period="/publicación"
+          name="Premium"
+          planKey="premium"
+          price={pricing.sellerPremium}
+          period="/mes"
           description="Vende más rápido"
-          features={plans.estandar}
+          features={plans.premium}
           icon={Sparkles}
-          isCurrent={currentPlan === 'estandar'}
+          isCurrent={currentPlan === 'premium'}
           isPopular
-          isChanging={changingPlan === 'estandar'}
-          onSelect={() => handleChangePlan('estandar')}
+          isChanging={changingPlan === 'premium'}
+          onSelect={() => handleChangePlan('premium')}
           currentPlan={currentPlan}
         />
 
-        {/* VERIFICADO */}
+        {/* PRO */}
         <PlanCard
-          name="Verificado"
-          planKey="verificado"
-          price={pricing.sellerVerificado}
+          name="PRO"
+          planKey="pro"
+          price={pricing.sellerProPlan}
           period="/mes"
           description="Máxima visibilidad y herramientas"
-          features={plans.verificado}
+          features={plans.pro}
           icon={Crown}
-          isCurrent={currentPlan === 'verificado'}
-          isChanging={changingPlan === 'verificado'}
-          onSelect={() => handleChangePlan('verificado')}
+          isCurrent={currentPlan === 'pro'}
+          isChanging={changingPlan === 'pro'}
+          onSelect={() => handleChangePlan('pro')}
           currentPlan={currentPlan}
         />
       </div>
@@ -399,11 +395,11 @@ function PlanCard({
 
 function getPlanOrder(plan: string): number {
   switch (plan) {
-    case 'libre_seller':
+    case 'gratis':
       return 0;
-    case 'estandar':
+    case 'premium':
       return 1;
-    case 'verificado':
+    case 'pro':
       return 2;
     default:
       return -1;
@@ -416,50 +412,22 @@ function getPlanOrder(plan: string): number {
 
 function ComparisonTable({ currentPlan }: { currentPlan: string }) {
   const features = [
-    {
-      label: 'Publicaciones activas',
-      libre_seller: '1',
-      estandar: '1 por pago',
-      verificado: '3 simultáneas',
-    },
-    { label: 'Fotos por vehículo', libre_seller: '5', estandar: '10', verificado: '12' },
-    {
-      label: 'Duración del listing',
-      libre_seller: '30 días',
-      estandar: '60 días',
-      verificado: '90 días',
-    },
-    { label: 'Contacto WhatsApp', libre_seller: true, estandar: true, verificado: true },
-    {
-      label: 'Posición en búsquedas',
-      libre_seller: '⬇ Fondo',
-      estandar: '⬆ Media',
-      verificado: 'Alta',
-    },
-    {
-      label: 'Badge de confianza',
-      libre_seller: '⚪ Sin verificar',
-      estandar: '🔵 Vendedor OKLA',
-      verificado: '✅ Verificado',
-    },
-    {
-      label: 'Verificación KYC',
-      libre_seller: 'Solo email',
-      estandar: 'Email + teléfono',
-      verificado: 'Cédula + selfie + tel.',
-    },
-    {
-      label: 'Renovación listing',
-      libre_seller: 'No incluida',
-      estandar: '$6.99',
-      verificado: 'Incluida',
-    },
-    { label: 'PricingAgent IA', libre_seller: '—', estandar: '1 / listing', verificado: '2 / mes' },
-    { label: 'Analytics', libre_seller: false, estandar: false, verificado: true },
+    { label: 'Publicaciones activas', gratis: '1', premium: '5', pro: '15' },
+    { label: 'Fotos por vehículo', gratis: '10', premium: '30', pro: '50' },
+    { label: 'Duración publicación', gratis: '30 días', premium: 'Permanente', pro: 'Permanente' },
+    { label: 'Contacto WhatsApp', gratis: true, premium: true, pro: true },
+    { label: 'Prioridad en búsquedas', gratis: false, premium: true, pro: true },
+    { label: 'Badge verificado', gratis: false, premium: true, pro: true },
+    { label: 'Destacadas/mes', gratis: '0', premium: '2', pro: '5' },
+    { label: 'Estadísticas detalladas', gratis: false, premium: true, pro: true },
+    { label: 'Boosts disponibles', gratis: false, premium: true, pro: true },
+    { label: 'Compartir en redes', gratis: false, premium: true, pro: true },
+    { label: 'Alertas de baja de precio', gratis: false, premium: false, pro: true },
+    { label: 'Soporte prioritario', gratis: false, premium: false, pro: true },
   ];
 
-  const planColumns = ['libre_seller', 'estandar', 'verificado'] as const;
-  const planHeaders = ['Libre', 'Estándar', 'Verificado'];
+  const planColumns = ['gratis', 'premium', 'pro'] as const;
+  const planHeaders = ['Gratis', 'Premium', 'PRO'];
 
   return (
     <table className="w-full">

@@ -66,7 +66,6 @@ interface PlanInfo {
 // PLAN DATA
 // =============================================================================
 
-// v5.0 — prices in DOP (USD × 58): LIBRE $0 | VISIBLE $29 | STARTER $59 | PRO $99 | ELITE $349 | ENTERPRISE $599
 const DEALER_PLANS: Record<string, PlanInfo> = {
   libre: {
     key: 'libre',
@@ -75,107 +74,100 @@ const DEALER_PLANS: Record<string, PlanInfo> = {
     annualPrice: 0,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 5 fotos por vehículo',
-      'Posición estándar en búsquedas',
-      '1 valoración PricingAgent IA gratis',
+      '5 fotos por vehículo',
+      'Portal público básico',
+      'Prioridad de búsqueda estándar',
+      '1 valoración IA gratis',
     ],
   },
   visible: {
     key: 'visible',
     name: 'Visible',
-    monthlyPrice: 1682, // $29 USD × 58
-    annualPrice: 16820, // 2 meses gratis
+    monthlyPrice: 1699,
+    annualPrice: 16990,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 10 fotos por vehículo',
-      'Prioridad media en búsquedas',
+      '10 fotos por vehículo',
       '3 publicaciones destacadas/mes',
-      '🔵 Badge Dealer Verificado OKLA',
-      '$15 OKLA Coins/mes',
-      '5 valoraciones PricingAgent IA/mes',
       'Dashboard Analytics básico',
+      'Badge Dealer Verificado OKLA',
+      '$15 OKLA Coins/mes',
+      '5 valoraciones IA/mes',
       'Soporte email',
-      '✅ Garantía: 10 consultas en 30 días o mes 2 gratis',
+      '✅ Garantía: si no recibes 10 consultas en 30 días, el mes 2 es gratis',
     ],
   },
   starter: {
     key: 'starter',
     name: 'Starter',
-    monthlyPrice: 3422, // $59 USD × 58
-    annualPrice: 34220,
+    monthlyPrice: 3499,
+    annualPrice: 34990,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 12 fotos por vehículo',
-      'Alta prioridad en búsquedas',
+      '12 fotos por vehículo',
       '5 publicaciones destacadas/mes',
-      '🔵 Badge Verificado+',
+      'Dashboard Analytics básico',
+      'Badge Verificado+',
       '$30 OKLA Coins/mes',
       'ChatAgent Web 100 conv/mes',
       'ChatAgent WhatsApp 100 conv/mes',
       'Overage $0.10/conv adicional',
-      '10 valoraciones PricingAgent IA/mes',
-      'Soporte email — respuesta 48h',
+      'Soporte email prioritario',
     ],
   },
   pro: {
     key: 'pro',
     name: 'Pro',
-    monthlyPrice: 5742, // $99 USD × 58
-    annualPrice: 57420,
+    monthlyPrice: 5799,
+    annualPrice: 57990,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 15 fotos por vehículo',
-      'Alta prioridad en búsquedas',
+      '15 fotos por vehículo',
       '10 publicaciones destacadas/mes',
-      '🥇 Badge Verificado Dorado',
+      'Dashboard Analytics avanzado',
+      'Badge Verificado Dorado',
       '$45 OKLA Coins/mes',
       'ChatAgent Web 300 conv/mes',
       'ChatAgent WhatsApp 300 conv/mes',
-      'Overage $0.08/conv adicional',
       'Agendamiento automático',
-      'PricingAgent IA ilimitado',
-      'Dashboard Analytics avanzado',
-      'Soporte email — 24h respuesta',
+      'Valoración IA ilimitada',
+      'Soporte email prioritario',
     ],
   },
   elite: {
     key: 'elite',
     name: 'Élite',
-    monthlyPrice: 20242, // $349 USD × 58
-    annualPrice: 202420,
+    monthlyPrice: 20299,
+    annualPrice: 202990,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 20 fotos + video tour',
-      'Top prioridad en búsquedas',
+      '20 fotos + video tour',
       '25 publicaciones destacadas/mes',
-      '💎 Badge Verificado Premium',
+      'Dashboard Analytics completo + exportar',
+      'Badge Verificado Premium',
       '$120 OKLA Coins/mes',
       'ChatAgent Web 5,000 conv/mes',
       'ChatAgent WhatsApp 5,000 conv/mes',
-      'Overage $0.06/conv adicional',
-      'Agendamiento + recordatorios WhatsApp',
-      'PricingAgent IA ilimitado + PDF',
-      'Dashboard Analytics completo + exportar',
+      'Agendamiento + recordatorios WA',
+      'Valoración IA ilimitada + PDF',
       'Gerente de cuenta dedicado',
     ],
   },
   enterprise: {
     key: 'enterprise',
     name: 'Enterprise',
-    monthlyPrice: 34742, // $599 USD × 58
-    annualPrice: 347420,
+    monthlyPrice: 34999,
+    annualPrice: 349990,
     features: [
       'Publicaciones ilimitadas',
-      'Hasta 20 fotos + video tour',
-      '#1 garantizado en posición de búsqueda',
+      '20 fotos + video tour',
       '50 publicaciones destacadas/mes',
-      '👑 Badge Enterprise',
+      'Dashboard + API + reportes custom',
+      'Badge Enterprise',
       '$300 OKLA Coins/mes',
-      'ChatAgent IA SIN LÍMITE',
-      'Agendamiento + CRM + recordatorios WhatsApp',
-      'PricingAgent IA ilimitado + PDF + API',
+      'ChatAgent SIN LÍMITE',
+      'Agendamiento + CRM + recordatorios WA',
       'Acceso completo a API OKLA',
-      'Dashboard + API + reportes personalizados',
       'Empleados ilimitados',
       'SLA garantizado + Soporte 24/7',
     ],
@@ -189,7 +181,6 @@ const SELLER_PLAN_ALIASES: Record<string, string> = {
   estandar_seller: 'estandar',
 };
 
-// v5.0 Seller Plans — prices shown in USD (API stores in DOP, upgrade page divides by 58)
 const SELLER_PLANS: Record<string, PlanInfo> = {
   libre_seller: {
     key: 'libre_seller',
@@ -198,7 +189,7 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
     annualPrice: 0,
     features: [
       '1 publicación activa',
-      'Hasta 5 fotos por vehículo',
+      '5 fotos por vehículo',
       'Duración: 30 días',
       '⬇ Posición al fondo en búsquedas',
       '⚪ Sin badge de verificación',
@@ -212,12 +203,12 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
     annualPrice: 9.99, // precio por listing (pago único)
     features: [
       '1 publicación por pago',
-      'Hasta 10 fotos por vehículo',
+      '10 fotos por vehículo',
       'Duración: 60 días',
       '⬆ Posición media (bajo dealers)',
       '🔵 Badge Vendedor OKLA',
       'KYC: email + teléfono verificados',
-      'Renovación de listing: $6.99',
+      'Renovación de listing: $4.99',
       '1 valoración PricingAgent IA por listing',
     ],
   },
@@ -228,9 +219,9 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
     annualPrice: 34.99,
     features: [
       '3 publicaciones simultáneas',
-      'Hasta 12 fotos por vehículo',
+      '12 fotos por vehículo',
       'Duración: 90 días',
-      '📈 Alta posición (bajo dealers VISIBLE)',
+      '📈 Alta posición visible (bajo dealers)',
       '✅ Badge Vendedor Verificado',
       'KYC completo: cédula + selfie + teléfono',
       'Renovación de listing incluida',
@@ -405,55 +396,21 @@ function UpgradeCheckoutInner() {
     userType === 'seller' ? (SELLER_PLAN_ALIASES[rawPlanKey] ?? rawPlanKey) : rawPlanKey;
 
   // Build dealer plans with LIVE pricing from admin configuration
-  const dealerPlansLive = useMemo<Record<string, PlanInfo>>(
-    () => ({
-      libre: { ...DEALER_PLANS.libre, monthlyPrice: 0, annualPrice: 0 },
-      visible: {
-        ...DEALER_PLANS.visible,
-        monthlyPrice: pricing.dealerVisible,
-        annualPrice: Math.round(pricing.dealerVisible * 10),
-      },
-      starter: {
-        ...DEALER_PLANS.starter,
-        monthlyPrice: pricing.dealerStarter,
-        annualPrice: Math.round(pricing.dealerStarter * 10),
-      },
-      pro: {
-        ...DEALER_PLANS.pro,
-        monthlyPrice: pricing.dealerPro,
-        annualPrice: Math.round(pricing.dealerPro * 10),
-      },
-      elite: {
-        ...DEALER_PLANS.elite,
-        monthlyPrice: pricing.dealerElite,
-        annualPrice: Math.round(pricing.dealerElite * 10),
-      },
-      enterprise: {
-        ...DEALER_PLANS.enterprise,
-        monthlyPrice: pricing.dealerEnterprise,
-        annualPrice: Math.round(pricing.dealerEnterprise * 10),
-      },
-    }),
-    [pricing]
-  );
+  const dealerPlansLive = useMemo<Record<string, PlanInfo>>(() => ({
+    libre: { ...DEALER_PLANS.libre, monthlyPrice: 0, annualPrice: 0 },
+    visible: { ...DEALER_PLANS.visible, monthlyPrice: pricing.dealerVisible, annualPrice: Math.round(pricing.dealerVisible * 10) },
+    starter: { ...DEALER_PLANS.starter, monthlyPrice: pricing.dealerStarter, annualPrice: Math.round(pricing.dealerStarter * 10) },
+    pro: { ...DEALER_PLANS.pro, monthlyPrice: pricing.dealerPro, annualPrice: Math.round(pricing.dealerPro * 10) },
+    elite: { ...DEALER_PLANS.elite, monthlyPrice: pricing.dealerElite, annualPrice: Math.round(pricing.dealerElite * 10) },
+    enterprise: { ...DEALER_PLANS.enterprise, monthlyPrice: pricing.dealerEnterprise, annualPrice: Math.round(pricing.dealerEnterprise * 10) },
+  }), [pricing]);
 
   // Build seller plans with LIVE pricing from admin configuration (prices stored in DOP, displayed as USD)
-  const sellerPlansLive = useMemo<Record<string, PlanInfo>>(
-    () => ({
-      libre_seller: { ...SELLER_PLANS.libre_seller, monthlyPrice: 0, annualPrice: 0 },
-      estandar: {
-        ...SELLER_PLANS.estandar,
-        monthlyPrice: pricing.sellerEstandar / 58,
-        annualPrice: pricing.sellerEstandar / 58,
-      },
-      verificado: {
-        ...SELLER_PLANS.verificado,
-        monthlyPrice: pricing.sellerVerificado / 58,
-        annualPrice: pricing.sellerVerificado / 58,
-      },
-    }),
-    [pricing]
-  );
+  const sellerPlansLive = useMemo<Record<string, PlanInfo>>(() => ({
+    libre_seller: { ...SELLER_PLANS.libre_seller, monthlyPrice: 0, annualPrice: 0 },
+    estandar: { ...SELLER_PLANS.estandar, monthlyPrice: pricing.sellerEstandar / 58, annualPrice: pricing.sellerEstandar / 58 },
+    verificado: { ...SELLER_PLANS.verificado, monthlyPrice: pricing.sellerVerificado / 58, annualPrice: pricing.sellerVerificado / 58 },
+  }), [pricing]);
 
   const plans = userType === 'dealer' ? dealerPlansLive : sellerPlansLive;
   const planKeys = Object.keys(plans);
