@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using BillingService.Domain.Entities;
 using BillingService.Domain.Interfaces;
+using BillingService.Infrastructure.Persistence;
 using BillingService.Infrastructure.Services;
 using Stripe;
 using System.Collections.Concurrent;
@@ -22,6 +25,8 @@ public class PaymentMethodsController : ControllerBase
     private readonly IStripeService _stripeService;
     private readonly StripeSettings _stripeSettings;
     private readonly PayPalSettings _paypalSettings;
+    private readonly IPayPalService _payPalService;
+    private readonly BillingDbContext _db;
     private readonly ILogger<PaymentMethodsController> _logger;
 
     private static readonly ConcurrentDictionary<string, TokenizationSessionData> _tokenSessions = new();
@@ -35,11 +40,15 @@ public class PaymentMethodsController : ControllerBase
         IStripeService stripeService,
         IOptions<StripeSettings> stripeSettings,
         IOptions<PayPalSettings> paypalSettings,
+        IPayPalService payPalService,
+        BillingDbContext db,
         ILogger<PaymentMethodsController> logger)
     {
         _stripeService = stripeService;
         _stripeSettings = stripeSettings.Value;
         _paypalSettings = paypalSettings.Value;
+        _payPalService = payPalService;
+        _db = db;
         _logger = logger;
     }
 
@@ -48,16 +57,40 @@ public class PaymentMethodsController : ControllerBase
     // ========================================
 
     [HttpGet]
-    public ActionResult<UserPaymentMethodsListDto> GetPaymentMethods()
+    public async Task<ActionResult<UserPaymentMethodsListDto>> GetPaymentMethods(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
         _logger.LogDebug("GetPaymentMethods called for user {UserId}", userId);
 
+        var methods = await _db.UserPaymentMethods
+            .Where(m => m.UserId == userId && m.IsActive)
+            .OrderByDescending(m => m.IsDefault)
+            .ThenByDescending(m => m.CreatedAt)
+            .ToListAsync(ct);
+
+        var defaultId = methods.FirstOrDefault(m => m.IsDefault)?.Id.ToString();
+
+        var dtos = methods.Select(m => new UserPaymentMethodDto
+        {
+            Id = m.Id.ToString(),
+            Type = m.Type,
+            Gateway = m.Gateway,
+            IsDefault = m.IsDefault,
+            IsActive = m.IsActive,
+            NickName = m.NickName ?? m.DisplayName,
+            Card = null,
+            CreatedAt = m.CreatedAt.ToString("o"),
+            LastUsedAt = m.LastUsedAt?.ToString("o"),
+            UsageCount = m.UsageCount,
+            IsExpired = false,
+            ExpiresSoon = false
+        }).ToList();
+
         return Ok(new UserPaymentMethodsListDto
         {
-            Methods = new List<UserPaymentMethodDto>(),
-            DefaultMethodId = null,
-            Total = 0,
+            Methods = dtos,
+            DefaultMethodId = defaultId,
+            Total = dtos.Count,
             ExpiredCount = 0,
             ExpiringSoonCount = 0
         });
@@ -71,17 +104,57 @@ public class PaymentMethodsController : ControllerBase
     }
 
     [HttpPost("{paymentMethodId}/default")]
-    public IActionResult SetDefault(string paymentMethodId)
+    public async Task<IActionResult> SetDefault(string paymentMethodId, CancellationToken ct)
     {
-        _logger.LogWarning("SetDefault called for non-existent payment method {Id}", paymentMethodId);
-        return NotFound(new { error = "Método de pago no encontrado." });
+        var userId = GetCurrentUserId();
+        if (!Guid.TryParse(paymentMethodId, out var methodGuid))
+            return BadRequest(new { error = "ID de método de pago inválido." });
+
+        var method = await _db.UserPaymentMethods
+            .FirstOrDefaultAsync(m => m.Id == methodGuid && m.UserId == userId && m.IsActive, ct);
+
+        if (method == null)
+            return NotFound(new { error = "Método de pago no encontrado." });
+
+        // Clear existing default
+        await _db.UserPaymentMethods
+            .Where(m => m.UserId == userId && m.IsDefault)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsDefault, false), ct);
+
+        method.IsDefault = true;
+        await _db.SaveChangesAsync(ct);
+
+        return Ok(new { message = "Método de pago predeterminado actualizado." });
     }
 
     [HttpDelete("{paymentMethodId}")]
-    public IActionResult DeletePaymentMethod(string paymentMethodId)
+    public async Task<IActionResult> DeletePaymentMethod(string paymentMethodId, CancellationToken ct)
     {
-        _logger.LogWarning("DeletePaymentMethod called for non-existent payment method {Id}", paymentMethodId);
-        return NotFound(new { error = "Método de pago no encontrado." });
+        var userId = GetCurrentUserId();
+        if (!Guid.TryParse(paymentMethodId, out var methodGuid))
+            return BadRequest(new { error = "ID de método de pago inválido." });
+
+        var method = await _db.UserPaymentMethods
+            .FirstOrDefaultAsync(m => m.Id == methodGuid && m.UserId == userId && m.IsActive, ct);
+
+        if (method == null)
+            return NotFound(new { error = "Método de pago no encontrado." });
+
+        // Soft delete
+        method.IsActive = false;
+        if (method.IsDefault)
+        {
+            method.IsDefault = false;
+            // Promote most recently added active method as new default
+            var next = await _db.UserPaymentMethods
+                .Where(m => m.UserId == userId && m.IsActive && m.Id != methodGuid)
+                .OrderByDescending(m => m.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+            if (next != null) next.IsDefault = true;
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return Ok(new { message = "Método de pago eliminado." });
     }
 
     // ========================================
@@ -113,33 +186,33 @@ public class PaymentMethodsController : ControllerBase
                 return await InitiateStripeTokenization(userId, request);
 
             case "PayPal":
-            {
-                var payPalSessionId = Guid.NewGuid().ToString("N");
-                _tokenSessions[payPalSessionId] = new TokenizationSessionData
                 {
-                    SessionId = payPalSessionId,
-                    UserId = userId,
-                    Gateway = "PayPal",
-                    Status = "pending",
-                    CreatedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(30),
-                    SetAsDefault = request.SetAsDefault ?? false,
-                    NickName = request.NickName
-                };
-
-                return Ok(new TokenizationInitResponse
-                {
-                    SessionId = payPalSessionId,
-                    Gateway = "PayPal",
-                    IntegrationType = "sdk",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(30).ToString("o"),
-                    SdkConfig = new SdkConfiguration
+                    var payPalSessionId = Guid.NewGuid().ToString("N");
+                    _tokenSessions[payPalSessionId] = new TokenizationSessionData
                     {
-                        ClientId = _paypalSettings.ClientId,
-                        Environment = _paypalSettings.Sandbox ? "sandbox" : "production"
-                    }
-                });
-            }
+                        SessionId = payPalSessionId,
+                        UserId = userId,
+                        Gateway = "PayPal",
+                        Status = "pending",
+                        CreatedAt = DateTime.UtcNow,
+                        ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                        SetAsDefault = request.SetAsDefault ?? false,
+                        NickName = request.NickName
+                    };
+
+                    return Ok(new TokenizationInitResponse
+                    {
+                        SessionId = payPalSessionId,
+                        Gateway = "PayPal",
+                        IntegrationType = "sdk",
+                        ExpiresAt = DateTime.UtcNow.AddMinutes(30).ToString("o"),
+                        SdkConfig = new SdkConfiguration
+                        {
+                            ClientId = _paypalSettings.ClientId,
+                            Environment = _paypalSettings.Sandbox ? "sandbox" : "production"
+                        }
+                    });
+                }
 
             case "Azul":
             case "CardNET":
@@ -169,7 +242,8 @@ public class PaymentMethodsController : ControllerBase
     /// For Stripe: verifies the SetupIntent succeeded and stores the payment method reference.
     /// </summary>
     [HttpPost("tokenize/complete")]
-    public async Task<IActionResult> CompleteTokenization([FromBody] TokenizationCompleteRequest request)
+    public async Task<IActionResult> CompleteTokenization([FromBody] TokenizationCompleteRequest request,
+        CancellationToken ct)
     {
         var userId = GetCurrentUserId();
 
@@ -198,7 +272,7 @@ public class PaymentMethodsController : ControllerBase
 
         if (session.Gateway == "PayPal")
         {
-            return CompletePayPalTokenization(userId, session, request);
+            return await CompletePayPalTokenization(userId, session, request, ct);
         }
 
         return Ok(new
@@ -282,34 +356,96 @@ public class PaymentMethodsController : ControllerBase
     // STRIPE TOKENIZATION HELPERS
     // ========================================
 
-    private IActionResult CompletePayPalTokenization(
-        Guid userId, TokenizationSessionData session, TokenizationCompleteRequest request)
+    private async Task<IActionResult> CompletePayPalTokenization(
+        Guid userId, TokenizationSessionData session, TokenizationCompleteRequest request,
+        CancellationToken ct)
     {
         var payPalOrderId = request.PayPalVaultId ?? request.ProviderToken;
 
         if (string.IsNullOrWhiteSpace(payPalOrderId))
-        {
             return BadRequest(new { error = "PayPal order ID no proporcionado." });
+
+        // 1. Capture the PayPal order to get payer info
+        PayPalCaptureResult capture;
+        try
+        {
+            capture = await _payPalService.CaptureOrderAsync(payPalOrderId, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "PayPal capture failed for order {OrderId}", payPalOrderId);
+            return StatusCode(502, new { error = "No se pudo verificar el pago con PayPal. Intenta de nuevo." });
         }
 
+        if (capture.Status != "COMPLETED")
+        {
+            _logger.LogWarning("PayPal order {OrderId} not COMPLETED, status={Status}", payPalOrderId, capture.Status);
+            return BadRequest(new { error = $"El pago de verificación no fue aprobado (estado: {capture.Status})." });
+        }
+
+        var payerEmail = capture.PayerEmail ?? "paypal-account";
+        var payerId = capture.PayerId ?? payPalOrderId;
+
+        // 2. Upsert the UserPaymentMethod record
+        var existing = await _db.UserPaymentMethods
+            .FirstOrDefaultAsync(m => m.UserId == userId && m.ProviderId == payerId, ct);
+
+        if (existing != null)
+        {
+            // Already linked — just update display name and reactivate
+            existing.IsActive = true;
+            existing.DisplayName = payerEmail;
+        }
+        else
+        {
+            var isFirst = !await _db.UserPaymentMethods
+                .AnyAsync(m => m.UserId == userId && m.IsActive, ct);
+
+            var newMethod = new UserPaymentMethod
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Gateway = "PayPal",
+                Type = "paypal_account",
+                ProviderId = payerId,
+                DisplayName = payerEmail,
+                NickName = session.NickName,
+                IsDefault = session.SetAsDefault || isFirst,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            if (newMethod.IsDefault)
+            {
+                // Clear any existing default
+                await _db.UserPaymentMethods
+                    .Where(m => m.UserId == userId && m.IsDefault)
+                    .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsDefault, false), ct);
+            }
+
+            _db.UserPaymentMethods.Add(newMethod);
+            existing = newMethod;
+        }
+
+        await _db.SaveChangesAsync(ct);
         session.Status = "completed";
         _tokenSessions[session.SessionId] = session;
 
         _logger.LogInformation(
-            "PayPal tokenization completed: user={UserId}, orderId={OrderId}, setAsDefault={Default}",
-            userId, payPalOrderId, session.SetAsDefault);
+            "PayPal payment method saved: user={UserId}, payerId={PayerId}, email={Email}",
+            userId, payerId, payerEmail);
 
         return Ok(new
         {
             success = true,
             paymentMethod = new
             {
-                id = payPalOrderId,
+                id = existing.Id.ToString(),
                 gateway = "PayPal",
-                type = "paypal",
-                isDefault = session.SetAsDefault,
-                nickName = session.NickName ?? "PayPal",
-                createdAt = DateTime.UtcNow.ToString("o")
+                type = "paypal_account",
+                isDefault = existing.IsDefault,
+                nickName = existing.NickName ?? payerEmail,
+                createdAt = existing.CreatedAt.ToString("o")
             }
         });
     }

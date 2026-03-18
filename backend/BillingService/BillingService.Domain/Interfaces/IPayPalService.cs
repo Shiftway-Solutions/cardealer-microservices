@@ -71,7 +71,9 @@ public record PayPalCaptureResult(
     string Status,
     decimal Amount,
     string Currency,
-    string? ReceiptUrl
+    string? ReceiptUrl,
+    string? PayerEmail,
+    string? PayerId
 );
 
 public record PayPalRefundResult(

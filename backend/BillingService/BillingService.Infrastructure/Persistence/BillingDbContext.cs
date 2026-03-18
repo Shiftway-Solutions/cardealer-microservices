@@ -32,6 +32,9 @@ public class BillingDbContext : DbContext
     // Dealer payment gateway preferences — which gateways are enabled per dealer
     public DbSet<DealerGatewayPreferences> DealerGatewayPreferences => Set<DealerGatewayPreferences>();
 
+    // User (non-dealer) saved payment methods — PayPal accounts, cards via Stripe, etc.
+    public DbSet<UserPaymentMethod> UserPaymentMethods => Set<UserPaymentMethod>();
+
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
     }
@@ -351,6 +354,18 @@ public class BillingDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.DealerId).IsUnique();
             entity.Property(e => e.EnabledGateways).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<UserPaymentMethod>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.ProviderId }).IsUnique();
+            entity.Property(e => e.Gateway).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Type).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ProviderId).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(e => e.NickName).HasMaxLength(100);
         });
     }
 

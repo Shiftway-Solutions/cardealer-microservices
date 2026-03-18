@@ -246,7 +246,9 @@ public class PayPalService : IPayPalService
                 Status: order.Status,
                 Amount: capturedAmount,
                 Currency: capture?.Amount?.CurrencyCode ?? "USD",
-                ReceiptUrl: null);
+                ReceiptUrl: null,
+                PayerEmail: order.Payer?.EmailAddress,
+                PayerId: order.Payer?.PayerId);
         }, cancellationToken);
     }
 
@@ -463,6 +465,9 @@ internal class PayPalOrderResponse
     [JsonPropertyName("purchase_units")]
     public List<PayPalPurchaseUnit>? PurchaseUnits { get; set; }
 
+    [JsonPropertyName("payer")]
+    public PayPalPayerInfo? Payer { get; set; }
+
     [JsonPropertyName("create_time")]
     public DateTime? CreateTime { get; set; }
 }
@@ -528,6 +533,15 @@ internal class PayPalRefundResponse
 
     [JsonPropertyName("amount")]
     public PayPalAmount? Amount { get; set; }
+}
+
+internal class PayPalPayerInfo
+{
+    [JsonPropertyName("email_address")]
+    public string? EmailAddress { get; set; }
+
+    [JsonPropertyName("payer_id")]
+    public string? PayerId { get; set; }
 }
 
 internal class PayPalWebhookVerifyResponse
