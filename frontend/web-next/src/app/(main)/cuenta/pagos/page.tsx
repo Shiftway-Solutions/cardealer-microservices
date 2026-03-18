@@ -21,24 +21,13 @@ import {
   Calendar,
   Plus,
   Trash2,
-  Check,
   Shield,
-  ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +40,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   userBillingService,
-  availableGateways,
   type EarlyBirdStatus,
   type PaymentMethodInfo,
   type PaymentGateway,
@@ -403,7 +391,7 @@ function AddPaymentMethodDialog({
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }) {
-  const [selectedGateway, setSelectedGateway] = React.useState<PaymentGateway>('Azul');
+  const [selectedGateway] = React.useState<PaymentGateway>('PayPal');
   const [setAsDefault, setSetAsDefault] = React.useState(true);
   const [, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -411,35 +399,6 @@ function AddPaymentMethodDialog({
   const [tokenizationResponse, setTokenizationResponse] =
     React.useState<TokenizationInitResponse | null>(null);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
-
-  // Currency display for PayPal (PayPal charges USD; we show estimated DOP equivalent)
-  const [paypalDisplayCurrency, setPaypalDisplayCurrency] = React.useState<'DOP' | 'USD'>('DOP');
-  const [dopRate, setDopRate] = React.useState<number | null>(null);
-  const [rateSource, setRateSource] = React.useState<'live' | 'fallback' | null>(null);
-  const PAYPAL_VERIFICATION_AMOUNT_USD = 1.0; // $1.00 verification charge
-
-  // Fetch live USD→DOP rate when reaching PayPal SDK step
-  React.useEffect(() => {
-    if (step !== 'sdk') return;
-    let cancelled = false;
-    fetch('/api/exchange-rate?from=USD&to=DOP')
-      .then(r => r.json())
-      .then((data: { rate: number; source: 'live' | 'fallback' }) => {
-        if (!cancelled) {
-          setDopRate(data.rate);
-          setRateSource(data.source);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setDopRate(62.5); // Approximate fallback
-          setRateSource('fallback');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [step]);
 
   // Gateway info with integration types
   const gatewayInfo: Record<
@@ -496,14 +455,18 @@ function AddPaymentMethodDialog({
     },
   };
 
-  // Reset state when dialog closes
+  // Reset state when dialog closes; auto-start PayPal tokenization when it opens
   React.useEffect(() => {
     if (!open) {
       setStep('select');
       setTokenizationResponse(null);
       setError('');
       setIsLoading(false);
+    } else {
+      // Skip gateway selector — go directly to PayPal
+      handleContinue();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Listen for iframe messages (for PixelPay and similar)
@@ -635,125 +598,12 @@ function AddPaymentMethodDialog({
   };
 
   // Render gateway selection
-  const renderGatewaySelection = () => (
-    <>
-      {/* Security Notice */}
-      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <Shield className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
-        <div className="text-sm">
-          <p className="font-medium text-blue-900">Proceso 100% Seguro (PCI DSS)</p>
-          <p className="text-blue-700">
-            Tus datos de tarjeta son procesados directamente por la pasarela que selecciones. Nunca
-            pasan por nuestros servidores.
-          </p>
-        </div>
-      </div>
-
-      {/* Gateway Selection */}
-      <div className="space-y-3">
-        <Label>Selecciona tu pasarela de pago</Label>
-        <div className="max-h-[300px] space-y-2 overflow-y-auto">
-          {availableGateways.map(gateway => {
-            const info = gatewayInfo[gateway.id];
-            return (
-              <label
-                key={gateway.id}
-                className={cn(
-                  'relative flex cursor-pointer items-center rounded-xl border-2 p-4 transition-all',
-                  selectedGateway === gateway.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-border hover:border-border'
-                )}
-              >
-                <input
-                  type="radio"
-                  name="gateway"
-                  value={gateway.id}
-                  checked={selectedGateway === gateway.id}
-                  onChange={e => setSelectedGateway(e.target.value as PaymentGateway)}
-                  className="sr-only"
-                />
-                <div className="flex flex-1 items-center gap-3">
-                  <div
-                    className={cn(
-                      'flex h-12 w-12 items-center justify-center rounded-lg text-2xl',
-                      selectedGateway === gateway.id ? 'bg-blue-500' : 'bg-muted'
-                    )}
-                  >
-                    {info.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{info.name}</span>
-                      {gateway.recommended && (
-                        <Badge className="bg-green-100 text-xs text-green-800 hover:bg-green-100">
-                          Recomendado
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {info.integrationType === 'redirect' && 'Página segura'}
-                        {info.integrationType === 'iframe' && 'Checkout embebido'}
-                        {info.integrationType === 'sdk' && 'SDK integrado'}
-                      </Badge>
-                    </div>
-                    <span className="text-muted-foreground block truncate text-sm">
-                      {info.description}
-                    </span>
-                    <span className="text-muted-foreground text-xs">{info.note}</span>
-                  </div>
-                </div>
-                {selectedGateway === gateway.id && (
-                  <Check className="h-5 w-5 flex-shrink-0 text-blue-500" />
-                )}
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Set as Default Option */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="setAsDefault"
-          checked={setAsDefault}
-          onCheckedChange={checked => setSetAsDefault(checked === true)}
-        />
-        <label htmlFor="setAsDefault" className="text-sm leading-none font-medium">
-          Establecer como método de pago predeterminado
-        </label>
-      </div>
-
-      <DialogFooter className="flex-col gap-3 sm:flex-row">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => onOpenChange(false)}
-        >
-          Cancelar
-        </Button>
-        <Button type="button" className="w-full sm:w-auto" onClick={handleContinue}>
-          <ExternalLink className="mr-2 h-4 w-4" />
-          Continuar a {gatewayInfo[selectedGateway].name}
-        </Button>
-      </DialogFooter>
-    </>
-  );
-
-  // Render iframe integration (for PixelPay)
   const renderIframe = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Ingresa los datos de tu tarjeta</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setStep('select');
-            setTokenizationResponse(null);
-          }}
-        >
-          ← Volver
+        <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          ← Cancelar
         </Button>
       </div>
 
@@ -777,82 +627,27 @@ function AddPaymentMethodDialog({
   // Render SDK integration (for PayPal — official @paypal/react-paypal-js)
   const renderSdk = () => {
     const clientId = tokenizationResponse?.sdkConfig?.clientId;
-    const dopAmount = dopRate ? Math.round(PAYPAL_VERIFICATION_AMOUNT_USD * dopRate) : null;
 
     return (
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="font-medium">Pagar con PayPal</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setStep('select');
-              setTokenizationResponse(null);
-            }}
-          >
-            ← Volver
+          <h3 className="font-medium">Agregar método de pago con PayPal</h3>
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+            ← Cancelar
           </Button>
         </div>
 
-        {/* Currency display toggle */}
-        <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Monto de verificación</span>
-            {/* Toggle */}
-            <div className="flex overflow-hidden rounded-lg border bg-white text-xs shadow-sm">
-              <button
-                type="button"
-                className={cn(
-                  'px-3 py-1.5 font-semibold transition-colors',
-                  paypalDisplayCurrency === 'DOP'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-500 hover:bg-gray-50'
-                )}
-                onClick={() => setPaypalDisplayCurrency('DOP')}
-              >
-                🇩🇴 DOP
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  'px-3 py-1.5 font-semibold transition-colors',
-                  paypalDisplayCurrency === 'USD'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-500 hover:bg-gray-50'
-                )}
-                onClick={() => setPaypalDisplayCurrency('USD')}
-              >
-                🇺🇸 USD
-              </button>
-            </div>
+        {/* Info notice: no charge */}
+        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+          <Shield className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
+          <div className="text-sm">
+            <p className="font-medium text-green-900">Sin cobro — solo verificación de identidad</p>
+            <p className="text-green-700">
+              Conecta tu cuenta PayPal o tarjeta para usarla en futuras transacciones. No se
+              realizará ningún cobro.
+            </p>
           </div>
-
-          {paypalDisplayCurrency === 'DOP' ? (
-            <div>
-              <div className="flex items-baseline gap-2">
-                {dopAmount != null ? (
-                  <p className="text-3xl font-bold tracking-tight text-gray-900">
-                    RD$ {dopAmount.toLocaleString('es-DO')}
-                  </p>
-                ) : (
-                  <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
-                )}
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                ≈ $1.00 USD &middot; Tasa {rateSource === 'live' ? 'en vivo' : 'referencial'}: 1 USD
-                = RD$ {dopRate != null ? dopRate.toFixed(2) : '…'}
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-3xl font-bold tracking-tight text-gray-900">$1.00 USD</p>
-              <p className="mt-1 text-xs text-gray-500">
-                Tu banco convertirá a DOP con su tipo de cambio
-              </p>
-            </div>
-          )}
         </div>
 
         {/* PayPal Smart Buttons */}
@@ -860,21 +655,23 @@ function AddPaymentMethodDialog({
           {clientId ? (
             <PayPalPaymentButton
               clientId={clientId}
-              amount={String(PAYPAL_VERIFICATION_AMOUNT_USD)}
+              amount="1.00"
               currency="USD"
+              intent="authorize"
               onCreateOrder={async () => {
                 const res = await fetch('/api/payments/paypal/create-order', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    amount: PAYPAL_VERIFICATION_AMOUNT_USD,
+                    amount: 1.0,
                     currency: 'USD',
-                    description: 'Verificación de método de pago OKLA',
+                    description: 'Verificación de cuenta OKLA',
+                    intentType: 'authorize',
                   }),
                   credentials: 'include',
                 });
                 const data = (await res.json()) as { orderId?: string };
-                if (!data.orderId) throw new Error('No se pudo crear la orden');
+                if (!data.orderId) throw new Error('No se pudo iniciar la verificación');
                 return data.orderId;
               }}
               onApprove={async (orderId: string) => {
@@ -886,7 +683,7 @@ function AddPaymentMethodDialog({
                     payPalVaultId: orderId,
                   });
                 }
-                toast.success('PayPal vinculado correctamente');
+                toast.success('Método de pago PayPal vinculado correctamente');
                 onSuccess?.();
                 onOpenChange(false);
               }}
@@ -895,8 +692,7 @@ function AddPaymentMethodDialog({
                 toast.error(msg);
               }}
               onCancel={() => {
-                setStep('select');
-                setTokenizationResponse(null);
+                onOpenChange(false);
               }}
             />
           ) : (
@@ -927,26 +723,6 @@ function AddPaymentMethodDialog({
       <DialogContent
         className={cn('max-w-lg', step === 'iframe' && 'max-w-xl', step === 'sdk' && 'max-w-md')}
       >
-        {step === 'select' && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Agregar Método de Pago</DialogTitle>
-              <DialogDescription>
-                Selecciona cómo deseas agregar tu tarjeta. El proceso es 100% seguro.
-              </DialogDescription>
-            </DialogHeader>
-
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                {error}
-              </div>
-            )}
-
-            {renderGatewaySelection()}
-          </>
-        )}
-
         {step === 'loading' && renderLoading()}
 
         {step === 'iframe' && renderIframe()}

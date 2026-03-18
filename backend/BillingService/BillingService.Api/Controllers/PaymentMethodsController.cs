@@ -375,26 +375,32 @@ public class PaymentMethodsController : ControllerBase
         if (string.IsNullOrWhiteSpace(payPalOrderId))
             return BadRequest(new { error = "PayPal order ID no proporcionado." });
 
-        // 1. Capture the PayPal order to get payer info
-        PayPalCaptureResult capture;
+        // 1. Get payer info from the approved PayPal order WITHOUT capturing (no charge).
+        //    The order was created with intent=AUTHORIZE; after user approval it is in
+        //    APPROVED state and contains payer data. We intentionally skip capture so
+        //    the authorization expires naturally — the user is never charged.
+        PayPalOrderResult? order;
         try
         {
-            capture = await _payPalService.CaptureOrderAsync(payPalOrderId, ct);
+            order = await _payPalService.GetOrderAsync(payPalOrderId, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "PayPal capture failed for order {OrderId}", payPalOrderId);
-            return StatusCode(502, new { error = "No se pudo verificar el pago con PayPal. Intenta de nuevo." });
+            _logger.LogError(ex, "PayPal GetOrder failed for order {OrderId}", payPalOrderId);
+            return StatusCode(502, new { error = "No se pudo verificar la cuenta con PayPal. Intenta de nuevo." });
         }
 
-        if (capture.Status != "COMPLETED")
+        if (order == null)
+            return BadRequest(new { error = "Orden de PayPal no encontrada." });
+
+        if (order.Status != "APPROVED" && order.Status != "COMPLETED")
         {
-            _logger.LogWarning("PayPal order {OrderId} not COMPLETED, status={Status}", payPalOrderId, capture.Status);
-            return BadRequest(new { error = $"El pago de verificación no fue aprobado (estado: {capture.Status})." });
+            _logger.LogWarning("PayPal order {OrderId} not APPROVED, status={Status}", payPalOrderId, order.Status);
+            return BadRequest(new { error = $"La verificación de cuenta no fue aprobada (estado: {order.Status})." });
         }
 
-        var payerEmail = capture.PayerEmail ?? "paypal-account";
-        var payerId = capture.PayerId ?? payPalOrderId;
+        var payerEmail = order.PayerEmail ?? "paypal-account";
+        var payerId = order.PayerId ?? payPalOrderId;
 
         // 2. Upsert the UserPaymentMethod record
         UserPaymentMethod? existing;

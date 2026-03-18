@@ -130,6 +130,7 @@ public class PayPalService : IPayPalService
         string returnUrl,
         string cancelUrl,
         Dictionary<string, string>? metadata = null,
+        string intent = "CAPTURE",
         CancellationToken cancellationToken = default)
     {
         return await ExecuteWithResilienceAsync(async ct =>
@@ -142,7 +143,7 @@ public class PayPalService : IPayPalService
 
             var orderPayload = new
             {
-                intent = "CAPTURE",
+                intent = intent.ToUpperInvariant(),
                 purchase_units = new[]
                 {
                     new
@@ -282,7 +283,9 @@ public class PayPalService : IPayPalService
                 ApprovalUrl: null,
                 Amount: amount,
                 Currency: pu?.Amount?.CurrencyCode ?? "USD",
-                CreatedAt: order.CreateTime ?? DateTime.UtcNow);
+                CreatedAt: order.CreateTime ?? DateTime.UtcNow,
+                PayerEmail: order.Payer?.EmailAddress,
+                PayerId: order.Payer?.PayerId);
         }, cancellationToken);
     }
 

@@ -44,6 +44,7 @@ public class PayPalController : ControllerBase
                 request.ReturnUrl ?? $"{Request.Scheme}://{Request.Host}/checkout/exito",
                 request.CancelUrl ?? $"{Request.Scheme}://{Request.Host}/checkout",
                 request.Metadata,
+                request.IntentType?.ToUpperInvariant() == "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE",
                 cancellationToken);
 
             return Ok(new
@@ -171,7 +172,9 @@ public record CreatePayPalOrderRequest(
     string? Description = null,
     string? ReturnUrl = null,
     string? CancelUrl = null,
-    Dictionary<string, string>? Metadata = null
+    Dictionary<string, string>? Metadata = null,
+    /// <summary>"authorize" = hold without charging (for card tokenization); "capture" = charge immediately (default)</summary>
+    string? IntentType = null
 );
 
 public record CapturePayPalOrderRequest(

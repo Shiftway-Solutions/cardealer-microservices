@@ -36,6 +36,8 @@ interface PayPalPaymentButtonProps {
   onCancel?: () => void;
   /** Whether the button is disabled */
   disabled?: boolean;
+  /** PayPal intent: 'capture' (default, charges immediately) or 'authorize' (hold, no charge) */
+  intent?: 'capture' | 'authorize';
 }
 
 // =============================================================================
@@ -147,6 +149,7 @@ export function PayPalPaymentButton({
   onError,
   onCancel,
   disabled,
+  intent = 'capture',
 }: PayPalPaymentButtonProps) {
   if (!clientId) {
     return (
@@ -162,7 +165,7 @@ export function PayPalPaymentButton({
       options={{
         clientId,
         currency: currency === 'DOP' ? 'USD' : currency,
-        intent: 'capture',
+        intent,
         locale: 'es_DO',
       }}
     >

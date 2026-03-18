@@ -8,6 +8,7 @@ public interface IPayPalService
     /// <summary>
     /// Crea una orden de PayPal para un pago único
     /// </summary>
+    /// <param name="intent">"CAPTURE" (cobro inmediato, default) o "AUTHORIZE" (autorizar sin cobrar)</param>
     /// <returns>PayPal Order ID</returns>
     Task<PayPalOrderResult> CreateOrderAsync(
         decimal amount,
@@ -16,6 +17,7 @@ public interface IPayPalService
         string returnUrl,
         string cancelUrl,
         Dictionary<string, string>? metadata = null,
+        string intent = "CAPTURE",
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -62,7 +64,9 @@ public record PayPalOrderResult(
     string? ApprovalUrl,
     decimal Amount,
     string Currency,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? PayerEmail = null,
+    string? PayerId = null
 );
 
 public record PayPalCaptureResult(
