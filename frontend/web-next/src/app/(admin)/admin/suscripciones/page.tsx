@@ -164,7 +164,7 @@ const SELLER_PLAN_CARDS: PlanCardData[] = [
     key: SellerPlan.VERIFICADO,
     name: 'VERIFICADO',
     description: 'Para vendedores profesionales',
-    monthlyPrice: 1999,
+    monthlyPrice: 2029, // RD$ 2,029 DOP = $34.99 USD (2029/58) — matches AdminService sellerVerificado
     targetAudience: 'seller',
     color: 'purple',
     bgColor: 'bg-purple-50',

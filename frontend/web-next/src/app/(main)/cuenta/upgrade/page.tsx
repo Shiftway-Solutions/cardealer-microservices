@@ -208,8 +208,8 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
   estandar: {
     key: 'estandar',
     name: 'Estándar',
-    monthlyPrice: 9.99,
-    annualPrice: 9.99, // precio por listing (pago único)
+    monthlyPrice: 579, // DOP — fallback estático; precio real via usePlatformPricing
+    annualPrice: 579, // DOP por listing (pago único)
     features: [
       '1 publicación por pago',
       'Hasta 10 fotos por vehículo',
@@ -224,8 +224,8 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
   verificado: {
     key: 'verificado',
     name: 'Verificado',
-    monthlyPrice: 34.99,
-    annualPrice: 34.99,
+    monthlyPrice: 2029, // DOP — fallback estático; precio real via usePlatformPricing
+    annualPrice: 2029,
     features: [
       '3 publicaciones simultáneas',
       'Hasta 12 fotos por vehículo',
@@ -385,6 +385,80 @@ function buildSellerComparison(currentKey: string, targetKey: string): Compariso
 }
 
 // =============================================================================
+// SELLER 3-PLAN COMPARISON
+// =============================================================================
+
+interface ComparisonRow3 {
+  label: string;
+  libre: string | boolean;
+  estandar: string | boolean;
+  verificado: string | boolean;
+}
+
+function buildSellerComparisonAll(): ComparisonRow3[] {
+  const libre = SELLER_PLAN_LIMITS[SellerPlan.LIBRE];
+  const estandar = SELLER_PLAN_LIMITS[SellerPlan.ESTANDAR];
+  const verificado = SELLER_PLAN_LIMITS[SellerPlan.VERIFICADO];
+
+  return [
+    {
+      label: 'Publicaciones activas',
+      libre: String(libre.maxListings),
+      estandar: '1 por pago',
+      verificado: String(verificado.maxListings),
+    },
+    {
+      label: 'Duración del listing',
+      libre: `${libre.listingDuration} días`,
+      estandar: `${estandar.listingDuration} días`,
+      verificado: `${verificado.listingDuration} días`,
+    },
+    {
+      label: 'Fotos por vehículo',
+      libre: `Hasta ${libre.maxImages}`,
+      estandar: `Hasta ${estandar.maxImages}`,
+      verificado: `Hasta ${verificado.maxImages}`,
+    },
+    {
+      label: 'Posición búsqueda',
+      libre: '⬇ Fondo absoluto',
+      estandar: '⬆ Media (bajo dealers)',
+      verificado: '📈 Alta (bajo dealers VISIBLE)',
+    },
+    {
+      label: 'Badge de confianza',
+      libre: '⚪ Sin verificar',
+      estandar: '🔵 Vendedor OKLA',
+      verificado: '✅ Vendedor Verificado',
+    },
+    {
+      label: 'Verificación KYC',
+      libre: 'Solo email',
+      estandar: 'Email + teléfono',
+      verificado: 'Cédula + selfie + tel.',
+    },
+    {
+      label: 'Renovación listing',
+      libre: '—',
+      estandar: 'RD$406/listing',
+      verificado: 'Incluida',
+    },
+    {
+      label: 'PricingAgent IA',
+      libre: '—',
+      estandar: '1/listing',
+      verificado: '2/mes',
+    },
+    {
+      label: 'Analytics',
+      libre: libre.analyticsAccess,
+      estandar: estandar.analyticsAccess,
+      verificado: verificado.analyticsAccess,
+    },
+  ];
+}
+
+// =============================================================================
 // PAYMENT METHOD TYPES
 // =============================================================================
 
@@ -470,19 +544,19 @@ function UpgradeCheckoutInner() {
     [pricing]
   );
 
-  // Build seller plans with LIVE pricing from admin configuration (prices stored in DOP, displayed as USD)
+  // Build seller plans with LIVE pricing from admin configuration (prices in DOP)
   const sellerPlansLive = useMemo<Record<string, PlanInfo>>(
     () => ({
       libre_seller: { ...SELLER_PLANS.libre_seller, monthlyPrice: 0, annualPrice: 0 },
       estandar: {
         ...SELLER_PLANS.estandar,
-        monthlyPrice: pricing.sellerEstandar / 58,
-        annualPrice: pricing.sellerEstandar / 58,
+        monthlyPrice: pricing.sellerEstandar,
+        annualPrice: pricing.sellerEstandar,
       },
       verificado: {
         ...SELLER_PLANS.verificado,
-        monthlyPrice: pricing.sellerVerificado / 58,
-        annualPrice: pricing.sellerVerificado / 58,
+        monthlyPrice: pricing.sellerVerificado,
+        annualPrice: pricing.sellerVerificado,
       },
     }),
     [pricing]
@@ -494,7 +568,12 @@ function UpgradeCheckoutInner() {
   // Current plan = lowest tier (mock: user is on free plan)
   const currentPlanKey = planKeys[0];
   const currentPlan = plans[currentPlanKey];
-  const targetPlan = plans[targetPlanKey] ?? plans[planKeys[planKeys.length - 1]];
+  // For sellers: allow switching target plan by clicking cards; initialize from URL param
+  const [selectedTargetPlanKey, setSelectedTargetPlanKey] = useState<string>(targetPlanKey);
+  const targetPlan =
+    userType === 'seller'
+      ? (sellerPlansLive[selectedTargetPlanKey] ?? sellerPlansLive['verificado'])
+      : (plans[targetPlanKey] ?? plans[planKeys[planKeys.length - 1]]);
 
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -509,7 +588,7 @@ function UpgradeCheckoutInner() {
     return buildSellerComparison(currentPlanKey, targetPlan.key);
   }, [userType, currentPlanKey, targetPlan.key]);
 
-  const priceCurrency = userType === 'seller' ? 'USD' : 'DOP';
+  const priceCurrency = 'DOP';
   const price = billingPeriod === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
   const monthlyCost =
     billingPeriod === 'annual' ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice;
@@ -569,68 +648,130 @@ function UpgradeCheckoutInner() {
         </div>
         <h1 className="text-3xl font-bold">Actualiza tu plan</h1>
         <p className="text-muted-foreground mt-2">
-          Compara tu plan actual con {targetPlan.name} y confirma tu upgrade
+          {userType === 'seller'
+            ? 'Elige el plan que mejor se adapte a ti y confirma tu upgrade'
+            : `Compara tu plan actual con ${targetPlan.name} y confirma tu upgrade`}
         </p>
       </div>
 
       {/* Plan Comparison */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Current Plan */}
-        <Card className="border-2 border-gray-200">
-          <CardHeader className="text-center">
-            <Badge variant="outline" className="mx-auto mb-2 w-fit">
-              Plan Actual
-            </Badge>
-            <CardTitle className="text-xl">{currentPlan.name}</CardTitle>
-            <CardDescription>
-              {currentPlan.monthlyPrice === 0
-                ? 'Gratis'
-                : `${formatPrice(currentPlan.monthlyPrice, priceCurrency)}${userType === 'seller' && currentPlan.key === 'estandar' ? '/listing' : '/mes'}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {currentPlan.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="text-muted-foreground">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+      {userType === 'seller' ? (
+        /* Seller: all 3 plans as selectable cards */
+        <div className="grid gap-4 sm:grid-cols-3">
+          {Object.values(sellerPlansLive).map(plan => {
+            const isCurrent = plan.key === currentPlanKey;
+            const isSelected = plan.key === selectedTargetPlanKey && !isCurrent;
+            return (
+              <Card
+                key={plan.key}
+                onClick={() => !isCurrent && setSelectedTargetPlanKey(plan.key)}
+                className={cn(
+                  'relative border-2 transition-all',
+                  isCurrent
+                    ? 'border-gray-200'
+                    : isSelected
+                      ? 'border-primary cursor-pointer shadow-md'
+                      : 'cursor-pointer border-gray-200 hover:border-gray-400'
+                )}
+              >
+                {isCurrent && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-500 px-3 py-1 text-xs font-bold whitespace-nowrap text-white">
+                    TU PLAN
+                  </div>
+                )}
+                {isSelected && (
+                  <div className="bg-primary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap text-white">
+                    SELECCIONADO
+                  </div>
+                )}
+                <CardHeader className="pt-6 text-center">
+                  <CardTitle className="text-lg">{plan.name}</CardTitle>
+                  <CardDescription className="text-base font-semibold">
+                    {plan.monthlyPrice === 0
+                      ? 'Gratis'
+                      : `${formatPrice(plan.monthlyPrice, 'DOP')}${plan.key === 'estandar' ? '/listing' : '/mes'}`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-1.5">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Check
+                          className={cn(
+                            'mt-0.5 h-4 w-4 shrink-0',
+                            isCurrent ? 'text-gray-400' : 'text-emerald-500'
+                          )}
+                        />
+                        <span className={isCurrent ? 'text-muted-foreground' : 'font-medium'}>
+                          {f}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* Dealer: current plan vs target plan */
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Current Plan */}
+          <Card className="border-2 border-gray-200">
+            <CardHeader className="text-center">
+              <Badge variant="outline" className="mx-auto mb-2 w-fit">
+                Plan Actual
+              </Badge>
+              <CardTitle className="text-xl">{currentPlan.name}</CardTitle>
+              <CardDescription>
+                {currentPlan.monthlyPrice === 0
+                  ? 'Gratis'
+                  : `${formatPrice(currentPlan.monthlyPrice, priceCurrency)}/mes`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {currentPlan.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                    <span className="text-muted-foreground">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
 
-        {/* Target Plan */}
-        <Card className="border-primary relative border-2">
-          <div className="bg-primary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-bold text-white">
-            RECOMENDADO
-          </div>
-          <CardHeader className="text-center">
-            <Badge className="bg-primary mx-auto mb-2 w-fit text-white">Nuevo Plan</Badge>
-            <CardTitle className="text-xl">{targetPlan.name}</CardTitle>
-            <CardDescription>
-              {formatPrice(monthlyCost, priceCurrency)}
-              {targetPlan.key === 'estandar' ? '/listing' : '/mes'}
-              {billingPeriod === 'annual' && savings > 0 && (
-                <span className="ml-1 text-emerald-600">(facturación anual)</span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {targetPlan.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                  <span className="font-medium">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Target Plan */}
+          <Card className="border-primary relative border-2">
+            <div className="bg-primary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-bold text-white">
+              RECOMENDADO
+            </div>
+            <CardHeader className="text-center">
+              <Badge className="bg-primary mx-auto mb-2 w-fit text-white">Nuevo Plan</Badge>
+              <CardTitle className="text-xl">{targetPlan.name}</CardTitle>
+              <CardDescription>
+                {formatPrice(monthlyCost, priceCurrency)}/mes
+                {billingPeriod === 'annual' && savings > 0 && (
+                  <span className="ml-1 text-emerald-600">(facturación anual)</span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {targetPlan.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span className="font-medium">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Feature-by-feature comparison table */}
-      {comparison.length > 0 && (
+      {userType === 'seller' ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Comparación detallada</CardTitle>
@@ -641,17 +782,19 @@ function UpgradeCheckoutInner() {
                 <thead>
                   <tr className="bg-muted/50 border-b">
                     <th className="px-4 py-3 text-left font-medium">Característica</th>
-                    <th className="px-4 py-3 text-center font-medium">{currentPlan.name}</th>
-                    <th className="px-4 py-3 text-center font-medium">{targetPlan.name}</th>
+                    <th className="px-4 py-3 text-center font-medium">Libre</th>
+                    <th className="px-4 py-3 text-center font-medium">Estándar</th>
+                    <th className="bg-primary/5 px-4 py-3 text-center font-medium">Verificado</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {comparison.map((row, i) => (
+                  {buildSellerComparisonAll().map((row, i) => (
                     <tr key={i} className="border-b last:border-0">
                       <td className="px-4 py-3">{row.label}</td>
-                      <td className="px-4 py-3 text-center">{renderCellValue(row.current)}</td>
+                      <td className="px-4 py-3 text-center">{renderCellValue(row.libre)}</td>
+                      <td className="px-4 py-3 text-center">{renderCellValue(row.estandar)}</td>
                       <td className="bg-primary/5 px-4 py-3 text-center">
-                        {renderCellValue(row.target)}
+                        {renderCellValue(row.verificado)}
                       </td>
                     </tr>
                   ))}
@@ -660,6 +803,38 @@ function UpgradeCheckoutInner() {
             </div>
           </CardContent>
         </Card>
+      ) : (
+        comparison.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Comparación detallada</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/50 border-b">
+                      <th className="px-4 py-3 text-left font-medium">Característica</th>
+                      <th className="px-4 py-3 text-center font-medium">{currentPlan.name}</th>
+                      <th className="px-4 py-3 text-center font-medium">{targetPlan.name}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparison.map((row, i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="px-4 py-3">{row.label}</td>
+                        <td className="px-4 py-3 text-center">{renderCellValue(row.current)}</td>
+                        <td className="bg-primary/5 px-4 py-3 text-center">
+                          {renderCellValue(row.target)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )
       )}
 
       {/* Guarantee Banner — shown only for Plan VISIBLE */}

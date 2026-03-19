@@ -682,11 +682,7 @@ function SellerDashboard() {
       <SellerProfileBanner />
 
       {/* Upgrade banner — shown to sellers on free plan */}
-      <UpgradeBanner
-        variant="inline"
-        userType="seller"
-        upgradeUrl="/cuenta/upgrade?plan=premium&type=seller"
-      />
+      <UpgradeBanner variant="inline" userType="seller" upgradeUrl="/cuenta/suscripcion" />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

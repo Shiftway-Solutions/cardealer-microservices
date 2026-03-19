@@ -820,7 +820,9 @@ export function SubscriptionPlanManager() {
         if (catalog.dealer?.length) {
           setDealerPlans(prev =>
             prev.map(p => {
-              const live = (catalog.dealer as Array<{ key: string; monthlyPrice: number; annualPrice: number }>).find(d => d.key === p.key);
+              const live = (
+                catalog.dealer as Array<{ key: string; monthlyPrice: number; annualPrice: number }>
+              ).find(d => d.key === p.key);
               if (!live) return p;
               return { ...p, monthlyPrice: live.monthlyPrice, annualPrice: live.annualPrice };
             })
@@ -829,7 +831,9 @@ export function SubscriptionPlanManager() {
         if (catalog.seller?.length) {
           setSellerPlans(prev =>
             prev.map(p => {
-              const live = (catalog.seller as Array<{ key: string; monthlyPrice: number; annualPrice: number }>).find(s => s.key === p.key);
+              const live = (
+                catalog.seller as Array<{ key: string; monthlyPrice: number; annualPrice: number }>
+              ).find(s => s.key === p.key);
               if (!live) return p;
               return { ...p, monthlyPrice: live.monthlyPrice, annualPrice: live.annualPrice };
             })
@@ -928,14 +932,20 @@ export function SubscriptionPlanManager() {
       const pricingPayload = {
         ...pricing,
         dealerLibre: dealerPlans.find(p => p.key === 'libre')?.monthlyPrice ?? pricing.dealerLibre,
-        dealerVisible: dealerPlans.find(p => p.key === 'visible')?.monthlyPrice ?? pricing.dealerVisible,
-        dealerStarter: dealerPlans.find(p => p.key === 'starter')?.monthlyPrice ?? pricing.dealerStarter,
+        dealerVisible:
+          dealerPlans.find(p => p.key === 'visible')?.monthlyPrice ?? pricing.dealerVisible,
+        dealerStarter:
+          dealerPlans.find(p => p.key === 'starter')?.monthlyPrice ?? pricing.dealerStarter,
         dealerPro: dealerPlans.find(p => p.key === 'pro')?.monthlyPrice ?? pricing.dealerPro,
         dealerElite: dealerPlans.find(p => p.key === 'elite')?.monthlyPrice ?? pricing.dealerElite,
-        dealerEnterprise: dealerPlans.find(p => p.key === 'enterprise')?.monthlyPrice ?? pricing.dealerEnterprise,
-        sellerGratis: sellerPlans.find(p => p.key === 'libre_seller')?.monthlyPrice ?? pricing.sellerGratis,
-        sellerEstandar: sellerPlans.find(p => p.key === 'estandar')?.monthlyPrice ?? pricing.sellerEstandar,
-        sellerVerificado: sellerPlans.find(p => p.key === 'verificado')?.monthlyPrice ?? pricing.sellerVerificado,
+        dealerEnterprise:
+          dealerPlans.find(p => p.key === 'enterprise')?.monthlyPrice ?? pricing.dealerEnterprise,
+        sellerGratis:
+          sellerPlans.find(p => p.key === 'libre_seller')?.monthlyPrice ?? pricing.sellerGratis,
+        sellerEstandar:
+          sellerPlans.find(p => p.key === 'estandar')?.monthlyPrice ?? pricing.sellerEstandar,
+        sellerVerificado:
+          sellerPlans.find(p => p.key === 'verificado')?.monthlyPrice ?? pricing.sellerVerificado,
       };
 
       const priceRes = await fetch('/api/admin/pricing', {
@@ -949,7 +959,9 @@ export function SubscriptionPlanManager() {
         toast.success('✅ Configuración de planes guardada y publicada exitosamente');
       } else {
         // Prices endpoint may return 404 in dev if AdminService isn't running — still OK
-        toast.success('✅ Planes guardados localmente. Precios se actualizarán cuando AdminService esté disponible.');
+        toast.success(
+          '✅ Planes guardados localmente. Precios se actualizarán cuando AdminService esté disponible.'
+        );
       }
     } catch {
       toast.error('Error al guardar la configuración. Intenta de nuevo.');
@@ -970,7 +982,11 @@ export function SubscriptionPlanManager() {
             Define funcionalidades, configura planes y establece precios.
           </p>
         </div>
-        <Button onClick={handleSaveAll} disabled={isSaving || isLoadingPlans} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+        <Button
+          onClick={handleSaveAll}
+          disabled={isSaving || isLoadingPlans}
+          className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+        >
           <Save className="h-4 w-4" />
           {isSaving ? 'Guardando...' : 'Guardar Todo'}
         </Button>
@@ -1200,11 +1216,13 @@ export function SubscriptionPlanManager() {
                                   <span className={cn('text-xs', !isIncluded && 'text-gray-400')}>
                                     {feature.name}
                                   </span>
-                                  {isIncluded && feature.valueType === 'number' && assignment?.value !== undefined && (
-                                    <p className="text-xs font-semibold text-emerald-600">
-                                      {assignment.value === -1 ? '∞' : String(assignment.value)}
-                                    </p>
-                                  )}
+                                  {isIncluded &&
+                                    feature.valueType === 'number' &&
+                                    assignment?.value !== undefined && (
+                                      <p className="text-xs font-semibold text-emerald-600">
+                                        {assignment.value === -1 ? '∞' : String(assignment.value)}
+                                      </p>
+                                    )}
                                 </div>
                                 <Switch
                                   checked={isIncluded}

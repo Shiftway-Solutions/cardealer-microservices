@@ -1653,3 +1653,5 @@ test
 [2025-01-01 12:07:00] [GATE-3e] pnpm build — OK | Next.js compiled successfully
 [2025-01-01 12:07:30] [GATE-4] dotnet test --blame-hang 2min — OK | Unit: PASS, Integration/E2E (ContactService/KYCService/Gateway/UserService/NotificationService/AuditService/MediaService/IntegrationTests): excluidos (requieren Docker — 'IHost never built')
 [2025-01-01 12:07:35] [GATE] ✅ Gate completo v5.0 planes pricing update.
+[2026-03-18 21:35:01] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/upgrade/page.tsx — Seller upgrade page: (1) precios a DOP (579/2029), (2) eliminado /58 en sellerPlansLive, (3) selectedTargetPlanKey state, (4) priceCurrency siempre DOP, (5) 3-col plan cards para sellers, (6) tabla comparación 3-col con buildSellerComparisonAll()
+[2026-03-19 05:47:05] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/page.tsx — UpgradeBanner upgradeUrl cambiado de /cuenta/upgrade?plan=premium&type=seller a /cuenta/suscripcion. El banner ahora lleva al usuario al flujo correcto: selección de plan → checkout.
