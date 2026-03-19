@@ -308,79 +308,46 @@ function buildSellerComparison(currentKey: string, targetKey: string): Compariso
   const target = SELLER_PLAN_LIMITS[targetKey as SellerPlan];
   if (!current || !target) return [];
 
-  // v5.0 seller-specific display maps
-  const positionMap: Record<string, string> = {
-    libre_seller: '⬇ Fondo absoluto',
-    estandar: '⬆ Media (bajo dealers)',
-    verificado: '📈 Alta (bajo dealers VISIBLE)',
-  };
-  const badgeMap: Record<string, string> = {
-    libre_seller: '⚪ Sin verificar',
-    estandar: '🔵 Vendedor OKLA',
-    verificado: '✅ Vendedor Verificado',
-  };
-  const kycMap: Record<string, string> = {
-    libre_seller: 'Solo email',
-    estandar: 'Email + teléfono',
-    verificado: 'Cédula + selfie + tel.',
-  };
-  const renewalMap: Record<string, string> = {
-    libre_seller: '—',
-    estandar: '$6.99',
-    verificado: 'Incluida',
-  };
-  const pricingAgentMap: Record<string, string> = {
-    libre_seller: '—',
-    estandar: '1/listing',
-    verificado: '2/mes',
-  };
-
   return [
     {
       label: 'Publicaciones activas',
-      current: currentKey === 'estandar' ? '1 por pago' : String(current.maxListings),
-      target: targetKey === 'estandar' ? '1 por pago' : String(target.maxListings),
-    },
-    {
-      label: 'Duración del listing',
-      current: `${current.listingDuration} días`,
-      target: `${target.listingDuration} días`,
+      current: String(current.maxListings),
+      target: String(target.maxListings),
     },
     {
       label: 'Fotos por vehículo',
-      current: `Hasta ${current.maxImages}`,
-      target: `Hasta ${target.maxImages}`,
+      current: String(current.maxImages),
+      target: String(target.maxImages),
     },
     {
-      label: 'Posición búsqueda',
-      current: positionMap[currentKey] ?? '—',
-      target: positionMap[targetKey] ?? '—',
+      label: 'Duración publicación',
+      current: current.listingDuration === 0 ? 'Permanente' : `${current.listingDuration} días`,
+      target: target.listingDuration === 0 ? 'Permanente' : `${target.listingDuration} días`,
     },
     {
-      label: 'Badge de confianza',
-      current: badgeMap[currentKey] ?? '—',
-      target: badgeMap[targetKey] ?? '—',
+      label: 'Publicaciones destacadas',
+      current: String(current.featuredListings),
+      target: String(target.featuredListings),
+    },
+    { label: 'Badge verificado', current: current.verifiedBadge, target: target.verifiedBadge },
+    {
+      label: 'Prioridad en búsquedas',
+      current: current.searchPriority,
+      target: target.searchPriority,
     },
     {
-      label: 'Verificación KYC',
-      current: kycMap[currentKey] ?? '—',
-      target: kycMap[targetKey] ?? '—',
+      label: 'Estadísticas detalladas',
+      current: current.detailedStats,
+      target: target.detailedStats,
     },
+    { label: 'Boosts disponibles', current: current.boostAvailable, target: target.boostAvailable },
+    { label: 'Vista 360°', current: current.view360Available, target: target.view360Available },
     {
-      label: 'Renovación listing',
-      current: renewalMap[currentKey] ?? '—',
-      target: renewalMap[targetKey] ?? '—',
+      label: 'Alertas de precio',
+      current: current.priceDropAlerts,
+      target: target.priceDropAlerts,
     },
-    {
-      label: 'PricingAgent IA',
-      current: pricingAgentMap[currentKey] ?? '—',
-      target: pricingAgentMap[targetKey] ?? '—',
-    },
-    {
-      label: 'Analytics',
-      current: current.analyticsAccess,
-      target: target.analyticsAccess,
-    },
+    { label: 'Videos', current: String(current.maxVideos), target: String(target.maxVideos) },
   ];
 }
 

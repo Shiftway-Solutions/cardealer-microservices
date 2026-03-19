@@ -402,8 +402,8 @@ const DEFAULT_SELLER_PLANS: SubscriptionPlan[] = [
     key: 'verificado',
     name: 'Verificado',
     description: 'Para vendedores profesionales',
-    monthlyPrice: 2029,
-    annualPrice: 2029,
+    monthlyPrice: 1999,
+    annualPrice: 1999,
     currency: 'DOP',
     targetAudience: 'seller',
     tier: 2,
@@ -452,8 +452,8 @@ const DEFAULT_DEALER_PLANS: SubscriptionPlan[] = [
     key: 'visible',
     name: 'Visible',
     description: 'Para dealers que quieren destacar',
-    monthlyPrice: 1682,
-    annualPrice: 16820,
+    monthlyPrice: 1699,
+    annualPrice: 16990,
     currency: 'DOP',
     targetAudience: 'dealer',
     tier: 1,
@@ -479,8 +479,8 @@ const DEFAULT_DEALER_PLANS: SubscriptionPlan[] = [
     key: 'starter',
     name: 'Starter',
     description: 'Primer paso con ChatAgent IA',
-    monthlyPrice: 3422,
-    annualPrice: 34220,
+    monthlyPrice: 3499,
+    annualPrice: 34990,
     currency: 'DOP',
     targetAudience: 'dealer',
     tier: 2,
@@ -508,8 +508,8 @@ const DEFAULT_DEALER_PLANS: SubscriptionPlan[] = [
     key: 'pro',
     name: 'Pro',
     description: 'Para dealers profesionales',
-    monthlyPrice: 5742,
-    annualPrice: 57420,
+    monthlyPrice: 5799,
+    annualPrice: 57990,
     currency: 'DOP',
     targetAudience: 'dealer',
     tier: 3,
@@ -542,8 +542,8 @@ const DEFAULT_DEALER_PLANS: SubscriptionPlan[] = [
     key: 'elite',
     name: 'Élite',
     description: 'Todo incluido para los mejores dealers',
-    monthlyPrice: 20242,
-    annualPrice: 202420,
+    monthlyPrice: 20299,
+    annualPrice: 202990,
     currency: 'DOP',
     targetAudience: 'dealer',
     tier: 3,
@@ -562,8 +562,8 @@ const DEFAULT_DEALER_PLANS: SubscriptionPlan[] = [
     key: 'enterprise',
     name: 'Enterprise',
     description: 'Para grupos automotrices y franquicias',
-    monthlyPrice: 34742,
-    annualPrice: 347420,
+    monthlyPrice: 34999,
+    annualPrice: 349990,
     currency: 'DOP',
     targetAudience: 'dealer',
     tier: 5,
@@ -1196,16 +1196,9 @@ export function SubscriptionPlanManager() {
                                 key={feature.id}
                                 className="flex items-center justify-between text-sm"
                               >
-                                <div className="min-w-0">
-                                  <span className={cn('text-xs', !isIncluded && 'text-gray-400')}>
-                                    {feature.name}
-                                  </span>
-                                  {isIncluded && feature.valueType === 'number' && assignment?.value !== undefined && (
-                                    <p className="text-xs font-semibold text-emerald-600">
-                                      {assignment.value === -1 ? '∞' : String(assignment.value)}
-                                    </p>
-                                  )}
-                                </div>
+                                <span className={cn('text-xs', !isIncluded && 'text-gray-400')}>
+                                  {feature.name}
+                                </span>
                                 <Switch
                                   checked={isIncluded}
                                   onCheckedChange={() =>

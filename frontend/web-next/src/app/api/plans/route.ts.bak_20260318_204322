@@ -296,7 +296,7 @@ function buildCatalog(pricing: PricingData): PlansCatalog {
 
   const sellerPlans: PublicPlan[] = [
     {
-      key: 'libre_seller',
+      key: 'libre',
       name: 'Libre',
       description: 'Para vender de forma ocasional',
       monthlyPrice: pricing.sellerGratis,
