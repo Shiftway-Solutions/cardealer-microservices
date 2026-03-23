@@ -2415,6 +2415,62 @@ public class VehiclesController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Delete a specific image from a vehicle.
+    /// Caller must be the vehicle's seller or an Admin.
+    /// If the deleted image was the primary, the next image (by SortOrder) is promoted to primary.
+    /// </summary>
+    [HttpDelete("{id:guid}/images/{imageId:guid}")]
+    public async Task<ActionResult> DeleteImage(Guid id, Guid imageId)
+    {
+        var vehicle = await _context.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Authorization: caller must be the seller or an Admin
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin)
+        {
+            if (!Guid.TryParse(userIdClaim, out var callerId) || callerId != vehicle.SellerId)
+                return Forbid();
+        }
+
+        var image = await _context.VehicleImages
+            .FirstOrDefaultAsync(i => i.Id == imageId && i.VehicleId == id);
+
+        if (image == null)
+            return NotFound(new { message = "Image not found" });
+
+        var wasPrimary = image.IsPrimary;
+        _context.VehicleImages.Remove(image);
+        await _context.SaveChangesAsync();
+
+        // If the deleted image was primary, promote the next one
+        if (wasPrimary)
+        {
+            var nextImage = await _context.VehicleImages
+                .Where(i => i.VehicleId == id)
+                .OrderBy(i => i.SortOrder)
+                .FirstOrDefaultAsync();
+
+            if (nextImage != null)
+            {
+                nextImage.IsPrimary = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        await InvalidateVehicleCacheAsync(id);
+
+        _logger.LogInformation("Deleted image {ImageId} from vehicle {VehicleId}", imageId, id);
+        return NoContent();
+    }
+
     // Helper method to generate a URL-friendly slug from vehicle data
     private static string GenerateSlug(Vehicle vehicle)
     {

@@ -1684,3 +1684,4 @@ test
 [2026-03-23 16:54:19] [GATE-3c] pnpm install --frozen-lockfile — OK
 [2026-03-23 16:54:19] [GATE-3d] CI=true pnpm test --run — OK | 576 tests pasados
 [2026-03-23 16:54:19] [GATE-3e] pnpm build — OK | Compiled successfully
+[2026-03-23 17:14:57] [MODIFICACION] VehiclesController.cs — Added DELETE api/vehicles/{id}/images/{imageId} endpoint with seller/admin auth
