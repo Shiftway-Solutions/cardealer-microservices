@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * GET /api/vehicles
- * BFF proxy → VehiclesSaleService vía Gateway.
- * Fallback: demo data cubriendo todos los tipos de carrocería y combustible
- * para que las secciones del homepage siempre muestren vehículos completos.
+ * GET  /api/vehicles — BFF proxy → VehiclesSaleService vía Gateway.
+ *   Fallback: demo data cubriendo todos los tipos de carrocería y combustible
+ *   para que las secciones del homepage siempre muestren vehículos completos.
  *
- * Parámetros soportados:
+ *   Parámetros soportados:
  *   bodyStyle   = SUV | Sedan | Hatchback | Pickup | Coupe | Crossover |
  *                 SportsCar | Convertible | Van | Minivan
  *   fuelType    = Gasoline | Hybrid | Electric | Diesel
@@ -14,12 +13,50 @@ import { NextRequest, NextResponse } from 'next/server';
  *   pageSize    = alias de limit
  *   sortBy      = newest | featured | price_desc | price_asc
  *   status      = Active (default)
+ *
+ * POST /api/vehicles — BFF proxy for authenticated vehicle creation.
+ *   Forwards the request body and Authorization header to VehiclesSaleService.
+ *   Required because Next.js intercepts all /api/vehicles requests (including
+ *   POST) before the afterFiles rewrite can proxy them to the Gateway, causing
+ *   a 405 Method Not Allowed when only GET is exported here.
  */
 
 export const runtime = 'edge';
 
 const API_URL =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
+
+export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  const cookieHeader = request.headers.get('cookie');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (authHeader) headers['Authorization'] = authHeader;
+  if (cookieHeader) headers['Cookie'] = cookieHeader;
+
+  try {
+    const body = await request.text();
+    const res = await fetch(`${API_URL}/api/vehicles`, {
+      method: 'POST',
+      headers,
+      body,
+      signal: AbortSignal.timeout(30000),
+    });
+
+    const data = await res.text();
+    const contentType = res.headers.get('content-type') ?? 'application/json';
+
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { 'Content-Type': contentType },
+    });
+  } catch (error) {
+    console.error('[/api/vehicles POST] proxy error:', error);
+    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 });
+  }
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
