@@ -39,7 +39,12 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { useAuth } from '@/hooks/use-auth';
 import { getCurrentDealer } from '@/services/dealers';
-import { sanitizeText, sanitizeEmail, sanitizePhone, sanitizeRNC } from '@/lib/security/sanitize';
+import {
+  sanitizeText,
+  sanitizeEmail,
+  sanitizePhone,
+  sanitizeRNC,
+} from '@/lib/security/sanitize';
 
 const steps = [
   { id: 1, title: 'Tipo de Dealer', icon: Building2 },

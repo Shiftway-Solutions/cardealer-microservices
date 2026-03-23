@@ -623,6 +623,7 @@ public class VehiclesController : ControllerBase
             {
                 return Conflict(new
                 {
+                    code = "DUPLICATE_VEHICLE_VIN",
                     message = $"Ya existe un vehículo registrado con el VIN {normalizedVin}.",
                     existingVehicleId = existingVehicle.Id,
                     field = "VIN"

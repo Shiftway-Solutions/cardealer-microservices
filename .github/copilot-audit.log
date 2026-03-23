@@ -1666,3 +1666,12 @@ test
 [2026-03-19 06:57:07] [MODIFICACIÓN] dealer/registro/page.tsx — Fix 400: ownerUserId/state/whatsApp/taxId/dealerType field names + RNC format validation
 [2026-03-19 06:57:07] [CREACIÓN] dealer/notificaciones/page.tsx — Redirect a /cuenta/notificaciones (fix 404 desde dealer layout header)
 [2026-03-19 06:57:07] [CREACIÓN] cuenta/mis-vehiculos/[id]/editar/page.tsx — Redirect a /vender/editar/[id] (fix 404 desde smart-publish-wizard)
+[2026-03-23 12:54:35] [GATE] Iniciando gate pre-commit — fix CSP worker-src + S3 ACL conditional...
+[2026-03-23 13:52:01] [BACKUP] frontend/web-next/next.config.ts.bak_* — pre-CSP-fix backup
+[2026-03-23 13:52:01] [MODIFICACIÓN] frontend/web-next/next.config.ts — Add connect.facebook.net + analytics.tiktok.com to script-src and connect-src
+[2026-03-23 13:52:01] [MODIFICACIÓN] frontend/web-next/src/app/api/vehicles/route.ts — Add POST BFF proxy handler (fixes 405 on vehicle creation)
+[2026-03-23 13:52:01] [GIT] git push origin main — 282b4433 fix: resolve /publicar submission errors (405 + CSP violations)
+[2026-03-23 14:52:52] [BACKUP] ImageUrlValidationService.cs.bak_20260323_145009 — pre-InternalBucketPatterns fix
+[2026-03-23 14:52:52] [MODIFICACION] frontend/web-next/src/components/vehicles/photos/image-compressor.ts — set useWebWorker:false to fix CSP cdn.jsdelivr.net script violation on photo upload
+[2026-03-23 14:52:52] [MODIFICACION] backend/VehiclesSaleService/VehiclesSaleService.Application/Services/ImageUrlValidationService.cs — remove .digitaloceanspaces.com from InternalBucketPatterns (was blocking all DO Spaces URLs causing publish 400)
+[2026-03-23 14:52:52] [GIT] git push origin main 4dec0b4f — fix: photo CSP + publish 400

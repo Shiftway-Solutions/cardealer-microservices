@@ -496,7 +496,6 @@ export function SmartPublishWizard({
     } catch {
       /* ignore corrupt data */
     }
-     
   }, []);
 
   // Auto-save to localStorage on step change
@@ -749,13 +748,30 @@ export function SmartPublishWizard({
         code?: string;
         requiresKyc?: boolean;
         redirectUrl?: string;
+        existingVehicleId?: string;
+        field?: string;
       };
+
+      // Handle duplicate vehicle VIN
+      if (err.code === 'DUPLICATE_VEHICLE_VIN' && err.existingVehicleId) {
+        toast.error(
+          `El VIN ya está registrado. Usa un VIN diferente o edita el vehículo existente.`,
+          { duration: 8000 }
+        );
+        // Optionally redirect to the existing vehicle for comparison
+        setTimeout(() => {
+          router.push(`/cuenta/mis-vehiculos/${err.existingVehicleId}`);
+        }, 1000);
+        return;
+      }
+
       // If dealer KYC is required, redirect to verification page
       if (err.requiresKyc || err.code === 'HTTP_403') {
         toast.error(err.message || 'Debes verificar tu identidad antes de publicar.');
         router.push(err.redirectUrl || '/cuenta/verificacion');
         return;
       }
+
       toast.error(err.message || 'Error al publicar el vehículo');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

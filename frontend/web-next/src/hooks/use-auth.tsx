@@ -19,7 +19,6 @@ import {
   type LoginRequest,
   type RegisterRequest,
 } from '@/services/auth';
-import { createDealer, type CreateDealerRequest } from '@/services/dealers';
 import type { User } from '@/types';
 
 // =============================================================================
@@ -105,26 +104,6 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         isLoading: false,
         error: null,
       });
-
-      // After successful login, check for pending dealer registration
-      // (user just verified email and is logging in for first time)
-      if (typeof window !== 'undefined') {
-        try {
-          const pendingDealerStr = localStorage.getItem('pending-dealer-registration');
-          if (pendingDealerStr) {
-            const pendingDealer: CreateDealerRequest = JSON.parse(pendingDealerStr);
-            // Create dealer profile now that user is authenticated
-            await createDealer(pendingDealer);
-            // Clear localStorage — dealer profile created successfully
-            localStorage.removeItem('pending-dealer-registration');
-          }
-        } catch (dealerErr) {
-          console.error('Failed to create dealer profile after login:', dealerErr);
-          // Logger error but don't fail the login — user can try again later
-          // or from the dashboard
-        }
-      }
-
       return { user };
     } catch (err) {
       // If 2FA is required, stop loading and re-throw — the login page handles this
@@ -157,24 +136,6 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         isLoading: false,
         error: null,
       });
-
-      // After successful 2FA login, check for pending dealer registration
-      if (typeof window !== 'undefined') {
-        try {
-          const pendingDealerStr = localStorage.getItem('pending-dealer-registration');
-          if (pendingDealerStr) {
-            const pendingDealer: CreateDealerRequest = JSON.parse(pendingDealerStr);
-            // Create dealer profile now that user is authenticated
-            await createDealer(pendingDealer);
-            // Clear localStorage — dealer profile created successfully
-            localStorage.removeItem('pending-dealer-registration');
-          }
-        } catch (dealerErr) {
-          console.error('Failed to create dealer profile after 2FA login:', dealerErr);
-          // Log error but don't fail the login
-        }
-      }
-
       return { user };
     } catch (err) {
       const error = err as { message?: string };
