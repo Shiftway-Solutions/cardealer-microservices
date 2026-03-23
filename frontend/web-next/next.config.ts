@@ -221,6 +221,15 @@ const nextConfig: NextConfig = {
                 },
               ]
             : []),
+          // Prevent stale HTML after Next.js deployments.
+          // Chunk hashes change on every build — if the browser caches old HTML,
+          // it references chunks that no longer exist on the server → 404 cascade.
+          // "no-cache" allows caching but forces revalidation before use (ETag/304).
+          // /_next/static/:path* (below) overrides this to "immutable" for JS/CSS chunks.
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, must-revalidate',
+          },
         ],
       },
       // Cache static assets aggressively
