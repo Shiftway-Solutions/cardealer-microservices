@@ -185,6 +185,15 @@ public class MediaController : ControllerBase
                 file.FileName, ex.ErrorCode);
             return StatusCode(503, new { error = "Storage service temporarily unavailable. Please try again in a moment." });
         }
+        catch (Amazon.S3.AmazonS3Exception ex) when (ex.ErrorCode == "AccessControlListNotSupported")
+        {
+            _logger.LogError(ex,
+                "S3 bucket does not allow ACLs for file {FileName}. " +
+                "Set Storage:S3:UseAcl=false in configuration and ensure the bucket has a public-read bucket policy. " +
+                "AWS Error: {ErrorCode}",
+                file.FileName, ex.ErrorCode);
+            return StatusCode(503, new { error = "Storage configuration error. Please contact support." });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Upload failed for file {FileName}: {ErrorMessage}", file.FileName, ex.Message);
@@ -263,6 +272,15 @@ public class MediaController : ControllerBase
                 "S3 clock drift detected for file {FileName}. Restart MediaService container to resync. Error: {ErrorCode}",
                 file.FileName, ex.ErrorCode);
             return StatusCode(503, new { error = "Storage service temporarily unavailable. Please try again in a moment." });
+        }
+        catch (Amazon.S3.AmazonS3Exception ex) when (ex.ErrorCode == "AccessControlListNotSupported")
+        {
+            _logger.LogError(ex,
+                "S3 bucket does not allow ACLs for file {FileName}. " +
+                "Set Storage:S3:UseAcl=false in configuration and ensure the bucket has a public-read bucket policy. " +
+                "Error: {ErrorCode}",
+                file.FileName, ex.ErrorCode);
+            return StatusCode(503, new { error = "Storage configuration error. Please contact support." });
         }
         catch (Exception ex)
         {

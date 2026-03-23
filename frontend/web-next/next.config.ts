@@ -148,6 +148,10 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https://fonts.gstatic.com",
+      // worker-src must be explicitly set; otherwise browsers fall back to script-src which
+      // does not allow blob: URIs. browser-image-compression creates blob: workers for
+      // client-side image compression before upload — without this directive uploads stall.
+      "worker-src 'self' blob:",
       // BFF pattern: browser calls same-origin (/api/*), Next.js rewrites proxy to internal Gateway
       // No need for https://api.okla.com.do — Gateway is NOT exposed externally
       "connect-src 'self' http://localhost:* https://www.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://api.stripe.com https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com wss: ws:",

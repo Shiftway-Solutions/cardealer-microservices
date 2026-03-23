@@ -89,9 +89,13 @@ public class S3StorageService : IMediaStorageService
             ContentType = contentType
         };
 
-        // Enforce public-read ACL on pre-signed uploads so files uploaded
-        // via pre-signed URL are publicly accessible (same as UploadFileAsync).
-        request.Headers["x-amz-acl"] = "public-read";
+        // Only enforce public-read ACL if the bucket has ACLs enabled.
+        // AWS S3 buckets created after April 2023 have ACLs disabled by default;
+        // use a bucket policy for public access in those cases.
+        if (_options.UseAcl)
+        {
+            request.Headers["x-amz-acl"] = "public-read";
+        }
 
         var uploadUrl = _s3Client.GetPreSignedURL(request);
 
@@ -191,7 +195,11 @@ public class S3StorageService : IMediaStorageService
             InputStream = fileStream,
             ContentType = contentType,
             AutoCloseStream = false,
-            CannedACL = S3CannedACL.PublicRead // Ensure all uploaded objects are publicly readable
+            // CannedACL is only set when the bucket has ACLs explicitly enabled.
+            // Modern AWS S3 buckets (created after April 2023) disable ACLs by default;
+            // attempting to set PublicRead on such buckets throws AccessControlListNotSupported.
+            // Public access for those buckets should be configured via bucket policy.
+            CannedACL = _options.UseAcl ? S3CannedACL.PublicRead : S3CannedACL.NoACL
         };
 
         try
