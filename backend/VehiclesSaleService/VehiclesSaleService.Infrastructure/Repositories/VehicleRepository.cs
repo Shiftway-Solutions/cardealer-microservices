@@ -76,6 +76,11 @@ public class VehicleRepository : IVehicleRepository
                     .ThenByDescending(v => v.Make)
                 : query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
                     .ThenBy(v => v.Make),
+            // "PublishedAt" sort: no premium boost — shows truly newest vehicles first.
+            // Used by the "Más reciente" filter so buyers can discover fresh listings regardless of paid tier.
+            "publishedat" => p.SortDescending
+                ? query.OrderByDescending(v => v.PublishedAt ?? v.CreatedAt)
+                : query.OrderBy(v => v.PublishedAt ?? v.CreatedAt),
             _ => query.OrderByDescending(v => v.IsPremium && (v.FeaturedUntil == null || v.FeaturedUntil > now) ? 2 : v.IsFeatured ? 1 : 0)
                 .ThenByDescending(v => v.CreatedAt)
         };

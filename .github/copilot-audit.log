@@ -1676,3 +1676,11 @@ test
 [2026-03-23 14:52:52] [MODIFICACION] backend/VehiclesSaleService/VehiclesSaleService.Application/Services/ImageUrlValidationService.cs — remove .digitaloceanspaces.com from InternalBucketPatterns (was blocking all DO Spaces URLs causing publish 400)
 [2026-03-23 14:52:52] [GIT] git push origin main 4dec0b4f — fix: photo CSP + publish 400
 [2026-03-23 16:06:13] [GATE-4] dotnet test --blame-hang 2min — OK | VehiclesSaleService: 0 failed, 220 passed. Other failures: pre-existing Integration/E2E (entry point exited without IHost — requires Docker+Postgres+RabbitMQ)
+[2026-03-23 16:06:36] [GIT] git push origin main — fix: VIN checksum warning + AddImages cache invalidation
+[2026-03-23 16:54:19] [GATE-1] dotnet restore — OK
+[2026-03-23 16:54:19] [GATE-2] dotnet build TreatWarningsAsErrors — OK | 0 errores 0 warnings
+[2026-03-23 16:54:19] [GATE-3a] pnpm lint — OK | 0 errors (24 warnings pre-existentes)
+[2026-03-23 16:54:19] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[2026-03-23 16:54:19] [GATE-3c] pnpm install --frozen-lockfile — OK
+[2026-03-23 16:54:19] [GATE-3d] CI=true pnpm test --run — OK | 576 tests pasados
+[2026-03-23 16:54:19] [GATE-3e] pnpm build — OK | Compiled successfully

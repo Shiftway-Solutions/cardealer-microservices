@@ -281,7 +281,7 @@ function mapSortParams(sortBy?: string): { sortBy?: string; sortOrder?: 'asc' | 
     case 'mileage_asc':
       return { sortBy: 'Mileage', sortOrder: 'asc' };
     case 'newest':
-      return { sortBy: 'CreatedAt', sortOrder: 'desc' };
+      return { sortBy: 'PublishedAt', sortOrder: 'desc' };
     default:
       return {};
   }
