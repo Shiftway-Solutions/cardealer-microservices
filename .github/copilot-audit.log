@@ -1685,3 +1685,24 @@ test
 [2026-03-23 16:54:19] [GATE-3d] CI=true pnpm test --run — OK | 576 tests pasados
 [2026-03-23 16:54:19] [GATE-3e] pnpm build — OK | Compiled successfully
 [2026-03-23 17:14:57] [MODIFICACION] VehiclesController.cs — Added DELETE api/vehicles/{id}/images/{imageId} endpoint with seller/admin auth
+[2026-03-23 20:59:21] [MODIFICACION] use-vehicle-search.ts — Fix: page no se serializa en URL ni se lee de URL params (scroll infinito)
+[2026-03-23 20:59:21] [MODIFICACION] search-store.ts — Fix: page excluido del partialize de Zustand persist
+[2026-03-23 20:59:21] [MODIFICACION] vehiculos-client.tsx — Fix: defensive check en acumulacion allVehicles para page>1 con lista vacia
+[2026-03-23 20:59:21] [GIT] git push origin main — fix(vehiculos): 3 bugs corregidos en scroll infinito y filtros
+[2026-03-23 21:05:52] [DEPLOYMENT] GitHub Actions Run #23467895021 — ✅ SUCCESS
+[2026-03-23 21:05:52] [DEPLOYMENT] Fix vehiculos (scroll infinito) — LLEGÓ A PRODUCCIÓN
+[2026-03-23 21:38:49] [MODIFICACION] use-vehicle-search.ts + vehiculos-client.tsx - fix race condition: isPlaceholderData guard evita que allVehicles se repopule con datos obsoletos al cambiar filtros make/model. Commit 13d13cf5.
+[2026-03-23 22:06:00] [GIT] git push origin main — commit eae45a3c: 4 filtros fijos (enum mappings condition/fuelType/transmission/drivetrain + SellerType backend)
+[2026-03-23 22:36:50] [GIT] git push origin main — commit ef6d9d6e: fix IntersectionObserver race (lista vacia triggerea page=2 durante debounce)
+[2026-03-23 23:00:36] [MODIFICACIÓN] frontend/web-next/src/app/(main)/vender/promover/[id]/page.tsx — Rewrite: planes de seller/dealer con precios live, fix error de pago (PayPal en lugar de /api/checkout/sessions), tabla comparativa, método de pago multi-opción
+[2026-03-23 23:00:36] [GATE-3a] pnpm lint — OK | 0 errors
+[2026-03-23 23:00:36] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build TreatWarningsAsErrors — OK | 0 errors, 0 warnings
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3a] pnpm lint — OK | 0 errors
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3c] pnpm install --frozen-lockfile — OK
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d] CI=true pnpm test --run — OK | 576 tests passed, 0 failed
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3e] pnpm build — OK | Next.js compiled successfully
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test --blame-hang 2min — Unit tests PASS; Integration/E2E excluded (require Docker)
+[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con push.
