@@ -573,7 +573,7 @@ export function generateSponsoredVehiclesForSlot(
       mileage: 18000,
       transmission: 'Automática',
       fuelType: 'Gasolina',
-      imageUrl: 'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
+      imageUrl: 'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&q=75',
       location: 'Santiago',
       dealerName: 'MegaCars DR',
       dealerRating: 4.5,
