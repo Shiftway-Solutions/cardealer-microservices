@@ -189,13 +189,23 @@ try
         try
         {
             context.Database.Migrate();
-            Log.Information("Database migration completed for {ServiceName}", ServiceName);
+            Log.Information("Database migration applied for {ServiceName}", ServiceName);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Database migration error for {ServiceName}. Will use EnsureCreated fallback.", ServiceName);
-            try { context.Database.EnsureCreated(); }
-            catch { /* Ignore if EnsureCreated also fails */ }
+            Log.Warning(ex, "Database migration error for {ServiceName} (may have no migration files). Falling through to EnsureCreated.", ServiceName);
+        }
+
+        // Always run EnsureCreated — SupportAgent uses code-first without migration files,
+        // so Migrate() is a no-op; EnsureCreated() guarantees schema exists on fresh DB.
+        try
+        {
+            context.Database.EnsureCreated();
+            Log.Information("Database schema ensured for {ServiceName}", ServiceName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "EnsureCreated failed for {ServiceName}", ServiceName);
         }
     }
 

@@ -2831,6 +2831,24 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/chat/metrics/prompt-cache",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/chat/metrics/prompt-cache",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatbotservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin, SuperAdmin"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
       "UpstreamHttpMethod": ["GET", "POST"],
       "DownstreamPathTemplate": "/api/whatsapp/webhook",
