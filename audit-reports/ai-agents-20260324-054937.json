@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "errors": [
+    "[WARN] #### ⚠️ **AI Agent Security: NO VERIFICABLE**"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_054659.md",
+  "timestamp": "2026-03-24T05:49:37.879954",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "Security"
+}

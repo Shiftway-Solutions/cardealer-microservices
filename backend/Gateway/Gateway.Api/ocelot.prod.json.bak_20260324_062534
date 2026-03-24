@@ -2848,23 +2848,6 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/api/whatsapp/webhook",
-      "UpstreamHttpMethod": ["GET", "POST"],
-      "DownstreamPathTemplate": "/api/whatsapp/webhook",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "chatbotservice",
-          "Port": 8080
-        }
-      ],
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 5,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-    {
       "UpstreamPathTemplate": "/api/chat/handoff/{everything}",
       "UpstreamHttpMethod": ["POST", "OPTIONS"],
       "DownstreamPathTemplate": "/api/chat/handoff/{everything}",

@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "passed": 0,
+  "failed": 3,
+  "skipped": 0,
+  "errors": [
+    "RecoAgent: ❌ **No veo sección de RecoAgent personalizada**: No hay secciones llamadas \"Para ti\", \"Recomendados para ti\" o similar que indiquen recomendaciones pe",
+    "RecoAgent: ❌ **Sin razones personalizadas**: No veo texto como \"Basado en tu búsqueda...\", \"Porque te gustó...\", o explicaciones personalizadas del RecoAgent.",
+    "RecoAgent: #### ❌ RecoAgent NO IMPLEMENTADO"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_053405.md",
+  "timestamp": "2026-03-24T05:35:42.486138",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "RecoAgent"
+}

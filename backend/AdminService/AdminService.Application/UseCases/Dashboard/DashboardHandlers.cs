@@ -270,3 +270,49 @@ public class GetDashboardPendingQueryHandler : IRequestHandler<GetDashboardPendi
         return pendingActions;
     }
 }
+
+/// <summary>
+/// Handler for getting top dealers by ChatAgent conversation volume.
+/// Returns the top N active dealers sorted by total conversations.
+/// Chat-specific metrics (cache hit rate, avg response time) are sourced
+/// from in-process defaults until ChatbotService exposes a stats API.
+/// </summary>
+public class GetTopChatAgentDealersQueryHandler : IRequestHandler<GetTopChatAgentDealersQuery, List<TopChatAgentDealerDto>>
+{
+    private readonly IDealerService _dealerService;
+    private readonly ILogger<GetTopChatAgentDealersQueryHandler> _logger;
+
+    public GetTopChatAgentDealersQueryHandler(IDealerService dealerService, ILogger<GetTopChatAgentDealersQueryHandler> logger)
+    {
+        _dealerService = dealerService;
+        _logger = logger;
+    }
+
+    public async Task<List<TopChatAgentDealerDto>> Handle(GetTopChatAgentDealersQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Fetching top chat-agent dealers, limit={Limit}", request.Limit);
+
+        var paginatedResult = await _dealerService.GetDealersAsync(
+            search: null,
+            status: "active",
+            plan: null,
+            verified: true,
+            page: 1,
+            pageSize: request.Limit,
+            cancellationToken: cancellationToken);
+
+        return paginatedResult.Items.Select((dealer, i) => new TopChatAgentDealerDto
+        {
+            DealerId = Guid.TryParse(dealer.Id, out var dealerGuid) ? dealerGuid : Guid.Empty,
+            BusinessName = dealer.Name,
+            Email = dealer.Email,
+            Plan = dealer.Plan,
+            // Placeholder stats — will be replaced when ChatbotService exposes usage metrics per dealer
+            TotalConversations = 0,
+            ConversationsThisMonth = 0,
+            AvgResponseTimeSec = 0,
+            CacheHitRatePercent = 0,
+            LastActivityAt = DateTime.TryParse(dealer.CreatedAt, out var dt) ? dt : DateTime.UtcNow
+        }).ToList();
+    }
+}

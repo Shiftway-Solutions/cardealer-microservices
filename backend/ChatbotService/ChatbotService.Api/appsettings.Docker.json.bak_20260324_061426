@@ -7,15 +7,6 @@
     }
   },
   "AllowedHosts": "*",
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres;Port=5432;Database=chatbotservice;Username=postgres;Password=postgres",
-    "Redis": "redis:6379"
-  },
-  "RabbitMQ": {
-    "Host": "rabbitmq",
-    "Port": 5672,
-    "Username": "cardealer"
-  },
   "LlmService": {
     "ServerUrl": "https://api.anthropic.com",
     "ModelId": "claude-haiku-4-5-20251001",

@@ -66,18 +66,4 @@ public class DashboardController : ControllerBase
         var result = await _mediator.Send(new GetDashboardPendingQuery());
         return Ok(result);
     }
-
-    /// <summary>
-    /// Get top dealers ranked by ChatAgent conversation volume
-    /// </summary>
-    /// <param name="limit">Number of dealers to return (default 10)</param>
-    [HttpGet("top-chatagent-dealers")]
-    [ProducesResponseType(typeof(List<TopChatAgentDealerDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<TopChatAgentDealerDto>>> GetTopChatAgentDealers([FromQuery] int limit = 10)
-    {
-        _logger.LogInformation("Getting top chat-agent dealers, limit={Limit}", limit);
-
-        var result = await _mediator.Send(new GetTopChatAgentDealersQuery(limit));
-        return Ok(result);
-    }
 }

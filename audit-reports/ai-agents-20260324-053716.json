@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 4,
+  "failed": 5,
+  "skipped": 0,
+  "errors": [
+    "[WARN] 6 advertencia(s) encontradas — revisar reporte"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_053549.md",
+  "timestamp": "2026-03-24T05:37:16.663793",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "LLMGateway"
+}

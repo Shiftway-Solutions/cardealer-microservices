@@ -1706,3 +1706,91 @@ test
 [$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3e] pnpm build — OK | Next.js compiled successfully
 [$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test --blame-hang 2min — Unit tests PASS; Integration/E2E excluded (require Docker)
 [$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con push.
+[2026-03-24 01:01:40] [CREACION] .prompts/monitor_prompt6.py — Reescrito completo: monitoreo prompt_6.md + Playwright AI agents audit (OpenClaw Terminal)
+[2026-03-24 01:01:40] [CREACION] .prompts/prompt_7.md — Plan de auditoria de Agentes IA OKLA (13 fases, 100+ tareas)
+[2026-03-24 01:01:40] [CREACION] frontend/web-next/e2e/ai-agents-audit.spec.ts — Playwright E2E spec: SearchAgent, ChatAgent, PricingAgent, RecoAgent, LLMGateway, Security (6 suites)
+[2026-03-24 05:04:15] [MONITOR] TRIGGER CI/CD: gh workflow run smart-cicd.yml --ref main
+[2026-03-24 05:04:16] [MONITOR] [WARN] gh CLI retornó código 1: could not create workflow dispatch event: HTTP 422: Workflow does not have 'workflow_dispatch' trigger (https://api.github.com/repos/gregorymorenoiem/cardealer-microservices/actions/workflows/22052281
+[2026-03-24 05:04:16] [MONITOR] MANUAL: Ve a GitHub Actions y ejecuta smart-cicd.yml desde la rama main
+[2026-03-24 05:04:16] [MONITOR] TRIGGER CI/CD: gh workflow run smart-cicd.yml --ref main
+[2026-03-24 05:04:17] [MONITOR] [WARN] gh CLI retornó código 1: could not create workflow dispatch event: HTTP 422: Workflow does not have 'workflow_dispatch' trigger (https://api.github.com/repos/gregorymorenoiem/cardealer-microservices/actions/workflows/22052281
+[2026-03-24 05:04:17] [MONITOR] MANUAL: Ve a GitHub Actions y ejecuta smart-cicd.yml desde la rama main
+[2026-03-24 05:04:17] [MONITOR] ACTUALIZADO: ai-agents-audit.spec.ts — 10 suites (SearchAgent, DealerChat, Pricing, Reco, SupportAgent, LLM Gateway, WhatsApp, Security, PromptCache)
+[2026-03-24 05:04:17] [MONITOR] INICIANDO auditoria de Agentes IA — Playwright/Chrome — URL: https://okla.com.do
+[2026-03-24 05:04:17] [MONITOR] [FAIL] Playwright audit — PASS: 0 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:04:17] [MONITOR] Reporte guardado: ai-agents-20260324-050417.json
+[2026-03-24 05:05:35] [MONITOR] INICIANDO auditoria de Agentes IA — Playwright/Chrome — URL: https://okla.com.do
+[2026-03-24 05:05:36] [MONITOR] [FAIL] Playwright audit — PASS: 0 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:05:36] [MONITOR] Reporte guardado: ai-agents-20260324-050536.json
+[2026-03-24 05:25:14] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-24 05:25:18] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-24 05:25:28] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_052514.md
+[2026-03-24 05:25:28] [MONITOR] [OK] OpenClaw audit — PASS: 0 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:25:28] [MONITOR] Reporte JSON guardado: ai-agents-20260324-052528.json
+[2026-03-24 05:26:13] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-24 05:26:16] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-24 05:30:26] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_052613.md
+[2026-03-24 05:30:26] [MONITOR] [OK] OpenClaw audit — PASS: 0 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:30:26] [MONITOR] Reporte JSON guardado: ai-agents-20260324-053026.json
+[2026-03-24 05:31:46] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: PricingAgent
+[2026-03-24 05:31:49] [MONITOR] Auditando agente especifico: PricingAgent
+[2026-03-24 05:33:38] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_053147.md
+[2026-03-24 05:33:38] [MONITOR] [OK] OpenClaw audit — PASS: 1 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:33:38] [MONITOR] Reporte JSON guardado: ai-agents-20260324-053338.json
+[2026-03-24 05:34:05] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: RecoAgent
+[2026-03-24 05:34:08] [MONITOR] Auditando agente especifico: RecoAgent
+[2026-03-24 05:35:42] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_053405.md
+[2026-03-24 05:35:42] [MONITOR] [FALLO] OpenClaw audit — PASS: 0 | FAIL: 3 | SKIP: 0
+[2026-03-24 05:35:42] [MONITOR]   [ERROR] RecoAgent: ❌ **No veo sección de RecoAgent personalizada**: No hay secciones llamadas "Para ti", "Recomendados para ti" o similar que indiquen recomendaciones pe
+[2026-03-24 05:35:42] [MONITOR]   [ERROR] RecoAgent: ❌ **Sin razones personalizadas**: No veo texto como "Basado en tu búsqueda...", "Porque te gustó...", o explicaciones personalizadas del RecoAgent.
+[2026-03-24 05:35:42] [MONITOR]   [ERROR] RecoAgent: #### ❌ RecoAgent NO IMPLEMENTADO
+[2026-03-24 05:35:42] [MONITOR] Reporte JSON guardado: ai-agents-20260324-053542.json
+[2026-03-24 05:35:49] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: LLMGateway
+[2026-03-24 05:35:49] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: SupportAgent
+[2026-03-24 05:35:53] [MONITOR] Auditando agente especifico: SupportAgent
+[2026-03-24 05:35:53] [MONITOR] Auditando agente especifico: LLMGateway
+[2026-03-24 05:37:16] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_053549.md
+[2026-03-24 05:37:16] [MONITOR] [FALLO] OpenClaw audit — PASS: 4 | FAIL: 5 | SKIP: 0
+[2026-03-24 05:37:16] [MONITOR]   [ERROR] [WARN] 6 advertencia(s) encontradas — revisar reporte
+[2026-03-24 05:37:16] [MONITOR] Reporte JSON guardado: ai-agents-20260324-053716.json
+[2026-03-24 05:37:16] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: LLMGateway
+[2026-03-24 05:37:19] [MONITOR] Auditando agente especifico: LLMGateway
+[2026-03-24 05:38:10] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: LLMGateway
+[2026-03-24 05:38:13] [MONITOR] Auditando agente especifico: LLMGateway
+[2026-03-24 05:41:34] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_053810.md
+[2026-03-24 05:41:34] [MONITOR] [OK] OpenClaw audit — PASS: 0 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:41:34] [MONITOR] Reporte JSON guardado: ai-agents-20260324-054134.json
+[2026-03-24 05:42:14] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: SupportAgent
+[2026-03-24 05:42:17] [MONITOR] Auditando agente especifico: SupportAgent
+[2026-03-24 05:44:46] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_054214.md
+[2026-03-24 05:44:46] [MONITOR] [FALLO] OpenClaw audit — PASS: 1 | FAIL: 1 | SKIP: 0
+[2026-03-24 05:44:46] [MONITOR]   [ERROR] SupportAgent: 2. ❌ **Error del SupportAgent** - Muestra **"Error enviando mensaje"** ([ref=e442]) y **"Lo siento, hubo un problema. Por favor intenta de nuevo."** (
+[2026-03-24 05:44:46] [MONITOR] Reporte JSON guardado: ai-agents-20260324-054446.json
+[2026-03-24 05:45:06] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: WhatsApp
+[2026-03-24 05:45:09] [MONITOR] Auditando agente especifico: WhatsApp
+[2026-03-24 05:46:44] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_054506.md
+[2026-03-24 05:46:44] [MONITOR] [FALLO] OpenClaw audit — PASS: 0 | FAIL: 2 | SKIP: 0
+[2026-03-24 05:46:44] [MONITOR]   [ERROR] WhatsApp: 2. **❌ Mensajes no procesables** - WhatsApp no puede enviar eventos
+[2026-03-24 05:46:44] [MONITOR]   [ERROR] WhatsApp: - ❌ **WhatsApp webhook uniquely broken** (peor que otros endpoints)
+[2026-03-24 05:46:44] [MONITOR] Reporte JSON guardado: ai-agents-20260324-054644.json
+[2026-03-24 05:46:59] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: Security
+[2026-03-24 05:47:02] [MONITOR] Auditando agente especifico: Security
+[2026-03-24 05:49:37] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_054659.md
+[2026-03-24 05:49:37] [MONITOR] [OK] OpenClaw audit — PASS: 1 | FAIL: 0 | SKIP: 0
+[2026-03-24 05:49:37] [MONITOR]   [ERROR] [WARN] #### ⚠️ **AI Agent Security: NO VERIFICABLE**
+[2026-03-24 05:49:37] [MONITOR] Reporte JSON guardado: ai-agents-20260324-054937.json
+[2026-03-24 05:49:57] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: PromptCache
+[2026-03-24 05:50:00] [MONITOR] Auditando agente especifico: PromptCache
+[2026-03-24 05:52:01] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260324_054957.md
+[2026-03-24 05:52:01] [MONITOR] [FALLO] OpenClaw audit — PASS: 1 | FAIL: 2 | SKIP: 0
+[2026-03-24 05:52:01] [MONITOR]   [ERROR] PromptCache: ❌ 404 - /api/chat/metrics/prompt-cache (PromptCache)
+[2026-03-24 05:52:01] [MONITOR]   [ERROR] PromptCache: 1. **❌ No hay visibilidad de PromptCache performance**
+[2026-03-24 05:52:01] [MONITOR] Reporte JSON guardado: ai-agents-20260324-055201.json
+[2026-03-24 06:26:49] [GATE-1] dotnet restore — OK
+[2026-03-24 06:26:49] [GATE-2] dotnet build TreatWarningsAsErrors — OK
+[2026-03-24 06:33:52] [GATE-3a] pnpm lint — OK | 0 errors, 26 warnings
+[2026-03-24 06:33:52] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[2026-03-24 06:33:52] [GATE-3c] pnpm install --frozen-lockfile — OK
+[2026-03-24 06:33:52] [GATE-3d] CI=true pnpm test --run — OK | 576/576 passed
+[2026-03-24 06:33:52] [GATE-3e] pnpm build — OK | Next.js compiled successfully
+[2026-03-24 06:33:52] [GATE-4] dotnet test --blame-hang 2min — OK | AdminService.Tests: 157/157 PASS. Integration/E2E failures are pre-existing (require Docker)

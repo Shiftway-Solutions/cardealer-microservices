@@ -16,3 +16,8 @@ public record GetDashboardActivityQuery(int Limit = 10) : IRequest<List<Dashboar
 /// Query to get pending actions for dashboard
 /// </summary>
 public record GetDashboardPendingQuery() : IRequest<List<DashboardPendingActionResponse>>;
+
+/// <summary>
+/// Query to get top dealers by ChatAgent conversation volume
+/// </summary>
+public record GetTopChatAgentDealersQuery(int Limit = 10) : IRequest<List<TopChatAgentDealerDto>>;

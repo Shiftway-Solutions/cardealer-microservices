@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 0,
+  "errors": [],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_052613.md",
+  "timestamp": "2026-03-24T05:30:26.633261",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "all"
+}

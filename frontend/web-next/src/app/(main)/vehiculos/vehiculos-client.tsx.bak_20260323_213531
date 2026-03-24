@@ -382,7 +382,6 @@ export default function VehiculosClient() {
     results,
     isLoading,
     isFetching,
-    isPlaceholderData,
     error,
     refetch,
     activeFilterCount,
@@ -441,30 +440,24 @@ export default function VehiculosClient() {
 
   // Accumulate pages as they load
   React.useEffect(() => {
-    // Guard: never update accumulated list with placeholder (stale) data.
-    // When filtersKey changes, React Query serves the previous query's data as
-    // placeholderData while the new query is in-flight. Without this guard the
-    // accumulation fires (because `filters.page` also changed on filter reset)
-    // and overwrites the cleared list with stale vehicles from the old query.
-    if (isLoading || isPlaceholderData || vehicles.length === 0) return;
-
-    const responsePage = results?.page ?? 1;
-    if (responsePage === 1) {
-      // Page 1 of a REAL response → always replace (new filter, initial load, clear)
-      setAllVehicles(vehicles);
-    } else if (allVehicles.length === 0) {
-      // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
-      // (race condition). Reset to page 1 to recover gracefully.
-      setFilter('page', 1);
-    } else {
-      // Page > 1 and we have prior results → append deduped
-      setAllVehicles(prev => {
-        const ids = new Set(prev.map((v: VehicleCardData) => v.id));
-        return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
-      });
+    if (!isLoading && vehicles.length > 0) {
+      if ((filters.page ?? 1) === 1) {
+        // Page 1 → always replace (covers: initial load, filter change, clear filters)
+        setAllVehicles(vehicles);
+      } else if (allVehicles.length === 0) {
+        // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
+        // (stale URL like ?page=7 or race condition). Reset to page 1 to recover gracefully.
+        setFilter('page', 1);
+      } else {
+        // Page > 1 and we have prior results → append deduped
+        setAllVehicles(prev => {
+          const ids = new Set(prev.map((v: VehicleCardData) => v.id));
+          return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles, isLoading, isPlaceholderData]);
+  }, [vehicles, isLoading, filters.page]);
 
   // Intersection observer: trigger next page when sentinel enters viewport
   React.useEffect(() => {
@@ -472,20 +465,7 @@ export default function VehiculosClient() {
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Guard: allVehicles.length > 0 prevents the observer from incrementing
-        // the page during the debounce window after a filter change clears the list.
-        // Without this guard: when allVehicles is cleared, the sentinel appears at
-        // the top of the page; with isFetching=false (old cached query still active)
-        // and totalPages=7 (stale all-vehicles data), the observer fires setFilter('page',2).
-        // The debounce then fetches Honda+Civic page 2 (empty), causing totalCount=3
-        // but allVehicles=[] — the permanent "no results" bug.
-        if (
-          entry.isIntersecting &&
-          !isLoading &&
-          !isFetching &&
-          currentPage < totalPages &&
-          allVehicles.length > 0
-        ) {
+        if (entry.isIntersecting && !isLoading && !isFetching && currentPage < totalPages) {
           setFilter('page', currentPage + 1);
         }
       },
@@ -493,11 +473,7 @@ export default function VehiculosClient() {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-    // allVehicles.length is required in deps so the closure captures the correct
-    // value; the observer re-creates when the list transitions 0→N (page 1 loaded)
-    // so subsequent page loads work correctly.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, isFetching, currentPage, totalPages, setFilter, allVehicles.length]);
+  }, [isLoading, isFetching, currentPage, totalPages, setFilter]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Build active filter chips for display

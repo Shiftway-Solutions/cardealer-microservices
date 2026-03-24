@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "errors": [
+    "SupportAgent: 2. ❌ **Error del SupportAgent** - Muestra **\"Error enviando mensaje\"** ([ref=e442]) y **\"Lo siento, hubo un problema. Por favor intenta de nuevo.\"** ("
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_054214.md",
+  "timestamp": "2026-03-24T05:44:46.715617",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "SupportAgent"
+}

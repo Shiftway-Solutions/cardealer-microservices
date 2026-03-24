@@ -171,21 +171,6 @@ public class DealersController : ControllerBase
 
         return Created($"/api/admin/dealers/{result.Id}", result);
     }
-
-    /// <summary>
-    /// Get dealers with cancelled subscriptions
-    /// </summary>
-    /// <param name="limit">Maximum number of results (default 50)</param>
-    [HttpGet("cancelled")]
-    [Authorize(Roles = "Admin,SuperAdmin")]
-    [ProducesResponseType(typeof(List<AdminDealerDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<AdminDealerDto>>> GetCancelledDealers([FromQuery] int limit = 50)
-    {
-        _logger.LogInformation("Getting cancelled dealers, limit={Limit}", limit);
-
-        var result = await _mediator.Send(new GetDealersQuery(null, "cancelled", null, null, 1, limit));
-        return Ok(result.Items);
-    }
 }
 
 // ============================================================================

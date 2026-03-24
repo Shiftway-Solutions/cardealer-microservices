@@ -266,3 +266,75 @@ public sealed class GetFinancialDashboardQueryHandler
         ];
     }
 }
+
+/// <summary>
+/// Handler for revenue breakdown by subscription plan.
+/// Reuses IDealerService to get the plan-tier breakdown and compute MRR per plan.
+/// </summary>
+public sealed class GetRevenueByPlanQueryHandler : IRequestHandler<GetRevenueByPlanQuery, RevenueBreakdownDto>
+{
+    private readonly IDealerService _dealerService;
+    private readonly ILogger<GetRevenueByPlanQueryHandler> _logger;
+
+    private static readonly Dictionary<string, (string Name, decimal Price, string Color)> PlanPricing = new()
+    {
+        ["libre"] = ("Libre", 0m, "#9ca3af"),
+        ["visible"] = ("Visible", 29m, "#3b82f6"),
+        ["pro"] = ("Pro", 89m, "#8b5cf6"),
+        ["elite"] = ("Elite", 199m, "#f59e0b"),
+    };
+
+    public GetRevenueByPlanQueryHandler(IDealerService dealerService, ILogger<GetRevenueByPlanQueryHandler> logger)
+    {
+        _dealerService = dealerService;
+        _logger = logger;
+    }
+
+    public async Task<RevenueBreakdownDto> Handle(GetRevenueByPlanQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Fetching revenue by plan breakdown");
+
+        var dealerStats = await _dealerService.GetDealerStatsAsync(cancellationToken);
+
+        var planCounts = new Dictionary<string, int>
+        {
+            ["libre"] = dealerStats.ByPlan?.Libre ?? 0,
+            ["visible"] = dealerStats.ByPlan?.Visible ?? 0,
+            ["pro"] = dealerStats.ByPlan?.Pro ?? 0,
+            ["elite"] = dealerStats.ByPlan?.Elite ?? 0,
+        };
+
+        var byPlan = new List<PlanRevenueDto>();
+        var totalMrr = 0m;
+
+        foreach (var (key, count) in planCounts)
+        {
+            if (!PlanPricing.TryGetValue(key, out var pricing)) continue;
+            totalMrr += count * pricing.Price;
+        }
+
+        foreach (var (key, count) in planCounts)
+        {
+            if (!PlanPricing.TryGetValue(key, out var pricing)) continue;
+            var planMrr = count * pricing.Price;
+            byPlan.Add(new PlanRevenueDto
+            {
+                PlanKey = key,
+                PlanName = pricing.Name,
+                DealerCount = count,
+                PricePerMonth = pricing.Price,
+                TotalMrr = planMrr,
+                PercentOfMrr = totalMrr > 0 ? Math.Round(planMrr / totalMrr * 100, 1) : 0m,
+                Color = pricing.Color,
+            });
+        }
+
+        return new RevenueBreakdownDto
+        {
+            Mrr = totalMrr,
+            MrrChangePercent = 0m,
+            ByPlan = byPlan,
+            BySources = [],
+        };
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "exit_code": 0,
+  "passed": 0,
+  "failed": 2,
+  "skipped": 0,
+  "errors": [
+    "WhatsApp: 2. **❌ Mensajes no procesables** - WhatsApp no puede enviar eventos",
+    "WhatsApp: - ❌ **WhatsApp webhook uniquely broken** (peor que otros endpoints)"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260324_054506.md",
+  "timestamp": "2026-03-24T05:46:44.379235",
+  "base_url": "https://okla.com.do",
+  "agent_focus": "WhatsApp"
+}

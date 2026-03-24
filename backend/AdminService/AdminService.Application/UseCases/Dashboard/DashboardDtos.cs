@@ -64,3 +64,19 @@ public class DashboardPendingActionResponse
     public string Priority { get; set; } = "medium"; // high, medium, low
     public string Href { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// ChatAgent usage stats for a dealer — top users by AI conversation volume
+/// </summary>
+public class TopChatAgentDealerDto
+{
+    public Guid DealerId { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Plan { get; set; } = string.Empty;
+    public int TotalConversations { get; set; }
+    public int ConversationsThisMonth { get; set; }
+    public double AvgResponseTimeSec { get; set; }
+    public double CacheHitRatePercent { get; set; }
+    public DateTime LastActivityAt { get; set; }
+}
