@@ -157,23 +157,26 @@ public class S3StorageService : IMediaStorageService
 
     public Task<string> GetFileUrlAsync(string storageKey)
     {
-        // If a CDN or custom base URL is configured, use it directly (permanent, no expiry)
-        if (!string.IsNullOrEmpty(_options.CdnBaseUrl))
+        // When objects are publicly accessible (UseAcl=true sets CannedACL=PublicRead on upload,
+        // or bucket has a public-read bucket policy), use permanent CDN/direct URL.
+        // This avoids expiry issues for truly public content.
+        if (_options.UseAcl)
         {
-            return Task.FromResult($"{_options.CdnBaseUrl}/{storageKey}");
+            if (!string.IsNullOrEmpty(_options.CdnBaseUrl))
+            {
+                return Task.FromResult($"{_options.CdnBaseUrl}/{storageKey}");
+            }
+
+            if (string.IsNullOrEmpty(_options.ServiceUrl))
+            {
+                var permanentUrl = $"https://{_options.BucketName}.s3.{_options.Region}.amazonaws.com/{storageKey}";
+                return Task.FromResult(permanentUrl);
+            }
         }
 
-        // No CDN configured: if using native AWS S3 (no custom ServiceUrl),
-        // build the permanent public URL — objects are uploaded with CannedACL=PublicRead
-        // so pre-signed URLs with expiry are unnecessary and cause broken links after 24h.
-        if (string.IsNullOrEmpty(_options.ServiceUrl))
-        {
-            var permanentUrl = $"https://{_options.BucketName}.s3.{_options.Region}.amazonaws.com/{storageKey}";
-            return Task.FromResult(permanentUrl);
-        }
-
-        // Custom S3-compatible endpoint (e.g. DigitalOcean Spaces): fall back to pre-signed URL.
-        // For DO Spaces, configure CdnBaseUrl instead to avoid expiry.
+        // Objects are private (UseAcl=false — modern AWS S3 buckets disable ACLs by default,
+        // no public bucket policy). Generate a presigned GET URL valid for PreSignedUrlExpirationMinutes.
+        // For permanent public access, configure a bucket policy + UseAcl=true or use CloudFront.
         var request = new GetPreSignedUrlRequest
         {
             BucketName = _options.BucketName,

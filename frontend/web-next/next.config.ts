@@ -309,6 +309,24 @@ const nextConfig: NextConfig = {
         destination: '/callback/:provider',
         permanent: true,
       },
+      // Restore /auth/login → /login (route group (auth) maps to /login, not /auth/login)
+      // Fixes 404 for users/links hitting /auth/login directly
+      {
+        source: '/auth/login',
+        destination: '/login',
+        permanent: false,
+      },
+      // Also handle /auth/registro and /auth/recuperar-contrasena for legacy links
+      {
+        source: '/auth/registro',
+        destination: '/registro',
+        permanent: false,
+      },
+      {
+        source: '/auth/registro/:path*',
+        destination: '/registro/:path*',
+        permanent: false,
+      },
     ];
   },
 

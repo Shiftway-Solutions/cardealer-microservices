@@ -101,6 +101,32 @@ apiClient.interceptors.request.use(
 // call is made — all others await the same promise.
 let refreshPromise: Promise<AxiosResponse> | null = null;
 
+// Exponential backoff helper — waits 2^attempt * 1000ms (max 16s)
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Retry a refresh-token call with exponential backoff on 429 responses.
+// max 3 retries: 1s, 2s, 4s delays.
+async function refreshWithBackoff(url: string, maxRetries = 3): Promise<AxiosResponse> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await axios.post(url, {}, { withCredentials: true });
+    } catch (err) {
+      lastError = err;
+      const status = (err as AxiosError)?.response?.status;
+      // Only retry on 429 (rate limit) and 503 (service unavailable)
+      if ((status === 429 || status === 503) && attempt < maxRetries) {
+        const delay = Math.min(Math.pow(2, attempt) * 1000, 16000);
+        await sleep(delay);
+        continue;
+      }
+      // For any other error or max retries exhausted, throw immediately
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 // Response interceptor - Handle errors and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -133,11 +159,7 @@ apiClient.interceptors.response.use(
       try {
         // Deduplicate: reuse in-flight refresh request if one is already pending
         if (!refreshPromise) {
-          refreshPromise = axios.post(
-            `${API_URL}/api/auth/refresh-token`,
-            {},
-            { withCredentials: true }
-          );
+          refreshPromise = refreshWithBackoff(`${API_URL}/api/auth/refresh-token`);
           // Clear the shared promise after it settles (success or failure)
           refreshPromise.finally(() => {
             refreshPromise = null;

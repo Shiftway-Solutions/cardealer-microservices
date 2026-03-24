@@ -661,10 +661,18 @@ spec:
             # and CdnBaseUrl to https://{bucket}.{region}.cdn.digitaloceanspaces.com
             - name: Storage__S3__ServiceUrl
               value: ""
-            # Permanent public S3 URL base — objects are uploaded with CannedACL=PublicRead
-            # Using permanent URL avoids pre-signed URL expiration (previous 24h issue)
+            # CdnBaseUrl used only when UseAcl=true (public objects). With UseAcl=false (default for
+            # modern S3 buckets), presigned GET URLs are generated instead to serve private objects.
             - name: Storage__S3__CdnBaseUrl
               value: "https://okla-images-2026.s3.us-east-2.amazonaws.com"
+            # UseAcl=false — modern AWS S3 buckets (post-April 2023) disable ACLs by default.
+            # Set to true only after enabling Object Ownership + ACLs in S3 bucket settings.
+            - name: Storage__S3__UseAcl
+              value: "false"
+            # Presigned URL expiry: 7 days. Ensures images remain accessible for a week
+            # before requiring a CdnUrl refresh. Trigger /api/media/admin/refresh-urls periodically.
+            - name: Storage__S3__PreSignedUrlExpirationMinutes
+              value: "10080"
             - name: Storage__S3__AccessKey
               valueFrom:
                 secretKeyRef:

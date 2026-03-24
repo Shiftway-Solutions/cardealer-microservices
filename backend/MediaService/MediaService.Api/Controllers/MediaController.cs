@@ -3,6 +3,7 @@ using MediaService.Application.Features.Media.Commands.FinalizeUpload;
 using MediaService.Application.Features.Media.Commands.DeleteMedia;
 using MediaService.Application.Features.Media.Commands.UploadVehicleImage;
 using MediaService.Application.Features.Media.Commands.GetPresignedUrlsBatch;
+using MediaService.Application.Features.Media.Commands.RefreshMediaUrls;
 using MediaService.Application.Features.Media.Queries.GetMedia;
 using MediaService.Application.Features.Media.Queries.ValidateImageQuality;
 using MediaService.Domain.Interfaces.Services;
@@ -510,6 +511,31 @@ public class MediaController : ControllerBase
         var query = new ValidateImageQualityQuery { File = file };
         var result = await _mediator.Send(query);
         return Ok(result);
+    }
+
+    #endregion
+
+    #region Admin Endpoints
+
+    /// <summary>
+    /// Admin: Bulk-refresh all stored CdnUrls for processed media assets.
+    /// Use after AWS IAM key rotation or when presigned URLs have expired.
+    /// Requires Admin role. Results: count of refreshed/skipped/failed assets.
+    /// </summary>
+    [HttpPost("admin/refresh-urls")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<RefreshMediaUrlsResponse>>> RefreshAllMediaUrls(
+        [FromQuery] string? context = null,
+        [FromQuery] int batchSize = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RefreshMediaUrlsCommand
+        {
+            Context = context,
+            BatchSize = Math.Clamp(batchSize, 10, 500)
+        };
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.Success ? Ok(result) : StatusCode(500, result);
     }
 
     #endregion
