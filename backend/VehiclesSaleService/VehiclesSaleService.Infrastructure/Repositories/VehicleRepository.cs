@@ -311,6 +311,9 @@ public class VehicleRepository : IVehicleRepository
         if (p.HasCleanTitle.HasValue)
             query = query.Where(v => v.HasCleanTitle == p.HasCleanTitle.Value);
 
+        if (p.SellerType.HasValue)
+            query = query.Where(v => v.SellerType == p.SellerType.Value);
+
         // Extended DR-market filters
         if (p.MinSeats.HasValue)
             query = query.Where(v => v.Seats >= p.MinSeats.Value);

@@ -114,6 +114,7 @@ public class VehiclesController : ControllerBase
             ZipCode = request.ZipCode,
             IsCertified = request.IsCertified,
             HasCleanTitle = request.HasCleanTitle,
+            SellerType = request.SellerType,
             MinSeats = request.MinSeats,
             Cylinders = request.Cylinders,
             InteriorColor = request.InteriorColor,
@@ -2564,6 +2565,8 @@ public record VehicleSearchRequest
     public string? ZipCode { get; init; }
     public bool? IsCertified { get; init; }
     public bool? HasCleanTitle { get; init; }
+    /// <summary>Filter by seller type: Seller (particular) or Dealer (concesionario)</summary>
+    public SellerType? SellerType { get; init; }
 
     // Extended DR-market filters
     /// <summary>Minimum number of seats (5 = family SUV, 7 = 7-seater)</summary>

@@ -551,6 +551,36 @@ export async function searchVehicles(
     Page: params.page ?? 1,
     PageSize: params.pageSize ?? 12,
   };
+  // Maps frontend Spanish/abbreviated strings → C# enum member names (case-insensitive
+  // ASP.NET Core binding handles exact English names; Spanish strings cause text-search fallback).
+  const conditionMap: Record<string, string> = {
+    nuevo: 'New',
+    usado: 'Used',
+  };
+  const fuelTypeMap: Record<string, string> = {
+    gasolina: 'Gasoline',
+    diesel: 'Diesel',
+    hibrido: 'Hybrid',
+    electrico: 'Electric',
+    glp: 'NaturalGas',
+    pluginhybrid: 'PlugInHybrid',
+  };
+  const transmissionMap: Record<string, string> = {
+    automatica: 'Automatic',
+    manual: 'Manual',
+    cvt: 'CVT',
+  };
+  const driveTypeMap: Record<string, string> = {
+    fwd: 'FWD',
+    rwd: 'RWD',
+    awd: 'AWD',
+    '4wd': 'FourWD',
+  };
+  const sellerTypeMap: Record<string, string> = {
+    dealer: 'Dealer',
+    seller: 'Seller',
+  };
+
   if (params.q) backendParams.Search = params.q;
   if (params.make) backendParams.Make = params.make;
   if (params.model) backendParams.Model = params.model;
@@ -560,15 +590,20 @@ export async function searchVehicles(
   if (params.priceMax) backendParams.MaxPrice = params.priceMax;
   if (params.mileageMax) backendParams.MaxMileage = params.mileageMax;
   if (params.bodyType) backendParams.BodyStyle = params.bodyType;
-  if (params.fuelType) backendParams.FuelType = params.fuelType;
-  if (params.transmission) backendParams.Transmission = params.transmission;
-  if (params.condition) backendParams.Condition = params.condition;
+  if (params.fuelType) backendParams.FuelType = fuelTypeMap[params.fuelType] ?? params.fuelType;
+  if (params.transmission)
+    backendParams.Transmission = transmissionMap[params.transmission] ?? params.transmission;
+  if (params.condition)
+    backendParams.Condition = conditionMap[params.condition] ?? params.condition;
   if (params.province) backendParams.State = params.province;
   if (params.city) backendParams.City = params.city;
-  if (params.drivetrain) backendParams.DriveType = params.drivetrain;
+  if (params.drivetrain)
+    backendParams.DriveType = driveTypeMap[params.drivetrain] ?? params.drivetrain;
   if (params.color) backendParams.ExteriorColor = params.color;
   if (params.isCertified !== undefined) backendParams.IsCertified = params.isCertified;
   if (params.hasCleanTitle !== undefined) backendParams.HasCleanTitle = params.hasCleanTitle;
+  if (params.sellerType)
+    backendParams.SellerType = sellerTypeMap[params.sellerType] ?? params.sellerType;
   // Extended DR-market filters
   if (params.seats) backendParams.MinSeats = params.seats;
   if (params.cylinders) backendParams.Cylinders = params.cylinders;

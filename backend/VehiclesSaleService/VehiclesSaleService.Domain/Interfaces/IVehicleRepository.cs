@@ -62,6 +62,8 @@ public class VehicleSearchParameters
     public string? ZipCode { get; set; }
     public bool? IsCertified { get; set; }
     public bool? HasCleanTitle { get; set; }
+    /// <summary>Seller type: Seller (particular) or Dealer (concesionario)</summary>
+    public SellerType? SellerType { get; set; }
 
     // Extended DR-market filters
     /// <summary>Minimum passenger seats (e.g. 5 for family SUV, 7 for 7-seater)</summary>
