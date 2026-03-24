@@ -382,6 +382,7 @@ export default function VehiculosClient() {
     results,
     isLoading,
     isFetching,
+    isPlaceholderData,
     error,
     refetch,
     activeFilterCount,
@@ -440,24 +441,30 @@ export default function VehiculosClient() {
 
   // Accumulate pages as they load
   React.useEffect(() => {
-    if (!isLoading && vehicles.length > 0) {
-      if ((filters.page ?? 1) === 1) {
-        // Page 1 → always replace (covers: initial load, filter change, clear filters)
-        setAllVehicles(vehicles);
-      } else if (allVehicles.length === 0) {
-        // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
-        // (stale URL like ?page=7 or race condition). Reset to page 1 to recover gracefully.
-        setFilter('page', 1);
-      } else {
-        // Page > 1 and we have prior results → append deduped
-        setAllVehicles(prev => {
-          const ids = new Set(prev.map((v: VehicleCardData) => v.id));
-          return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
-        });
-      }
+    // Guard: never update accumulated list with placeholder (stale) data.
+    // When filtersKey changes, React Query serves the previous query's data as
+    // placeholderData while the new query is in-flight. Without this guard the
+    // accumulation fires (because `filters.page` also changed on filter reset)
+    // and overwrites the cleared list with stale vehicles from the old query.
+    if (isLoading || isPlaceholderData || vehicles.length === 0) return;
+
+    const responsePage = results?.page ?? 1;
+    if (responsePage === 1) {
+      // Page 1 of a REAL response → always replace (new filter, initial load, clear)
+      setAllVehicles(vehicles);
+    } else if (allVehicles.length === 0) {
+      // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
+      // (race condition). Reset to page 1 to recover gracefully.
+      setFilter('page', 1);
+    } else {
+      // Page > 1 and we have prior results → append deduped
+      setAllVehicles(prev => {
+        const ids = new Set(prev.map((v: VehicleCardData) => v.id));
+        return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles, isLoading, filters.page]);
+  }, [vehicles, isLoading, isPlaceholderData]);
 
   // Intersection observer: trigger next page when sentinel enters viewport
   React.useEffect(() => {

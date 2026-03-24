@@ -94,6 +94,12 @@ export interface UseVehicleSearchReturn {
   refetch: () => void;
   /** Active filter count */
   activeFilterCount: number;
+  /**
+   * True while React Query is showing placeholder (stale) data for a new query key.
+   * Consumers MUST skip updating accumulated lists when this is true to avoid
+   * flashing stale vehicles during filter changes.
+   */
+  isPlaceholderData: boolean;
 }
 
 // =============================================================================
@@ -441,6 +447,7 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}): UseVehi
     data: results,
     isLoading,
     isFetching,
+    isPlaceholderData,
     error,
     refetch,
   } = useQuery({
@@ -529,6 +536,7 @@ export function useVehicleSearch(options: UseVehicleSearchOptions = {}): UseVehi
     results,
     isLoading,
     isFetching,
+    isPlaceholderData: isPlaceholderData ?? false,
     error: error as Error | null,
     refetch,
     activeFilterCount,
