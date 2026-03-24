@@ -1821,3 +1821,6 @@ test
 [2026-03-24 10:35:08] [GIT] Commit bdd662c8 pushed a main — fix PlainToTsQuery, ocelot cache 5s, hover cards, ARIA filters, VehiclesController error handling
 [2026-03-24 10:35:08] [DELEGADO_OPENCLAW] CI/CD deployment + verificacion produccion post-deploy commit bdd662c8
 [2026-03-24 10:55:54] [GATE] ✅ Pre-commit gate passed — 0 backend errors, 0 warnings, 576 FE tests passed, 220 VSS unit tests passed
+[2026-03-24 11:29:55] [EJECUCIÓN] CI/CD Run 23496268213 — DEPLOY SUCCESS: CI Build 55s + Deploy 49s to production
+[2026-03-24 11:46:04] [CREACIÓN] docs/chatbot-llm/FASE_3_TRAINING/evaluate_before_deploy.py — Evaluator v2.0.0-dual-mode para CI gate. Fix FileNotFoundError en eval-gate job #72
+[2026-03-24 13:19:41] [GATE] ✅ Completo — dotnet build 0err/0warn | pnpm lint 0err | typecheck clean | 576 FE tests | Gateway Integration pre-existing failures only

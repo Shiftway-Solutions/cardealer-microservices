@@ -140,6 +140,9 @@ spec:
     metadata:
       labels:
         app: gateway
+      annotations:
+        # Force pod restart to pickup ConfigMap changes (subPath mounts don't auto-propagate)
+        configmap-version: "2026-03-24-ocelot-route-split"
     spec:
       serviceAccountName: okla-backend
       automountServiceAccountToken: false
