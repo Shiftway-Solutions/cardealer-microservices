@@ -21,6 +21,7 @@ builder.Services.AddTransient<MediaCleanupHandler>();
 // ============= BACKGROUND SERVICES =============
 builder.Services.AddHostedService<ImageProcessingWorker>();
 builder.Services.AddHostedService<MediaCleanupWorker>();
+builder.Services.AddHostedService<MediaUrlRefreshWorker>();
 
 var host = builder.Build();
 host.Run();

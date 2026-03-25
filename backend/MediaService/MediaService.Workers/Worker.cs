@@ -193,3 +193,129 @@ public class MediaCleanupWorker : BackgroundService
 
 /// <summary>DTO for deserializing RabbitMQ process media messages</summary>
 public record ProcessMediaMessage(string? MediaId, string? ProcessingType = null);
+
+/// <summary>
+/// Periodic worker that refreshes S3 presigned URLs for all processed media assets.
+/// Runs every 5 days to ensure URLs are refreshed before the 7-day AWS presigned URL expiry.
+/// Only activates when Storage__S3__UseAcl=false (private bucket mode).
+/// </summary>
+public class MediaUrlRefreshWorker : BackgroundService
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<MediaUrlRefreshWorker> _logger;
+    private readonly IConfiguration _configuration;
+
+    // Refresh every 5 days — well within the 7-day presigned URL expiry window
+    private static readonly TimeSpan RefreshInterval = TimeSpan.FromDays(5);
+
+    public MediaUrlRefreshWorker(
+        IServiceProvider serviceProvider,
+        ILogger<MediaUrlRefreshWorker> logger,
+        IConfiguration configuration)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+        _configuration = configuration;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        // Only run when bucket is private (UseAcl=false) — public buckets don't need presigned URL refresh
+        var useAcl = _configuration.GetValue<bool>("Storage:S3:UseAcl", false);
+        if (useAcl)
+        {
+            _logger.LogInformation("MediaUrlRefreshWorker disabled — UseAcl=true (public bucket), presigned URLs not required");
+            return;
+        }
+
+        _logger.LogInformation("MediaUrlRefreshWorker starting — refresh every {Days}d (private S3 bucket, UseAcl=false)",
+            RefreshInterval.TotalDays);
+
+        // Initial delay of 2 minutes to let other services start
+        await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                _logger.LogInformation("[MediaUrlRefresh] Starting scheduled presigned URL refresh at {Time}", DateTime.UtcNow);
+
+                using var scope = _serviceProvider.CreateScope();
+                var mediaRepository = scope.ServiceProvider.GetRequiredService<MediaService.Domain.Interfaces.Repositories.IMediaRepository>();
+                var storageService = scope.ServiceProvider.GetRequiredService<MediaService.Domain.Interfaces.Services.IMediaStorageService>();
+
+                var processedAssets = await mediaRepository.GetByStatusAsync(
+                    MediaService.Domain.Enums.MediaStatus.Processed, stoppingToken);
+
+                var assets = processedAssets.Where(a => !string.IsNullOrEmpty(a.StorageKey)).ToList();
+                int refreshed = 0, failed = 0, skipped = 0;
+                const int BatchSize = 100;
+                var batch = new List<MediaService.Domain.Entities.MediaAsset>(BatchSize);
+
+                foreach (var asset in assets)
+                {
+                    if (stoppingToken.IsCancellationRequested) break;
+
+                    try
+                    {
+                        var freshUrl = await storageService.GetFileUrlAsync(asset.StorageKey);
+                        if (freshUrl != asset.CdnUrl)
+                        {
+                            asset.MarkAsProcessed(freshUrl);
+                            batch.Add(asset);
+                            refreshed++;
+                        }
+                        else
+                        {
+                            skipped++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        _logger.LogWarning(ex, "[MediaUrlRefresh] Failed to refresh URL for asset {Id}", asset.Id);
+                    }
+
+                    if (batch.Count >= BatchSize)
+                    {
+                        await FlushBatchAsync(mediaRepository, batch, stoppingToken);
+                        batch.Clear();
+                    }
+                }
+
+                if (batch.Count > 0)
+                    await FlushBatchAsync(mediaRepository, batch, stoppingToken);
+
+                _logger.LogInformation(
+                    "[MediaUrlRefresh] Completed. Inspected={Inspected} Refreshed={Refreshed} Failed={Failed} Skipped={Skipped}",
+                    assets.Count, refreshed, failed, skipped);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MediaUrlRefresh] Unhandled error during scheduled URL refresh");
+            }
+
+            try
+            {
+                await Task.Delay(RefreshInterval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("MediaUrlRefreshWorker stopping");
+            }
+        }
+    }
+
+    private static async Task FlushBatchAsync(
+        MediaService.Domain.Interfaces.Repositories.IMediaRepository repo,
+        List<MediaService.Domain.Entities.MediaAsset> batch,
+        CancellationToken cancellationToken)
+    {
+        foreach (var asset in batch)
+        {
+            try { await repo.UpdateAsync(asset, cancellationToken); }
+            catch { /* individual update failure logged at caller */ }
+        }
+    }
+}
+
