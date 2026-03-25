@@ -201,9 +201,9 @@ describe('Dealer Plan Features', () => {
       expect(features.whatsappIntegration).toBe(true);
     });
 
-    it('should have 5000 ChatAgent conversations/month', () => {
-      expect(features.chatAgentWeb).toBe(5000);
-      expect(features.chatAgentWhatsApp).toBe(5000);
+    it('should have 2000 ChatAgent conversations/month', () => {
+      expect(features.chatAgentWeb).toBe(2000);
+      expect(features.chatAgentWhatsApp).toBe(2000);
     });
 
     it('should have the most OKLA Coins credits', () => {
@@ -275,8 +275,8 @@ describe('Dealer Plan Features', () => {
 
 describe('ELITE Overage Calculation', () => {
   describe('Constants', () => {
-    it('ELITE soft limit should be 5000 conversations/month', () => {
-      expect(ELITE_SOFT_LIMIT).toBe(5000);
+    it('ELITE soft limit should be 2000 conversations/month', () => {
+      expect(ELITE_SOFT_LIMIT).toBe(2000);
     });
 
     it('STARTER soft limit should be 100 conversations/month', () => {

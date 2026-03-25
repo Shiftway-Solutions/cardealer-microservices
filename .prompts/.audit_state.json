@@ -1,9 +1,10 @@
 {
   "sprints_completados": [
-    1
+    1,
+    2
   ],
-  "sprint_actual": 2,
+  "sprint_actual": 3,
   "inicio": "2026-03-25T00:57:02.850230",
-  "phase": "reaudit",
+  "phase": "fix",
   "fix_attempt": 1
 }

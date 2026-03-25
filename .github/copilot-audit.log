@@ -1861,3 +1861,12 @@ test
 [2026-03-25 10:10:22] [AUDIT-SPRINT] Sprint 2 [fix] despachado: Búsqueda & Filtros de Vehículos (Guest)
 [2026-03-25 10:21:39] [MODIFICACIÓN] Sprint 2 FIX — Corregidos 3 bugs: FRONTEND-018 (fuelType en español), FRONTEND-024 (paginación), FRONTEND-025 (rotación sponsored). Gate Pre-Commit pasado.
 [2026-03-25 10:21:52] [AUDIT-SPRINT] Sprint 2 [reaudit] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 11:07:53] [AUDIT-SPRINT] Sprint 2 [fix] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 11:07:53] [REAUDIT] S2 COMPLETADO — 8/11 fixed, FRONTEND-018 partial, FRONTEND-025 persists. Commit 04be20aa pushed.
+[2026-03-25 11:19:11] [FIX] S2 FIXES COMPLETOS — FRONTEND-018,025,029 corregidos. Commit 9d3103e0 pushed. Gate Pre-Commit PASADO.
+[2026-03-25 11:19:23] [AUDIT-SPRINT] Sprint 2 [reaudit] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 11:32:23] [AUDIT-SPRINT] Sprint 2 [fix] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 11:43:23] [AUDIT-SPRINT] Sprint 2 [reaudit] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 11:52:53] [AUDIT-SPRINT] Sprint 2 completado (ciclo completo)
+[2026-03-25 11:52:53] [AUDIT-SPRINT] Sprint 3 [audit] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 11:59:53] [AUDIT-SPRINT] Sprint 3 [fix] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)

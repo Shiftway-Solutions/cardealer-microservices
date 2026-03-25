@@ -30,7 +30,7 @@ export const STARTER_OVERAGE_COST_USD = 0.1;
 // =============================================================================
 
 /** ELITE plan soft limit: conversations/month before overage kicks in */
-export const ELITE_SOFT_LIMIT = 5000;
+export const ELITE_SOFT_LIMIT = 2000;
 
 /** ELITE plan overage cost per conversation above limit (USD) */
 export const ELITE_OVERAGE_COST_USD = 0.06;

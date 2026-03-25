@@ -187,10 +187,66 @@ public static class PlanFeatureLimits
         HasCompetitorAnalysis = true,
     };
 
+    public static readonly PlanLimits StarterLimits = new()
+    {
+        PlanKey = "starter",
+        DisplayName = "Starter",
+        PricePerMonth = 59m,
+        MaxImagesPerVehicle = 15,
+        MaxFeaturedListingsPerMonth = 5,
+        SearchPriority = "high",
+        MonthlyCoins = 30,
+        BadgeType = "verified-plus",
+        ChatAgentMonthlyMessages = 100,
+        RecosAgentMonthlyMessages = 100,
+        MaxPromotionsPerMonth = 0,
+        MaxSavedSearches = 10,
+        AnalyticsDashboard = "basic",
+        MaxStaffAccounts = 1,
+        HasLeadManagement = true,
+        HasBulkUpload = true,
+        HasPrioritySupport = false,
+        HasCustomBranding = false,
+        HasWhatsAppIntegration = false,
+        HasVideoTour = false,
+        HasApiAccess = false,
+        HasExportAnalytics = false,
+        HasDedicatedAccountManager = false,
+        HasCompetitorAnalysis = false,
+    };
+
+    public static readonly PlanLimits EnterpriseLimits = new()
+    {
+        PlanKey = "enterprise",
+        DisplayName = "Enterprise",
+        PricePerMonth = 599m,
+        MaxImagesPerVehicle = 20,
+        MaxFeaturedListingsPerMonth = 50,
+        SearchPriority = "top",
+        MonthlyCoins = 300,
+        BadgeType = "enterprise",
+        ChatAgentMonthlyMessages = -1, // Unlimited
+        RecosAgentMonthlyMessages = -1, // Unlimited
+        MaxPromotionsPerMonth = 0,
+        MaxSavedSearches = -1, // Unlimited
+        AnalyticsDashboard = "complete",
+        MaxStaffAccounts = -1, // Unlimited
+        HasLeadManagement = true,
+        HasBulkUpload = true,
+        HasPrioritySupport = true,
+        HasCustomBranding = true,
+        HasWhatsAppIntegration = true,
+        HasVideoTour = true,
+        HasApiAccess = true,
+        HasExportAnalytics = true,
+        HasDedicatedAccountManager = true,
+        HasCompetitorAnalysis = true,
+    };
+
     /// <summary>
     /// All available plans ordered by tier.
     /// </summary>
-    public static readonly PlanLimits[] AllPlans = { LibreLimits, VisibleLimits, ProLimits, EliteLimits };
+    public static readonly PlanLimits[] AllPlans = { LibreLimits, VisibleLimits, StarterLimits, ProLimits, EliteLimits, EnterpriseLimits };
 
     // ═══════════════════════════════════════════
     // CONVERSATION LIMIT CONSTANTS — CONTRA #5 (Elite Negative Margin Fix)

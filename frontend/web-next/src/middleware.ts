@@ -53,6 +53,7 @@ const publicRoutes = [
   '/privacidad',
   '/cookies',
   '/seguridad',
+  '/politica-reembolso',
   '/reportar',
   '/empleos',
   '/prensa',
