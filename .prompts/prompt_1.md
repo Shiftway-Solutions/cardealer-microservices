@@ -1,10 +1,12 @@
 # RE-AUDITORÍA (Verificación de fixes, intento 1/3) — Sprint 1: Homepage & Navegación Pública (Guest)
+
 **Fecha:** 2026-03-25 05:59:48
 **Fase:** REAUDIT
 **Usuario:** Guest (sin login)
 **URL:** https://okla.com.do
 
 ## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
+
 Esta es la re-verificación del Sprint 1 (intento 1/3).
 Re-ejecuta las mismas tareas de auditoría con Chrome para verificar que los fixes funcionan.
 
@@ -15,12 +17,13 @@ Re-ejecuta las mismas tareas de auditoría con Chrome para verificar que los fix
 IMPORTANTE: Usa Chrome como un humano. NO scripts.
 
 ## Credenciales
-| Rol | Email | Password |
-|-----|-------|----------|
-| Admin | admin@okla.local | Admin123!@# |
-| Buyer | buyer002@okla-test.com | BuyerTest2026! |
-| Dealer | nmateo@okla.com.do | Dealer2026!@# |
-| Vendedor Particular | gmoreno@okla.com.do | $Gregory1 |
+
+| Rol                 | Email                  | Password       |
+| ------------------- | ---------------------- | -------------- |
+| Admin               | admin@okla.local       | Admin123!@#    |
+| Buyer               | buyer002@okla-test.com | BuyerTest2026! |
+| Dealer              | nmateo@okla.com.do     | Dealer2026!@#  |
+| Vendedor Particular | gmoreno@okla.com.do    | $Gregory1      |
 
 ---
 
@@ -29,6 +32,7 @@ IMPORTANTE: Usa Chrome como un humano. NO scripts.
 ### S1-T01: Auditar Homepage completa
 
 **Pasos:**
+
 - [ ] Paso 1: Abre Chrome y navega a https://okla.com.do
 - [ ] Paso 2: Toma una screenshot de la página actual y dime qué ves
 - [ ] Paso 3: Verifica que el Hero dice 'Tu próximo vehículo está en OKLA'
@@ -41,6 +45,7 @@ IMPORTANTE: Usa Chrome como un humano. NO scripts.
 - [ ] Paso 10: Busca si hay un vehículo E2E de prueba visible (Toyota Corolla 2022 — E2E mm8mioxc) — si lo ves, reporta como BUG CRÍTICO
 
 **A validar:**
+
 - [ ] FRONTEND-001: ¿Las imágenes de vehículos cargan (no 403 S3)?
 - [ ] FRONTEND-002: ¿Los precios muestran formato RD$ con separadores de miles?
 - [ ] FRONTEND-003: ¿El carrusel funciona (swipe/arrows)?
@@ -55,6 +60,7 @@ _(documentar aquí lo encontrado)_
 ### S1-T02: Auditar Navbar y Footer
 
 **Pasos:**
+
 - [ ] Paso 1: Navega a https://okla.com.do
 - [ ] Paso 2: Toma una screenshot del navbar y verifica que contiene: Inicio, Comprar, Vender, Dealers, ¿Por qué OKLA?, Ingresar, Registrarse
 - [ ] Paso 3: Scroll hasta el final de la página y toma screenshot del footer
@@ -62,6 +68,7 @@ _(documentar aquí lo encontrado)_
 - [ ] Paso 5: Verifica que aparece el disclaimer legal: Ley 358-05, ITBIS, Pro-Consumidor, INDOTEL
 
 **A validar:**
+
 - [ ] FRONTEND-004: ¿Los links del footer apuntan a páginas reales?
 - [ ] FRONTEND-010: ¿El disclaimer de Ley 358-05 es legalmente completo?
 - [ ] FRONTEND-014: ¿SEO: meta title, description, og:image configurados?
@@ -74,6 +81,7 @@ _(documentar aquí lo encontrado)_
 ### S1-T03: Auditar sección de Concesionarios y Carruseles
 
 **Pasos:**
+
 - [ ] Paso 1: Navega a https://okla.com.do
 - [ ] Paso 2: Scroll hasta la sección 'Concesionarios en OKLA' y toma screenshot
 - [ ] Paso 3: Verifica que muestra dealers verificados con su conteo de inventario
@@ -85,6 +93,7 @@ _(documentar aquí lo encontrado)_
 - [ ] Paso 9: Verifica que la ubicación dice 'Santo Domingo Norte' (con espacio) y NO 'Santo DomingoNorte'
 
 **A validar:**
+
 - [ ] FRONTEND-009: ¿Vehículos duplicados en carruseles?
 - [ ] FRONTEND-011: ¿Los dealers muestran conteo real de vehículos?
 - [ ] FRONTEND-012: ¿'Ver inventario' lleva a página real?
@@ -99,6 +108,7 @@ _(documentar aquí lo encontrado)_
 ### S1-T04: Auditar responsive mobile
 
 **Pasos:**
+
 - [ ] Paso 1: Navega a https://okla.com.do
 - [ ] Paso 2: Redimensiona el browser a 375px de ancho (mobile)
 - [ ] Paso 3: Toma una screenshot y verifica que el hero, búsqueda y categorías se ven bien en mobile
@@ -108,6 +118,7 @@ _(documentar aquí lo encontrado)_
 - [ ] Paso 7: Redimensiona de vuelta a 1920px (desktop)
 
 **A validar:**
+
 - [ ] FRONTEND-013: ¿Responsive: hero, carruseles, grid funcionan en mobile (375px)?
 
 **Hallazgos:**
@@ -116,6 +127,7 @@ _(documentar aquí lo encontrado)_
 ---
 
 ## Resultado
+
 - Sprint: 1 — Homepage & Navegación Pública (Guest)
 - Fase: REAUDIT
 - Estado: EN PROGRESO

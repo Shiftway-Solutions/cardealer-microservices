@@ -90,9 +90,6 @@ jobs:
             reviewservice:
               - 'backend/ReviewService/**'
               - 'backend/_Shared/**'
-            dealermanagementservice:
-              - 'backend/DealerManagementService/**'
-              - 'backend/_Shared/**'
             dealeranalyticsservice:
               - 'backend/DealerAnalyticsService/**'
               - 'backend/_Shared/**'
@@ -439,16 +436,6 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/reviewservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/reviewservice:latest
-
-      - name: "🐳 Build & Push DealerManagementService"
-        if: steps.filter.outputs.dealermanagementservice == 'true' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v6
-        with:
-          context: backend
-          file: backend/DealerManagementService/Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/dealermanagementservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/dealermanagementservice:latest
 
       - name: "🐳 Build & Push Gateway"
         if: steps.filter.outputs.gateway == 'true' && github.ref == 'refs/heads/main'

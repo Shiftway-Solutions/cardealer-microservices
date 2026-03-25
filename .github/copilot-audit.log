@@ -1851,3 +1851,4 @@ test
 [2026-03-25 02:09:03] [GATE] ✅ Sprint 1 Audit — All gates passed (dotnet build, pnpm lint/typecheck/test/build)
 [2026-03-25 02:09:13] [AUDIT-SPRINT] Sprint 1 [fix] despachado: Homepage & Navegación Pública (Guest)
 [2026-03-25 05:59:48] [AUDIT-SPRINT] Sprint 1 [reaudit] despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 06:24:36] [MODIFICACIÓN] smart-cicd.yml, initial-build.yml — Removed DealerManagementService, IdempotencyService, MaintenanceService, AlertService (non-existent directories)

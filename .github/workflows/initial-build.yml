@@ -69,30 +69,18 @@ jobs:
           - name: auditservice
             context: ./backend
             dockerfile: ./backend/AuditService/Dockerfile
-          - name: idempotencyservice
-            context: ./backend
-            dockerfile: ./backend/IdempotencyService/Dockerfile
           - name: adminservice
             context: ./backend
             dockerfile: ./backend/AdminService/Dockerfile
           - name: contactservice
             context: ./backend
             dockerfile: ./backend/ContactService/Dockerfile
-          - name: dealermanagementservice
-            context: ./backend
-            dockerfile: ./backend/DealerManagementService/Dockerfile
           - name: chatbotservice
             context: ./backend
             dockerfile: ./backend/ChatbotService/Dockerfile
-          - name: maintenanceservice
-            context: ./backend
-            dockerfile: ./backend/MaintenanceService/Dockerfile
           - name: comparisonservice
             context: ./backend
             dockerfile: ./backend/ComparisonService/Dockerfile
-          - name: alertservice
-            context: ./backend
-            dockerfile: ./backend/AlertService/Dockerfile
           - name: reviewservice
             context: ./backend
             dockerfile: ./backend/ReviewService/Dockerfile
