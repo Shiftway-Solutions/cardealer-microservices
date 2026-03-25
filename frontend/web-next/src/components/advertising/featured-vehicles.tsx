@@ -232,24 +232,27 @@ export default function FeaturedVehicles({
         seenVehicles.add(key);
         return true;
       })
-      .slice(0, effectiveMaxItems).map((v, i) => {
-      const primaryImg = v.images
-        ?.filter(img => img.url && !img.url.startsWith('blob:'))
-        .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url;
-      return {
-        vehicleId: v.id,
-        campaignId: '',
-        position: i,
-        qualityScore: 0,
-        title: v.title || `${v.year} ${v.make} ${v.model}`,
-        slug: v.slug,
-        imageUrl: primaryImg,
-        price: v.price,
-        currency: v.currency || 'DOP',
-        location:
-          [normalizeLocationName(v.city ?? ''), normalizeLocationName(v.state ?? '')].filter(Boolean).join(', ') || 'R.D.',
-      };
-    });
+      .slice(0, effectiveMaxItems)
+      .map((v, i) => {
+        const primaryImg = v.images
+          ?.filter(img => img.url && !img.url.startsWith('blob:'))
+          .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url;
+        return {
+          vehicleId: v.id,
+          campaignId: '',
+          position: i,
+          qualityScore: 0,
+          title: v.title || `${v.year} ${v.make} ${v.model}`,
+          slug: v.slug,
+          imageUrl: primaryImg,
+          price: v.price,
+          currency: v.currency || 'DOP',
+          location:
+            [normalizeLocationName(v.city ?? ''), normalizeLocationName(v.state ?? '')]
+              .filter(Boolean)
+              .join(', ') || 'R.D.',
+        };
+      });
   }, [fallbackData, effectiveMaxItems]);
 
   const accentColor =
@@ -308,9 +311,23 @@ export default function FeaturedVehicles({
   }
 
   // Use rotation items if available, otherwise fallback to regular vehicles
-  const rotationVehicles = (rotation?.items || [])
-    .filter(v => v.title && v.imageUrl && v.price)
-    .slice(0, effectiveMaxItems);
+  // P0-005: Also filter E2E test vehicles from rotation items
+  // P0-007: Deduplicate rotation items by title (make+model+year not available here)
+  const rotationVehicles = useMemo(() => {
+    const items = (rotation?.items || [])
+      .filter(v => {
+        if (!v.title || !v.imageUrl || !v.price) return false;
+        const t = (v.title || '').toUpperCase();
+        return !t.includes('E2E') && !t.includes('DO NOT BUY');
+      });
+    const seen = new Set<string>();
+    return items.filter(v => {
+      const key = (v.title || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, effectiveMaxItems);
+  }, [rotation?.items, effectiveMaxItems]);
   const vehicles = rotationVehicles.length > 0 ? rotationVehicles : fallbackVehicles;
 
   // When no paid vehicles are active AND no fallback vehicles — hide the section entirely

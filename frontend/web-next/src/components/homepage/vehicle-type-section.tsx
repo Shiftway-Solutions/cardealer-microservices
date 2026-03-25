@@ -228,7 +228,9 @@ function VehicleCard({
   const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
   const location =
-    [normalizeLocationName(vehicle.city), normalizeLocationName(vehicle.state)].filter(Boolean).join(', ') || 'R.D.';
+    [normalizeLocationName(vehicle.city), normalizeLocationName(vehicle.state)]
+      .filter(Boolean)
+      .join(', ') || 'R.D.';
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
