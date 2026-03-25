@@ -234,7 +234,8 @@ export default function FeaturedVehicles({
         imageUrl: primaryImg,
         price: v.price,
         currency: v.currency || 'DOP',
-        location: [normalizeLocationName(v.city ?? ''), v.state].filter(Boolean).join(', ') || 'R.D.',
+        location:
+          [normalizeLocationName(v.city ?? ''), v.state].filter(Boolean).join(', ') || 'R.D.',
       };
     });
   }, [fallbackData, effectiveMaxItems]);

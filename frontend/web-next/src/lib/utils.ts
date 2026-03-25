@@ -82,10 +82,10 @@ const CITY_NORMALIZATIONS: Record<string, string> = {
   'Santo DomingoNorte': 'Santo Domingo Norte',
   'Santo DomingoEste': 'Santo Domingo Este',
   'Santo DomingoOeste': 'Santo Domingo Oeste',
-  'SantoDomingoNorte': 'Santo Domingo Norte',
-  'SantoDomingoEste': 'Santo Domingo Este',
-  'SantoDomingoOeste': 'Santo Domingo Oeste',
-  'SantoDomingo': 'Santo Domingo',
+  SantoDomingoNorte: 'Santo Domingo Norte',
+  SantoDomingoEste: 'Santo Domingo Este',
+  SantoDomingoOeste: 'Santo Domingo Oeste',
+  SantoDomingo: 'Santo Domingo',
 };
 
 export function normalizeLocationName(name: string): string {

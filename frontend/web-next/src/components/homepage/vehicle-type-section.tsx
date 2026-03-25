@@ -227,7 +227,8 @@ function VehicleCard({
   const fallbackImage = getVehicleFallbackImage(vehicle.id, vehicle.make, vehicle.bodyStyle);
   const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
-  const location = [normalizeLocationName(vehicle.city), vehicle.state].filter(Boolean).join(', ') || 'R.D.';
+  const location =
+    [normalizeLocationName(vehicle.city), vehicle.state].filter(Boolean).join(', ') || 'R.D.';
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
