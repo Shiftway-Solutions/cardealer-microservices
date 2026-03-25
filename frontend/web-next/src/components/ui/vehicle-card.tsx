@@ -113,9 +113,10 @@ export function VehicleCard({
 
   const fuelIcons: Record<string, React.ReactNode> = {
     Gasolina: <Fuel className="h-3.5 w-3.5" />,
-    Diesel: <Fuel className="h-3.5 w-3.5" />,
+    Diésel: <Fuel className="h-3.5 w-3.5" />,
     Eléctrico: <Zap className="h-3.5 w-3.5" />,
     Híbrido: <Zap className="h-3.5 w-3.5" />,
+    GLP: <Fuel className="h-3.5 w-3.5" />,
   };
 
   if (variant === 'horizontal') {

@@ -272,31 +272,35 @@ function mapTransmission(val: string | number | undefined): string {
 }
 
 /**
- * Map backend fuelType enum to frontend string
+ * Map backend fuelType enum to Spanish display label
  */
 function mapFuelType(val: string | number | undefined): string {
   const s = String(val ?? '')
     .toLowerCase()
     .replace(/\s+/g, '');
   const map: Record<string, string> = {
-    '0': 'gasoline',
-    gasoline: 'gasoline',
-    '1': 'diesel',
-    diesel: 'diesel',
-    '2': 'electric',
-    electric: 'electric',
-    '3': 'hybrid',
-    hybrid: 'hybrid',
-    '4': 'hybrid',
-    pluginhybrid: 'hybrid',
-    '5': 'gasoline',
-    hydrogen: 'gasoline',
-    '6': 'gasoline',
-    flexfuel: 'gasoline',
-    '7': 'gasoline',
-    naturalgas: 'gasoline',
+    '0': 'Gasolina',
+    gasoline: 'Gasolina',
+    gasolina: 'Gasolina',
+    '1': 'Diésel',
+    diesel: 'Diésel',
+    diésel: 'Diésel',
+    '2': 'Eléctrico',
+    electric: 'Eléctrico',
+    eléctrico: 'Eléctrico',
+    '3': 'Híbrido',
+    hybrid: 'Híbrido',
+    híbrido: 'Híbrido',
+    '4': 'Híbrido',
+    pluginhybrid: 'Híbrido',
+    '5': 'Gasolina',
+    hydrogen: 'Gasolina',
+    '6': 'Gasolina',
+    flexfuel: 'Gasolina',
+    '7': 'Gasolina',
+    naturalgas: 'GLP',
   };
-  return map[s] || s || 'gasoline';
+  return map[s] || s || 'Gasolina';
 }
 
 /**

@@ -704,7 +704,16 @@ export function generateSponsoredVehiclesForSlot(
     },
   ];
 
-  return DEMO_SPONSORED.slice(0, maxAds).map(v => ({
+  // Shuffle array using slot position as seed to get variety across different slots
+  // and different page loads (Date-based component changes per minute)
+  const shuffled = [...DEMO_SPONSORED];
+  const seedBase = slotPosition.length + (Date.now() % 60000);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.abs((seedBase * (i + 1) * 31) % (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, maxAds).map(v => ({
     ...v,
     slotPosition,
     impressionToken: `imp-${Date.now()}-${v.id}`,

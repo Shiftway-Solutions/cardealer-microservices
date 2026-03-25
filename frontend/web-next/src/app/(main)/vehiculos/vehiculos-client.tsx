@@ -383,7 +383,6 @@ export default function VehiculosClient() {
     results,
     isLoading,
     isFetching,
-    isPlaceholderData,
     error,
     refetch,
     activeFilterCount,
@@ -432,89 +431,14 @@ export default function VehiculosClient() {
   const currentPage = filters.page ?? 1;
   const totalPages = results?.totalPages ?? 1;
 
-  // ── Infinite scroll ──────────────────────────────────────────────────────
-  const [allVehicles, setAllVehicles] = React.useState<VehicleCardData[]>([]);
-  const sentinelRef = React.useRef<HTMLDivElement>(null);
-  const prevFiltersKeyRef = React.useRef<string | null>(null);
-
-  // Key that ignores page number — changes only when real search params change
-  const filtersKey = React.useMemo(() => {
-    const { page: _, ...rest } = filters;
-    return JSON.stringify(rest);
-  }, [filters]);
-
-  // When real search params change: reset accumulated list and scroll to top
-  React.useEffect(() => {
-    if (prevFiltersKeyRef.current === null) {
-      prevFiltersKeyRef.current = filtersKey;
-      return;
-    }
-    if (prevFiltersKeyRef.current !== filtersKey) {
-      prevFiltersKeyRef.current = filtersKey;
-      setAllVehicles([]);
+  // ── Pagination ───────────────────────────────────────────────────────────
+  const handlePageChange = React.useCallback(
+    (page: number) => {
+      setFilter('page', page);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [filtersKey]);
-
-  // Accumulate pages as they load
-  React.useEffect(() => {
-    // Guard: never update accumulated list with placeholder (stale) data.
-    // When filtersKey changes, React Query serves the previous query's data as
-    // placeholderData while the new query is in-flight. Without this guard the
-    // accumulation fires (because `filters.page` also changed on filter reset)
-    // and overwrites the cleared list with stale vehicles from the old query.
-    if (isLoading || isPlaceholderData || vehicles.length === 0) return;
-
-    const responsePage = results?.page ?? 1;
-    if (responsePage === 1) {
-      // Page 1 of a REAL response → always replace (new filter, initial load, clear)
-      setAllVehicles(vehicles);
-    } else if (allVehicles.length === 0) {
-      // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
-      // (race condition). Reset to page 1 to recover gracefully.
-      setFilter('page', 1);
-    } else {
-      // Page > 1 and we have prior results → append deduped
-      setAllVehicles(prev => {
-        const ids = new Set(prev.map((v: VehicleCardData) => v.id));
-        return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles, isLoading, isPlaceholderData]);
-
-  // Intersection observer: trigger next page when sentinel enters viewport
-  React.useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Guard: allVehicles.length > 0 prevents the observer from incrementing
-        // the page during the debounce window after a filter change clears the list.
-        // Without this guard: when allVehicles is cleared, the sentinel appears at
-        // the top of the page; with isFetching=false (old cached query still active)
-        // and totalPages=7 (stale all-vehicles data), the observer fires setFilter('page',2).
-        // The debounce then fetches Honda+Civic page 2 (empty), causing totalCount=3
-        // but allVehicles=[] — the permanent "no results" bug.
-        if (
-          entry.isIntersecting &&
-          !isLoading &&
-          !isFetching &&
-          currentPage < totalPages &&
-          allVehicles.length > 0
-        ) {
-          setFilter('page', currentPage + 1);
-        }
-      },
-      { rootMargin: '600px' }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-    // allVehicles.length is required in deps so the closure captures the correct
-    // value; the observer re-creates when the list transitions 0→N (page 1 loaded)
-    // so subsequent page loads work correctly.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, isFetching, currentPage, totalPages, setFilter, allVehicles.length]);
+    },
+    [setFilter]
+  );
   // ─────────────────────────────────────────────────────────────────────────
 
   // Build active filter chips for display
@@ -700,12 +624,12 @@ export default function VehiculosClient() {
 
   // Render accumulated vehicles with ad slots every 6 items
   const renderResults = () => {
-    if (!allVehicles.length) return null;
+    if (!vehicles.length) return null;
 
     if (viewMode === 'list') {
       return (
         <>
-          {allVehicles.map((vehicle: VehicleCardData, i: number) => (
+          {vehicles.map((vehicle: VehicleCardData, i: number) => (
             <React.Fragment key={vehicle.id}>
               <VehicleCard
                 vehicle={vehicle}
@@ -731,7 +655,7 @@ export default function VehiculosClient() {
     const sponsoredPool = [...topSponsored, ...inlineSponsored];
     let sponsoredOffset = 0;
 
-    allVehicles.forEach((vehicle: VehicleCardData, i: number) => {
+    vehicles.forEach((vehicle: VehicleCardData, i: number) => {
       items.push(
         <VehicleCard
           key={vehicle.id}
@@ -1131,12 +1055,12 @@ export default function VehiculosClient() {
             )}
 
             {/* Loading skeleton — only on initial load */}
-            {!error && isLoading && allVehicles.length === 0 && (
+            {!error && isLoading && vehicles.length === 0 && (
               <VehiclesGridSkeleton viewMode={viewMode} />
             )}
 
             {/* Results grid with ad slots */}
-            {!error && allVehicles.length > 0 && (
+            {!error && vehicles.length > 0 && (
               <div
                 className={cn(
                   viewMode === 'grid'
@@ -1149,7 +1073,7 @@ export default function VehiculosClient() {
             )}
 
             {/* Empty state */}
-            {!error && !isLoading && !isFetching && allVehicles.length === 0 && (
+            {!error && !isLoading && !isFetching && vehicles.length === 0 && (
               <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center shadow-sm dark:bg-slate-900">
                 <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
                   <span className="text-5xl">🔍</span>
@@ -1178,25 +1102,85 @@ export default function VehiculosClient() {
               </div>
             )}
 
-            {/* Infinite scroll sentinel — triggers next page load */}
-            <div ref={sentinelRef} className="h-px" />
-
-            {/* Loading more indicator */}
-            {(isLoading || isFetching) && allVehicles.length > 0 && (
+            {/* Loading indicator */}
+            {(isLoading || isFetching) && vehicles.length > 0 && (
               <div className="mt-2 flex justify-center py-8">
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <RefreshCcw className="text-primary h-4 w-4 animate-spin" />
-                  Cargando más vehículos…
+                  Cargando vehículos…
                 </div>
               </div>
             )}
 
-            {/* End of results */}
-            {!isLoading && !isFetching && allVehicles.length > 0 && currentPage >= totalPages && (
-              <p className="text-muted-foreground mt-8 pb-6 text-center text-xs">
-                Has visto los <span className="font-semibold">{totalResults.toLocaleString()}</span>{' '}
-                vehículos
-              </p>
+            {/* Pagination */}
+            {!isLoading && !isFetching && vehicles.length > 0 && totalPages > 1 && (
+              <nav
+                aria-label="Paginación de resultados"
+                className="mt-8 flex flex-col items-center gap-3 pb-6"
+              >
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="border-border bg-card text-muted-foreground hover:bg-muted rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Página anterior"
+                  >
+                    Anterior
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => {
+                      // Show first, last, current, and neighbors
+                      if (p === 1 || p === totalPages) return true;
+                      if (Math.abs(p - currentPage) <= 1) return true;
+                      return false;
+                    })
+                    .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && p - (arr[idx - 1] ?? 0) > 1) acc.push('ellipsis');
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item, idx) =>
+                      item === 'ellipsis' ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="text-muted-foreground px-2 text-sm"
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => handlePageChange(item)}
+                          className={cn(
+                            'min-w-[36px] rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                            item === currentPage
+                              ? 'bg-primary border-primary text-white'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                          )}
+                          aria-current={item === currentPage ? 'page' : undefined}
+                          aria-label={`Página ${item}`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="border-border bg-card text-muted-foreground hover:bg-muted rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Página siguiente"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Mostrando página {currentPage} de {totalPages} ({totalResults.toLocaleString()}{' '}
+                  vehículos)
+                </p>
+              </nav>
             )}
           </main>
         </div>

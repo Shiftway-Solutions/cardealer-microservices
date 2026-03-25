@@ -1854,3 +1854,10 @@ test
 [2026-03-25 06:24:36] [MODIFICACIÓN] smart-cicd.yml, initial-build.yml — Removed DealerManagementService, IdempotencyService, MaintenanceService, AlertService (non-existent directories)
 [2026-03-25 07:41:19] [AUDIT-SPRINT] Sprint 1 [fix] despachado: Homepage & Navegación Pública (Guest)
 [2026-03-25 07:50:50] [AUDIT-SPRINT] Sprint 1 [reaudit] despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 08:34:20] [AUDIT-SPRINT] Sprint 1 [fix] despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 08:36:20] [AUDIT-SPRINT] Sprint 1 [reaudit] despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 09:11:51] [AUDIT-SPRINT] Sprint 1 completado (ciclo completo)
+[2026-03-25 09:11:51] [AUDIT-SPRINT] Sprint 2 [audit] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 10:10:22] [AUDIT-SPRINT] Sprint 2 [fix] despachado: Búsqueda & Filtros de Vehículos (Guest)
+[2026-03-25 10:21:39] [MODIFICACIÓN] Sprint 2 FIX — Corregidos 3 bugs: FRONTEND-018 (fuelType en español), FRONTEND-024 (paginación), FRONTEND-025 (rotación sponsored). Gate Pre-Commit pasado.
+[2026-03-25 10:21:52] [AUDIT-SPRINT] Sprint 2 [reaudit] despachado: Búsqueda & Filtros de Vehículos (Guest)
