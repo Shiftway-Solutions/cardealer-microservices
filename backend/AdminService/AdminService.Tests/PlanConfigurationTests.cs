@@ -4,13 +4,14 @@ using Xunit;
 namespace AdminService.Tests.Shared;
 
 /// <summary>
-/// Tests for PlanConfiguration — the single source of truth for OKLA v2 plan mapping.
+/// Tests for PlanConfiguration — the single source of truth for OKLA v5 plan mapping.
 /// Ensures consistency between backend enum names, frontend display names, and pricing.
+/// 6 dealer plans: Libre ($0), Visible ($29), Starter ($59), Pro ($99), Elite ($349), Enterprise ($599)
 /// </summary>
 public class PlanConfigurationTests
 {
     // =========================================================================
-    // GetDisplayName — maps internal names → v2 display names
+    // GetDisplayName — maps internal names → v5 display names
     // =========================================================================
 
     [Theory]
@@ -21,9 +22,9 @@ public class PlanConfigurationTests
     [InlineData("basic", "Visible")]
     [InlineData("Professional", "Pro")]
     [InlineData("professional", "Pro")]
-    [InlineData("Enterprise", "Elite")]
-    [InlineData("enterprise", "Elite")]
-    public void GetDisplayName_FromEnumNames_ReturnsV2Name(string internalName, string expected)
+    [InlineData("Enterprise", "Enterprise")]
+    [InlineData("enterprise", "Enterprise")]
+    public void GetDisplayName_FromEnumNames_ReturnsV5Name(string internalName, string expected)
     {
         Assert.Equal(expected, PlanConfiguration.GetDisplayName(internalName));
     }
@@ -31,22 +32,22 @@ public class PlanConfigurationTests
     [Theory]
     [InlineData("Libre", "Libre")]
     [InlineData("Visible", "Visible")]
+    [InlineData("Starter", "Starter")]
     [InlineData("Pro", "Pro")]
     [InlineData("Elite", "Elite")]
     [InlineData("libre", "Libre")]
     [InlineData("visible", "Visible")]
+    [InlineData("starter", "Starter")]
     [InlineData("pro", "Pro")]
     [InlineData("elite", "Elite")]
-    public void GetDisplayName_FromV2Names_IsIdempotent(string name, string expected)
+    public void GetDisplayName_FromV5Names_IsIdempotent(string name, string expected)
     {
         Assert.Equal(expected, PlanConfiguration.GetDisplayName(name));
     }
 
     [Theory]
-    [InlineData("Starter", "Visible")]  // Old v1 name maps to Visible
-    [InlineData("starter", "Visible")]
-    [InlineData("Premium", "Elite")]     // Alias maps to Elite
-    [InlineData("Custom", "Elite")]      // Custom maps to Elite
+    [InlineData("Premium", "Elite")]      // Alias maps to Elite
+    [InlineData("Custom", "Enterprise")]   // Custom maps to Enterprise
     public void GetDisplayName_FromLegacyNames_MapsCorrectly(string legacyName, string expected)
     {
         Assert.Equal(expected, PlanConfiguration.GetDisplayName(legacyName));
@@ -64,15 +65,15 @@ public class PlanConfigurationTests
     }
 
     // =========================================================================
-    // GetMonthlyPrice — returns v2 USD prices
+    // GetMonthlyPrice — returns v5 USD prices
     // =========================================================================
 
     [Theory]
     [InlineData("Free", 0)]
     [InlineData("Basic", 29)]
-    [InlineData("Professional", 89)]
-    [InlineData("Enterprise", 199)]
-    public void GetMonthlyPrice_FromEnumNames_ReturnsV2Price(string name, decimal expected)
+    [InlineData("Professional", 99)]
+    [InlineData("Enterprise", 599)]
+    public void GetMonthlyPrice_FromEnumNames_ReturnsV5Price(string name, decimal expected)
     {
         Assert.Equal(expected, PlanConfiguration.GetMonthlyPrice(name));
     }
@@ -80,23 +81,21 @@ public class PlanConfigurationTests
     [Theory]
     [InlineData("Libre", 0)]
     [InlineData("Visible", 29)]
-    [InlineData("Pro", 89)]
-    [InlineData("Elite", 199)]
-    public void GetMonthlyPrice_FromV2Names_ReturnsCorrectPrice(string name, decimal expected)
+    [InlineData("Starter", 59)]
+    [InlineData("Pro", 99)]
+    [InlineData("Elite", 349)]
+    [InlineData("Enterprise", 599)]
+    public void GetMonthlyPrice_FromV5Names_ReturnsCorrectPrice(string name, decimal expected)
     {
         Assert.Equal(expected, PlanConfiguration.GetMonthlyPrice(name));
     }
 
     [Theory]
-    [InlineData("Starter", 29)]   // Old v1 Starter→Visible=$29 (NOT $49)
-    [InlineData("Premium", 199)]  // Premium→Elite=$199 (NOT $299)
-    public void GetMonthlyPrice_FromLegacyNames_ReturnsV2Price_NotV1Price(string name, decimal expected)
+    [InlineData("Premium", 349)]   // Premium→Elite=$349
+    [InlineData("Custom", 599)]    // Custom→Enterprise=$599
+    public void GetMonthlyPrice_FromLegacyNames_ReturnsV5Price(string name, decimal expected)
     {
-        // Critical regression test: old v1 prices ($49, $149, $299) must NOT be returned
         Assert.Equal(expected, PlanConfiguration.GetMonthlyPrice(name));
-        Assert.NotEqual(49m, PlanConfiguration.GetMonthlyPrice("Starter"));
-        Assert.NotEqual(149m, PlanConfiguration.GetMonthlyPrice("Pro"));
-        Assert.NotEqual(299m, PlanConfiguration.GetMonthlyPrice("Enterprise"));
     }
 
     [Fact]
@@ -114,8 +113,8 @@ public class PlanConfigurationTests
     [InlineData("Free", "libre")]
     [InlineData("Basic", "visible")]
     [InlineData("Professional", "pro")]
-    [InlineData("Enterprise", "elite")]
-    [InlineData("Starter", "visible")]
+    [InlineData("Enterprise", "enterprise")]
+    [InlineData("Starter", "starter")]
     [InlineData("Premium", "elite")]
     [InlineData(null, "libre")]
     [InlineData("", "libre")]
@@ -129,25 +128,29 @@ public class PlanConfigurationTests
     // =========================================================================
 
     [Fact]
-    public void AllDisplayNames_HasFourTiersInOrder()
+    public void AllDisplayNames_HasSixTiersInOrder()
     {
         var names = PlanConfiguration.AllDisplayNames;
-        Assert.Equal(4, names.Count);
+        Assert.Equal(6, names.Count);
         Assert.Equal("Libre", names[0]);
         Assert.Equal("Visible", names[1]);
-        Assert.Equal("Pro", names[2]);
-        Assert.Equal("Elite", names[3]);
+        Assert.Equal("Starter", names[2]);
+        Assert.Equal("Pro", names[3]);
+        Assert.Equal("Elite", names[4]);
+        Assert.Equal("Enterprise", names[5]);
     }
 
     [Fact]
     public void PricesByDisplayName_MatchesExpected()
     {
         var prices = PlanConfiguration.PricesByDisplayName;
-        Assert.Equal(4, prices.Count);
+        Assert.Equal(6, prices.Count);
         Assert.Equal(0m, prices["Libre"]);
         Assert.Equal(29m, prices["Visible"]);
-        Assert.Equal(89m, prices["Pro"]);
-        Assert.Equal(199m, prices["Elite"]);
+        Assert.Equal(59m, prices["Starter"]);
+        Assert.Equal(99m, prices["Pro"]);
+        Assert.Equal(349m, prices["Elite"]);
+        Assert.Equal(599m, prices["Enterprise"]);
     }
 
     [Fact]
@@ -155,21 +158,25 @@ public class PlanConfigurationTests
     {
         Assert.Equal(PlanConfiguration.PriceLibre, PlanConfiguration.PricesByDisplayName["Libre"]);
         Assert.Equal(PlanConfiguration.PriceVisible, PlanConfiguration.PricesByDisplayName["Visible"]);
+        Assert.Equal(PlanConfiguration.PriceStarter, PlanConfiguration.PricesByDisplayName["Starter"]);
         Assert.Equal(PlanConfiguration.PricePro, PlanConfiguration.PricesByDisplayName["Pro"]);
         Assert.Equal(PlanConfiguration.PriceElite, PlanConfiguration.PricesByDisplayName["Elite"]);
+        Assert.Equal(PlanConfiguration.PriceEnterprise, PlanConfiguration.PricesByDisplayName["Enterprise"]);
     }
 
     // =========================================================================
-    // Consistency: v2 prices match frontend plan-config.ts exactly
+    // Consistency: v5 prices match frontend plan-config.ts exactly
     // =========================================================================
 
     [Fact]
-    public void V2Prices_MatchFrontendPlanConfig()
+    public void V5Prices_MatchFrontendPlanConfig()
     {
         // These must match frontend/web-next/src/lib/plan-config.ts DEALER_PLAN_PRICES
         Assert.Equal(0m, PlanConfiguration.PriceLibre);
         Assert.Equal(29m, PlanConfiguration.PriceVisible);
-        Assert.Equal(89m, PlanConfiguration.PricePro);
-        Assert.Equal(199m, PlanConfiguration.PriceElite);
+        Assert.Equal(59m, PlanConfiguration.PriceStarter);
+        Assert.Equal(99m, PlanConfiguration.PricePro);
+        Assert.Equal(349m, PlanConfiguration.PriceElite);
+        Assert.Equal(599m, PlanConfiguration.PriceEnterprise);
     }
 }

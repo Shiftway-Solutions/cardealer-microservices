@@ -12,7 +12,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { formatPrice } from '@/lib/format';
+import { normalizeLocationName } from '@/lib/utils';
 import { useResponsiveMaxItems } from '@/hooks/use-responsive-max-items';
 
 // ─────────────────────────────────────────────
@@ -226,7 +227,7 @@ function VehicleCard({
   const fallbackImage = getVehicleFallbackImage(vehicle.id, vehicle.make, vehicle.bodyStyle);
   const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
-  const location = [vehicle.city, vehicle.state].filter(Boolean).join(', ') || 'R.D.';
+  const location = [normalizeLocationName(vehicle.city), vehicle.state].filter(Boolean).join(', ') || 'R.D.';
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
@@ -370,7 +371,16 @@ export default function VehicleTypeSection({
     retry: 1,
   });
 
-  const vehicles = data?.vehicles?.slice(0, effectiveMaxItems) ?? [];
+  // FIX FRONTEND-009: Deduplicate vehicles by ID to prevent same vehicle appearing twice
+  const vehicles = useMemo(() => {
+    const items = data?.vehicles?.slice(0, effectiveMaxItems) ?? [];
+    const seen = new Set<string>();
+    return items.filter((v: VehicleItem) => {
+      if (seen.has(v.id)) return false;
+      seen.add(v.id);
+      return true;
+    });
+  }, [data?.vehicles, effectiveMaxItems]);
 
   // Loading skeleton
   if (isLoading) {

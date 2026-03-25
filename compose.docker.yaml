@@ -63,15 +63,14 @@ services:
     image: rabbitmq:3.12-management-alpine
     container_name: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: cardealer
-      RABBITMQ_DEFAULT_PASS_FILE: /run/secrets/rabbitmq_password
-    secrets:
-      - rabbitmq_password
+      RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq.conf
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
     ports:
       - "5672:5672"
       - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - cardealer-net
     healthcheck:
@@ -98,7 +97,7 @@ services:
   gateway:
     build:
       context: ./backend
-      dockerfile: Gateway/Gateway.Api/Dockerfile
+      dockerfile: Gateway/Dockerfile
     container_name: gateway
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -126,7 +125,7 @@ services:
   authservice:
     build:
       context: ./backend
-      dockerfile: AuthService/AuthService.Api/Dockerfile
+      dockerfile: AuthService/Dockerfile
     container_name: authservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -169,7 +168,7 @@ services:
   userservice:
     build:
       context: ./backend
-      dockerfile: UserService/UserService.Api/Dockerfile
+      dockerfile: UserService/Dockerfile
     container_name: userservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -201,7 +200,7 @@ services:
   roleservice:
     build:
       context: ./backend
-      dockerfile: RoleService/RoleService.Api/Dockerfile
+      dockerfile: RoleService/Dockerfile
     container_name: roleservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -233,7 +232,7 @@ services:
   errorservice:
     build:
       context: ./backend
-      dockerfile: ErrorService/ErrorService.Api/Dockerfile
+      dockerfile: ErrorService/Dockerfile
     container_name: errorservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -293,7 +292,7 @@ services:
   notificationservice:
     build:
       context: ./backend
-      dockerfile: NotificationService/NotificationService.Api/Dockerfile
+      dockerfile: NotificationService/Dockerfile
     container_name: notificationservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -338,7 +337,7 @@ services:
   billingservice:
     build:
       context: ./backend
-      dockerfile: BillingService/BillingService.Api/Dockerfile
+      dockerfile: BillingService/Dockerfile
     container_name: billingservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -361,7 +360,7 @@ services:
   crmservice:
     build:
       context: ./backend
-      dockerfile: CRMService/CRMService.Api/Dockerfile
+      dockerfile: CRMService/Dockerfile
     container_name: crmservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -384,7 +383,7 @@ services:
   mediaservice:
     build:
       context: ./backend
-      dockerfile: MediaService/MediaService.Api/Dockerfile
+      dockerfile: MediaService/Dockerfile
     container_name: mediaservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -469,7 +468,7 @@ services:
   auditservice:
     build:
       context: ./backend
-      dockerfile: AuditService/AuditService.Api/Dockerfile
+      dockerfile: AuditService/Dockerfile
     container_name: auditservice
     environment:
       ASPNETCORE_ENVIRONMENT: Docker

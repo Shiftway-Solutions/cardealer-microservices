@@ -1829,3 +1829,24 @@ test
 [2026-03-24 19:17:12] [GATE] Iniciando Gate Pre-Commit...
 [2026-03-24 19:25:09] [GIT] Commit de correcciones CRÍTICAS: /auth/login redirect, S3 presigned URLs, env vars, backoff api-client
 [2026-03-24 19:42:24] [GIT] PUSH exitoso a main → CI/CD completado: build ✅ tests ✅ docker push (MediaService+Frontend Web) ✅ Deploy K8s ✅ Verify ✅ — commit 68242aa2
+[2026-03-24 23:25:53] [MODIFICACIÓN] ~/.openclaw/agents/*/models.json y auth-profiles.json — Eliminado provider ollama (NON-PREMIUM INTEGRATION fallida). Ollama no instalado/corriendo causaba TypeError:fetch-failed cada 60s + lane queue backlog + timeout en github-copilot:github. Fix: removido Ollama de models.json y auth-profiles.json de ambos agentes (main, dev-senior). OpenClaw reiniciado y verificado OK.
+[2026-03-25 00:03:15] [EJECUCIÓN] Gate Pre-Commit PASSED (8/8) → Commit 9d61af03 + da7debd7 pushed → CI/CD ✓ → Deploy to production ✓ → Health Check ✓ → Smoke Test ✓ → E2E pending
+[2026-03-25 00:46:57] [AUDIT-PLAN] Plan de auditoría cargado: 313 items totales
+[2026-03-25 00:46:57] [AUDIT-PLAN]   Frontend: 172 | Backend: 65 | Planes: 35 | IA/UX: 17 | Legal: 14
+[2026-03-25 00:46:57] [AUDIT-PLAN]   Hallazgos P0 (críticos): 10
+[2026-03-25 00:47:00] [CREACIÓN] .prompts/monitor_prompt1.py — Plan de auditoría integral (313 items, 5 fases, 10 P0)
+[2026-03-25 00:47:00] [AUDIT-PLAN] Plan de auditoría cargado: 313 items totales
+[2026-03-25 00:47:00] [AUDIT-PLAN]   Frontend: 172 | Backend: 65 | Planes: 35 | IA/UX: 17 | Legal: 14
+[2026-03-25 00:47:00] [AUDIT-PLAN]   Hallazgos P0 (críticos): 10
+[2026-03-25 00:47:00] [AUDIT-PLAN] Report generated: /Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/audit-plan-20260325_004700.md
+[2026-03-25 00:52:00] [BACKUP] .prompts/monitor_prompt1.py — pre-refactoring
+[2026-03-25 00:57:02] [AUDIT-SPRINT] Sprint 1 despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 01:01:12] [MODIFICACIÓN] .github/copilot-instructions.md — Actualizado: eliminada referencia OpenClaw, nuevo rol CPSO condensado con todas las disciplinas, gate y permisos
+[2026-03-25 01:04:13] [MODIFICACIÓN] .github/copilot-instructions.md — Refactor: eliminada referencia a OpenClaw, nuevo rol CPSO con ciclo autónomo, disciplinas, monitoreo prompt_6 y gate condensado
+[2026-03-25 01:32:08] [MODIFICACIÓN] PlanConfiguration.cs — Actualizado a v5: 6 planes (Starter , Enterprise ), Elite , Pro 
+[2026-03-25 01:32:08] [MODIFICACIÓN] PlanConfigurationTests.cs — Tests actualizados a v5
+[2026-03-25 01:32:08] [MODIFICACIÓN] vender-cta.tsx — Planes seller renombrados: Gratis→Libre, Premium→Estándar, PRO→Verificado
+[2026-03-25 01:32:08] [MODIFICACIÓN] monitor_prompt1.py — Refactored: ciclo audit→fix→reaudit, Sprint 11 chatbots, Chrome-only
+[2026-03-25 01:35:13] [AUDIT-SPRINT] Sprint 1 [audit] despachado: Homepage & Navegación Pública (Guest)
+[2026-03-25 02:09:03] [GATE] ✅ Sprint 1 Audit — All gates passed (dotnet build, pnpm lint/typecheck/test/build)
+[2026-03-25 02:09:13] [AUDIT-SPRINT] Sprint 1 [fix] despachado: Homepage & Navegación Pública (Guest)

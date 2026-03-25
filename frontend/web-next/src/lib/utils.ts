@@ -75,6 +75,25 @@ export function formatMileage(km: number): string {
 }
 
 /**
+ * FIX FRONTEND-016: Normalize known Dominican Republic city names
+ * that may be stored without proper spacing (e.g., "Santo DomingoNorte" → "Santo Domingo Norte")
+ */
+const CITY_NORMALIZATIONS: Record<string, string> = {
+  'Santo DomingoNorte': 'Santo Domingo Norte',
+  'Santo DomingoEste': 'Santo Domingo Este',
+  'Santo DomingoOeste': 'Santo Domingo Oeste',
+  'SantoDomingoNorte': 'Santo Domingo Norte',
+  'SantoDomingoEste': 'Santo Domingo Este',
+  'SantoDomingoOeste': 'Santo Domingo Oeste',
+  'SantoDomingo': 'Santo Domingo',
+};
+
+export function normalizeLocationName(name: string): string {
+  if (!name) return name;
+  return CITY_NORMALIZATIONS[name] || name;
+}
+
+/**
  * Format date in local format
  */
 export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions): string {

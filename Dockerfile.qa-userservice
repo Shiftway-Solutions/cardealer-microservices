@@ -1,0 +1,23 @@
+# UserService QA Build  
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy shared libraries
+COPY _Shared/ ./_Shared/
+
+# Copy UserService
+COPY UserService/ ./UserService/
+WORKDIR /src/UserService
+
+RUN dotnet restore UserService.Api/UserService.Api.csproj && \
+    dotnet build UserService.Api/UserService.Api.csproj -c Release --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+WORKDIR /app
+EXPOSE 8080
+
+COPY --from=build /src/UserService/UserService.Api/bin/Release/net8.0 .
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD wget -qO- http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "UserService.Api.dll"]

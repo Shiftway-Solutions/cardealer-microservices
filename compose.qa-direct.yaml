@@ -1,0 +1,175 @@
+# Minimal QA Compose - Direct binary mount (no Docker build delays)
+# Usage: docker compose -f compose.qa-direct.yaml up -d
+
+services:
+  # Infrastructure
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-qa
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: authservice,userservice
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_qa_data:/var/lib/postgresql/data
+      - ./scripts/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-qa
+    ports:
+      - "6379:6379"
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq-qa
+    environment:
+      RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq.conf
+    volumes:
+      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # Core Services (using pre-compiled binaries mounted directly)
+  authservice:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+    container_name: authservice-qa
+    command: dotnet AuthService.Api.dll
+    working_dir: /app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      DB_HOST: postgres-qa
+      DB_PORT: 5432
+      DB_NAME: authservice
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis-qa
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq-qa
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: cardealer
+      RABBITMQ_PASSWORD: cardealer-dev-password
+      RabbitMQ__UserName: cardealer
+      RabbitMQ__Password: cardealer-dev-password
+      RabbitMQ__HostName: rabbitmq-qa
+      RabbitMQ__Port: 5672
+      JWT_SECRET_KEY: dev-secret-key-for-jwt-testing-only-must-be-long-enough
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "15085:8080"
+    volumes:
+      - ./backend/AuthService/AuthService.Api/bin/Release/net8.0:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  userservice:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+    container_name: userservice-qa
+    command: dotnet UserService.Api.dll
+    working_dir: /app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      DB_HOST: postgres-qa
+      DB_PORT: 5432
+      DB_NAME: userservice
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq-qa
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: cardealer
+      RABBITMQ_PASSWORD: cardealer-dev-password
+      RabbitMQ__UserName: cardealer
+      RabbitMQ__Password: cardealer-dev-password
+      RabbitMQ__HostName: rabbitmq-qa
+      RabbitMQ__Port: 5672
+      JWT_SECRET_KEY: dev-secret-key-for-jwt-testing-only-must-be-long-enough
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "15086:8080"
+    volumes:
+      - ./backend/UserService/UserService.Api/bin/Release/net8.0:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  gateway:
+    image: mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+    container_name: gateway-qa
+    command: dotnet Gateway.Api.dll
+    working_dir: /app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      RabbitMQ__UserName: cardealer
+      RabbitMQ__Password: cardealer-dev-password
+      RabbitMQ__HostName: rabbitmq-qa
+      RabbitMQ__Port: 5672
+      JWT_SECRET_KEY: dev-secret-key-for-jwt-testing-only-must-be-long-enough
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/Gateway/Gateway.Api/bin/Release/net8.0:/app:ro
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  cardealer-net-qa:
+    driver: bridge
+
+volumes:
+  postgres_qa_data:

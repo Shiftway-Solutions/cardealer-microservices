@@ -166,6 +166,8 @@ public class VehicleRepository : IVehicleRepository
             .Include(v => v.Images.Where(i => i.IsPrimary))
             .Include(v => v.Category)
             .Where(v => !v.IsDeleted && v.IsFeatured && v.Status == VehicleStatus.Active)
+            // FIX FRONTEND-008: Exclude E2E test vehicles from featured listings
+            .Where(v => v.Title == null || !v.Title.Contains("E2E"))
             .OrderByDescending(v => v.CreatedAt)
             .Take(take)
             .ToListAsync();
@@ -222,7 +224,9 @@ public class VehicleRepository : IVehicleRepository
         var query = _context.Vehicles
             .Include(v => v.Images.Where(i => i.IsPrimary))
             .Include(v => v.Category)
-            .Where(v => !v.IsDeleted && v.Status == VehicleStatus.Active);
+            .Where(v => !v.IsDeleted && v.Status == VehicleStatus.Active)
+            // FIX FRONTEND-008: Exclude E2E test vehicles from public listings
+            .Where(v => v.Title == null || !v.Title.Contains("E2E"));
 
         // Full-text search using PostgreSQL PlainToTsQuery (safe for any text input)
         if (!string.IsNullOrWhiteSpace(p.SearchTerm))

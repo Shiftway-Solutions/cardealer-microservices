@@ -1,0 +1,181 @@
+# Minimal QA Compose - Only infrastructure + core 3 services for testing
+# Usage: docker compose -f compose.qa.yaml up -d
+
+version: "3.8"
+
+services:
+  # Infrastructure
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-qa
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: authservice,userservice,roleservice
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_qa_data:/var/lib/postgresql/data
+      - ./scripts/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-qa
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_qa_data:/data
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq-qa
+    environment:
+      RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq.conf
+    volumes:
+      - rabbitmq_qa_data:/var/lib/rabbitmq
+      - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./config/definitions.json:/etc/rabbitmq/definitions.json:ro
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  consul:
+    image: hashicorp/consul:1.17
+    container_name: consul-qa
+    ports:
+      - "8500:8500"
+    volumes:
+      - consul_qa_data:/consul/data
+    networks:
+      - cardealer-net-qa
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0
+
+  # Core Services
+  authservice:
+    build:
+      context: .
+      dockerfile: Dockerfile.qa-runtime-authservice
+    container_name: authservice-qa
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      DB_HOST: postgres-qa
+      DB_PORT: 5432
+      DB_NAME: authservice
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis-qa
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq-qa
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: cardealer
+      RABBITMQ_PASSWORD: cardealer-dev-password
+      CONSUL_ADDRESS: http://consul-qa:8500
+      JWT_SECRET_KEY: dev-secret-key-that-is-long-enough-for-jwt
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "15085:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  userservice:
+    build:
+      context: .
+      dockerfile: Dockerfile.qa-runtime-userservice
+    container_name: userservice-qa
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      DB_HOST: postgres-qa
+      DB_PORT: 5432
+      DB_NAME: userservice
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq-qa
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: cardealer
+      RABBITMQ_PASSWORD: cardealer-dev-password
+      CONSUL_ADDRESS: http://consul-qa:8500
+      JWT_SECRET_KEY: dev-secret-key-that-is-long-enough-for-jwt
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "15086:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.qa-runtime-gateway
+    container_name: gateway-qa
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      CONSUL_ADDRESS: http://consul-qa:8500
+      JWT_SECRET_KEY: dev-secret-key-that-is-long-enough-for-jwt
+      JWT_ISSUER: CarDealer
+      JWT_AUDIENCE: CarDealerApp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - consul
+    networks:
+      - cardealer-net-qa
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  cardealer-net-qa:
+    driver: bridge
+
+volumes:
+  postgres_qa_data:
+  redis_qa_data:
+  rabbitmq_qa_data:
+  consul_qa_data:

@@ -13,6 +13,7 @@ import { apiClient } from '@/lib/api-client';
 import type { RotatedVehicle } from '@/types/advertising';
 import { formatPrice } from '@/lib/format';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
+import { normalizeLocationName } from '@/lib/utils';
 
 function FeaturedVehicleCard({
   vehicle,
@@ -233,7 +234,7 @@ export default function FeaturedVehicles({
         imageUrl: primaryImg,
         price: v.price,
         currency: v.currency || 'DOP',
-        location: [v.city, v.state].filter(Boolean).join(', ') || 'R.D.',
+        location: [normalizeLocationName(v.city ?? ''), v.state].filter(Boolean).join(', ') || 'R.D.',
       };
     });
   }, [fallbackData, effectiveMaxItems]);

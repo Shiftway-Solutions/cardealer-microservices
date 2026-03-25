@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import { normalizeLocationName } from '@/lib/utils';
 import type {
   Vehicle,
   VehicleImage,
@@ -342,7 +343,7 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
   }));
 
   // Location: handle both {city, province} and {city, state} shapes
-  const city = (raw.city as string) || '';
+  const city = normalizeLocationName((raw.city as string) || '');
   const province = (raw.province as string) || (raw.state as string) || '';
   const country = (raw.country as string) || 'DO';
 
@@ -456,7 +457,7 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
   })[0];
   const imageUrl = (firstImage?.url as string) || '/placeholder-car.jpg';
   // Location: backend entity uses state, DTO uses province
-  const city = (raw.city as string) || '';
+  const city = normalizeLocationName((raw.city as string) || '');
   const province = (raw.province as string) || (raw.state as string) || '';
   const location = [city, province].filter(Boolean).join(', ');
   // Seller info

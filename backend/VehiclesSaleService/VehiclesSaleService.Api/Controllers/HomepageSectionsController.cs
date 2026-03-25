@@ -256,6 +256,8 @@ public class HomepageSectionsController : ControllerBase
                 .AsNoTracking()
                 .Where(vs => vs.HomepageSectionConfigId == s.Id)
                 .Where(vs => vs.Vehicle.Status == VehicleStatus.Active && !vs.Vehicle.IsDeleted)
+                // FIX FRONTEND-008: Exclude E2E test vehicles from homepage sections
+                .Where(vs => vs.Vehicle.Title == null || !vs.Vehicle.Title.Contains("E2E"))
                 .Where(vs => vs.StartDate == null || vs.StartDate <= now)
                 .Where(vs => vs.EndDate == null || vs.EndDate >= now)
                 .OrderByDescending(vs => vs.IsPinned)
@@ -427,6 +429,8 @@ public class HomepageSectionsController : ControllerBase
         var vehicles = await _context.VehicleHomepageSections
             .AsNoTracking()
             .Where(vhs => vhs.HomepageSectionConfigId == section.Id)
+            // FIX FRONTEND-008: Exclude E2E test vehicles
+            .Where(vhs => vhs.Vehicle.Title == null || !vhs.Vehicle.Title.Contains("E2E"))
             .OrderByDescending(vhs => vhs.IsPinned)
             .ThenBy(vhs => vhs.SortOrder)
             .Include(vhs => vhs.Vehicle)

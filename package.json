@@ -1,0 +1,28 @@
+{
+  "name": "cardealer-microservices",
+  "version": "1.0.0",
+  "description": "",
+  "main": "decode-jwt.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gregorymorenoiem/cardealer-microservices.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gregorymorenoiem/cardealer-microservices/issues"
+  },
+  "homepage": "https://github.com/gregorymorenoiem/cardealer-microservices#readme",
+  "dependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

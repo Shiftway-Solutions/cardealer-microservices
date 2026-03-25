@@ -1,37 +1,35 @@
 namespace CarDealer.Contracts.Enums;
 
 /// <summary>
-/// Single source of truth for OKLA plan mapping (v5 — Freemium Model v5).
+/// Single source of truth for OKLA plan mapping (v2 — Freemium Model v3).
 /// 
-/// 6 Dealer plans aligned with frontend/web-next/src/lib/plan-config.ts:
-///   Libre ($0), Visible ($29), Starter ($59), Pro ($99), Elite ($349), Enterprise ($599)
-///
 /// Backend enum (BillingService.Domain): Free=0, Basic=1, Professional=2, Enterprise=3, Custom=4
-/// This class bridges internal enum names and the v5 display names.
+/// Frontend v2 display names:            Libre,   Visible,  Pro,           Elite
+/// Prices (USD/month):                   $0,      $29,      $89,           $199
+///
+/// This class bridges the gap between internal enum names and the v2 display names
+/// used by the frontend and shown to users. Always use this for any plan-related
+/// display, pricing lookup, or breakdown aggregation.
 /// </summary>
 public static class PlanConfiguration
 {
     // =========================================================================
-    // V5 PLAN DISPLAY NAMES (match frontend/web-next/src/lib/plan-config.ts)
+    // V2 PLAN DISPLAY NAMES (match frontend/web-next/src/lib/plan-config.ts)
     // =========================================================================
 
     public const string DisplayLibre = "Libre";
     public const string DisplayVisible = "Visible";
-    public const string DisplayStarter = "Starter";
     public const string DisplayPro = "Pro";
     public const string DisplayElite = "Elite";
-    public const string DisplayEnterprise = "Enterprise";
 
     // =========================================================================
-    // V5 MONTHLY PRICES (USD) — match frontend DEALER_PLAN_PRICES
+    // V2 MONTHLY PRICES (USD) — match frontend DEALER_PLAN_PRICES
     // =========================================================================
 
     public const decimal PriceLibre = 0m;
     public const decimal PriceVisible = 29m;
-    public const decimal PriceStarter = 59m;
-    public const decimal PricePro = 99m;
-    public const decimal PriceElite = 349m;
-    public const decimal PriceEnterprise = 599m;
+    public const decimal PricePro = 89m;
+    public const decimal PriceElite = 199m;
 
     /// <summary>
     /// Maps an internal plan name (from SubscriptionPlan enum or DealerManagementService)
@@ -46,18 +44,20 @@ public static class PlanConfiguration
             "free" => DisplayLibre,
             "basic" => DisplayVisible,
             "professional" => DisplayPro,
-            "enterprise" => DisplayEnterprise,
+            "enterprise" => DisplayElite,
 
-            // V5 names (idempotent / from frontend)
+            // Old v1 names (from docs and seed data)
+            "starter" => DisplayVisible,
+
+            // V2 names (idempotent / from frontend)
             "libre" => DisplayLibre,
             "visible" => DisplayVisible,
-            "starter" => DisplayStarter,
             "pro" => DisplayPro,
             "elite" => DisplayElite,
 
             // Aliases
             "premium" => DisplayElite,
-            "custom" => DisplayEnterprise,
+            "custom" => DisplayElite, // Custom plans show as Elite tier
             "none" or "" or null => DisplayLibre,
 
             _ => DisplayLibre
@@ -74,11 +74,9 @@ public static class PlanConfiguration
         return (internalPlan ?? "").Trim().ToLowerInvariant() switch
         {
             "free" or "libre" or "none" or "" => PriceLibre,
-            "basic" or "visible" => PriceVisible,
-            "starter" => PriceStarter,
+            "basic" or "starter" or "visible" => PriceVisible,
             "professional" or "pro" => PricePro,
-            "elite" or "premium" => PriceElite,
-            "enterprise" or "custom" => PriceEnterprise,
+            "enterprise" or "elite" or "premium" or "custom" => PriceElite,
             _ => PriceLibre
         };
     }
@@ -92,34 +90,30 @@ public static class PlanConfiguration
         return (internalPlan ?? "").Trim().ToLowerInvariant() switch
         {
             "free" or "libre" or "none" or "" => "libre",
-            "basic" or "visible" => "visible",
-            "starter" => "starter",
+            "basic" or "starter" or "visible" => "visible",
             "professional" or "pro" => "pro",
-            "elite" or "premium" => "elite",
-            "enterprise" or "custom" => "enterprise",
+            "enterprise" or "elite" or "premium" or "custom" => "elite",
             _ => "libre"
         };
     }
 
     /// <summary>
-    /// Returns all v5 plan display names in tier order (ascending).
+    /// Returns all v2 plan display names in tier order (ascending).
     /// </summary>
     public static IReadOnlyList<string> AllDisplayNames { get; } = new[]
     {
-        DisplayLibre, DisplayVisible, DisplayStarter, DisplayPro, DisplayElite, DisplayEnterprise
+        DisplayLibre, DisplayVisible, DisplayPro, DisplayElite
     };
 
     /// <summary>
-    /// Returns all v5 plan prices in tier order (ascending).
+    /// Returns all v2 plan prices in tier order (ascending).
     /// </summary>
     public static IReadOnlyDictionary<string, decimal> PricesByDisplayName { get; } =
         new Dictionary<string, decimal>
         {
             [DisplayLibre] = PriceLibre,
             [DisplayVisible] = PriceVisible,
-            [DisplayStarter] = PriceStarter,
             [DisplayPro] = PricePro,
             [DisplayElite] = PriceElite,
-            [DisplayEnterprise] = PriceEnterprise,
         };
 }

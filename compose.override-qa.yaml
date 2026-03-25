@@ -1,0 +1,19 @@
+# Override compose - disable non-existent services & disable agents for QA
+# Usage: docker compose -f compose.docker.yaml -f compose.override-qa.yaml up -d
+
+services:
+  # Services that don't exist in backend/ - disabled for QA
+  productservice:
+    profiles: ["disabled"]
+  listingagent:
+    profiles: ["disabled"]
+  searchagent:
+    profiles: ["disabled"]
+  supportagent:
+    profiles: ["disabled"]
+  recoagent:
+    profiles: ["disabled"]
+  
+  # Optional: disable frontend for backend-only testing
+  # frontend-web:
+  #   profiles: ["disabled"]

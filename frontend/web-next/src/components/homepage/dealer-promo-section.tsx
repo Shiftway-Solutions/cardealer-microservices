@@ -11,6 +11,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Building2, Star, ChevronRight } from 'lucide-react';
@@ -50,6 +51,7 @@ const DEFAULT_SLOTS = 10;
 
 function DealerCard({ dealer }: { dealer: DealerPromoItem }) {
   const href = dealer.portalSlug ? `/portal/${dealer.portalSlug}` : `/dealers?id=${dealer.id}`;
+  const [logoError, setLogoError] = useState(false);
 
   return (
     <Link
@@ -64,13 +66,14 @@ function DealerCard({ dealer }: { dealer: DealerPromoItem }) {
 
       {/* Logo */}
       <div className="relative mb-3 h-20 w-full overflow-hidden rounded-xl">
-        {dealer.logoUrl ? (
+        {dealer.logoUrl && !logoError ? (
           <Image
             src={dealer.logoUrl}
             alt={dealer.name}
             fill
             sizes="(max-width: 640px) 160px, 220px"
             className="object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
+            onError={() => setLogoError(true)}
           />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30">

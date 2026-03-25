@@ -96,7 +96,7 @@ export function HeroCTA() {
     <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
       {!isAuthenticated ? (
         <>
-          <Button asChild size="lg" className="hover:bg-muted text-primary gap-2 bg-white px-8">
+          <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-primary">
             <Link href="/vender/registro">
               Crear cuenta y vender
               <ArrowRight className="h-5 w-5" />
@@ -112,7 +112,7 @@ export function HeroCTA() {
           </Button>
         </>
       ) : canSell ? (
-        <Button asChild size="lg" className="hover:bg-muted text-primary gap-2 bg-white px-8">
+        <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-primary">
           <Link href="/publicar">
             <BadgeCheck className="h-5 w-5" />
             Publicar mi vehículo
@@ -123,7 +123,7 @@ export function HeroCTA() {
         <Button
           size="lg"
           disabled
-          className="text-primary cursor-not-allowed gap-2 bg-white/50 px-8"
+          className="cursor-not-allowed gap-2 bg-white/50 px-8 text-primary"
         >
           <Loader2 className="h-5 w-5 animate-spin" />
           Verificación en proceso...
@@ -163,14 +163,14 @@ export function FinalCTA() {
   return (
     <>
       {!isAuthenticated ? (
-        <Button asChild size="lg" className="hover:bg-muted text-primary gap-2 bg-white px-8">
+        <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-primary">
           <Link href="/vender/registro">
             Crear cuenta y vender
             <ArrowRight className="h-5 w-5" />
           </Link>
         </Button>
       ) : canSell ? (
-        <Button asChild size="lg" className="hover:bg-muted text-primary gap-2 bg-white px-8">
+        <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white px-8 text-primary">
           <Link href="/publicar">
             Publicar ahora
             <ArrowRight className="h-5 w-5" />
@@ -180,7 +180,7 @@ export function FinalCTA() {
         <Button
           size="lg"
           disabled
-          className="text-primary cursor-not-allowed gap-2 bg-white/50 px-8"
+          className="cursor-not-allowed gap-2 bg-white/50 px-8 text-primary"
         >
           <Loader2 className="h-5 w-5 animate-spin" />
           Verificación en proceso...
@@ -215,11 +215,11 @@ export function VenderPricing() {
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      {/* Libre Plan */}
+      {/* Free Plan */}
       <Card className="border-border border-2">
         <CardContent className="p-6">
           <div className="mb-4">
-            <h3 className="text-foreground text-xl font-bold">Libre</h3>
+            <h3 className="text-foreground text-xl font-bold">Gratis</h3>
             <p className="text-muted-foreground text-sm">Para vendedores ocasionales</p>
           </div>
           <div className="mb-6">
@@ -227,18 +227,18 @@ export function VenderPricing() {
           </div>
           <ul className="mb-6 space-y-3">
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />1 publicación activa
+              <CheckCircle className="h-4 w-4 text-primary" />1 publicación activa
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               Hasta {pricing.freeMaxPhotos} fotos por vehículo
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               Duración: {pricing.basicListingDays} días
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               Contacto por WhatsApp
             </li>
           </ul>
@@ -248,114 +248,113 @@ export function VenderPricing() {
         </CardContent>
       </Card>
 
-      {/* Estándar Plan */}
-      <Card className="border-primary relative border-2">
+      {/* Premium Plan */}
+      <Card className="relative border-2 border-primary">
         {/* Popular badge */}
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="bg-primary rounded-full px-3 py-1 text-xs font-semibold text-white">
+          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">
             MÁS POPULAR
           </span>
         </div>
 
         <CardContent className="p-6">
           <div className="mb-4">
-            <h3 className="text-foreground text-xl font-bold">Estándar</h3>
+            <h3 className="text-foreground text-xl font-bold">Premium</h3>
             <p className="text-muted-foreground text-sm">Vende más rápido</p>
           </div>
           <div className="mb-6">
             <span className="text-foreground text-4xl font-bold">
-              {formatPrice(pricing.sellerEstandar)}
-            </span>
-            <span className="text-muted-foreground text-sm">/publicación</span>
-          </div>
-          <ul className="mb-6 space-y-3">
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />1 publicación por pago
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Hasta 10 fotos por vehículo
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Duración: 60 días
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Prioridad en búsquedas
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Badge de vendedor verificado
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Boosts disponibles
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Compartir en redes sociales
-            </li>
-          </ul>
-          <Button asChild className="bg-primary hover:bg-primary/90 w-full">
-            <Link href="/publicar?plan=estandar">Elegir Estándar</Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Verificado Plan */}
-      <Card className="border-border border-2">
-        <CardContent className="p-6">
-          <div className="mb-4">
-            <h3 className="text-foreground text-xl font-bold">Verificado</h3>
-            <p className="text-muted-foreground text-sm">Máxima visibilidad</p>
-          </div>
-          <div className="mb-6">
-            <span className="text-foreground text-4xl font-bold">
-              {formatPrice(pricing.sellerVerificado)}
+              {formatPrice(pricing.sellerPremium)}
             </span>
             <span className="text-muted-foreground text-sm">/mes</span>
           </div>
           <ul className="mb-6 space-y-3">
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Hasta 3 publicaciones activas
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Hasta 5 publicaciones activas
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Hasta 12 fotos por vehículo
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Hasta 30 fotos por vehículo
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Duración: 90 días
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Publicaciones permanentes
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Máxima prioridad en búsquedas
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Prioridad en búsquedas
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               Badge de vendedor verificado
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Estadísticas detalladas
+              <CheckCircle className="h-4 w-4 text-primary" />2 destacadas/mes
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Estadísticas detalladas
+            </li>
+          </ul>
+          <Button asChild className="w-full bg-primary hover:bg-primary/90">
+            <Link href="/publicar?plan=premium">Elegir Premium</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* PRO Plan */}
+      <Card className="border-border border-2">
+        <CardContent className="p-6">
+          <div className="mb-4">
+            <h3 className="text-foreground text-xl font-bold">PRO</h3>
+            <p className="text-muted-foreground text-sm">Máxima visibilidad</p>
+          </div>
+          <div className="mb-6">
+            <span className="text-foreground text-4xl font-bold">
+              {formatPrice(pricing.sellerProPlan)}
+            </span>
+            <span className="text-muted-foreground text-sm">/mes</span>
+          </div>
+          <ul className="mb-6 space-y-3">
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Hasta 15 publicaciones activas
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Hasta 50 fotos por vehículo
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Publicaciones permanentes
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Máxima prioridad en búsquedas
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Badge de vendedor verificado
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />5 destacadas/mes
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Analytics avanzados
+            </li>
+            <li className="text-muted-foreground flex items-center gap-2 text-sm">
+              <CheckCircle className="h-4 w-4 text-primary" />
               Alertas automáticas de baja de precio
             </li>
             <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
-              Vista 360° disponible
-            </li>
-            <li className="text-muted-foreground flex items-center gap-2 text-sm">
-              <CheckCircle className="text-primary h-4 w-4" />
+              <CheckCircle className="h-4 w-4 text-primary" />
               Soporte prioritario
             </li>
           </ul>
           <Button asChild className="w-full bg-gray-900 hover:bg-gray-800">
-            <Link href="/publicar?plan=verificado">Elegir Verificado</Link>
+            <Link href="/publicar?plan=pro">Elegir PRO</Link>
           </Button>
         </CardContent>
       </Card>

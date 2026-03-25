@@ -1,0 +1,56 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "users": [
+    {
+      "name": "cardealer",
+      "password": "cardealer-dev-password",
+      "tags": "administrator"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "cardealer",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "user-events",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "auth-events",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "vehicle-events",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "billing-events",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "amq.topic",
+      "type": "topic",
+      "durable": true
+    }
+  ]
+}

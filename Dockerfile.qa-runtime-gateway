@@ -1,0 +1,12 @@
+# Gateway QA Runtime-Only (using pre-built binaries)
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+WORKDIR /app
+EXPOSE 8080
+
+# Copy pre-built binaries
+COPY backend/Gateway/Gateway.Api/bin/Release/net8.0 .
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD wget -qO- http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "Gateway.Api.dll"]

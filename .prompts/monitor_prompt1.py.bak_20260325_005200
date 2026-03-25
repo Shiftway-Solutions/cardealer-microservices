@@ -1,0 +1,1014 @@
+#!/usr/bin/env python3
+"""
+monitor_prompt1.py — OKLA Platform Comprehensive Audit Plan
+=============================================================
+Auditoría integral de Frontend + Backend + Planes de Suscripción
+para todas las vistas y todos los tipos de usuario de okla.com.do.
+
+Archivo original (bridge monitor) respaldado en monitor_prompt1.py.bak_*
+
+Este script genera y ejecuta el plan de auditoría completo organizado en fases:
+  FASE 1: Auditoría Frontend (Vistas públicas + por rol de usuario)
+  FASE 2: Auditoría Backend (APIs, seguridad, datos, autenticación)
+  FASE 3: Auditoría de Planes de Suscripción (Alineación negocio ↔ código)
+  FASE 4: Auditoría de IA/Chatbots y UX competitiva
+  FASE 5: Compliance legal RD (Ley 358-05, Ley 172-13, INDOTEL)
+
+Cuentas de prueba:
+  Admin:  admin@okla.local        / Admin123!@#
+  Buyer:  buyer002@okla-test.com  / BuyerTest2026!
+  Dealer: nmateo@okla.com.do      / Dealer2026!@#
+  Seller: gmoreno@okla.com.do     / $Gregory1
+
+Uso:
+  python3 .prompts/monitor_prompt1.py                          # Ejecutar auditoría completa
+  python3 .prompts/monitor_prompt1.py --fase 1                 # Solo frontend
+  python3 .prompts/monitor_prompt1.py --fase 2                 # Solo backend
+  python3 .prompts/monitor_prompt1.py --fase 3                 # Solo suscripciones
+  python3 .prompts/monitor_prompt1.py --rol seller             # Solo auditar vistas de seller
+  python3 .prompts/monitor_prompt1.py --report                 # Generar reporte MD
+  python3 .prompts/monitor_prompt1.py --delegate-openclaw      # Delegar a OpenClaw via prompt_1.md
+"""
+
+import argparse
+import json
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
+# ============================================================================
+# CONFIGURACIÓN
+# ============================================================================
+REPO_ROOT = Path(__file__).parent.parent
+PROMPT_FILE = Path(__file__).parent / "prompt_1.md"
+AUDIT_LOG = REPO_ROOT / ".github" / "copilot-audit.log"
+REPORT_DIR = REPO_ROOT / "audit-reports"
+PRODUCTION_URL = "https://okla.com.do"
+
+ACCOUNTS = {
+    "admin":  {"username": "admin@okla.local",       "password": "Admin123!@#",     "role": "Admin",             "account_type": 4},
+    "buyer":  {"username": "buyer002@okla-test.com",  "password": "BuyerTest2026!",  "role": "Buyer",             "account_type": 1},
+    "dealer": {"username": "nmateo@okla.com.do",      "password": "Dealer2026!@#",   "role": "Dealer",            "account_type": 2},
+    "seller": {"username": "gmoreno@okla.com.do",     "password": "$Gregory1",       "role": "Vendedor Particular","account_type": 1},
+}
+
+# ============================================================================
+# FASE 1: AUDITORÍA FRONTEND — Todas las vistas por tipo de usuario
+# ============================================================================
+FASE_1_FRONTEND = {
+    "nombre": "AUDITORÍA FRONTEND — Vistas por Rol de Usuario",
+    "descripcion": (
+        "Auditar cada vista visible en okla.com.do para cada tipo de usuario "
+        "(Guest, Buyer, Seller, Dealer, Admin). Verificar contenido renderizado, "
+        "navegación, UX, accessibilidad, SEO, responsive design, y consistencia."
+    ),
+
+    # -----------------------------------------------------------------------
+    # 1A. VISTAS PÚBLICAS (Sin Autenticar / Guest)
+    # -----------------------------------------------------------------------
+    "1A_GUEST": {
+        "descripcion": "Vistas accesibles sin autenticación",
+        "vistas": {
+            # --- HOMEPAGE ---
+            "/": {
+                "titulo_esperado": "OKLA - Marketplace de Vehículos",
+                "elementos_criticos": [
+                    "Navbar: Inicio, Comprar, Vender, Dealers, ¿Por qué OKLA?, Ingresar, Registrarse",
+                    "Hero: 'Tu próximo vehículo está en OKLA'",
+                    "Barra de búsqueda con placeholder 'Busca tu vehículo ideal'",
+                    "Categorías rápidas: SUV, Sedán, Camioneta, Deportivo, Híbrido, Eléctrico",
+                    "Trust badges: Vendedores Verificados, Historial Garantizado, Precios Transparentes",
+                    "Estadísticas: 10,000+ Vehículos, 50,000+ Usuarios, 500+ Dealers, 95% Satisfacción",
+                    "Sección: ⭐ Vehículos Destacados (carousel con tag 'Publicidad')",
+                    "Sección: 💎 Vehículos Premium (carousel con tag 'Publicidad')",
+                    "Sección: Concesionarios en OKLA (10 dealers verificados con inventario)",
+                    "Sección: SUVs — Los más solicitados",
+                    "Sección: Crossovers — Versatilidad urbana",
+                    "Sección: Sedanes — Comodidad y eficiencia",
+                    "Disclaimer legal: Ley 358-05, ITBIS, Pro-Consumidor, INDOTEL",
+                    "CTA: Publicar Gratis / Para Dealers",
+                    "Footer: Marketplace, Compañía, Legal, Soporte + Configurar cookies",
+                ],
+                "auditar": [
+                    "FRONTEND-001: ¿Las imágenes de vehículos cargan correctamente (no 403 S3)?",
+                    "FRONTEND-002: ¿Los precios muestran formato RD$ correcto con separadores de miles?",
+                    "FRONTEND-003: ¿El carrusel de vehículos destacados funciona (swipe/arrows)?",
+                    "FRONTEND-004: ¿Los links del footer apuntan a páginas reales o dan 404?",
+                    "FRONTEND-005: ¿La búsqueda rápida redirige a /vehiculos con filtros?",
+                    "FRONTEND-006: ¿Las categorías (SUV, Sedán, etc.) filtran correctamente?",
+                    "FRONTEND-007: ¿El badge 'Publicidad' aparece en todos los vehículos pagados?",
+                    "FRONTEND-008: ¿Vehículo E2E test visible? (Toyota Corolla 2022 — E2E mm8mioxc) → Debe ocultarse",
+                    "FRONTEND-009: ¿Vehículos duplicados en carruseles? (Maserati Ghibli aparece 2x en Sedanes)",
+                    "FRONTEND-010: ¿El disclaimer de Ley 358-05 es legalmente completo?",
+                    "FRONTEND-011: ¿Los concesionarios muestran conteo real de vehículos o datos fake?",
+                    "FRONTEND-012: ¿'Ver inventario' de cada dealer lleva a su página real?",
+                    "FRONTEND-013: ¿Responsive: hero, carruseles, grid dealers funcionan en mobile (375px)?",
+                    "FRONTEND-014: ¿SEO: meta title, description, og:image están configurados?",
+                    "FRONTEND-015: ¿Las estadísticas (10K+, 50K+, 500+, 95%) son datos reales del backend o hardcoded?",
+                    "FRONTEND-016: ¿'Santo DomingoNorte' vs 'Santo Domingo Norte' — inconsistencia en ubicaciones?",
+                    "FRONTEND-017: ¿Tipo de combustible muestra 'gasoline' en inglés — debería ser 'Gasolina'?",
+                ],
+            },
+
+            # --- VEHÍCULOS (LISTADO) ---
+            "/vehiculos": {
+                "titulo_esperado": "Vehículos en Venta | OKLA",
+                "elementos_criticos": [
+                    "Barra búsqueda: 'Busca por marca, modelo, año, color...'",
+                    "Trust bar: Vendedores verificados · +2,400 vehículos activos · Contacto directo · Alertas gratis",
+                    "Filtros: Condición (Nuevo/Usado), Marca y Modelo, Precio (slider RD$0–10M), Año, Carrocería, Ubicación",
+                    "Quick filters: < 1M, 1M–2M, 2M–5M, > 5M",
+                    "Carrocerías: Sedán, SUV, Crossover, Pickup, Hatchback, Coupé, Deportivo, Convertible, Van, Minivan",
+                    "Botón: Filtros avanzados / Crear alerta",
+                    "Sidebar: Recomendados (Publicidad) — 4 vehículos con precios RD$ y ≈USD",
+                    "Tab filters: Ofertas, Nuevos, Recientes, Sto. Domingo, Santiago, Título limpio",
+                    "Resultados: '149 vehículos encontrados' + Guardar búsqueda",
+                    "Vehicle cards: imagen, badge (Particular/Dealer/Verificado), año, km, combustible, ubicación, precio RD$ + ≈USD",
+                    "Sección: Vehículos Patrocinados (Publicidad) — intercalados cada 6-9 resultados",
+                    "Paginación: 15 páginas",
+                ],
+                "auditar": [
+                    "FRONTEND-018: ¿El tipo combustible muestra 'gasoline' (inglés) en vehículos particulares vs 'Gasolina' en patrocinados?",
+                    "FRONTEND-019: ¿Los filtros de precio funcionan y actualizan resultados en tiempo real?",
+                    "FRONTEND-020: ¿La conversión RD$ a USD es correcta? (Tasa ≈60.5 DOP/USD verificar)",
+                    "FRONTEND-021: ¿Los vehículos patrocinados se diferencian visualmente de los orgánicos?",
+                    "FRONTEND-022: ¿'Guardar búsqueda' funciona para usuarios no autenticados? (debería pedir login)",
+                    "FRONTEND-023: ¿'Activar alertas' funciona o requiere autenticación?",
+                    "FRONTEND-024: ¿La paginación (15 páginas) carga correctamente y mantiene filtros?",
+                    "FRONTEND-025: ¿Vehículos patrocinados repiten los mismos 3 (RAV4, CR-V, Tucson) en cada bloque?",
+                    "FRONTEND-026: ¿El ordenamiento 'Más relevantes' funciona con alternativas (precio, año, km)?",
+                    "FRONTEND-027: ¿El filtro 'Título limpio' funciona (verificar backend tiene esta propiedad)?",
+                    "FRONTEND-028: ¿Mobile: los filtros colapsan en drawer/modal en pantallas pequeñas?",
+                    "FRONTEND-029: ¿Vehicle card muestra '0 km' para vehículos nuevos? (Toyota Corolla Cross 0km)",
+                    "FRONTEND-030: ¿'Contactar vendedor' sin auth abre modal de login o permite contacto anónimo?",
+                ],
+            },
+
+            # --- VENDER ---
+            "/vender": {
+                "titulo_esperado": "Vende tu Vehículo | OKLA",
+                "elementos_criticos": [
+                    "Hero: 'Vende tu vehículo al mejor precio'",
+                    "CTA principal: 'Crear cuenta y vender' + 'Ya tengo cuenta'",
+                    "Stats: 10K+ vendidos, 7 días venta promedio, 95% satisfechos, RD$500M+ transado",
+                    "Sección: ¿Cómo funciona? (4 pasos)",
+                    "Sección: ¿Por qué vender en OKLA? (Sin comisiones, Rápido, Visibilidad, Soporte 24/7)",
+                    "Planes de publicación: Gratis (RD$0), Premium (RD$579/mes), PRO (RD$2,029/mes)",
+                ],
+                "auditar": [
+                    "FRONTEND-031: ¿Los planes de /vender coinciden con los de /cuenta/suscripcion?",
+                    "FRONTEND-032: Plan Gratis dice '1 publicación activa, 5 fotos, 30 días' — ¿coincide con backend PlanFeatureLimits?",
+                    "FRONTEND-033: Plan Premium dice 'RD$579/mes' — ¿coincide con pricing del backend? (backend no tiene seller plans)",
+                    "FRONTEND-034: Plan PRO dice 'RD$2,029/mes' — ¿es pricing dinámico o hardcoded?",
+                    "FRONTEND-035: ¿'Comenzar gratis' redirige a registro o publicar directamente?",
+                    "FRONTEND-036: ¿Las estadísticas (10K+, RD$500M+) son datos reales?",
+                    "FRONTEND-037: ¿El CTA 'Ver cómo funciona' tiene video o sección anchor?",
+                ],
+            },
+
+            # --- DEALERS ---
+            "/dealers": {
+                "titulo_esperado": "Para Dealers | OKLA",
+                "elementos_criticos": [
+                    "Hero: 'Vende más vehículos con OKLA'",
+                    "Stats: 500+ Dealers, 10K+ Ventas mensuales, 95% Satisfacción, 24h Soporte",
+                    "Features: Dashboard, Fotos 360°, Analytics, CRM, App Móvil, SEO",
+                    "6 Planes: LIBRE($0), VISIBLE(RD$1,682), STARTER(RD$3,422), PRO(RD$5,742), ÉLITE(RD$20,242), ENTERPRISE(RD$34,742)",
+                    "Testimonios: 3 dealers (Juan Pérez, María García, Carlos Martínez)",
+                    "CTA: 'Comenzar prueba gratis' — 14 días gratis, sin tarjeta",
+                ],
+                "auditar": [
+                    "FRONTEND-038: 6 planes en /dealers vs 4 planes en backend (PlanConfiguration.cs) — DESALINEACIÓN CRÍTICA",
+                    "FRONTEND-039: Planes STARTER y ENTERPRISE no existen en backend — ¿qué pasa si alguien los compra?",
+                    "FRONTEND-040: Plan PRO frontend RD$5,742/mes ≈ $95 USD vs backend $89 USD — diferencia de precio",
+                    "FRONTEND-041: Plan ÉLITE frontend RD$20,242/mes ≈ $335 USD vs backend $199 USD — diferencia ENORME",
+                    "FRONTEND-042: ChatAgent limits: ÉLITE frontend dice 5,000 conv/mes vs backend 2,000 conv — ¿cuál aplica?",
+                    "FRONTEND-043: ¿Los testimonios son reales o ficticios? (Juan Pérez, AutoMax RD — verificar)",
+                    "FRONTEND-044: STARTER dice 'ChatAgent Web 100 conv/mes' — backend no tiene tier Starter",
+                    "FRONTEND-045: ENTERPRISE dice '#1 GARANTIZADO en búsquedas' — ¿legalmente sostenible?",
+                    "FRONTEND-046: ¿'14 días gratis' está implementado en el backend?",
+                    "FRONTEND-047: Badges: MÁS POPULAR (PRO) vs RECOMENDADO (ÉLITE) — ¿estrategia intencional?",
+                    "FRONTEND-048: ¿Los precios RD$ vienen de usePlatformPricing() dinámico o están hardcoded?",
+                ],
+            },
+
+            # --- LOGIN ---
+            "/login": {
+                "titulo_esperado": "OKLA - Marketplace de Vehículos #1 en República Dominicana",
+                "elementos_criticos": [
+                    "Layout split: imagen izquierda + form derecha",
+                    "Stats: 10,000+ Vehículos, 500+ Dealers, 50,000+ Usuarios",
+                    "Social login: Google, Apple",
+                    "Form: Email, Contraseña, Recordarme, ¿Olvidaste tu contraseña?",
+                    "CTA: 'Iniciar sesión' + '¿No tienes cuenta? Regístrate gratis'",
+                ],
+                "auditar": [
+                    "FRONTEND-049: ¿Login con Google OAuth funciona? (callback /callback/google)",
+                    "FRONTEND-050: ¿Login con Apple OAuth funciona? (callback /callback/apple)",
+                    "FRONTEND-051: ¿'Olvidaste tu contraseña' lleva a /recuperar-contrasena o /forgot-password?",
+                    "FRONTEND-052: ¿Hay rate limiting en intentos de login (backend AuthPolicy 20req/min)?",
+                    "FRONTEND-053: ¿Error claro cuando credenciales son incorrectas (no revela si email existe)?",
+                    "FRONTEND-054: ¿El checkbox 'Recordarme' afecta duración del token?",
+                    "FRONTEND-055: ¿CSRF protection en el form de login (double submit cookie)?",
+                ],
+            },
+
+            # --- REGISTRO ---
+            "/registro": {
+                "titulo_esperado": "OKLA - Marketplace de Vehículos #1 en República Dominicana",
+                "elementos_criticos": [
+                    "Social: Google, Apple",
+                    "Intent selector: Comprar / Vender",
+                    "Form: Nombre, Apellido, Email, Teléfono (opcional), Contraseña, Confirmar",
+                    "Checkboxes: Términos, Mayor de 18, Transferencia datos Art. 27 Ley 172-13",
+                    "CTA: 'Crear cuenta' + '¿Ya tienes cuenta? Inicia sesión'",
+                ],
+                "auditar": [
+                    "FRONTEND-056: ¿El consent de Ley 172-13 Art. 27 (datos en USA) es obligatorio?",
+                    "FRONTEND-057: ¿Validación de email (formato, dominio)?",
+                    "FRONTEND-058: ¿Validación de contraseña (mín. caracteres, complejidad)?",
+                    "FRONTEND-059: ¿El teléfono (809-555-0123) valida formato dominicano?",
+                    "FRONTEND-060: ¿Selección Comprar/Vender mapea a UserIntent backend?",
+                    "FRONTEND-061: ¿El registro envía email de verificación? (/verificar-email)",
+                    "FRONTEND-062: ¿Registro de dealer es separado? (/registro/dealer)",
+                    "FRONTEND-063: ¿Protección anti-bot (captcha/honeypot)?",
+                ],
+            },
+
+            # --- OTRAS VISTAS PÚBLICAS ---
+            "/precios": {"auditar": ["FRONTEND-064: ¿Existe y muestra planes actualizados?"]},
+            "/terminos": {"auditar": ["FRONTEND-065: ¿Contenido legal actualizado 2026?"]},
+            "/privacidad": {"auditar": ["FRONTEND-066: ¿Política de privacidad cumple Ley 172-13?"]},
+            "/cookies": {"auditar": ["FRONTEND-067: ¿Banner de cookies funcional? ¿Granular opt-in/out?"]},
+            "/herramientas": {"auditar": ["FRONTEND-068: ¿Calculadora financiamiento/importación funcionan?"]},
+            "/comparar": {"auditar": ["FRONTEND-069: ¿Comparador de vehículos funciona?"]},
+            "/okla-score": {"auditar": ["FRONTEND-070: ¿OKLA Score está implementado o placeholder?"]},
+            "/empleos": {"auditar": ["FRONTEND-071: ¿Página de empleos tiene posiciones reales?"]},
+            "/reclamaciones": {"auditar": ["FRONTEND-072: ¿Formulario de reclamaciones funciona (Ley 358-05)?"]},
+            "/politica-reembolso": {"auditar": ["FRONTEND-073: ¿Existe política de reembolso vigente?"]},
+            "/buscar": {"auditar": ["FRONTEND-074: ¿Búsqueda avanzada vs /vehiculos — cuál se usa?"]},
+            "/offline": {"auditar": ["FRONTEND-075: ¿PWA offline page configurada?"]},
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    # 1B. VISTAS DE BUYER (buyer002@okla-test.com)
+    # -----------------------------------------------------------------------
+    "1B_BUYER": {
+        "descripcion": "Buyer autenticado — funcionalidades de compra",
+        "vistas": {
+            "/": {
+                "auditar": [
+                    "FRONTEND-076: ¿Navbar muestra nombre del buyer y avatar?",
+                    "FRONTEND-077: ¿El botón 'Ingresar' cambia a menú de usuario?",
+                    "FRONTEND-078: ¿Aparece icono de notificaciones con badge contador?",
+                    "FRONTEND-079: ¿El contenido del home es igual que guest o personalizado?",
+                ],
+            },
+            "/vehiculos": {
+                "auditar": [
+                    "FRONTEND-080: ¿'Contactar vendedor' abre modal de contacto (no redirección a login)?",
+                    "FRONTEND-081: ¿Se puede guardar búsqueda como buyer?",
+                    "FRONTEND-082: ¿Las alertas de precio funcionan?",
+                    "FRONTEND-083: ¿Se puede agregar vehículo a favoritos?",
+                ],
+            },
+            "/vehiculos/[slug]": {
+                "auditar": [
+                    "FRONTEND-084: ¿Detalle del vehículo muestra galería, specs, vendedor, ubicación?",
+                    "FRONTEND-085: ¿Botón 'Contactar vendedor' envía contact request al backend?",
+                    "FRONTEND-086: ¿Vista 360° funciona (/vehiculos/[slug]/360)?",
+                    "FRONTEND-087: ¿Se puede compartir vehículo (WhatsApp, social)?",
+                    "FRONTEND-088: ¿PricingAgent muestra valoración de precio?",
+                ],
+            },
+            "/cuenta": {
+                "auditar": [
+                    "FRONTEND-089: ¿Buyer ve dashboard de comprador (favoritos, historial, búsquedas)?",
+                    "FRONTEND-090: ¿Buyer puede convertirse a vendedor? (/cuenta/convert-to-seller)",
+                    "FRONTEND-091: ¿Sección 'Mis Mensajes' muestra conversaciones con vendedores?",
+                ],
+            },
+            "/cuenta/favoritos": {"auditar": ["FRONTEND-092: ¿Lista de favoritos muestra vehículos guardados?"]},
+            "/cuenta/busquedas": {"auditar": ["FRONTEND-093: ¿Búsquedas guardadas con alertas?"]},
+            "/cuenta/mensajes": {"auditar": ["FRONTEND-094: ¿Inbox de mensajes/consultas funcional?"]},
+            "/cuenta/perfil": {"auditar": ["FRONTEND-095: ¿Buyer puede editar nombre, foto, teléfono?"]},
+            "/cuenta/seguridad": {"auditar": ["FRONTEND-096: ¿Cambiar contraseña, 2FA, sesiones activas?"]},
+            "/cuenta/notificaciones": {"auditar": ["FRONTEND-097: ¿Configurar preferencias de notificación?"]},
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    # 1C. VISTAS DE SELLER (gmoreno@okla.com.do)
+    # -----------------------------------------------------------------------
+    "1C_SELLER": {
+        "descripcion": "Seller autenticado — funcionalidades de venta particular",
+        "vistas": {
+            "/": {
+                "auditar": [
+                    "FRONTEND-098: ¿Navbar muestra 'Gregory' + 'Vendedor Particular' + 73 notificaciones?",
+                    "FRONTEND-099: ¿El badge '73' notificaciones es real o datos stale?",
+                    "FRONTEND-100: ¿El contenido del home es idéntico al de guest (observado)?",
+                ],
+            },
+            "/vehiculos": {
+                "auditar": [
+                    "FRONTEND-101: ¿El listado es idéntico al de guest (observado — sí)?",
+                    "FRONTEND-102: ¿El seller ve sus propios vehículos en el listado?",
+                ],
+            },
+            "/cuenta": {
+                "auditar": [
+                    "FRONTEND-103: ¿Dashboard muestra: Mi Garage, Estadísticas, Consultas, Reseñas?",
+                    "FRONTEND-104: ¿Panel de Vendedor muestra plan actual ('Libre') con 'Mejorar →'?",
+                    "FRONTEND-105: ¿Banner upsell: 'Desbloquea todo el potencial de OKLA'?",
+                    "FRONTEND-106: ¿Stats muestran: 0 Activos, 0 Ventas, — Calificación, — Tasa Respuesta?",
+                    "FRONTEND-107: ¿Mis Vehículos Recientes muestra 3 vehículos (Accord Pendiente, Civic Activo, CR-V Pausado)?",
+                    "FRONTEND-108: ¿El Honda Accord muestra 'Pendiente' — ¿qué significa? ¿moderación?",
+                    "FRONTEND-109: ¿El CR-V muestra 'Pausado' con 1 vista, 0 contactos — ¿se puede reactivar?",
+                    "FRONTEND-110: ¿Las Acciones Rápidas (Mis Vehículos, Consultas, Estadísticas, Pagos, Mi Plan) funcionan?",
+                    "FRONTEND-111: ¿Sidebar menú: Dashboard, Perfil, Garage, Estadísticas, Consultas, Reseñas, Búsqueda, Favoritos, Alertas, Pagos, Historial, Seguridad, Notificaciones, Preferencias?",
+                ],
+            },
+            "/cuenta/mis-vehiculos": {
+                "auditar": [
+                    "FRONTEND-112: ¿Lista completa de vehículos del seller con estados?",
+                    "FRONTEND-113: ¿Se puede editar cada vehículo (link 'Editar')?",
+                    "FRONTEND-114: ¿Se puede pausar/activar/eliminar vehículos?",
+                ],
+            },
+            "/cuenta/suscripcion": {
+                "auditar": [
+                    "FRONTEND-115: ¿Muestra plans de seller: Libre, Estándar ($9.99/pub), Verificado ($34.99/mes)?",
+                    "FRONTEND-116: ¿Los precios coinciden con /vender (Gratis, Premium RD$579, PRO RD$2,029)?",
+                    "FRONTEND-117: ¿Seller plans: 3 tiers en /cuenta vs 3 tiers en /vender — SON DIFERENTES NOMBRES Y PRECIOS?",
+                    "FRONTEND-118: ¿Se puede upgradar plan desde esta vista?",
+                ],
+            },
+            "/cuenta/estadisticas": {"auditar": ["FRONTEND-119: ¿Estadísticas de vistas, contactos por vehículo?"]},
+            "/cuenta/pagos": {"auditar": ["FRONTEND-120: ¿Historial de pagos y facturación?"]},
+            "/vender/publicar": {"auditar": ["FRONTEND-121: ¿Formulario de publicación paso a paso?"]},
+            "/vender/editar/[id]": {"auditar": ["FRONTEND-122: ¿Edición de vehículo publicado?"]},
+            "/vender/dashboard": {"auditar": ["FRONTEND-123: ¿Dashboard completo del seller?"]},
+            "/publicar": {"auditar": ["FRONTEND-124: ¿/publicar vs /vender/publicar — cuál se usa? ¿Hay duplicación de rutas?"]},
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    # 1D. VISTAS DE DEALER (nmateo@okla.com.do)
+    # -----------------------------------------------------------------------
+    "1D_DEALER": {
+        "descripcion": "Dealer autenticado — funcionalidades de concesionario",
+        "vistas": {
+            "/": {
+                "auditar": [
+                    "FRONTEND-125: ¿Navbar muestra nombre del dealer + badge verificado?",
+                    "FRONTEND-126: ¿El dealer ve contenido personalizado en home?",
+                ],
+            },
+            "/cuenta": {
+                "auditar": [
+                    "FRONTEND-127: ¿Dashboard de dealer muestra inventario, leads, ventas, analytics?",
+                    "FRONTEND-128: ¿Plan actual del dealer visible con opción de upgrade?",
+                    "FRONTEND-129: ¿CRM integrado disponible según plan?",
+                ],
+            },
+            "/cuenta/suscripcion": {
+                "auditar": [
+                    "FRONTEND-130: ¿Muestra los 6 planes de dealer? (Libre, Visible, Starter, Pro, Elite, Enterprise)",
+                    "FRONTEND-131: ¿Los precios de suscripción coinciden con /dealers?",
+                    "FRONTEND-132: ¿El proceso de upgrade/downgrade funciona?",
+                    "FRONTEND-133: ¿Stripe checkout integrado para pagos?",
+                ],
+            },
+            "/vender/publicar": {"auditar": ["FRONTEND-134: ¿Dealer puede publicar con más fotos según plan?"]},
+            "/vender/importar": {"auditar": ["FRONTEND-135: ¿Importación bulk de vehículos disponible?"]},
+            "/vender/leads": {"auditar": ["FRONTEND-136: ¿Gestión de leads/consultas por vehículo?"]},
+            "/vender/publicidad": {"auditar": ["FRONTEND-137: ¿Gestión de campañas publicitarias?"]},
+            "/vender/promover/[id]": {"auditar": ["FRONTEND-138: ¿Promocionar vehículo individual?"]},
+            "/dealers/[slug]": {"auditar": ["FRONTEND-139: ¿Página pública del dealer con inventario completo?"]},
+        },
+    },
+
+    # -----------------------------------------------------------------------
+    # 1E. VISTAS DE ADMIN (admin@okla.local)
+    # -----------------------------------------------------------------------
+    "1E_ADMIN": {
+        "descripcion": "Admin panel — gestión de plataforma",
+        "vistas": {
+            "/admin": {"auditar": ["FRONTEND-140: ¿Dashboard principal con métricas del sistema?"]},
+            "/admin/usuarios": {"auditar": ["FRONTEND-141: ¿CRUD de usuarios con filtros y búsqueda?"]},
+            "/admin/vehiculos": {"auditar": ["FRONTEND-142: ¿Moderación de vehículos (aprobar/rechazar)?"]},
+            "/admin/dealers": {"auditar": ["FRONTEND-143: ¿Gestión de dealers (verificar, suspender)?"]},
+            "/admin/suscripciones": {"auditar": ["FRONTEND-144: ¿Vista de suscripciones activas por plan?"]},
+            "/admin/facturacion": {"auditar": ["FRONTEND-145: ¿Revenue por plan, MRR, facturas?"]},
+            "/admin/planes": {"auditar": ["FRONTEND-146: ¿Configuración de planes y precios editable?"]},
+            "/admin/configuracion": {"auditar": ["FRONTEND-147: ¿Configuración global de plataforma?"]},
+            "/admin/contenido": {"auditar": ["FRONTEND-148: ¿Gestión de contenido homepage?"]},
+            "/admin/analytics": {"auditar": ["FRONTEND-149: ¿Analytics de plataforma (usuarios, vehículos, revenue)?"]},
+            "/admin/leads": {"auditar": ["FRONTEND-150: ¿Leads/consultas globales?"]},
+            "/admin/soporte": {"auditar": ["FRONTEND-151: ¿Tickets de soporte?"]},
+            "/admin/reportes": {"auditar": ["FRONTEND-152: ¿Reportes de contenido?"]},
+            "/admin/compliance": {"auditar": ["FRONTEND-153: ¿Panel de compliance legal?"]},
+            "/admin/kyc": {"auditar": ["FRONTEND-154: ¿Verificación KYC de usuarios?"]},
+            "/admin/publicidad": {"auditar": ["FRONTEND-155: ¿Gestión de campañas publicitarias?"]},
+            "/admin/banners": {"auditar": ["FRONTEND-156: ¿Banner management?"]},
+            "/admin/promociones": {"auditar": ["FRONTEND-157: ¿Códigos promocionales?"]},
+            "/admin/costos-llm": {"auditar": ["FRONTEND-158: ¿Dashboard de costos de IA/LLM?"]},
+            "/admin/search-agent": {"auditar": ["FRONTEND-159: ¿Testing del SearchAgent IA?"]},
+            "/admin/roles": {"auditar": ["FRONTEND-160: ¿Gestión de roles admin?"]},
+            "/admin/equipo": {"auditar": ["FRONTEND-161: ¿Gestión de equipo interno OKLA?"]},
+            "/admin/mantenimiento": {"auditar": ["FRONTEND-162: ¿Modo mantenimiento?"]},
+            "/admin/sistema": {"auditar": ["FRONTEND-163: ¿Health checks del sistema?"]},
+            "/admin/logs": {"auditar": ["FRONTEND-164: ¿Audit logs?"]},
+            "/admin/reviews": {"auditar": ["FRONTEND-165: ¿Moderación de reseñas?"]},
+            "/admin/transacciones": {"auditar": ["FRONTEND-166: ¿Transacciones financieras?"]},
+            "/admin/secciones": {"auditar": ["FRONTEND-167: ¿Homepage sections editor?"]},
+            "/admin/okla-score": {"auditar": ["FRONTEND-168: ¿Admin OKLA Score config?"]},
+            "/admin/early-bird": {"auditar": ["FRONTEND-169: ¿Early bird program management?"]},
+            "/admin/salud-imagenes": {"auditar": ["FRONTEND-170: ¿Image health dashboard?"]},
+            "/admin/limpieza-imagenes": {"auditar": ["FRONTEND-171: ¿Orphan image cleanup?"]},
+            "/admin/mensajes": {"auditar": ["FRONTEND-172: ¿Admin message management?"]},
+        },
+    },
+}
+
+# ============================================================================
+# FASE 2: AUDITORÍA BACKEND — APIs, Seguridad, Datos
+# ============================================================================
+FASE_2_BACKEND = {
+    "nombre": "AUDITORÍA BACKEND — APIs, Seguridad, Datos, Rendimiento",
+    "descripcion": (
+        "Auditar todos los endpoints del backend, autenticación, autorización, "
+        "seguridad OWASP, datos, rendimiento y consistencia entre servicios."
+    ),
+
+    # -----------------------------------------------------------------------
+    # 2A. AUTENTICACIÓN Y AUTORIZACIÓN
+    # -----------------------------------------------------------------------
+    "2A_AUTH": {
+        "auditar": [
+            "BACKEND-001: ¿JWT tokens se generan con claims correctos (sub, role, account_type, dealer_id)?",
+            "BACKEND-002: ¿HttpOnly cookies (okla_access_token, okla_refresh_token) se setean correctamente?",
+            "BACKEND-003: ¿SameSite=Lax en producción (no None)?",
+            "BACKEND-004: ¿Refresh token rotation implementada (revoca token anterior)?",
+            "BACKEND-005: ¿ClockSkew=0 en Gateway vs ClockSkewMinutes=5 en AuthService — conflicto?",
+            "BACKEND-006: ¿2FA (enable/disable/verify) funciona end-to-end?",
+            "BACKEND-007: ¿Email verification flow completo (register → email → verify)?",
+            "BACKEND-008: ¿Password reset flow completo (forgot → email → reset)?",
+            "BACKEND-009: ¿Phone verification funciona (/api/auth/phone/send-code, /verify)?",
+            "BACKEND-010: ¿OAuth Google/Apple callbacks correctos en producción?",
+            "BACKEND-011: ¿Session management — listar/revocar sesiones funciona?",
+            "BACKEND-012: ¿Rate limiting AuthPolicy 20req/min se aplica correctamente?",
+            "BACKEND-013: ¿El login NO revela si un email existe (timing attack)?",
+            "BACKEND-014: ¿Brute force protection — lockout después de N intentos?",
+            "BACKEND-015: ¿CSRF double submit cookie validación en Gateway?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 2B. GATEWAY Y ROUTING
+    # -----------------------------------------------------------------------
+    "2B_GATEWAY": {
+        "auditar": [
+            "BACKEND-016: ¿Ocelot routes todas configuradas en ocelot.prod.json?",
+            "BACKEND-017: ¿RoleClaimsTransformation mapea claims de Microsoft URI → short?",
+            "BACKEND-018: ¿SecurityHeadersMiddleware setea CSP, HSTS, X-Frame-Options, X-Content-Type?",
+            "BACKEND-019: ¿Rate limiting por route/IP funciona (uploads, AuthPolicy)?",
+            "BACKEND-020: ¿CORS configurado correctamente para okla.com.do?",
+            "BACKEND-021: ¿Health endpoints accesibles sin auth?",
+            "BACKEND-022: ¿Routes de AI processing (/api/ai/*) protegidas adecuadamente?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 2C. SERVICIOS PRINCIPALES
+    # -----------------------------------------------------------------------
+    "2C_SERVICES": {
+        "auditar": [
+            # AdminService
+            "BACKEND-023: ¿GET /api/admin/dashboard/overview retorna datos reales?",
+            "BACKEND-024: ¿GET /api/admin/dashboard/revenue calcula MRR correctamente?",
+            "BACKEND-025: ¿GET /api/public/pricing retorna planes sincronizados con frontend?",
+            "BACKEND-026: ¿POST /api/admin/dealers/{id}/verify actualiza estado del dealer?",
+            "BACKEND-027: ¿GET /api/admin/billing/revenue-by-plan refleja suscripciones reales?",
+            "BACKEND-028: ¿PublicConfigurationsController expone datos sensibles? (platform settings)",
+            # ContactService
+            "BACKEND-029: ¿POST /api/contact-requests crea consulta con UTM tracking?",
+            "BACKEND-030: ¿Los endpoints validan currentUserId para prevenir IDOR?",
+            "BACKEND-031: ¿Las respuestas (/reply) envían notificación al comprador?",
+            "BACKEND-032: ¿El archivado/eliminación de mensajes es soft-delete?",
+            # MediaService
+            "BACKEND-033: ¿S3 presigned URLs se generan correctamente (no 403)?",
+            "BACKEND-034: ¿Magic bytes validation bloquea archivos maliciosos?",
+            "BACKEND-035: ¿SVG upload bloqueado (XSS vector)?",
+            "BACKEND-036: ¿Rate limiting en uploads funciona?",
+            "BACKEND-037: ¿max_images_per_vehicle respeta límites del plan?",
+            # NotificationService
+            "BACKEND-038: ¿Email sending funciona (template-based)?",
+            "BACKEND-039: ¿WhatsApp integration funciona (Twilio/Meta)?",
+            "BACKEND-040: ¿Price alerts disparan notificaciones reales?",
+            "BACKEND-041: ¿Internal API key (/api/internal/*) no expuesto externamente?",
+            # ErrorService
+            "BACKEND-042: ¿POST /api/errors captura errores de frontend?",
+            "BACKEND-043: ¿RabbitMQ publishing de errores críticos funciona?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 2D. SEGURIDAD OWASP TOP 10
+    # -----------------------------------------------------------------------
+    "2D_SECURITY": {
+        "auditar": [
+            "BACKEND-044: [A01] ¿Broken Access Control — endpoints admin accesibles sin token admin?",
+            "BACKEND-045: [A01] ¿IDOR — un buyer puede ver/modificar datos de otro buyer?",
+            "BACKEND-046: [A02] ¿Cryptographic Failures — passwords hasheados con bcrypt/Argon2?",
+            "BACKEND-047: [A02] ¿JWT secret key almacenada seguramente (no en código)?",
+            "BACKEND-048: [A03] ¿SQL Injection — inputs sanitizados en queries (EF Core parameterized)?",
+            "BACKEND-049: [A03] ¿XSS — output encoding en respuestas API?",
+            "BACKEND-050: [A03] ¿Command Injection — inputs no pasan a shell commands?",
+            "BACKEND-051: [A04] ¿Insecure Design — rate limiting en todos los endpoints críticos?",
+            "BACKEND-052: [A05] ¿Security Misconfiguration — debug/swagger disabled en producción?",
+            "BACKEND-053: [A06] ¿Vulnerable Components — NuGet packages actualizados?",
+            "BACKEND-054: [A07] ¿Auth Failures — session fixation, credential stuffing?",
+            "BACKEND-055: [A08] ¿Integrity Failures — JWT signature verification?",
+            "BACKEND-056: [A09] ¿Logging — security events loggeados adecuadamente?",
+            "BACKEND-057: [A10] ¿SSRF — requests a URLs externas validadas?",
+            "BACKEND-058: ¿Prompt Injection — inputs de IA sanitizados?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 2E. DATOS Y CONSISTENCIA
+    # -----------------------------------------------------------------------
+    "2E_DATA": {
+        "auditar": [
+            "BACKEND-059: ¿Los 149 vehículos en /vehiculos coinciden con DB real?",
+            "BACKEND-060: ¿Vehículos de prueba (E2E mm8mioxc) visibles en producción?",
+            "BACKEND-061: ¿Dealers con conteos de inventario correctos (no hardcoded)?",
+            "BACKEND-062: ¿Las estadísticas del homepage (10K+, 50K+) son queries reales?",
+            "BACKEND-063: ¿Conversión de tipos combustible 'gasoline' → 'Gasolina' en API o frontend?",
+            "BACKEND-064: ¿Ubicaciones inconsistentes ('Santo DomingoNorte' vs 'Santo Domingo Norte')?",
+            "BACKEND-065: ¿Tasa de cambio RD$/USD actualizada automáticamente o hardcoded?",
+        ],
+    },
+}
+
+# ============================================================================
+# FASE 3: AUDITORÍA PLANES DE SUSCRIPCIÓN — Estrategia de Negocio
+# ============================================================================
+FASE_3_SUSCRIPCIONES = {
+    "nombre": "AUDITORÍA PLANES DE SUSCRIPCIÓN — Alineación Negocio ↔ Código",
+    "descripcion": (
+        "Auditoría crítica de la estrategia de monetización. Verificar que los planes "
+        "mostrados al usuario coinciden con lo implementado en backend, que los feature gates "
+        "funcionan, y que la estrategia de pricing es competitiva para RD."
+    ),
+
+    # -----------------------------------------------------------------------
+    # 3A. DESALINEACIÓN FRONTEND ↔ BACKEND
+    # -----------------------------------------------------------------------
+    "3A_DESALINEACION": {
+        "severidad": "CRÍTICA",
+        "hallazgos": [
+            {
+                "id": "PLAN-001",
+                "titulo": "Backend tiene 4 planes de dealer, Frontend muestra 6",
+                "detalle": (
+                    "Backend (PlanConfiguration.cs): Libre($0), Visible($29), Pro($89), Elite($199). "
+                    "Frontend (dealer-plans-section.tsx): Libre, Visible(RD$1,682), STARTER(RD$3,422), "
+                    "PRO(RD$5,742), ÉLITE(RD$20,242), ENTERPRISE(RD$34,742). "
+                    "Planes STARTER y ENTERPRISE no existen en backend."
+                ),
+                "impacto": "Si un dealer compra STARTER o ENTERPRISE, el backend no sabe qué plan aplicar",
+                "accion": "Decidir: ¿agregar al backend o eliminar del frontend?",
+            },
+            {
+                "id": "PLAN-002",
+                "titulo": "Precios INCONSISTENTES entre backend y frontend (Pro y Elite)",
+                "detalle": (
+                    "PRO: Backend $89/mes ≈ RD$5,385, Frontend muestra RD$5,742 (diferencia +RD$357). "
+                    "ELITE: Backend $199/mes ≈ RD$12,040, Frontend muestra RD$20,242 (diferencia +RD$8,202!)"
+                ),
+                "impacto": "Cliente paga precio de frontend pero backend registra precio diferente → discrepancia contable",
+                "accion": "Sincronizar precios. Definir fuente de verdad (¿backend API o frontend config?)",
+            },
+            {
+                "id": "PLAN-003",
+                "titulo": "Seller plans NO EXISTEN en backend",
+                "detalle": (
+                    "Frontend /vender muestra: Gratis, Premium(RD$579), PRO(RD$2,029). "
+                    "Frontend /cuenta/suscripcion muestra: Libre, Estándar($9.99/pub), Verificado($34.99/mes). "
+                    "Backend PlanConfiguration.cs solo tiene planes de DEALER. "
+                    "PlanFeatureLimits.cs no tiene seller-specific limits."
+                ),
+                "impacto": "Sellers no pueden realmente pagar/upgradar su plan porque el backend no lo soporta",
+                "accion": "Implementar SellerPlan en backend o unificar seller como subset de dealer plans",
+            },
+            {
+                "id": "PLAN-004",
+                "titulo": "Dos páginas de pricing para sellers con planes DISTINTOS",
+                "detalle": (
+                    "/vender muestra: Gratis, Premium(RD$579/mes, 5 pubs, 30 fotos), PRO(RD$2,029/mes, 15 pubs, 50 fotos). "
+                    "/cuenta/suscripcion muestra: Libre, Estándar($9.99/publicación), Verificado($34.99/mes, 3 pubs, 12 fotos). "
+                    "Son planes completamente diferentes con nombres, precios y features distintos."
+                ),
+                "impacto": "Confusión total del usuario. ¿Cuál es el plan real?",
+                "accion": "Unificar seller plans en una sola definición consistente",
+            },
+            {
+                "id": "PLAN-005",
+                "titulo": "ChatAgent limits difieren entre frontend y backend",
+                "detalle": (
+                    "ÉLITE: Frontend dice 5,000 conv/mes Web + 5,000 WhatsApp. "
+                    "Backend PlanFeatureLimits: ChatAgentMonthlyMessages = 2,000. "
+                    "PRO: Frontend dice 300 conv/mes. "
+                    "Backend: ChatAgentMonthlyMessages = 500."
+                ),
+                "impacto": "Si se implementa enforcement en backend, dealers recibirán menos de lo prometido",
+                "accion": "Alinear limits. Si se vende 5,000, backend debe soportar 5,000",
+            },
+            {
+                "id": "PLAN-006",
+                "titulo": "Feature limits de imágenes inconsistentes",
+                "detalle": (
+                    "Backend PlanFeatureLimits: Libre=10, Visible=20, Pro=30, Elite=40. "
+                    "Frontend /dealers: Libre=5, Visible=10, Starter=12, Pro=15, Elite=20. "
+                    "Frontend /vender: Gratis=5 fotos, Premium=30, PRO=50."
+                ),
+                "impacto": "Backend permite más fotos que lo que el frontend promete (o viceversa)",
+                "accion": "Definir límites definitivos y sincronizar",
+            },
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 3B. COMPETITIVIDAD DE PRECIOS (Mercado RD)
+    # -----------------------------------------------------------------------
+    "3B_COMPETITIVIDAD": {
+        "auditar": [
+            "PLAN-007: ¿Los precios son competitivos vs SuperCarros.com en RD?",
+            "PLAN-008: ¿Los precios son competitivos vs Facebook Marketplace (gratis)?",
+            "PLAN-009: ¿El plan Gratis es suficientemente útil para atraer usuarios?",
+            "PLAN-010: ¿El spread entre Libre y Visible ($29) es apropiado como primer upgrade?",
+            "PLAN-011: ¿El spread entre Pro ($89) y Elite ($199) justifica las features adicionales?",
+            "PLAN-012: ¿Enterprise ($599) es viable para el mercado dominicano?",
+            "PLAN-013: ¿El modelo de seller por publicación ($9.99) vs mensual ($34.99) es claro?",
+            "PLAN-014: ¿14 días trial en dealer plans está implementado en backend?",
+            "PLAN-015: ¿Los OKLA Coins (moneda virtual) tienen valor claro para el usuario?",
+            "PLAN-016: ¿El modelo de overage (ChatAgent $0.10/conv adicional) es transparente?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 3C. FLUJO DE PAGO Y BILLING
+    # -----------------------------------------------------------------------
+    "3C_BILLING": {
+        "auditar": [
+            "PLAN-017: ¿Stripe checkout implementado y funcional?",
+            "PLAN-018: ¿Stripe maneja moneda DOP correctamente?",
+            "PLAN-019: ¿Ya están integradas pasarelas RD (Cardnet, Azul)?",
+            "PLAN-020: ¿Webhook de Stripe actualiza suscripción en backend?",
+            "PLAN-021: ¿Cancelación/downgrade funciona sin perder datos?",
+            "PLAN-022: ¿Facturación electrónica para DGII (NCF) implementada?",
+            "PLAN-023: ¿Trial a pagado: se cobra automáticamente al terminar trial?",
+            "PLAN-024: ¿Refund policy implementada en Stripe?",
+            "PLAN-025: ¿Payment method management (agregar/quitar tarjeta)?",
+        ],
+    },
+
+    # -----------------------------------------------------------------------
+    # 3D. FEATURE GATING (Enforcement)
+    # -----------------------------------------------------------------------
+    "3D_FEATURE_GATING": {
+        "auditar": [
+            "PLAN-026: ¿ModuleAccessMiddleware valida límites de plan antes de crear vehículo?",
+            "PLAN-027: ¿MaxImagesPerVehicle se enforce en MediaService upload?",
+            "PLAN-028: ¿MaxFeaturedListingsPerMonth se enforce al destacar?",
+            "PLAN-029: ¿ChatAgent conversation limits se enforce por plan?",
+            "PLAN-030: ¿Badge type (none/verified/gold/premium) se asigna según plan?",
+            "PLAN-031: ¿Search priority/position varía realmente según plan?",
+            "PLAN-032: ¿API access restricción en plan Elite/Enterprise funciona?",
+            "PLAN-033: ¿Bulk upload solo disponible para planes que lo incluyen?",
+            "PLAN-034: ¿WhatsApp integration gated a Pro+ planes?",
+            "PLAN-035: ¿PricingAgent limits (1 free, ilimitado Pro+) se enforce?",
+        ],
+    },
+}
+
+# ============================================================================
+# FASE 4: AUDITORÍA IA/CHATBOTS Y UX COMPETITIVA
+# ============================================================================
+FASE_4_IA_UX = {
+    "nombre": "AUDITORÍA IA Y UX COMPETITIVA",
+    "descripcion": "Verificar agentes IA funcionales y UX superior al mercado.",
+    "auditar": [
+        "IA-001: ¿SearchAgent funciona en /vehiculos con lenguaje natural?",
+        "IA-002: ¿DealerChatAgent responde consultas de vehículos específicos?",
+        "IA-003: ¿PricingAgent genera valoraciones de precio coherentes?",
+        "IA-004: ¿RecoAgent sugiere vehículos relevantes?",
+        "IA-005: ¿SupportAgent resuelve preguntas frecuentes?",
+        "IA-006: ¿WhatsApp Agent responde mensajes entrantes?",
+        "IA-007: ¿Prompt injection protection funciona (rechaza prompts maliciosos)?",
+        "IA-008: ¿PromptCache reduce costos (cache hit rate)?",
+        "IA-009: ¿LLM Gateway fallback cascade funciona (Claude → Gemini → Llama)?",
+        "UX-001: ¿Tiempo de carga homepage < 3 segundos?",
+        "UX-002: ¿Core Web Vitals (LCP, FID, CLS) en verde?",
+        "UX-003: ¿Búsqueda de vehículos es más rápida que SuperCarros?",
+        "UX-004: ¿Mobile experience fluid (no layout shift)?",
+        "UX-005: ¿PWA installable con service worker?",
+        "UX-006: ¿Dark mode disponible?",
+        "UX-007: ¿Accesibilidad a11y (WCAG 2.1 AA)?",
+        "UX-008: ¿Internacionalización (español dominicano nativo, ¿soporte inglés?)?",
+    ],
+}
+
+# ============================================================================
+# FASE 5: COMPLIANCE LEGAL RD
+# ============================================================================
+FASE_5_COMPLIANCE = {
+    "nombre": "COMPLIANCE LEGAL — República Dominicana",
+    "descripcion": "Verificar cumplimiento con leyes dominicanas aplicables.",
+    "auditar": [
+        "LEGAL-001: ¿Ley 358-05 (Protección al Consumidor) — disclaimers de precios correctos?",
+        "LEGAL-002: ¿Ley 172-13 (Protección Datos Personales) — consent explícito implementado?",
+        "LEGAL-003: ¿Art. 27 Ley 172-13 — consentimiento transferencia datos a USA?",
+        "LEGAL-004: ¿INDOTEL regulaciones publicidad digital cumplidas?",
+        "LEGAL-005: ¿Pro-Consumidor — proceso de reclamaciones implementado?",
+        "LEGAL-006: ¿DGII — facturación electrónica con NCF para suscripciones?",
+        "LEGAL-007: ¿ITBIS (18%) — ¿se aplica a suscripciones digitales?",
+        "LEGAL-008: ¿Política de privacidad menciona cookies, analytics, tracking?",
+        "LEGAL-009: ¿Términos de servicio actualizados para 2026?",
+        "LEGAL-010: ¿Política de reembolso clara y accesible?",
+        "LEGAL-011: ¿Verificación de edad (18+) en registro implementada?",
+        "LEGAL-012: ¿Reportar fraude — funciona el flujo completo?",
+        "LEGAL-013: ¿Los testimonios en /dealers son reales o requieren disclaim 'ilustrativo'?",
+        "LEGAL-014: ¿'#1 GARANTIZADO en búsquedas' (Enterprise) — ¿publicidad engañosa?",
+    ],
+}
+
+
+# ============================================================================
+# RESUMEN EJECUTIVO DE HALLAZGOS CRÍTICOS (P0)
+# ============================================================================
+HALLAZGOS_P0 = [
+    {
+        "id": "P0-001",
+        "severidad": "CRÍTICA",
+        "area": "Planes",
+        "titulo": "6 planes dealer en frontend vs 4 en backend",
+        "impacto_negocio": "Revenue leakage — pagos por planes inexistentes en backend",
+    },
+    {
+        "id": "P0-002",
+        "severidad": "CRÍTICA",
+        "area": "Planes",
+        "titulo": "Seller plans no implementados en backend",
+        "impacto_negocio": "Sellers no pueden monetizar — la mitad de la estrategia de pricing no funciona",
+    },
+    {
+        "id": "P0-003",
+        "severidad": "CRÍTICA",
+        "area": "Planes",
+        "titulo": "Precios Elite difieren en RD$8,202 entre frontend y backend",
+        "impacto_negocio": "Riesgo contable y legal — cobras diferente de lo que registras",
+    },
+    {
+        "id": "P0-004",
+        "severidad": "CRÍTICA",
+        "area": "Planes",
+        "titulo": "Dos pricing pages para sellers con planes completamente diferentes",
+        "impacto_negocio": "Confusión del usuario → abandono del funnel de conversión",
+    },
+    {
+        "id": "P0-005",
+        "severidad": "ALTA",
+        "area": "Frontend",
+        "titulo": "Vehículo de prueba E2E visible en producción",
+        "impacto_negocio": "Daño a credibilidad — 'Toyota Corolla 2022 — E2E mm8mioxc' visible públicamente",
+    },
+    {
+        "id": "P0-006",
+        "severidad": "ALTA",
+        "area": "Frontend",
+        "titulo": "Datos en inglés mezclados con español ('gasoline' vs 'Gasolina')",
+        "impacto_negocio": "UX inconsistente → percepción de baja calidad",
+    },
+    {
+        "id": "P0-007",
+        "severidad": "ALTA",
+        "area": "Frontend",
+        "titulo": "Vehículos duplicados en carruseles (Maserati Ghibli 2x en Sedanes)",
+        "impacto_negocio": "Percepción de inventario inflado → desconfianza",
+    },
+    {
+        "id": "P0-008",
+        "severidad": "ALTA",
+        "area": "Frontend",
+        "titulo": "Ubicación inconsistente: 'Santo DomingoNorte' vs 'Santo Domingo Norte'",
+        "impacto_negocio": "Filtros de ubicación pueden fallar",
+    },
+    {
+        "id": "P0-009",
+        "severidad": "ALTA",
+        "area": "Backend",
+        "titulo": "ClockSkew=0 en Gateway vs 5min en AuthService",
+        "impacto_negocio": "Tokens válidos rechazados por Gateway (401 intermitente)",
+    },
+    {
+        "id": "P0-010",
+        "severidad": "ALTA",
+        "area": "Frontend",
+        "titulo": "Vehículos patrocinados repiten los mismos 3-4 en cada bloque",
+        "impacto_negocio": "Revenue publicitario: dealers que pagan ven rotación pobre",
+    },
+]
+
+
+# ============================================================================
+# EJECUCIÓN
+# ============================================================================
+def log_audit(message: str) -> None:
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = f"[{ts}] [AUDIT-PLAN] {message}"
+    print(entry)
+    try:
+        AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with AUDIT_LOG.open("a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+
+
+def count_audit_items() -> dict:
+    """Cuenta total de items de auditoría por fase."""
+    counts = {"frontend": 0, "backend": 0, "planes": 0, "ia_ux": 0, "legal": 0, "p0": len(HALLAZGOS_P0)}
+
+    for section in FASE_1_FRONTEND.values():
+        if isinstance(section, dict) and "vistas" in section:
+            for vista in section["vistas"].values():
+                if isinstance(vista, dict) and "auditar" in vista:
+                    counts["frontend"] += len(vista["auditar"])
+
+    for section in FASE_2_BACKEND.values():
+        if isinstance(section, dict) and "auditar" in section:
+            counts["backend"] += len(section["auditar"])
+
+    for section in FASE_3_SUSCRIPCIONES.values():
+        if isinstance(section, dict):
+            if "auditar" in section:
+                counts["planes"] += len(section["auditar"])
+            if "hallazgos" in section:
+                counts["planes"] += len(section["hallazgos"])
+
+    counts["ia_ux"] = len(FASE_4_IA_UX.get("auditar", []))
+    counts["legal"] = len(FASE_5_COMPLIANCE.get("auditar", []))
+    counts["total"] = sum(counts.values())
+    return counts
+
+
+def generate_report() -> str:
+    """Genera reporte Markdown del plan de auditoría."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    counts = count_audit_items()
+
+    lines = [
+        f"# OKLA — Plan de Auditoría Integral",
+        f"**Generado:** {ts}",
+        f"**URL:** {PRODUCTION_URL}",
+        f"**Total items de auditoría:** {counts['total']}",
+        "",
+        "## Resumen por Fase",
+        f"| Fase | Items |",
+        f"|------|-------|",
+        f"| FASE 1: Frontend (todas las vistas) | {counts['frontend']} |",
+        f"| FASE 2: Backend (APIs, seguridad) | {counts['backend']} |",
+        f"| FASE 3: Planes de Suscripción | {counts['planes']} |",
+        f"| FASE 4: IA/Chatbots + UX | {counts['ia_ux']} |",
+        f"| FASE 5: Compliance Legal RD | {counts['legal']} |",
+        f"| Hallazgos P0 (Críticos) | {counts['p0']} |",
+        "",
+        "## Cuentas de Prueba",
+        "| Rol | Username | Tipo |",
+        "|-----|----------|------|",
+    ]
+    for role, acc in ACCOUNTS.items():
+        lines.append(f"| {role.title()} | {acc['username']} | {acc['role']} |")
+
+    # P0 Hallazgos
+    lines.extend([
+        "",
+        "## HALLAZGOS P0 — Requieren acción inmediata",
+        "",
+    ])
+    for h in HALLAZGOS_P0:
+        lines.append(f"### {h['id']}: {h['titulo']}")
+        lines.append(f"- **Severidad:** {h['severidad']}")
+        lines.append(f"- **Área:** {h['area']}")
+        lines.append(f"- **Impacto:** {h['impacto_negocio']}")
+        lines.append("")
+
+    # Desalineación de planes
+    lines.extend([
+        "## FASE 3A — Desalineación Planes (Detalle)",
+        "",
+    ])
+    for h in FASE_3_SUSCRIPCIONES["3A_DESALINEACION"]["hallazgos"]:
+        lines.append(f"### {h['id']}: {h['titulo']}")
+        lines.append(f"- **Detalle:** {h['detalle']}")
+        lines.append(f"- **Impacto:** {h['impacto']}")
+        lines.append(f"- **Acción:** {h['accion']}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def delegate_to_openclaw(tasks: list[str]) -> None:
+    """Escribe tareas en prompt_1.md para que OpenClaw las ejecute."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    content = PROMPT_FILE.read_text(encoding="utf-8") if PROMPT_FILE.exists() else ""
+
+    new_tasks = f"\n\n## TAREAS PENDIENTES — Auditoría Integral ({ts})\n\n"
+    for task in tasks:
+        new_tasks += f"- [ ] {task}\n"
+
+    PROMPT_FILE.write_text(content + new_tasks, encoding="utf-8")
+    log_audit(f"Delegated {len(tasks)} tasks to OpenClaw via prompt_1.md")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="OKLA Comprehensive Audit Plan")
+    parser.add_argument("--fase", type=int, choices=[1, 2, 3, 4, 5], help="Run specific phase only")
+    parser.add_argument("--rol", choices=["guest", "buyer", "seller", "dealer", "admin"], help="Audit specific role")
+    parser.add_argument("--report", action="store_true", help="Generate Markdown report")
+    parser.add_argument("--delegate-openclaw", action="store_true", help="Delegate P0 tasks to OpenClaw")
+    parser.add_argument("--json", action="store_true", help="Output audit plan as JSON")
+    args = parser.parse_args()
+
+    counts = count_audit_items()
+    log_audit(f"Plan de auditoría cargado: {counts['total']} items totales")
+    log_audit(f"  Frontend: {counts['frontend']} | Backend: {counts['backend']} | "
+              f"Planes: {counts['planes']} | IA/UX: {counts['ia_ux']} | Legal: {counts['legal']}")
+    log_audit(f"  Hallazgos P0 (críticos): {counts['p0']}")
+
+    if args.json:
+        plan = {
+            "fase_1_frontend": FASE_1_FRONTEND,
+            "fase_2_backend": FASE_2_BACKEND,
+            "fase_3_suscripciones": FASE_3_SUSCRIPCIONES,
+            "fase_4_ia_ux": FASE_4_IA_UX,
+            "fase_5_compliance": FASE_5_COMPLIANCE,
+            "hallazgos_p0": HALLAZGOS_P0,
+            "cuentas": {k: {"username": v["username"], "role": v["role"]} for k, v in ACCOUNTS.items()},
+            "counts": counts,
+        }
+        print(json.dumps(plan, indent=2, ensure_ascii=False))
+        return
+
+    if args.report:
+        report = generate_report()
+        REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        report_file = REPORT_DIR / f"audit-plan-{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        report_file.write_text(report, encoding="utf-8")
+        log_audit(f"Report generated: {report_file}")
+        print(report)
+        return
+
+    if args.delegate_openclaw:
+        p0_tasks = [
+            f"AUDITAR EN PRODUCCIÓN: {h['titulo']} — {h['impacto_negocio']}" for h in HALLAZGOS_P0
+        ]
+        delegate_to_openclaw(p0_tasks)
+        return
+
+    # Default: print summary
+    print("=" * 80)
+    print("OKLA — PLAN DE AUDITORÍA INTEGRAL")
+    print(f"URL: {PRODUCTION_URL}")
+    print(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    print()
+
+    print("📊 RESUMEN")
+    print(f"  Total items: {counts['total']}")
+    for k, v in counts.items():
+        if k != "total":
+            print(f"  {k.upper()}: {v}")
+    print()
+
+    print("🔴 HALLAZGOS P0 (ACCIÓN INMEDIATA)")
+    for h in HALLAZGOS_P0:
+        print(f"  [{h['severidad']}] {h['id']}: {h['titulo']}")
+        print(f"    → {h['impacto_negocio']}")
+    print()
+
+    print("📋 Para ejecutar:")
+    print("  python3 .prompts/monitor_prompt1.py --report        # Generar reporte MD")
+    print("  python3 .prompts/monitor_prompt1.py --json          # Exportar como JSON")
+    print("  python3 .prompts/monitor_prompt1.py --delegate-openclaw  # Delegar P0 a OpenClaw")
+    print()
+
+
+if __name__ == "__main__":
+    main()
