@@ -108,7 +108,7 @@ function FeaturedVehicleCard({
 }
 
 // Placeholder card shown when no paid vehicles are active for this placement
-function EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 'PremiumSpot' }) {
+function _EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 'PremiumSpot' }) {
   const href = placementType === 'PremiumSpot' ? '/dealers' : '/vender/publicidad';
   const isPremium = placementType === 'PremiumSpot';
   return (
@@ -255,6 +255,25 @@ export default function FeaturedVehicles({
       });
   }, [fallbackData, effectiveMaxItems]);
 
+  // P0-005: Also filter E2E test vehicles from rotation items
+  // P0-007: Deduplicate rotation items by title (make+model+year not available here)
+  const rotationVehicles = useMemo(() => {
+    const items = (rotation?.items || []).filter(v => {
+      if (!v.title || !v.imageUrl || !v.price) return false;
+      const t = (v.title || '').toUpperCase();
+      return !t.includes('E2E') && !t.includes('DO NOT BUY');
+    });
+    const seen = new Set<string>();
+    return items
+      .filter(v => {
+        const key = (v.title || '').toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, effectiveMaxItems);
+  }, [rotation?.items, effectiveMaxItems]);
+
   const accentColor =
     placementType === 'PremiumSpot'
       ? { price: 'text-purple-600', border: 'border-purple-500 text-purple-600 hover:bg-purple-50' }
@@ -311,23 +330,6 @@ export default function FeaturedVehicles({
   }
 
   // Use rotation items if available, otherwise fallback to regular vehicles
-  // P0-005: Also filter E2E test vehicles from rotation items
-  // P0-007: Deduplicate rotation items by title (make+model+year not available here)
-  const rotationVehicles = useMemo(() => {
-    const items = (rotation?.items || [])
-      .filter(v => {
-        if (!v.title || !v.imageUrl || !v.price) return false;
-        const t = (v.title || '').toUpperCase();
-        return !t.includes('E2E') && !t.includes('DO NOT BUY');
-      });
-    const seen = new Set<string>();
-    return items.filter(v => {
-      const key = (v.title || '').toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, effectiveMaxItems);
-  }, [rotation?.items, effectiveMaxItems]);
   const vehicles = rotationVehicles.length > 0 ? rotationVehicles : fallbackVehicles;
 
   // When no paid vehicles are active AND no fallback vehicles — hide the section entirely
