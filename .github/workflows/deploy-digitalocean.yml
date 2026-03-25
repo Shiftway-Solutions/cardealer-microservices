@@ -27,7 +27,7 @@ on:
 
   # Trigger automático después de CI exitoso en main
   workflow_run:
-    workflows: ["🚀 Smart CI/CD"]
+    workflows: ["🚀 CI/CD"]
     types:
       - completed
     branches:
