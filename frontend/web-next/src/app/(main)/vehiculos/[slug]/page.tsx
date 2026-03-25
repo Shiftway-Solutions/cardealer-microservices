@@ -70,7 +70,8 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
 
     const priceFormatted = formatCurrency(vehicle.price);
     const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} - ${priceFormatted} | OKLA`;
-    const conditionLabel = vehicle.condition === 'new' ? 'Nuevo' : 'Usado';
+    const mileage = vehicle.mileage ?? 0;
+    const conditionLabel = vehicle.condition === 'new' && mileage <= 1000 ? 'Nuevo' : 'Usado';
     const description = `${conditionLabel} ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city} por ${priceFormatted}. ${vehicle.mileage?.toLocaleString() || 0} km. ¡Contáctanos hoy para agendar una prueba de manejo! Ver fotos, especificaciones y financiamiento en OKLA.`;
     const _imageUrl = vehicle.images?.[0]?.url;
 

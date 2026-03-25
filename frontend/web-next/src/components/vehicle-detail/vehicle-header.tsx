@@ -13,7 +13,17 @@
 'use client';
 
 import * as React from 'react';
-import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock, Flag, FileText } from 'lucide-react';
+import {
+  Heart,
+  Share2,
+  MapPin,
+  Calendar,
+  Gauge,
+  Shield,
+  Clock,
+  Flag,
+  FileText,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DealRatingBadge } from '@/components/ui/deal-rating-badge';
@@ -69,10 +79,11 @@ export function VehicleHeader({ vehicle, className, onPurchaseReportClick }: Veh
       >
         {/* Badges */}
         <div className="mb-3 flex flex-wrap gap-2">
-          {vehicle.condition === 'new' && (
+          {vehicle.condition === 'new' && (vehicle.mileage ?? 0) <= 1000 && (
             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Nuevo</Badge>
           )}
-          {vehicle.condition === 'used' && (
+          {(vehicle.condition === 'used' ||
+            (vehicle.condition === 'new' && (vehicle.mileage ?? 0) > 1000)) && (
             <Badge className="bg-muted text-foreground hover:bg-muted">Usado</Badge>
           )}
           {vehicle.condition === 'certified' && (
@@ -152,7 +163,13 @@ export function VehicleHeader({ vehicle, className, onPurchaseReportClick }: Veh
             )}
           </div>
           <p className="text-muted-foreground mt-1 text-sm">
-            ≈ {getAlternateCurrencyDisplay(vehicle.price, (vehicle.currency as 'DOP' | 'USD') || 'DOP').text}
+            ≈{' '}
+            {
+              getAlternateCurrencyDisplay(
+                vehicle.price,
+                (vehicle.currency as 'DOP' | 'USD') || 'DOP'
+              ).text
+            }
           </p>
 
           {/* Monthly Payment Estimate */}
