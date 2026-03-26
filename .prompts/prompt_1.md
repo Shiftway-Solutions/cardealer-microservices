@@ -1,6 +1,6 @@
-# AUDITORÍA — Sprint 9: Backend API & Seguridad OWASP
-**Fecha:** 2026-03-26 14:42:47
-**Fase:** AUDIT
+# CORRECCIÓN (Intento 1/3) — Sprint 9: Backend API & Seguridad OWASP
+**Fecha:** 2026-03-26 14:59:18
+**Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://twist-first-studios-transcription.trycloudflare.com)
 **Usuario:** Todos (verificar por API)
 **URL Base:** https://twist-first-studios-transcription.trycloudflare.com
@@ -19,20 +19,23 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones
-Ejecuta TODA la auditoría con **Chrome** como un humano real.
-NO uses scripts — solo Chrome. Scripts solo para upload/download de fotos vía MediaService.
+## Instrucciones — FASE DE CORRECCIÓN
+En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
-⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://twist-first-studios-transcription.trycloudflare.com` en vez de producción.
-Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
-Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
+1. Lee la sección 'BUGS A CORREGIR' abajo
+2. Corrige cada bug en el código fuente
+3. Ejecuta el Gate Pre-Commit (8 pasos) para validar
+4. Marca cada fix como completado: `- [ ]` → `- [x]`
+5. Al terminar, agrega `READ` al final
 
-Para cada tarea:
-1. Navega con Chrome a la URL indicada
-2. Toma screenshot cuando se indique
-3. Documenta bugs y discrepancias en la sección 'Hallazgos'
-4. Marca la tarea como completada: `- [ ]` → `- [x]`
-5. Al terminar TODAS las tareas, agrega `READ` al final
+⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
+
+## BUGS A CORREGIR
+_(El agente que hizo la auditoría documentó los hallazgos aquí.)_
+_(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
+
+Revisa el último reporte en `audit-reports/` o los hallazgos del prompt anterior.
+Corrige todos los bugs encontrados:
 
 ## Credenciales
 | Rol | Email | Password |
@@ -46,80 +49,15 @@ Para cada tarea:
 
 ## TAREAS
 
-### S9-T01: Verificar APIs de autenticación
+- [ ] Fix bugs de S9-T01: Verificar APIs de autenticación
+- [ ] Fix bugs de S9-T02: Verificar seguridad y datos
+- [ ] Fix bugs de S9-T03: Verificar pricing API vs frontend
 
-**Pasos:**
-- [ ] Paso 1: Abre Chrome y navega a https://twist-first-studios-transcription.trycloudflare.com/api/health (o https://api.okla.com.do/health en prod, https://okla.local/api/health en local)
-- [ ] Paso 2: Toma screenshot — ¿health endpoint responde?
-- [ ] Paso 3: Navega a https://twist-first-studios-transcription.trycloudflare.com y abre DevTools (F12)
-- [ ] Paso 4: Ve a la pestaña Network
-- [ ] Paso 5: Haz login como buyer (buyer002@okla-test.com / BuyerTest2026!)
-- [ ] Paso 6: Toma screenshot de las requests de Network — buscar la request de login
-- [ ] Paso 7: Verifica: ¿se setean cookies HttpOnly (okla_access_token, okla_refresh_token)?
-- [ ] Paso 8: Verifica: ¿los headers de response tienen CSP, HSTS, X-Frame-Options?
-- [ ] Paso 9: Cierra sesión
-
-**A validar:**
-- [ ] BACKEND-001: ¿JWT con claims correctos?
-- [ ] BACKEND-002: ¿HttpOnly cookies?
-- [ ] BACKEND-003: ¿SameSite=Lax?
-- [ ] BACKEND-018: ¿Security headers?
-- [ ] BACKEND-021: ¿Health endpoints sin auth?
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
-
-### S9-T02: Verificar seguridad y datos
-
-**Pasos:**
-- [ ] Paso 1: Sin estar loggeado, navega a https://twist-first-studios-transcription.trycloudflare.com/admin
-- [ ] Paso 2: Toma screenshot — ¿redirige a login o muestra panel? (BACKEND-044 Broken Access Control)
-- [ ] Paso 3: Sin estar loggeado, navega a https://twist-first-studios-transcription.trycloudflare.com/cuenta
-- [ ] Paso 4: Toma screenshot — ¿redirige a login?
-- [ ] Paso 5: Navega a https://twist-first-studios-transcription.trycloudflare.com/vehiculos
-- [ ] Paso 6: Abre DevTools > Console y busca errores JavaScript
-- [ ] Paso 7: Toma screenshot de la consola
-- [ ] Paso 8: Verifica en el listado: ¿hay vehículos con 'gasoline' en inglés? (BACKEND-063)
-- [ ] Paso 9: Verifica: ¿hay ubicaciones 'Santo DomingoNorte' sin espacio? (BACKEND-064)
-- [ ] Paso 10: Verifica: ¿el vehículo E2E test (Toyota Corolla mm8mioxc) aparece? (BACKEND-060)
-
-**A validar:**
-- [ ] BACKEND-044: ¿Broken Access Control en admin?
-- [ ] BACKEND-060: ¿Vehículos E2E en producción?
-- [ ] BACKEND-063: ¿'gasoline' vs 'Gasolina'?
-- [ ] BACKEND-064: ¿'Santo DomingoNorte'?
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
-
-### S9-T03: Verificar pricing API vs frontend
-
-**Pasos:**
-- [ ] Paso 1: Navega a https://twist-first-studios-transcription.trycloudflare.com y abre DevTools > Network
-- [ ] Paso 2: Navega a /dealers y observa las requests
-- [ ] Paso 3: Busca la request a /api/public/pricing o endpoint similar
-- [ ] Paso 4: Toma screenshot de la response — ¿coincide con lo que muestra el frontend?
-- [ ] Paso 5: Verifica: ¿los 6 planes del frontend vienen de la API o están hardcoded?
-- [ ] Paso 6: Busca request relacionada con tasa de cambio RD$/USD
-- [ ] Paso 7: Toma screenshot — ¿la tasa viene de API o está hardcoded?
-
-**A validar:**
-- [ ] BACKEND-025: ¿API pricing sincronizado con frontend?
-- [ ] BACKEND-065: ¿Tasa cambio actualizada o hardcoded?
-- [ ] PLAN-026 a PLAN-035: Feature gating
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
 
 ## Resultado
 - Sprint: 9 — Backend API & Seguridad OWASP
-- Fase: AUDIT
+- Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://twist-first-studios-transcription.trycloudflare.com)
 - URL: https://twist-first-studios-transcription.trycloudflare.com
 - Estado: EN PROGRESO
