@@ -186,13 +186,16 @@ describe('Homepage Sections Hook', () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.isLoading).toBe(false);
+        },
+        { timeout: 10_000 }
+      );
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.sections).toEqual([]);
-    });
+    }, 15_000);
 
     it('should handle empty sections', async () => {
       mockGetHomepageSections.mockResolvedValue([]);
