@@ -252,8 +252,12 @@ function isTokenExpired(payload: TokenPayload): boolean {
 /**
  * Create redirect response with security headers
  */
-function createRedirect(url: URL, _request: NextRequest): NextResponse {
-  const response = NextResponse.redirect(url);
+function createRedirect(url: URL, request: NextRequest): NextResponse {
+  // Use 303 (See Other) for POST/PUT/PATCH/DELETE so the browser follows with GET.
+  // Default 307 preserves the HTTP method, which causes 404 when a POST is
+  // redirected to a page route that only handles GET (e.g. /dealer/dashboard).
+  const status = request.method !== 'GET' && request.method !== 'HEAD' ? 303 : 307;
+  const response = NextResponse.redirect(url, status);
   addSecurityHeaders(response);
   return response;
 }

@@ -682,9 +682,9 @@ SPRINTS = [
                     "FRONTEND-130: ¿Muestra los 6 planes?",
                     "FRONTEND-131: ¿Precios coinciden con /dealers?",
                     "FRONTEND-132: ¿Upgrade/downgrade funciona?",
-                    "FRONTEND-133: ¿Stripe checkout integrado?",
-                    "PLAN-017: ¿Stripe checkout funcional?",
-                    "PLAN-018: ¿Stripe maneja DOP?",
+                    "FRONTEND-133: Paypal checkout integrado?",
+                    "PLAN-017: Paypal checkout funcional?",
+                    "PLAN-018: Paypal maneja DOP?",
                 ],
             },
             {

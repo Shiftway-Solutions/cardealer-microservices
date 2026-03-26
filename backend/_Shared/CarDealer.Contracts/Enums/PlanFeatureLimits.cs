@@ -19,8 +19,10 @@ public static class PlanFeatureLimits
         {
             "libre" => LibreLimits,
             "visible" => VisibleLimits,
+            "starter" => StarterLimits,
             "pro" => ProLimits,
             "elite" => EliteLimits,
+            "enterprise" => EnterpriseLimits,
             _ => LibreLimits, // Default to most restrictive
         };
     }
@@ -135,7 +137,7 @@ public static class PlanFeatureLimits
     {
         PlanKey = "pro",
         DisplayName = "Pro",
-        PricePerMonth = 89m,
+        PricePerMonth = 99m,
         MaxImagesPerVehicle = 30,
         MaxFeaturedListingsPerMonth = 10,
         SearchPriority = "high",
@@ -163,7 +165,7 @@ public static class PlanFeatureLimits
     {
         PlanKey = "elite",
         DisplayName = "Elite",
-        PricePerMonth = 199m,
+        PricePerMonth = 349m,
         MaxImagesPerVehicle = 40,
         MaxFeaturedListingsPerMonth = 25,
         SearchPriority = "top",

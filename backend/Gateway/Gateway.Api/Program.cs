@@ -196,7 +196,7 @@ try
                 ValidIssuer = jwtIssuer,
                 ValidAudience = jwtAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-                ClockSkew = TimeSpan.Zero // No tolerance — tokens expire exactly at exp claim
+                ClockSkew = TimeSpan.FromMinutes(5) // Match AuthService ClockSkewMinutes to prevent intermittent 401s
             };
 
             // Security (CWE-922): Support reading JWT from HttpOnly cookie

@@ -154,7 +154,7 @@ const nextConfig: NextConfig = {
       "worker-src 'self' blob:",
       // BFF pattern: browser calls same-origin (/api/*), Next.js rewrites proxy to internal Gateway
       // No need for https://api.okla.com.do — Gateway is NOT exposed externally
-      "connect-src 'self' http://localhost:* https://www.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://api.stripe.com https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com wss: ws: https://connect.facebook.net https://*.facebook.com https://analytics.tiktok.com https://*.tiktok.com",
+      "connect-src 'self' http://localhost:* https://www.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://www.google.com https://api.stripe.com https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com wss: ws: https://connect.facebook.net https://*.facebook.com https://analytics.tiktok.com https://*.tiktok.com",
       "frame-src 'self' https://js.stripe.com https://www.google.com https://www.paypal.com https://www.sandbox.paypal.com",
       "frame-ancestors 'self'",
       "form-action 'self'",
