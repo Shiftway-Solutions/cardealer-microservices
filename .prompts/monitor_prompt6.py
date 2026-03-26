@@ -19,13 +19,17 @@ los agentes IA de la plataforma via `openclaw agent --message` y
   - Security            Prompt injection + content moderation
   - PromptCache         Cache hit rate & savings metrics
 
+AMBIENTE: LOCAL con Docker Desktop + Cloudflare Tunnel (NO producción)
+La URL se auto-detecta del tunnel cloudflared activo. Para levantarlo:
+  docker compose --profile core --profile vehicles --profile business up -d
+  docker compose --profile tunnel up -d cloudflared
+
 Uso:
-  python monitor_prompt6.py                       # Monitoreo + auditoria IA completo
-  python monitor_prompt6.py --audit-only          # Solo auditoria de agentes IA (OpenClaw)
-  python monitor_prompt6.py --audit-only --agent SearchAgent  # Audita un agente especifico
-  python monitor_prompt6.py --monitor-only        # Solo monitorea prompt_6.md
-  python monitor_prompt6.py --url https://okla.com.do  # URL personalizada
-  python monitor_prompt6.py --trigger-cicd        # Lanza smart-cicd.yml via gh CLI
+  python monitor_prompt6.py                          # Monitoreo + auditoria (auto-detecta tunnel)
+  python monitor_prompt6.py --audit-only             # Solo auditoria (auto-detecta tunnel)
+  python monitor_prompt6.py --url https://okla.local # URL manual (ej: sin tunnel)
+  python monitor_prompt6.py --audit-only --agent SearchAgent
+  python monitor_prompt6.py --monitor-only           # Solo monitorea prompt_6.md
 """
 
 import argparse
@@ -46,7 +50,27 @@ AUDIT_REPORTS_DIR = REPO_ROOT / "audit-reports"
 # --- Configuracion ---
 MONITOR_INTERVAL_SECONDS = 60
 MAX_CHECKS_WITHOUT_CHANGE = 3
-PRODUCTION_URL = "https://okla.com.do"
+
+# URL base: ambiente local con tunnel cloudflared (NO producción)
+# Auto-detectado vía docker compose logs cloudflared, o pasado con --url
+PRODUCTION_URL = "https://okla.local"  # fallback si no hay tunnel activo
+
+
+def get_tunnel_url() -> str:
+    """Detecta automáticamente la URL activa del tunnel cloudflared."""
+    try:
+        result = subprocess.run(
+            ["docker", "compose", "logs", "cloudflared"],
+            capture_output=True, text=True, timeout=5,
+            cwd=str(REPO_ROOT),
+        )
+        import re
+        matches = re.findall(r"https://[a-z0-9-]+\.trycloudflare\.com", result.stdout + result.stderr)
+        if matches:
+            return matches[-1]
+    except Exception:
+        pass
+    return PRODUCTION_URL
 
 # --- Cuentas de prueba OKLA ---
 ACCOUNTS = {
@@ -1244,8 +1268,8 @@ def main() -> None:
                         help="Solo monitorea prompt_6.md sin browser automation")
     parser.add_argument("--trigger-cicd", action="store_true",
                         help="Dispara smart-cicd.yml via gh CLI y sale inmediatamente")
-    parser.add_argument("--url", default=PRODUCTION_URL,
-                        help=f"URL base para pruebas (default: {PRODUCTION_URL})")
+    parser.add_argument("--url", default=None,
+                        help="URL base para pruebas (default: auto-detecta tunnel cloudflared o usa https://okla.local)")
     parser.add_argument("--audit-interval", type=int, default=5,
                         help="Checks entre auditorias de agentes (default: 5 = cada 5 min)")
     parser.add_argument(
@@ -1259,13 +1283,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Resolver URL: --url explícito > tunnel auto-detectado > fallback okla.local
+    resolved_url = args.url if args.url else get_tunnel_url()
+    log_audit(f"URL de auditoría: {resolved_url}")
+
     if args.trigger_cicd and not args.audit_only and not args.monitor_only:
         # Dispara CI/CD directamente y sale
         success = trigger_cicd()
         sys.exit(0 if success else 1)
 
     elif args.audit_only:
-        results = run_openclaw_audit(base_url=args.url, agent_focus=args.agent)
+        results = run_openclaw_audit(base_url=resolved_url, agent_focus=args.agent)
         save_audit_report(results)
         failed = results.get("failed", 0)
         if failed == 0 and args.trigger_cicd:
@@ -1299,7 +1327,7 @@ def main() -> None:
         # Modo completo: monitor + auditorias OpenClaw + CI/CD opcional
         run_monitor_loop(
             audit_interval_checks=args.audit_interval,
-            base_url=args.url,
+            base_url=resolved_url,
             trigger_cicd_on_clean=args.trigger_cicd,
             agent_focus=args.agent,
         )
