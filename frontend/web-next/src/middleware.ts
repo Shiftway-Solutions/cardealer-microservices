@@ -327,6 +327,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Skip Server Action requests (POST with Next-Action header).
+  // Server Actions handle their own auth. Middleware redirects break
+  // the response format causing "An unexpected response was received from the server."
+  if (request.headers.get('next-action')) {
+    const response = NextResponse.next();
+    addSecurityHeaders(response);
+    return response;
+  }
+
   // Handle maintenance page: redirect to home if maintenance is NOT active
   if (pathname === MAINTENANCE_PATH) {
     try {

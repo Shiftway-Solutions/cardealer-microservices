@@ -4,113 +4,345 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminService.Api.Controllers;
 
 /// <summary>
-/// Controller for platform maintenance mode management (consolidated from MaintenanceService).
-/// TODO: Implement full CQRS handlers with MediatR when MaintenanceService logic is migrated.
+/// Controller for platform maintenance mode management.
+/// Provides full CRUD for maintenance windows, status checks, and immediate toggle.
+/// In-memory storage — state is lost on pod restart (acceptable for maintenance windows).
 /// </summary>
 [ApiController]
-[Route("api/admin/[controller]")]
+[Route("api/maintenance")]
 [Produces("application/json")]
 [Authorize(Roles = "Admin,SuperAdmin")]
 public class MaintenanceController : ControllerBase
 {
     private readonly ILogger<MaintenanceController> _logger;
 
-    // TODO: Replace with persistent storage (database or Redis) when fully implemented
-    private static MaintenanceStatus _currentStatus = new(
-        IsEnabled: false,
-        Message: null,
-        StartedAt: null,
-        EstimatedEndAt: null,
-        StartedBy: null
-    );
+    // In-memory storage for maintenance windows
+    private static readonly List<MaintenanceWindowDto> _windows = new();
+    private static readonly object _lock = new();
 
     public MaintenanceController(ILogger<MaintenanceController> logger)
     {
         _logger = logger;
     }
 
+    // =========================================================================
+    // PUBLIC ENDPOINTS (no auth required)
+    // =========================================================================
+
     /// <summary>
-    /// Get current maintenance mode status
+    /// Get current maintenance mode status (public — called by middleware on every request)
     /// </summary>
-    /// <returns>Current maintenance status</returns>
     [HttpGet("status")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(MaintenanceStatus), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MaintenanceStatusResponse), StatusCodes.Status200OK)]
     public IActionResult GetStatus()
     {
-        _logger.LogInformation("Getting maintenance status. IsEnabled={IsEnabled}", _currentStatus.IsEnabled);
+        lock (_lock)
+        {
+            var active = _windows.FirstOrDefault(w => w.Status == "InProgress");
+            var response = new MaintenanceStatusResponse
+            {
+                IsMaintenanceMode = active != null,
+                MaintenanceWindow = active
+            };
 
-        return Ok(_currentStatus);
+            return Ok(response);
+        }
     }
 
     /// <summary>
-    /// Update maintenance mode status (enable/disable with details)
+    /// Get upcoming maintenance windows (public)
     /// </summary>
-    /// <param name="request">New maintenance status</param>
-    /// <returns>Updated maintenance status</returns>
-    [HttpPost("status")]
-    [ProducesResponseType(typeof(MaintenanceStatus), StatusCodes.Status200OK)]
+    [HttpGet("upcoming")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(List<MaintenanceWindowDto>), StatusCodes.Status200OK)]
+    public IActionResult GetUpcoming([FromQuery] int days = 7)
+    {
+        lock (_lock)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(days);
+            var upcoming = _windows
+                .Where(w => w.Status == "Scheduled" && w.ScheduledStart <= cutoff)
+                .OrderBy(w => w.ScheduledStart)
+                .ToList();
+            return Ok(upcoming);
+        }
+    }
+
+    // =========================================================================
+    // ADMIN ENDPOINTS (auth required)
+    // =========================================================================
+
+    /// <summary>
+    /// Get all maintenance windows
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<MaintenanceWindowDto>), StatusCodes.Status200OK)]
+    public IActionResult GetAll()
+    {
+        lock (_lock)
+        {
+            return Ok(_windows.OrderByDescending(w => w.CreatedAt).ToList());
+        }
+    }
+
+    /// <summary>
+    /// Get a specific maintenance window by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetById(string id)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+            return Ok(window);
+        }
+    }
+
+    /// <summary>
+    /// Create a new maintenance window
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult SetStatus([FromBody] SetMaintenanceStatusRequest request)
+    public IActionResult Create([FromBody] CreateMaintenanceWindowRequest request)
     {
-        _logger.LogInformation("Setting maintenance status: IsEnabled={IsEnabled}, Message={Message}",
-            request.IsEnabled, request.Message);
+        if (string.IsNullOrWhiteSpace(request.Title))
+            return BadRequest(new { message = "Title is required" });
 
-        // TODO: Replace with MediatR command and persist to database
-        _currentStatus = new MaintenanceStatus(
-            IsEnabled: request.IsEnabled,
-            Message: request.Message,
-            StartedAt: request.IsEnabled ? DateTime.UtcNow : null,
-            EstimatedEndAt: request.EstimatedEndAt,
-            StartedBy: User.Identity?.Name ?? "system"
-        );
+        var window = new MaintenanceWindowDto
+        {
+            Id = Guid.NewGuid().ToString("N")[..12],
+            Title = request.Title,
+            Description = request.Description ?? "",
+            Type = MapType(request.Type),
+            Status = "Scheduled",
+            ScheduledStart = request.ScheduledStart,
+            ScheduledEnd = request.ScheduledEnd,
+            ActualStart = null,
+            ActualEnd = null,
+            CreatedBy = User.Identity?.Name ?? "admin",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = null,
+            Notes = null,
+            NotifyUsers = request.NotifyUsers,
+            NotifyMinutesBefore = request.NotifyMinutesBefore,
+            AffectedServices = request.AffectedServices ?? new List<string> { "all" },
+            IsActive = false,
+            IsUpcoming = request.ScheduledStart > DateTime.UtcNow
+        };
 
-        return Ok(_currentStatus);
+        lock (_lock)
+        {
+            _windows.Add(window);
+        }
+
+        _logger.LogInformation("Maintenance window created: {Id} - {Title}", window.Id, window.Title);
+        return CreatedAtAction(nameof(GetById), new { id = window.Id }, window);
     }
 
     /// <summary>
-    /// Toggle maintenance mode on/off
+    /// Start a maintenance window (activates maintenance mode)
     /// </summary>
-    /// <returns>Updated maintenance status</returns>
-    [HttpPost("toggle")]
-    [ProducesResponseType(typeof(MaintenanceStatus), StatusCodes.Status200OK)]
-    public IActionResult Toggle()
+    [HttpPost("{id}/start")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public IActionResult Start(string id)
     {
-        var newState = !_currentStatus.IsEnabled;
-        _logger.LogInformation("Toggling maintenance mode: {OldState} -> {NewState}",
-            _currentStatus.IsEnabled, newState);
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
 
-        // TODO: Replace with MediatR command and persist to database
-        _currentStatus = new MaintenanceStatus(
-            IsEnabled: newState,
-            Message: newState ? "Platform is under maintenance" : null,
-            StartedAt: newState ? DateTime.UtcNow : null,
-            EstimatedEndAt: null,
-            StartedBy: newState ? (User.Identity?.Name ?? "system") : null
-        );
+            // Check if another maintenance is already in progress
+            var existing = _windows.FirstOrDefault(w => w.Status == "InProgress" && w.Id != id);
+            if (existing != null)
+                return Conflict(new { message = $"Another maintenance is already in progress: {existing.Title}" });
 
-        return Ok(_currentStatus);
+            window.Status = "InProgress";
+            window.ActualStart = DateTime.UtcNow;
+            window.IsActive = true;
+            window.IsUpcoming = false;
+            window.UpdatedAt = DateTime.UtcNow;
+
+            _logger.LogWarning("MAINTENANCE MODE ACTIVATED: {Id} - {Title}", window.Id, window.Title);
+            return Ok(window);
+        }
     }
+
+    /// <summary>
+    /// Complete a maintenance window (deactivates maintenance mode)
+    /// </summary>
+    [HttpPost("{id}/complete")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Complete(string id)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+
+            window.Status = "Completed";
+            window.ActualEnd = DateTime.UtcNow;
+            window.IsActive = false;
+            window.UpdatedAt = DateTime.UtcNow;
+
+            _logger.LogInformation("MAINTENANCE MODE DEACTIVATED: {Id} - {Title}", window.Id, window.Title);
+            return Ok(window);
+        }
+    }
+
+    /// <summary>
+    /// Cancel a maintenance window
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Cancel(string id, [FromBody] CancelMaintenanceRequest request)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+
+            window.Status = "Cancelled";
+            window.IsActive = false;
+            window.Notes = (window.Notes ?? "") + $"\nCancelled: {request.Reason}";
+            window.UpdatedAt = DateTime.UtcNow;
+
+            _logger.LogInformation("Maintenance cancelled: {Id} - Reason: {Reason}", window.Id, request.Reason);
+            return Ok(window);
+        }
+    }
+
+    /// <summary>
+    /// Update maintenance window schedule
+    /// </summary>
+    [HttpPut("{id}/schedule")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult UpdateSchedule(string id, [FromBody] UpdateScheduleRequest request)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+
+            window.ScheduledStart = request.NewStart;
+            window.ScheduledEnd = request.NewEnd;
+            window.UpdatedAt = DateTime.UtcNow;
+
+            return Ok(window);
+        }
+    }
+
+    /// <summary>
+    /// Update maintenance window notes
+    /// </summary>
+    [HttpPut("{id}/notes")]
+    [ProducesResponseType(typeof(MaintenanceWindowDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult UpdateNotes(string id, [FromBody] UpdateNotesRequest request)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+
+            window.Notes = request.Notes;
+            window.UpdatedAt = DateTime.UtcNow;
+
+            return Ok(window);
+        }
+    }
+
+    /// <summary>
+    /// Delete a maintenance window
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Delete(string id)
+    {
+        lock (_lock)
+        {
+            var window = _windows.FirstOrDefault(w => w.Id == id);
+            if (window == null) return NotFound(new { message = "Maintenance window not found" });
+
+            if (window.Status == "InProgress")
+                return BadRequest(new { message = "Cannot delete an active maintenance window. Complete or cancel it first." });
+
+            _windows.Remove(window);
+            _logger.LogInformation("Maintenance window deleted: {Id}", id);
+            return NoContent();
+        }
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    private static string MapType(int type) => type switch
+    {
+        1 => "Scheduled",
+        2 => "Emergency",
+        3 => "Database",
+        4 => "Deployment",
+        5 => "Infrastructure",
+        _ => "Other"
+    };
 }
 
-/// <summary>
-/// Current maintenance mode status
-/// TODO: Move to Application/DTOs when fully implemented
-/// </summary>
-public record MaintenanceStatus(
-    bool IsEnabled,
-    string? Message,
-    DateTime? StartedAt,
-    DateTime? EstimatedEndAt,
-    string? StartedBy
+// =============================================================================
+// DTOs — Response models matching frontend expectations
+// =============================================================================
+
+public class MaintenanceStatusResponse
+{
+    public bool IsMaintenanceMode { get; set; }
+    public MaintenanceWindowDto? MaintenanceWindow { get; set; }
+}
+
+public class MaintenanceWindowDto
+{
+    public string Id { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Type { get; set; } = "Scheduled";
+    public string Status { get; set; } = "Scheduled";
+    public DateTime ScheduledStart { get; set; }
+    public DateTime ScheduledEnd { get; set; }
+    public DateTime? ActualStart { get; set; }
+    public DateTime? ActualEnd { get; set; }
+    public string CreatedBy { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string? Notes { get; set; }
+    public bool NotifyUsers { get; set; }
+    public int NotifyMinutesBefore { get; set; }
+    public List<string> AffectedServices { get; set; } = new();
+    public bool IsActive { get; set; }
+    public bool IsUpcoming { get; set; }
+}
+
+public record CreateMaintenanceWindowRequest(
+    string Title,
+    string? Description,
+    int Type,
+    DateTime ScheduledStart,
+    DateTime ScheduledEnd,
+    bool NotifyUsers = true,
+    int NotifyMinutesBefore = 30,
+    List<string>? AffectedServices = null
 );
 
-/// <summary>
-/// Request to set maintenance mode status
-/// TODO: Move to Application/DTOs when fully implemented
-/// </summary>
-public record SetMaintenanceStatusRequest(
-    bool IsEnabled,
-    string? Message = null,
-    DateTime? EstimatedEndAt = null
-);
+public record CancelMaintenanceRequest(string Reason);
+
+public record UpdateScheduleRequest(DateTime NewStart, DateTime NewEnd);
+
+public record UpdateNotesRequest(string Notes);

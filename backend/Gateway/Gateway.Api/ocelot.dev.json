@@ -2134,13 +2134,10 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "adminservice",
+          "Host": "userservice",
           "Port": 80
         }
       ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -5062,10 +5059,7 @@
           "Host": "adminservice",
           "Port": 80
         }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/upcoming",
@@ -5077,10 +5071,7 @@
           "Host": "adminservice",
           "Port": 80
         }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/maintenance",
