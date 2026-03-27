@@ -30,7 +30,7 @@ export default function PrivacidadPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-foreground text-3xl font-bold">Política de Privacidad</h1>
-            <p className="text-muted-foreground mt-2">Última actualización: Enero 2026</p>
+            <p className="text-muted-foreground mt-2">Última actualización: Marzo 2026</p>
           </div>
 
           {/* Content */}
@@ -186,35 +186,87 @@ export default function PrivacidadPage() {
                 Puede gestionar sus preferencias de cookies en la configuración de su navegador.
               </p>
 
-              <h2>7. Retención de Datos</h2>
+              <h2>7. Inteligencia Artificial y Procesamiento Automatizado</h2>
               <p>
-                Conservamos su información mientras su cuenta esté activa o según sea necesario para
-                proporcionarle servicios. Tras el cierre de cuenta, podemos retener ciertos datos
-                por razones legales, contables o de seguridad por un período razonable.
+                OKLA utiliza herramientas de inteligencia artificial para mejorar la experiencia del
+                usuario. Tiene derecho a solicitar revisión humana de cualquier decisión
+                automatizada que le afecte significativamente, contactándonos en{' '}
+                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>.
+              </p>
+              <ul>
+                <li>
+                  <strong>Búsqueda inteligente (SearchAgent):</strong> Sus consultas de búsqueda son
+                  procesadas por inteligencia artificial (Anthropic Claude) para interpretar
+                  lenguaje natural y extraer filtros de vehículos. Las consultas no se almacenan de
+                  forma identificable.
+                </li>
+                <li>
+                  <strong>Chatbot de vendedores (DealerChat):</strong> Las conversaciones con el
+                  agente IA son procesadas por Anthropic Claude. Los mensajes pueden ser retenidos
+                  temporalmente para el contexto de la conversación (máximo 24 horas).
+                </li>
+                <li>
+                  <strong>Recomendaciones (RecoAgent):</strong> Generamos sugerencias de vehículos
+                  basadas en su historial de navegación y preferencias mediante análisis
+                  automatizado.
+                </li>
+                <li>
+                  <strong>Estimación de precios (PricingAgent):</strong> Los precios estimados se
+                  calculan mediante modelos de IA basados en datos del mercado dominicano de
+                  vehículos. No constituyen una valoración oficial.
+                </li>
+              </ul>
+              <p>
+                Los datos procesados por nuestros sistemas de IA son tratados por Anthropic, Inc.
+                como subencargado, bajo acuerdos de procesamiento de datos que garantizan estándares
+                equivalentes de protección conforme a la Ley No. 172-13.
               </p>
 
-              <h2>8. Transferencias Internacionales</h2>
+              <h2>8. Retención de Datos</h2>
+              <p>Conservamos su información según los siguientes plazos:</p>
+              <ul>
+                <li>
+                  <strong>Datos de cuenta activa:</strong> mientras su cuenta permanezca activa
+                </li>
+                <li>
+                  <strong>Datos tras cierre de cuenta:</strong> hasta 5 años para obligaciones
+                  legales, contables y fiscales
+                </li>
+                <li>
+                  <strong>Registros de transacciones:</strong> 10 años conforme a legislación
+                  tributaria dominicana
+                </li>
+                <li>
+                  <strong>Conversaciones de chatbot:</strong> máximo 24 horas en memoria activa;
+                  logs anonimizados hasta 90 días para mejora del servicio
+                </li>
+                <li>
+                  <strong>Historial de búsquedas:</strong> hasta 12 meses en forma anonimizada
+                </li>
+              </ul>
+
+              <h2>9. Transferencias Internacionales</h2>
               <p>
                 Sus datos pueden ser transferidos y procesados en servidores ubicados fuera de
                 República Dominicana. Cuando esto ocurra, nos aseguraremos de que existan
                 protecciones adecuadas según las leyes aplicables.
               </p>
 
-              <h2>9. Menores de Edad</h2>
+              <h2>10. Menores de Edad</h2>
               <p>
                 Nuestros servicios no están dirigidos a menores de 18 años. No recopilamos
                 intencionalmente información de menores. Si tiene conocimiento de que un menor nos
                 ha proporcionado datos, contáctenos para eliminarlos.
               </p>
 
-              <h2>10. Cambios a esta Política</h2>
+              <h2>11. Cambios a esta Política</h2>
               <p>
                 Podemos actualizar esta política periódicamente. Le notificaremos cualquier cambio
                 significativo publicando la nueva política en esta página y, si es necesario, por
                 correo electrónico.
               </p>
 
-              <h2>11. Contacto</h2>
+              <h2>12. Contacto</h2>
               <p>Si tiene preguntas sobre esta Política de Privacidad, contáctenos:</p>
               <ul>
                 <li>
