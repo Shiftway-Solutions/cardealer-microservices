@@ -45,11 +45,19 @@ import re
 import threading
 from pathlib import Path
 from datetime import datetime
+import base64
+
 try:
     import websocket  # websocket-client
     _WS_AVAILABLE = True
 except ImportError:
     _WS_AVAILABLE = False
+
+try:
+    import openai as _openai_sdk
+    _VISION_AVAILABLE = True
+except ImportError:
+    _VISION_AVAILABLE = False
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -72,7 +80,9 @@ READ_STABLE_THRESHOLD = 120   # READ estable → dispatch nuevo ciclo
 VSCODE_BOOT_WAIT      = 25    # Segundos para que VS Code arranque
 MAX_CONTINUE_ATTEMPTS = 3     # Intentos de "continuar" antes de nuevo chat
 MAX_NEW_CHAT_ATTEMPTS = 2     # Intentos de nuevo chat antes de restart
-VISUAL_STALL_THRESHOLD = 90   # Segundos sin cambio visual en el chat = conversación detenida
+VISUAL_STALL_THRESHOLD = 120  # Segundos sin cambio visual en el chat = conversación detenida
+WORKSPACE_SETTLE_TIME  = 150  # Tiempo mínimo sin cambio en prompt_1.md antes de actuar
+USER_ACTIVE_GRACE      = 180  # Segundos de cooldown cuando se detecta usuario escribiendo en el chat
 SCREENSHOTS_KEEP      = 20    # Número máximo de screenshots a conservar
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -289,6 +299,66 @@ def focus_vscode():
     time.sleep(0.4)
 
 
+def _get_focused_ax_role() -> str:
+    """
+    Retorna el AX role del elemento con foco en VS Code.
+    Usa AXFocusedUIElement (acceso directo, sin traversal del árbol completo).
+    """
+    result = run_applescript('''
+    tell application "System Events"
+        tell process "Code"
+            try
+                return role of (value of attribute "AXFocusedUIElement" of window 1)
+            on error
+                return "unknown"
+            end try
+        end tell
+    end tell
+    ''')
+    return result.strip()
+
+
+def _click_chat_input_position():
+    """
+    Fallback: hace click en la posición estimada del input del chat de Copilot.
+    Calcula coordenadas relativas a la ventana de VS Code via AX.
+    Copilot Chat (panel lateral izquierdo): x~15% ancho, y~93% alto.
+    """
+    result = run_applescript('''
+    tell application "System Events"
+        tell process "Code"
+            try
+                set w to window 1
+                set pos to position of w
+                set sz to size of w
+                return ((item 1 of pos) as text) & "," & ((item 2 of pos) as text) & "," & ((item 1 of sz) as text) & "," & ((item 2 of sz) as text)
+            on error
+                return ""
+            end try
+        end tell
+    end tell
+    ''')
+    if not result.strip():
+        log("_click_chat_input_position: no se pudo obtener bounds de ventana", "WARN")
+        return
+    try:
+        parts = [float(x.strip()) for x in result.split(",")]
+        x_win, y_win, w_win, h_win = parts
+        click_x = int(x_win + w_win * 0.15)
+        click_y = int(y_win + h_win * 0.93)
+        run_applescript(f'''
+        tell application "System Events"
+            tell process "Code"
+                click at {{{click_x}, {click_y}}}
+            end tell
+        end tell
+        ''')
+        time.sleep(0.5)
+        log(f"Click fallback en chat input ({click_x},{click_y})")
+    except Exception as e:
+        log(f"Error en _click_chat_input_position: {e}", "WARN")
+
+
 def is_vscode_running() -> bool:
     out = run_applescript('tell application "System Events" to (name of processes) contains "Code"')
     return out.strip().lower() == "true"
@@ -359,54 +429,69 @@ def vscode_open_new_chat():
 
 
 def vscode_focus_chat_input():
-    """Foca el input del chat de Copilot."""
+    """
+    Foca el input del chat de Copilot SIN cerrarlo.
+
+    Estrategia:
+    1. Verifica via AXFocusedUIElement si ya hay un AXTextField/AXTextArea enfocado.
+       Si sí → no hacer nada (evita toggle-close de Cmd+Ctrl+I).
+    2. Si no → envía Cmd+Ctrl+I (keybinding nativo de Copilot Chat).
+    3. Verifica resultado. Si Cmd+Ctrl+I no enfocó un campo de texto → click fallback
+       en la posición estimada del input.
+
+    NUNCA usa la command palette (Cmd+Shift+P) porque el autocomplete puede
+    seleccionar un comando equivocado que cierra el chat.
+    """
     focus_vscode()
-    time.sleep(0.2)
-    # Intentar Cmd+Shift+P → "Chat: Focus on Chat View"
+    time.sleep(0.3)
+
+    # Paso 1: verificar si ya hay un campo de texto enfocado → no hacer nada
+    if _get_focused_ax_role() in ("AXTextField", "AXTextArea"):
+        return
+
+    # Paso 2: abrir/focar el chat con el keybinding dedicado de Copilot
     run_applescript('''
     tell application "System Events"
         tell process "Code"
-            keystroke "p" using {command down, shift down}
+            keystroke "i" using {command down, control down}
         end tell
     end tell
     ''')
-    time.sleep(0.6)
-    run_applescript('''
-    tell application "System Events"
-        tell process "Code"
-            keystroke "Focus Chat Input"
-        end tell
-    end tell
-    ''')
-    time.sleep(0.4)
-    run_applescript('''
-    tell application "System Events"
-        tell process "Code"
-            key code 36
-        end tell
-    end tell
-    ''')
-    time.sleep(0.5)
+    time.sleep(1.2)
+
+    # Paso 3: verificar resultado
+    if _get_focused_ax_role() not in ("AXTextField", "AXTextArea"):
+        log("Cmd+Ctrl+I no enfocó el input — usando click fallback", "WARN")
+        _click_chat_input_position()
 
 
 def vscode_type_in_chat(message: str):
     """
     Escribe un mensaje en el chat de Copilot y lo envía.
     Usa pbcopy + Cmd+V para mensajes largos (más fiable).
+
+    Verifica via AXFocusedUIElement que un campo de texto tenga el foco
+    antes de pegar. Si no lo tiene, llama a vscode_focus_chat_input().
+    Si tras el intento de foco siguen sin haber un campo de texto activo,
+    aborta para no pegar en el lugar equivocado.
     """
-    focus_vscode()
+    # Asegurar foco en el input del chat
+    vscode_focus_chat_input()
     time.sleep(0.2)
 
-    # Poner mensaje en clipboard
+    # Verificación final antes de pegar
+    ax_role = _get_focused_ax_role()
+    if ax_role not in ("AXTextField", "AXTextArea"):
+        log(f"No se pudo obtener foco en campo de texto (AX role={ax_role}) — abortando envío", "ERROR")
+        return
+
+    # Poner mensaje en clipboard y pegar
     subprocess.run(["pbcopy"], input=message.encode("utf-8"))
     time.sleep(0.1)
 
-    # Click en zona del input del chat (parte inferior del panel chat)
-    # Usar AppleScript para hacer click en la posición del chat input
     run_applescript('''
     tell application "System Events"
         tell process "Code"
-            -- Cmd+V para pegar
             keystroke "v" using {command down}
         end tell
     end tell
@@ -426,41 +511,8 @@ def vscode_type_in_chat(message: str):
 
 
 def vscode_type_continue():
-    """Escribe 'continuar' en el chat activo y envía."""
-    focus_vscode()
-    time.sleep(0.3)
-
-    # Evita dependencia de pyautogui: usar comando de VS Code para focar input.
-    vscode_focus_chat_input()
-
-    run_applescript(f'''
-    tell application "System Events"
-        tell process "Code"
-            set frontmost to true
-        end tell
-    end tell
-    ''')
-    time.sleep(0.2)
-
-    subprocess.run(["pbcopy"], input="continuar".encode("utf-8"))
-    time.sleep(0.1)
-
-    run_applescript('''
-    tell application "System Events"
-        tell process "Code"
-            keystroke "v" using {command down}
-        end tell
-    end tell
-    ''')
-    time.sleep(0.2)
-
-    run_applescript('''
-    tell application "System Events"
-        tell process "Code"
-            key code 36
-        end tell
-    end tell
-    ''')
+    """Escribe 'continuar' en el chat activo y lo envía."""
+    vscode_type_in_chat("continuar")
     log("✅ Enviado 'continuar' al chat")
 
 
@@ -652,17 +704,174 @@ _WATCHDOG_MAP = {
     "CONTINUAR":   "ERROR",
     "NUEVO_CHAT":  "DONE",
     "REINICIAR":   "RESTART",
+    "ESPERAR":     "USER_ACTIVE",
 }
+
+# ─── Vision-based state detection (Computer-Use pattern) ─────────────────────
+# Metodología profesional usada por Claude Computer Use, OpenAI CUA, etc.:
+# 1. Screenshot PNG → base64 encode
+# 2. Llamada directa a Claude Vision API (multimodal) con la imagen
+# 3. El modelo "ve" la pantalla como un humano y decide la acción
+# Sin OCR intermedio: el LLM interpreta directamente los píxeles.
+
+_VISION_MODEL   = "gpt-4o"            # Soporta visión nativa; fallback: gpt-4.1
+_VISION_PROMPT  = """\
+{temporal_section}\
+TEXTO EXTRAÍDO POR OCR DEL CHAT:
+---
+{ocr_text}
+---
+
+MÉTRICAS DEL SISTEMA:
+{extra_context}
+
+Tu tarea: clasifica el estado del agente GitHub Copilot en VS Code y devuelve UNA SOLA PALABRA.
+
+Opciones:
+- OK         → Copilot activo: spinner visible, texto generándose/streaming, o
+               workspace_sin_cambio < 150s (puede estar corriendo tools en background).
+               NO intervenir aunque el chat parezca quieto.
+- CONTINUAR  → Copilot terminó: respuesta completa visible, sin spinner, sin actividad,
+               y workspace_sin_cambio >= 150s. Enviar "continuar".
+- NUEVO_CHAT → Panel vacío, pantalla de bienvenida, o error grave sin recovery.
+               Abrir un chat nuevo con el loop prompt.
+- REINICIAR  → VS Code crash, panel del chat inexistente, estado corrupto.
+- ESPERAR    → Se detecta actividad HUMANA: hay texto siendo escrito en el input box
+               inferior del chat (no es Copilot generando — es el USUARIO tecleando).
+               Cursor parpadeante en el campo de entrada, letras apareciendo.
+               El script debe retroceder y no interferir.
+
+REGLA CRÍTICA: si workspace_sin_cambio < 150 en las métricas → responde OK.
+El agente escribe archivos y corre comandos en background después de responder en el chat.
+REGLA: si el input box inferior del chat muestra cursor activo o texto reciente → ESPERAR.
+
+Responde UNA SOLA PALABRA: OK | CONTINUAR | NUEVO_CHAT | REINICIAR | ESPERAR
+"""
+
+
+def _ask_vision_agent(screenshot_path: Path,
+                      prev_screenshot_path: Path | None = None,
+                      extra_context: str = "",
+                      ocr_text: str = "") -> str | None:
+    """
+    Computer-Use pattern: envía hasta 2 screenshots al LLM con visión.
+    - screenshot_path:      imagen ACTUAL del chat (obligatoria)
+    - prev_screenshot_path: imagen ANTERIOR del chat (opcional, referencia temporal)
+    - ocr_text:             texto OCR extraído del chat (embebido en el prompt)
+
+    Con 2 imágenes el modelo puede comparar el estado anterior vs actual,
+    detectando si hubo actividad (streaming, typing) entre ambas capturas.
+    Cost: ~85 tokens por imagen en detail=low → 2 imgs ≈ 170 tokens totales.
+
+    Modelos: gpt-4o (primary) → gpt-4.1 → raptor-mini
+    """
+    if not _VISION_AVAILABLE:
+        return None
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        log("OPENAI_API_KEY no configurado — skipping vision", "WARN")
+        return None
+
+    try:
+        current_data = base64.standard_b64encode(screenshot_path.read_bytes()).decode("utf-8")
+    except Exception as e:
+        log(f"No se pudo leer screenshot para vision: {e}", "WARN")
+        return None
+
+    # Construir lista de imágenes (prev primero, actual después)
+    content: list = []
+    has_prev = (
+        prev_screenshot_path is not None
+        and prev_screenshot_path.exists()
+        and prev_screenshot_path != screenshot_path
+    )
+    if has_prev:
+        try:
+            prev_data = base64.standard_b64encode(prev_screenshot_path.read_bytes()).decode("utf-8")
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{prev_data}", "detail": "low"},
+            })
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{current_data}", "detail": "low"},
+            })
+            temporal_section = (
+                "Estás clasificando el estado del agente GitHub Copilot en VS Code.\n"
+                "IMAGEN 1: estado ANTERIOR del chat (referencia temporal).\n"
+                "IMAGEN 2: estado ACTUAL del chat (toma la decisión basándote en esta).\n"
+            )
+        except Exception:
+            has_prev = False  # falló leer prev — caer a imagen única
+
+    if not has_prev:
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{current_data}", "detail": "low"},
+        })
+        temporal_section = "Estás clasificando el estado del agente GitHub Copilot en VS Code.\nIMAGEN: estado actual del chat.\n"
+
+    prompt_text = (
+        _VISION_PROMPT
+        .replace("{temporal_section}", temporal_section)
+        .replace("{ocr_text}", ocr_text.strip() or "(sin texto visible)")
+        .replace("{extra_context}", extra_context or "(ninguno)")
+    )
+    content.append({"type": "text", "text": prompt_text})
+
+    # Intentar modelos en orden de preferencia
+    models_to_try = [_VISION_MODEL, "gpt-4.1", "raptor-mini"]
+    seen: set = set()
+    ordered = [m for m in models_to_try if m not in seen and not seen.add(m)]
+
+    for model in ordered:
+        try:
+            client = _openai_sdk.OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model=model,
+                max_tokens=16,
+                messages=[{"role": "user", "content": content}],
+            )
+            raw     = response.choices[0].message.content.strip().upper().split()[0]
+            allowed = ("OK", "CONTINUAR", "NUEVO_CHAT", "REINICIAR")
+            if raw in allowed:
+                imgs = "2 imgs" if has_prev else "1 img"
+                log(f"Vision LLM → {raw} ({model}, {imgs})")
+                return raw
+            for word in allowed:
+                if word in raw:
+                    log(f"Vision LLM → {word} (extraído de '{raw}', {model})")
+                    return word
+            log(f"Vision LLM respuesta inválida: '{raw}' ({model})", "WARN")
+            return None
+        except Exception as exc:
+            log(f"Vision API error con {model}: {exc}", "WARN")
+            continue
+
+    return None
 
 
 def classify_chat_state(ocr_text: str, debug: bool = False,
-                        extra_context: str = "") -> str:
+                        extra_context: str = "",
+                        screenshot_path: Path | None = None,
+                        prev_screenshot_path: Path | None = None) -> str:
     """
-    Clasifica el estado del chat consultando al agente copilot-watchdog de
-    OpenClaw (cerebro LLM). Si el gateway no está disponible, cae back a
-    clasificación local con regex.
+    Clasifica el estado del chat usando un pipeline de 3 capas:
 
-    Respuesta del agente → estado interno:
+    CAPA 1 — Vision LLM (Computer-Use pattern)
+      Screenshot PNG → base64 → Claude Vision API (claude-haiku-4-5)
+      El modelo VE la pantalla directamente, sin OCR intermedio.
+      Metodología usada por Claude Computer Use, OpenAI CUA, Playwright Agent.
+
+    CAPA 2 — OCR + OpenClaw watchdog (texto)
+      Fallback cuando Vision no está disponible o falla.
+      OCR text → WebSocket → copilot-watchdog (github-copilot/gpt-4.1)
+
+    CAPA 3 — Regex local
+      Fallback final sin dependencias externas.
+
+    Respuesta → estado interno:
       OK          → WORKING  (Copilot trabajando, no intervenir)
       CONTINUAR   → ERROR    (enviar "continuar" al chat)
       NUEVO_CHAT  → DONE     (abrir nuevo chat con AGENT_LOOP_PROMPT)
@@ -671,15 +880,29 @@ def classify_chat_state(ocr_text: str, debug: bool = False,
     if debug:
         print(f"\n{'='*60}\nOCR RAW:\n{ocr_text}\n{'='*60}\n")
 
-    # ── Intentar con el cerebro LLM (copilot-watchdog) ────────────────────────
+    # ── CAPA 1: Vision LLM — Computer-Use pattern ─────────────────────────────
+    if screenshot_path and screenshot_path.exists():
+        decision = _ask_vision_agent(
+            screenshot_path,
+            prev_screenshot_path=prev_screenshot_path,
+            extra_context=extra_context,
+            ocr_text=ocr_text,
+        )
+        if decision is not None:
+            mapped = _WATCHDOG_MAP.get(decision, "IDLE")
+            log(f"[Vision] {decision} → {mapped}")
+            return mapped
+        log("Vision no disponible o falló — bajando a capa OCR+watchdog", "WARN")
+
+    # ── CAPA 2: OCR text → OpenClaw watchdog LLM ──────────────────────────────
     decision = _ask_watchdog_agent(ocr_text, extra_context=extra_context)
     if decision is not None:
         mapped = _WATCHDOG_MAP.get(decision, "IDLE")
-        log(f"Watchdog LLM → {decision} (mapea a {mapped})")
+        log(f"[Watchdog OCR] {decision} → {mapped}")
         return mapped
 
-    # ── Fallback: clasificación local con regex (si gateway no disponible) ─────
-    log("Gateway no disponible — usando clasificación local de respaldo", "WARN")
+    # ── CAPA 3: Regex local (fallback sin dependencias) ───────────────────────
+    log("Gateway OCR no disponible — usando regex local de respaldo", "WARN")
     text_lower = ocr_text.lower()
 
     for pattern in WORKING_PATTERNS:
@@ -810,6 +1033,13 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
     """
     now = time.time()
 
+    # ── 0. Cooldown usuario activo — no interferir mientras alguien escribe ────
+    user_active_until = state.get("user_active_until_ts", 0.0)
+    if now < user_active_until:
+        remaining = user_active_until - now
+        log(f"👤 Cooldown usuario activo — {remaining:.0f}s restantes, sin intervención")
+        return "idle", state
+
     # ── 1. Capturar área de mensajes del chat ──────────────────────────────────
     chat_sc = capture_chat_region_screenshot("chat")
     if chat_sc is None:
@@ -822,6 +1052,8 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
 
     if current_hash and current_hash != prev_hash:
         # El área de mensajes cambió → Copilot está generando contenido
+        state["prev_chat_screenshot"] = state.get("last_chat_screenshot", "")
+        state["last_chat_screenshot"] = str(chat_sc)
         state["last_chat_hash"] = current_hash
         state["last_visual_change_ts"] = now
         state["continue_attempts"] = 0
@@ -841,8 +1073,17 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
         cleanup_old_screenshots()
         return "idle", state
 
+    # ── 3.5. Workspace settle: si prompt_1.md cambió recientemente, esperar ────
+    # Copilot puede estar corriendo tool calls / escribiendo archivos en background
+    # aunque el chat ya no tenga streaming activo.
+    secs_since_prompt = get_last_action_time()
+    if secs_since_prompt < WORKSPACE_SETTLE_TIME:
+        log(f"Workspace activo hace {secs_since_prompt:.0f}s < {WORKSPACE_SETTLE_TIME}s — esperando settle")
+        cleanup_old_screenshots()
+        return "idle", state
+
     # ── 4. Chat estático demasiado tiempo → diagnosticar con OCR ──────────────
-    log(f"⚠️  Chat estático {secs_idle:.0f}s — analizando estado...", "WARN")
+    log(f"⚠️  Chat estático {secs_idle:.0f}s, workspace {secs_since_prompt:.0f}s — analizando...", "WARN")
 
     # OCR sobre la imagen ya recortada del chat (region=None porque ya es el crop)
     ocr_text = ocr_image(chat_sc, region=None)
@@ -851,17 +1092,24 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
     file_is_read = last_line.upper() == "READ"
     secs_since_mod = get_last_action_time()
 
-    # Contexto extra para el agente LLM: le damos toda la info relevante
+    # Contexto para el LLM: información del sistema con claves reconocibles en el prompt
     extra_context = (
-        f"Última línea de prompt_1.md: '{last_line}'\n"
-        f"Tiempo sin cambio en prompt_1.md: {secs_since_mod:.0f}s\n"
-        f"Chat visual estático: {secs_idle:.0f}s\n"
-        f"Intentos de continuar: {state.get('continue_attempts', 0)}\n"
-        f"Intentos de nuevo chat: {state.get('new_chat_attempts', 0)}"
+        f"workspace_sin_cambio: {secs_since_mod:.0f}s\n"
+        f"chat_estatico: {secs_idle:.0f}s\n"
+        f"ultima_linea_prompt: '{last_line}'\n"
+        f"intentos_continuar: {state.get('continue_attempts', 0)}\n"
+        f"intentos_nuevo_chat: {state.get('new_chat_attempts', 0)}"
     )
-    chat_ocr_state = classify_chat_state(ocr_text, debug=debug, extra_context=extra_context)
+    prev_sc_path = Path(state["prev_chat_screenshot"]) if state.get("prev_chat_screenshot") else None
+    chat_ocr_state = classify_chat_state(
+        ocr_text,
+        debug=debug,
+        extra_context=extra_context,
+        screenshot_path=chat_sc,
+        prev_screenshot_path=prev_sc_path,
+    )
 
-    log(f"OCR={chat_ocr_state} | prompt_1='{last_line}' | archivo_sin_cambio={secs_since_mod:.0f}s")
+    log(f"State={chat_ocr_state} | prompt_1='{last_line}' | archivo_sin_cambio={secs_since_mod:.0f}s")
 
     # ── 4a. Chat vacío → cargar el prompt inmediatamente ─────────────────────
     ocr_lower = ocr_text.lower()
@@ -888,6 +1136,14 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
     if chat_ocr_state == "ERROR":
         cleanup_old_screenshots()
         return _handle_error(state, now, "error OCR")
+
+    # ── 4b2. Usuario activo detectado por visión → retroceder ─────────────────
+    if chat_ocr_state == "USER_ACTIVE":
+        log(f"👤 Usuario activo detectado — sin intervención por {USER_ACTIVE_GRACE}s", "ACTION")
+        state["user_active_until_ts"] = now + USER_ACTIVE_GRACE
+        state["last_visual_change_ts"] = now  # reiniciar reloj visual
+        cleanup_old_screenshots()
+        return "user_active", state
 
     # ── 4c. READ estable → tarea completada, despachar nuevo ciclo ────────────
     if file_is_read:
@@ -1003,6 +1259,7 @@ def _default_state() -> dict:
         "read_since_ts": None,
         "last_chat_hash": "",          # Hash del último screenshot del área de mensajes
         "last_visual_change_ts": 0.0,  # Cuándo cambió visualmente el chat por última vez
+        "user_active_until_ts": 0.0,   # Hasta cuándo esperar por actividad de usuario
     }
 
 
