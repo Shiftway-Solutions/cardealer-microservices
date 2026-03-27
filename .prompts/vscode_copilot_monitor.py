@@ -83,7 +83,28 @@ MAX_NEW_CHAT_ATTEMPTS = 2     # Intentos de nuevo chat antes de restart
 VISUAL_STALL_THRESHOLD = 120  # Segundos sin cambio visual en el chat = conversación detenida
 WORKSPACE_SETTLE_TIME  = 150  # Tiempo mínimo sin cambio en prompt_1.md antes de actuar
 USER_ACTIVE_GRACE      = 180  # Segundos de cooldown cuando se detecta usuario escribiendo en el chat
+HID_ACTIVE_THRESHOLD   = 30   # Segundos: último HID + VS Code en foco → actividad humana detectada
 SCREENSHOTS_KEEP      = 20    # Número máximo de screenshots a conservar
+
+# ─── OpenClaw — rotación automática de modelos GitHub Copilot gratuitos ──────
+OPENCLAW_MODELS = [
+    "github-copilot/gpt-4.1",     # Primario (GPT-4.1)
+    "github-copilot/gpt-4o",       # Fallback 1 (GPT-4o)
+    "github-copilot/gpt-4o-mini",  # Fallback 2 (Raptor mini)
+]
+OPENCLAW_CONFIG   = Path.home() / ".openclaw" / "openclaw.json"
+COOLDOWN_MODEL_SW = 120    # Mínimo segundos entre rotaciones de modelo
+
+# Patrones de fallo de modelo en el chat (activan rotación automática de OpenClaw)
+MODEL_FAIL_PATTERNS = [
+    r"model.*not.*available",
+    r"model.*unavailable",
+    r"service.*unavailable",
+    r"(gpt-4\.1|gpt-4o|gpt-4o-mini).*error",
+    r"provider.*error",
+    r"llm.*error",
+    r"503\b",
+]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATRONES DE DETECCIÓN (OCR)
@@ -279,6 +300,63 @@ def read_agent_loop_prompt() -> str:
     except Exception as e:
         log(f"No se pudo leer AGENT_LOOP_PROMPT.md: {e}", "ERROR")
         return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DETECCIÓN DE ACTIVIDAD HUMANA (macOS HID + Accessibility)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _seconds_since_last_input() -> float:
+    """
+    Segundos desde el último evento de teclado o mouse del sistema operativo.
+    Usa CGEventSource (Quartz framework) — disponible sin permisos adicionales.
+    """
+    script = """
+import sys
+try:
+    from Quartz import CGEventSourceSecondsSinceLastEventType, kCGEventSourceStateHIDSystemState
+    # 0xFFFFFFFF = kCGAnyInputEventType (todos los tipos de eventos HID)
+    secs = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateHIDSystemState, 0xFFFFFFFF)
+    print(f"{secs:.1f}")
+except Exception:
+    print("9999")
+"""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True, text=True, timeout=5
+        )
+        return float(result.stdout.strip())
+    except Exception:
+        return 9999.0
+
+
+def _is_vscode_frontmost() -> bool:
+    """True si VS Code es la aplicación activa en primer plano."""
+    out = run_applescript(
+        'tell application "System Events" to '
+        'return name of first application process whose frontmost is true'
+    )
+    return "Code" in out
+
+
+def _is_human_active_in_vscode() -> tuple[bool, str]:
+    """
+    Detecta CUALQUIER actividad humana en VS Code usando dos señales nativas macOS:
+      - HID: último evento de teclado/mouse del sistema < HID_ACTIVE_THRESHOLD segundos
+      - Foco: VS Code es la aplicación activa en primer plano
+    Cubre: escritura en editor, clicks, navegación, apertura de archivos,
+           scroll en cualquier panel, uso del terminal integrado, etc.
+    Retorna (activo: bool, descripción: str).
+    """
+    try:
+        vs_front = _is_vscode_frontmost()
+        secs_hid = _seconds_since_last_input()
+        if vs_front and secs_hid < HID_ACTIVE_THRESHOLD:
+            return True, f"VS Code activo + HID hace {secs_hid:.0f}s"
+        return False, f"vs_front={vs_front}, hid={secs_hid:.0f}s"
+    except Exception as e:
+        return False, f"error HID: {e}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -707,6 +785,60 @@ _WATCHDOG_MAP = {
     "ESPERAR":     "USER_ACTIVE",
 }
 
+# ─── OpenClaw model rotation ──────────────────────────────────────────────────
+
+def _restart_openclaw_gateway():
+    """Reinicia el gateway de OpenClaw para aplicar cambios de configuración."""
+    log("🔄 Reiniciando OpenClaw gateway...", "ACTION")
+    result = subprocess.run(
+        ["openclaw", "gateway", "restart"],
+        capture_output=True, text=True, timeout=30
+    )
+    if result.returncode == 0:
+        log("✅ OpenClaw gateway reiniciado")
+        time.sleep(3)
+    else:
+        log(f"⚠️  openclaw gateway restart falló: {result.stderr[:200]}", "WARN")
+        # Fallback: stop + start
+        subprocess.run(["openclaw", "gateway", "stop"],
+                       capture_output=True, timeout=10)
+        time.sleep(1)
+        subprocess.Popen(["openclaw", "gateway", "start"])
+        time.sleep(3)
+
+
+def _switch_openclaw_model(state: dict, now: float) -> str:
+    """
+    Rota al siguiente modelo en OPENCLAW_MODELS, actualiza openclaw.json
+    y reinicia el gateway para aplicar el cambio.
+    Rotación: gpt-4.1 → gpt-4o → gpt-4o-mini → gpt-4.1 → ...
+    """
+    current_idx   = state.get("openclaw_model_idx", 0)
+    next_idx      = (current_idx + 1) % len(OPENCLAW_MODELS)
+    current_model = OPENCLAW_MODELS[current_idx]
+    next_model    = OPENCLAW_MODELS[next_idx]
+
+    log(f"⚡ Rotando modelo OpenClaw: {current_model} → {next_model}", "ACTION")
+    try:
+        config = json.loads(OPENCLAW_CONFIG.read_text())
+        # Actualizar primary en defaults
+        config.setdefault("agents", {}).setdefault("defaults", {}).setdefault("model", {})
+        config["agents"]["defaults"]["model"]["primary"] = next_model
+        # Actualizar también en cada agente individual
+        for agent in config["agents"].get("list", []):
+            agent["model"] = next_model
+        OPENCLAW_CONFIG.write_text(json.dumps(config, indent=2, ensure_ascii=False))
+        log(f"✅ openclaw.json actualizado → primary={next_model}")
+    except Exception as e:
+        log(f"Error actualizando openclaw.json: {e}", "WARN")
+        return current_model
+
+    state["openclaw_model_idx"]   = next_idx
+    state["last_model_switch_ts"] = now
+    _restart_openclaw_gateway()
+    return next_model
+
+
 # ─── Vision-based state detection (Computer-Use pattern) ─────────────────────
 # Metodología profesional usada por Claude Computer Use, OpenAI CUA, etc.:
 # 1. Screenshot PNG → base64 encode
@@ -736,14 +868,16 @@ Opciones:
 - NUEVO_CHAT → Panel vacío, pantalla de bienvenida, o error grave sin recovery.
                Abrir un chat nuevo con el loop prompt.
 - REINICIAR  → VS Code crash, panel del chat inexistente, estado corrupto.
-- ESPERAR    → Se detecta actividad HUMANA: hay texto siendo escrito en el input box
-               inferior del chat (no es Copilot generando — es el USUARIO tecleando).
-               Cursor parpadeante en el campo de entrada, letras apareciendo.
-               El script debe retroceder y no interferir.
+- ESPERAR    → Se detecta CUALQUIER actividad humana en VS Code: el usuario escribe
+               en el input del chat, navega el editor, abre/guarda archivos, hace
+               clicks o scroll en cualquier panel, usa el terminal integrado, o
+               cualquier interacción visual del humano (no es Copilot generando).
+               Señales: cursor parpadeante en input, texto emergente, panel activo
+               con foco de usuario, archivos recientemente abiertos en árbol lateral.
 
 REGLA CRÍTICA: si workspace_sin_cambio < 150 en las métricas → responde OK.
 El agente escribe archivos y corre comandos en background después de responder en el chat.
-REGLA: si el input box inferior del chat muestra cursor activo o texto reciente → ESPERAR.
+REGLA: cualquier señal de interacción humana activa en VS Code → ESPERAR.
 
 Responde UNA SOLA PALABRA: OK | CONTINUAR | NUEVO_CHAT | REINICIAR | ESPERAR
 """
@@ -1040,6 +1174,16 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
         log(f"👤 Cooldown usuario activo — {remaining:.0f}s restantes, sin intervención")
         return "idle", state
 
+    # ── 0.5. Actividad humana nativa macOS (HID + foco) — sin LLM ni screenshot ─
+    # Detección inmediata de cualquier actividad en VS Code: teclado, mouse, click,
+    # navegación de editor, terminal, árbol de archivos, etc.
+    human_active, hid_desc = _is_human_active_in_vscode()
+    if human_active:
+        log(f"👤 Actividad humana detectada ({hid_desc}) — cooldown {USER_ACTIVE_GRACE}s")
+        state["user_active_until_ts"] = now + USER_ACTIVE_GRACE
+        state["last_visual_change_ts"] = now
+        return "user_active", state
+
     # ── 1. Capturar área de mensajes del chat ──────────────────────────────────
     chat_sc = capture_chat_region_screenshot("chat")
     if chat_sc is None:
@@ -1110,6 +1254,12 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
     )
 
     log(f"State={chat_ocr_state} | prompt_1='{last_line}' | archivo_sin_cambio={secs_since_mod:.0f}s")
+
+    # ── 4a.0. Fallo de modelo detectado → rotar OpenClaw automáticamente ───────
+    if any(re.search(p, ocr_text.lower()) for p in MODEL_FAIL_PATTERNS):
+        if now - state.get("last_model_switch_ts", 0) > COOLDOWN_MODEL_SW:
+            log("⚡ Fallo de modelo detectado en chat — rotando OpenClaw model", "ACTION")
+            _switch_openclaw_model(state, now)
 
     # ── 4a. Chat vacío → cargar el prompt inmediatamente ─────────────────────
     ocr_lower = ocr_text.lower()
@@ -1260,6 +1410,8 @@ def _default_state() -> dict:
         "last_chat_hash": "",          # Hash del último screenshot del área de mensajes
         "last_visual_change_ts": 0.0,  # Cuándo cambió visualmente el chat por última vez
         "user_active_until_ts": 0.0,   # Hasta cuándo esperar por actividad de usuario
+        "openclaw_model_idx": 0,       # Índice del modelo activo en OPENCLAW_MODELS
+        "last_model_switch_ts": 0.0,   # Timestamp de la última rotación de modelo
     }
 
 
