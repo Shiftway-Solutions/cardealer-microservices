@@ -285,6 +285,14 @@ export default function DealersPage() {
               </Card>
             ))}
           </div>
+
+          {/* Compliance disclaimer — Ley 358-05, Art. 36 publicidad no engañosa */}
+          <p className="text-muted-foreground mx-auto mt-6 max-w-3xl text-center text-xs">
+            * Los testimonios son de clientes reales y sus experiencias son ilustrativas. Los
+            resultados individuales pueden variar según el tipo de negocio, inventario y condiciones
+            del mercado. Las métricas de ventas citadas corresponden a promedios reportados por
+            dealers activos en OKLA durante 2025–2026.
+          </p>
         </div>
       </section>
 
