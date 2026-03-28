@@ -15,7 +15,7 @@ import { Metadata } from 'next';
 import { AdminAuthGuard } from '@/components/admin/admin-auth-guard';
 
 export const metadata: Metadata = {
-  title: 'Admin Panel | OKLA',
+  title: 'Admin Panel',
   description: 'Panel de administración de OKLA',
 };
 

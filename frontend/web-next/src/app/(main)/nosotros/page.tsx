@@ -17,7 +17,7 @@ import { ABOUT_STATS, PLATFORM_STATS } from '@/lib/platform-stats';
 // =============================================================================
 
 export const metadata = {
-  title: 'Nosotros | OKLA - Marketplace de Vehículos en RD',
+  title: 'Nosotros',
   description:
     'Conoce a OKLA, el marketplace líder de vehículos en República Dominicana. Nuestra misión, valores y el equipo detrás de la plataforma.',
 };
@@ -30,7 +30,7 @@ export default function NosotrosPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary to-primary/80 py-20 text-white">
+      <section className="from-primary to-primary/80 relative bg-gradient-to-br py-20 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl font-bold md:text-5xl">
@@ -49,7 +49,7 @@ export default function NosotrosPage() {
             xmlns="http://www.w3.org/2000/svg"
             className="w-full"
           >
-            <path d="M0 48h1440V0C1440 0 1140 48 720 48S0 0 0 0v48z" fill="white" />
+            <path d="M0 48h1440V0C1440 0 1140 48 720 48S0 0 0 0v48z" className="fill-background" />
           </svg>
         </div>
       </section>
@@ -60,7 +60,7 @@ export default function NosotrosPage() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {ABOUT_STATS.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</div>
+                <div className="text-primary text-3xl font-bold md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
@@ -122,8 +122,8 @@ export default function NosotrosPage() {
             ].map((value, index) => (
               <Card key={index}>
                 <CardContent className="pt-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                    <value.icon className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-lg">
+                    <value.icon className="text-primary h-6 w-6" />
                   </div>
                   <h3 className="text-foreground mt-4 text-xl font-semibold">{value.title}</h3>
                   <p className="text-muted-foreground mt-2">{value.description}</p>
@@ -186,13 +186,13 @@ export default function NosotrosPage() {
       {/* Contact CTA */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 text-center text-white md:p-12">
+          <div className="from-primary to-primary/80 mx-auto max-w-3xl rounded-2xl bg-gradient-to-br p-8 text-center text-white md:p-12">
             <h2 className="text-2xl font-bold md:text-3xl">¿Tienes preguntas?</h2>
             <p className="mt-4 text-white/90">
               Estamos aquí para ayudarte. Contáctanos y te responderemos a la brevedad.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white text-primary">
+              <Button asChild size="lg" className="hover:bg-muted text-primary gap-2 bg-white">
                 <Link href="/contacto">
                   <Mail className="h-4 w-4" />
                   Contáctanos

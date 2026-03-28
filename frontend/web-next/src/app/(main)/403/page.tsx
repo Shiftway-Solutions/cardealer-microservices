@@ -14,7 +14,7 @@ import { ShieldX, Home, LogIn } from 'lucide-react';
 import { GoBackButton } from './go-back-button';
 
 export const metadata: Metadata = {
-  title: 'Acceso Denegado | OKLA',
+  title: 'Acceso Denegado',
   robots: 'noindex',
 };
 
@@ -55,10 +55,7 @@ export default function ForbiddenPage() {
           <div className="border-border mt-8 border-t pt-6">
             <p className="text-muted-foreground mb-4 text-sm">¿Necesitas acceso a esta función?</p>
             <div className="flex justify-center gap-4 text-sm">
-              <Link
-                href="/login"
-                className="flex items-center gap-1 text-primary hover:underline"
-              >
+              <Link href="/login" className="text-primary flex items-center gap-1 hover:underline">
                 <LogIn className="h-3 w-3" />
                 Iniciar Sesión
               </Link>

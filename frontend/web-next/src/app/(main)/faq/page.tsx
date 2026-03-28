@@ -9,7 +9,7 @@ import { HelpCircle, ChevronDown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Preguntas Frecuentes | OKLA',
+  title: 'Preguntas Frecuentes',
   description:
     'Respuestas a las preguntas más comunes sobre OKLA: cómo comprar, vender, publicar anuncios, pagos y seguridad en el marketplace de vehículos de RD.',
   keywords: [
@@ -48,7 +48,7 @@ const faqs = [
     questions: [
       {
         q: '¿Cuánto cuesta publicar un vehículo?',
-        a: 'Los vendedores individuales pagan RD$29 por publicación. Este costo incluye fotos ilimitadas, aparición en los resultados de búsqueda y herramientas de comunicación con compradores.',
+        a: 'Los anuncios básicos son gratuitos para vendedores individuales. Ofrecemos opciones premium desde RD$499 que incluyen mayor visibilidad, destacado en búsquedas y badge especial. Los dealers tienen planes mensuales con beneficios adicionales.',
       },
       {
         q: '¿Cuánto tiempo está activo mi anuncio?',
@@ -60,7 +60,7 @@ const faqs = [
       },
       {
         q: '¿Puedo publicar múltiples vehículos?',
-        a: 'Los vendedores individuales pueden publicar hasta 5 vehículos a la vez. Si tienes más vehículos, considera registrarte como dealer para acceder a planes con inventario ilimitado.',
+        a: 'Los vendedores individuales con plan Verificado pueden tener hasta 3 publicaciones activas simultáneamente. Si tienes más vehículos, considera registrarte como dealer para acceder a planes con inventario ilimitado.',
       },
     ],
   },
@@ -126,7 +126,7 @@ export default function FaqPage() {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-14 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-14 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">

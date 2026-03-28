@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'Herramientas para Vehículos en RD | OKLA',
+  title: 'Herramientas para Vehículos en RD',
   description:
     'Herramientas gratuitas para comprar, vender o importar vehículos en República Dominicana. Calculadora de financiamiento, importación, comparador y más.',
   keywords: [
@@ -62,7 +62,7 @@ const herramientas = [
     title: 'Verificación VIN',
     description:
       'Escanea o ingresa el VIN de un vehículo para obtener su historial, especificaciones de fábrica y verificar su autenticidad.',
-    href: '/publicar',
+    href: '/okla-score',
     cta: 'Verificar VIN',
     color: 'text-rose-600',
     bgColor: 'bg-rose-50',
@@ -73,7 +73,7 @@ export default function HerramientasPage() {
   return (
     <div className="bg-background min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-16 text-white">
         <div className="container mx-auto px-4 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
             <Wrench className="h-8 w-8" />

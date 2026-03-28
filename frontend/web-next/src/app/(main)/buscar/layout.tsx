@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Buscar Vehículos | OKLA - Marketplace de Vehículos en RD',
+  title: 'Buscar Vehículos',
   description:
     'Busca entre miles de vehículos en República Dominicana. Filtra por marca, modelo, año, precio, ubicación y más. ¡Encuentra tu carro ideal hoy en OKLA!',
   alternates: {

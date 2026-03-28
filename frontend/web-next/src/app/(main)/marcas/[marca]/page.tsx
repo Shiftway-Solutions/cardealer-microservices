@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     `Encuentra los mejores ${brandName} usados y nuevos en República Dominicana. Precios, modelos y ofertas verificadas en OKLA.`;
 
   return {
-    title: `${brandName} en Venta | Vehículos ${brandName} en RD | OKLA`,
+    title: `${brandName} en Venta | Vehículos ${brandName} en RD`,
     description,
     keywords: [
       `${brandName} en venta`,

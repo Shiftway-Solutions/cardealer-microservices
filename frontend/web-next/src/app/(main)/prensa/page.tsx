@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { PRESS_STATS } from '@/lib/platform-stats';
 
 export const metadata = {
-  title: 'Prensa | OKLA - Sala de Prensa',
+  title: 'Sala de Prensa',
   description:
     'Sala de prensa de OKLA. Encuentra comunicados de prensa, estadísticas de la plataforma, kit de marca y contacto con nuestro equipo de relaciones públicas.',
 };
@@ -90,8 +90,10 @@ export default function PrensaPage() {
                       </div>
                       <h3 className="text-foreground mt-1 font-medium">{release.title}</h3>
                     </div>
-                    <Button variant="ghost" size="sm" className="flex-shrink-0">
-                      <Download className="h-4 w-4" />
+                    <Button asChild variant="ghost" size="sm" className="flex-shrink-0">
+                      <a href="mailto:prensa@okla.com.do" title="Solicitar comunicado por email">
+                        <Download className="h-4 w-4" />
+                      </a>
                     </Button>
                   </CardContent>
                 </Card>
@@ -153,13 +155,13 @@ export default function PrensaPage() {
                 </div>
               </a>
               <a
-                href="tel:+18095551234"
+                href="tel:+18098501234"
                 className="bg-card border-border hover:border-primary flex items-center gap-3 rounded-lg border p-4 transition-colors"
               >
                 <Phone className="text-primary h-5 w-5" />
                 <div className="text-left">
                   <div className="text-foreground font-medium">Teléfono</div>
-                  <div className="text-muted-foreground text-sm">+1 (809) 555-1234</div>
+                  <div className="text-muted-foreground text-sm">+1 (809) 850-1234</div>
                 </div>
               </a>
             </div>

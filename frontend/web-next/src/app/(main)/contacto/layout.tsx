@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Contacto | OKLA - Marketplace de Vehículos en RD',
+  title: 'Contacto',
   description:
     'Contáctanos para cualquier consulta sobre compra o venta de vehículos en República Dominicana. Soporte por email, teléfono y chat.',
   keywords: [

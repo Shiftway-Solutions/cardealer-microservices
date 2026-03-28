@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export const metadata = {
-  title: 'Empleos | OKLA - Únete al Equipo',
+  title: 'Empleos - Únete al Equipo',
   description:
     'Trabaja con nosotros en OKLA. Conoce las oportunidades disponibles y únete al equipo que está transformando el mercado automotriz de República Dominicana.',
 };
@@ -64,7 +64,7 @@ export default function EmpleosPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">

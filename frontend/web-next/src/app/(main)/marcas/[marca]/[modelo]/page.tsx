@@ -261,7 +261,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     `Encuentra ${combo} usados y nuevos en venta en República Dominicana. Precios, fotos reales, comparaciones y ofertas verificadas en OKLA.`;
 
   return {
-    title: `${combo} en Venta | ${combo} Usados y Nuevos en RD | OKLA`,
+    title: `${combo} en Venta | ${combo} Usados y Nuevos en RD`,
     description,
     keywords: [
       `${combo} en venta`,

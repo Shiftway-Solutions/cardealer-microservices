@@ -13,7 +13,7 @@ import Link from 'next/link';
 // =============================================================================
 
 export const metadata = {
-  title: 'Términos y Condiciones | OKLA',
+  title: 'Términos y Condiciones',
   description:
     'Términos y condiciones de uso de la plataforma OKLA, marketplace de vehículos en República Dominicana.',
 };

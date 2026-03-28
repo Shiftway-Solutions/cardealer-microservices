@@ -89,7 +89,7 @@ export async function generateMetadata({ params }: DealerPageProps): Promise<Met
     .join(' ');
 
   return {
-    title: `${dealerName} | OKLA Dealers`,
+    title: `${dealerName}`,
     description: `Visita el perfil de ${dealerName} en OKLA. Encuentra su inventario de vehículos, reseñas y ubicación en República Dominicana.`,
     alternates: {
       canonical: `${SITE_URL}/dealers/${slug}`,

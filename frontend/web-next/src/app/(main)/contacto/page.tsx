@@ -412,7 +412,7 @@ export default function ContactoPage() {
             Revisa nuestra sección de ayuda donde respondemos las dudas más comunes.
           </p>
           <Button asChild variant="outline" className="mt-6">
-            <Link href="/ayuda">Ver preguntas frecuentes</Link>
+            <Link href="/faq">Ver preguntas frecuentes</Link>
           </Button>
         </div>
       </section>

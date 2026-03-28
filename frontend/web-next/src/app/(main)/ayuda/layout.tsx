@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Centro de Ayuda | OKLA - Marketplace de Vehículos en RD',
+  title: 'Centro de Ayuda',
   description:
     'Centro de ayuda de OKLA. Encuentra respuestas a tus preguntas sobre compra, venta, pagos, seguridad y más.',
   keywords: [

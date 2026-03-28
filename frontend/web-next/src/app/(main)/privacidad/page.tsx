@@ -13,7 +13,7 @@ import Link from 'next/link';
 // =============================================================================
 
 export const metadata = {
-  title: 'Política de Privacidad | OKLA',
+  title: 'Política de Privacidad',
   description:
     'Política de privacidad de OKLA. Conoce cómo recopilamos, usamos y protegemos tu información personal.',
 };

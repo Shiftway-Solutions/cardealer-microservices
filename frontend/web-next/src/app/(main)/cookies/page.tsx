@@ -7,7 +7,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Política de Cookies | OKLA',
+  title: 'Política de Cookies',
   description:
     'Información sobre cómo OKLA utiliza cookies y tecnologías de seguimiento en su plataforma.',
 };

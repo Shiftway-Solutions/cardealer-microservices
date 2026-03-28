@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { FinancingCalculator } from './financing-calculator';
 
 export const metadata: Metadata = {
-  title: 'Calculadora de Financiamiento Vehicular | OKLA',
+  title: 'Calculadora de Financiamiento Vehicular',
   description:
     'Calcula tu cuota mensual para financiar tu vehículo en República Dominicana. Tasas actualizadas del mercado, seguros y tabla de amortización completa.',
   keywords: [
@@ -25,7 +25,7 @@ export default function CalculadoraFinanciamientoPage() {
   return (
     <div className="bg-background min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-14 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-14 text-white">
         <div className="container mx-auto px-4 text-center">
           <h1 className="mb-3 text-3xl font-bold md:text-4xl">
             Calculadora de Financiamiento Vehicular

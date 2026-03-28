@@ -22,7 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: 'Verificación de Dealers | OKLA',
+  title: 'Verificación de Dealers',
   description:
     'Conoce los 4 criterios que un dealer debe cumplir para obtener el badge de Dealer Verificado en OKLA: RNC en DGII, WhatsApp verificado, listings moderados y sin reportes de fraude.',
   openGraph: {

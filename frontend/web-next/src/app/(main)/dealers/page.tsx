@@ -39,7 +39,7 @@ import { DEALER_STATS } from '@/lib/platform-stats';
 // =============================================================================
 
 export const metadata: Metadata = {
-  title: 'Para Dealers | OKLA - Plataforma de Venta de Vehículos',
+  title: 'Para Dealers - Plataforma de Venta de Vehículos',
   description:
     'Únete a la plataforma líder de venta de vehículos en República Dominicana. +500 dealers confían en nosotros. Herramientas profesionales para concesionarios.',
   openGraph: {
@@ -131,7 +131,7 @@ export default function DealersPage() {
         <div className="relative container mx-auto px-4 py-16 lg:py-24">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <div className="border-primary/30 bg-primary/10 text-primary mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium">
               <Building2 className="h-4 w-4" />
               Plataforma #1 para Dealers en RD
             </div>
@@ -151,7 +151,7 @@ export default function DealersPage() {
 
             {/* CTAs */}
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="gap-2 bg-primary px-8 hover:bg-primary/90">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 gap-2 px-8">
                 <Link href="/dealers/registro">
                   Comenzar prueba gratis
                   <ArrowRight className="h-5 w-5" />
@@ -161,7 +161,7 @@ export default function DealersPage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="gap-2 border-gray-600 text-white hover:bg-gray-800"
+                className="gap-2 border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white"
               >
                 <Link href="#planes">Ver planes</Link>
               </Button>
@@ -170,15 +170,15 @@ export default function DealersPage() {
             {/* Trust indicators */}
             <div className="text-muted-foreground mt-10 flex flex-wrap items-center justify-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+                <CheckCircle className="text-primary h-5 w-5" />
                 <span>14 días gratis</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+                <CheckCircle className="text-primary h-5 w-5" />
                 <span>Sin tarjeta de crédito</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
+                <CheckCircle className="text-primary h-5 w-5" />
                 <span>Cancela cuando quieras</span>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function DealersPage() {
               return (
                 <Card key={index} className="border-none bg-white shadow-sm">
                   <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="h-6 w-6 text-primary" />
+                    <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
+                      <Icon className="text-primary h-6 w-6" />
                     </div>
                     <h3 className="text-foreground mb-2 text-lg font-bold">{feature.title}</h3>
                     <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -307,8 +307,8 @@ export default function DealersPage() {
 
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                    <Users className="text-primary h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Audiencia verificada</h3>
@@ -319,8 +319,8 @@ export default function DealersPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Zap className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                    <Zap className="text-primary h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Resultados rápidos</h3>
@@ -331,8 +331,8 @@ export default function DealersPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Shield className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                    <Shield className="text-primary h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Plataforma segura</h3>
@@ -346,7 +346,7 @@ export default function DealersPage() {
 
             <div className="bg-muted rounded-2xl p-8 lg:p-12">
               <div className="text-center">
-                <div className="mb-4 text-5xl font-bold text-primary">40%</div>
+                <div className="text-primary mb-4 text-5xl font-bold">40%</div>
                 <div className="text-foreground mb-2 text-xl font-semibold">
                   Aumento promedio en ventas
                 </div>
@@ -371,7 +371,7 @@ export default function DealersPage() {
               Únete a los +500 dealers que ya están vendiendo más vehículos con OKLA. Comienza tu
               prueba gratis hoy.
             </p>
-            <Button asChild size="lg" className="gap-2 bg-primary px-8 hover:bg-primary/90">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 gap-2 px-8">
               <Link href="/dealers/registro">
                 Comenzar prueba gratis
                 <ArrowRight className="h-5 w-5" />

@@ -316,7 +316,7 @@ const nextConfig: NextConfig = {
         destination: '/login',
         permanent: false,
       },
-      // Also handle /auth/registro and /auth/recuperar-contrasena for legacy links
+      // Also handle /auth/registro y /auth/recuperar-contrasena for legacy links
       {
         source: '/auth/registro',
         destination: '/registro',
@@ -326,6 +326,12 @@ const nextConfig: NextConfig = {
         source: '/auth/registro/:path*',
         destination: '/registro/:path*',
         permanent: false,
+      },
+      // Redirect /preguntas-frecuentes to canonical /faq (SEO + user expectations)
+      {
+        source: '/preguntas-frecuentes',
+        destination: '/faq',
+        permanent: true,
       },
     ];
   },

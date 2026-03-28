@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { guides } from './guide-data';
 
 export const metadata = {
-  title: 'Guías de Compra de Vehículos | OKLA',
+  title: 'Guías de Compra de Vehículos',
   description:
     'Guías completas para comprar y vender vehículos en República Dominicana. Aprende a detectar fraudes, verificar documentos y negociar el mejor precio.',
 };
@@ -46,7 +46,7 @@ export default function GuiasPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-14 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-14 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">

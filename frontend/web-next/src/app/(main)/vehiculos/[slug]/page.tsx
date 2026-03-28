@@ -69,7 +69,8 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
     const vehicle = await vehicleService.getBySlug(slug);
 
     const priceFormatted = formatCurrency(vehicle.price);
-    const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} - ${priceFormatted} | OKLA`;
+    const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} - ${priceFormatted}`;
+    const ogTitle = `${title} | OKLA`;
     const mileage = vehicle.mileage ?? 0;
     const conditionLabel = vehicle.condition === 'new' && mileage <= 1000 ? 'Nuevo' : 'Usado';
     const description = `${conditionLabel} ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city} por ${priceFormatted}. ${vehicle.mileage?.toLocaleString() || 0} km. ¡Contáctanos hoy para agendar una prueba de manejo! Ver fotos, especificaciones y financiamiento en OKLA.`;
@@ -115,7 +116,7 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
         ? { index: true, follow: true, 'max-image-preview': 'large' as const, 'max-snippet': -1 }
         : { index: false, follow: false },
       openGraph: {
-        title,
+        title: ogTitle,
         description,
         url: vehicleUrl,
         // SEO FIX: Use 'article' type for product pages (richer than 'website')
@@ -128,7 +129,7 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
       },
       twitter: {
         card: 'summary_large_image',
-        title,
+        title: ogTitle,
         description,
         site: '@okla',
         // Twitter image is generated dynamically by twitter-image.tsx
@@ -147,7 +148,7 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
     };
   } catch {
     return {
-      title: 'Vehículo no encontrado | OKLA',
+      title: 'Vehículo no encontrado',
       description: 'El vehículo que buscas no está disponible.',
     };
   }
@@ -161,7 +162,7 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
   try {
     vehicle = await vehicleService.getBySlug(slug);
   } catch (error) {
-    console.error('Error fetching vehicle:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching vehicle:', error);
     notFound();
   }
 

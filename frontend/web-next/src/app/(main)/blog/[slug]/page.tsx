@@ -5,6 +5,7 @@
  * SSG with generateStaticParams for all posts
  */
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -31,12 +32,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostBySlug(slug);
-  if (!post) return { title: 'Artículo no encontrado | OKLA' };
+  if (!post) return { title: 'Artículo no encontrado' };
 
   const url = `https://okla.com.do/blog/${slug}`;
 
   return {
-    title: `${post.title} | Blog OKLA`,
+    title: `${post.title}`,
     description: post.excerpt,
     keywords: [post.category.toLowerCase(), 'OKLA', 'vehículos RD', 'mercado automotriz'],
     openGraph: {
@@ -45,7 +46,7 @@ export async function generateMetadata({
       url,
       images: [{ url: post.imageUrl, width: 1200, height: 600, alt: post.title }],
       type: 'article',
-      publishedTime: post.date,
+      publishedTime: post.isoDate,
       authors: [post.author],
       locale: 'es_DO',
       siteName: 'OKLA',
@@ -78,7 +79,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     headline: post.title,
     description: post.excerpt,
     image: post.imageUrl,
-    datePublished: post.date,
+    datePublished: post.isoDate,
     author: {
       '@type': 'Organization',
       name: post.author,
@@ -101,6 +102,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   // Parse content into paragraphs and headings
   const contentSections = post.content.split('\n\n').filter(Boolean);
+
+  // Safe React-based bold text renderer (replaces dangerouslySetInnerHTML)
+  function renderBoldText(text: string): React.ReactNode[] {
+    const parts = text.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <strong key={i} className="text-foreground font-semibold">
+          {part}
+        </strong>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -137,12 +152,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {/* Hero Image */}
       <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 md:h-96 dark:from-slate-800 dark:to-slate-900">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={post.imageUrl}
           alt={post.title}
-          className="h-full w-full object-cover"
-          loading="eager"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute right-0 bottom-0 left-0 p-6 md:p-10">
@@ -250,27 +266,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     return (
                       <ListTag key={index} className="text-muted-foreground my-4 space-y-2 pl-6">
                         {items.map((item, i) => (
-                          <li key={i} className="list-disc">
-                            {item.replace(/^[-\d]+[.)]\s*/, '')}
+                          <li key={i} className={isOrdered ? 'list-decimal' : 'list-disc'}>
+                            {renderBoldText(item.replace(/^[-\d]+[.)]\s*/, ''))}
                           </li>
                         ))}
                       </ListTag>
                     );
                   }
-                  // Regular paragraphs — handle **bold** text
+                  // Regular paragraphs — handle **bold** text safely (no dangerouslySetInnerHTML)
                   return (
-                    <p
-                      key={index}
-                      className="text-muted-foreground my-4 leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: section
-                          .replace(
-                            /\*\*(.*?)\*\*/g,
-                            '<strong class="text-foreground font-semibold">$1</strong>'
-                          )
-                          .replace(/\n/g, '<br />'),
-                      }}
-                    />
+                    <p key={index} className="text-muted-foreground my-4 leading-relaxed">
+                      {renderBoldText(section)}
+                    </p>
                   );
                 })}
               </div>
@@ -322,12 +329,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     <Link key={related.slug} href={`/blog/${related.slug}`} className="group block">
                       <div className="flex gap-3">
                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={related.imageUrl}
                             alt={related.title}
+                            width={64}
+                            height={64}
+                            sizes="64px"
                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                            loading="lazy"
                           />
                         </div>
                         <div className="min-w-0 flex-1">

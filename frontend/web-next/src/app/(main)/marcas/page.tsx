@@ -36,7 +36,7 @@ const ALL_BRANDS = [
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'Todas las Marcas de Vehículos | Autos en Venta en RD | OKLA',
+  title: 'Todas las Marcas de Vehículos | Autos en Venta en RD',
   description:
     'Explora todas las marcas de vehículos disponibles en República Dominicana: Toyota, Honda, Hyundai, Kia, Nissan, Chevrolet, Ford, Jeep, BMW, Mercedes-Benz y más. Precios, modelos y ofertas verificadas.',
   keywords: [

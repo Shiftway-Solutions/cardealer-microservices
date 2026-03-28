@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Herramientas para Vehículos | OKLA',
+  title: 'Herramientas para Vehículos',
   description:
     'Herramientas gratuitas para comprar, vender o importar vehículos en República Dominicana. Calculadoras, comparador y más.',
   keywords: [

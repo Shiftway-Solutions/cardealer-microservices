@@ -8,7 +8,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Vista 360° | OKLA',
+  title: 'Vista 360°',
   robots: {
     index: false,
     follow: false,

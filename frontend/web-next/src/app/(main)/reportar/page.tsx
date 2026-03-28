@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const metadata = {
-  title: 'Reportar Fraude | OKLA',
+  title: 'Reportar Fraude',
   description:
     'Reporta actividad fraudulenta o sospechosa en OKLA. Te ayudamos a protegerte de estafas al comprar o vender vehículos.',
 };

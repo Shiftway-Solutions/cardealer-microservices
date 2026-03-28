@@ -8,13 +8,14 @@
  * Route: /seguridad
  */
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, Lock, Eye, AlertTriangle, CheckCircle, Phone, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export const metadata = {
-  title: 'Centro de Seguridad | OKLA',
+export const metadata: Metadata = {
+  title: 'Centro de Seguridad',
   description:
     'Cómo OKLA protege tus datos y transacciones. Consejos de seguridad para comprar y vender vehículos de forma segura.',
 };
@@ -54,14 +55,14 @@ const safetyTips = [
   'No compartas información bancaria por mensajes',
   'Usa el sistema de mensajería interno de OKLA',
   'Verifica el VIN del vehículo antes de comprar',
-  'Solicita un historial del vehículo (Carfax o similar)',
+  'Solicita un historial del vehículo (verificación DGII o inspección mecánica)',
 ];
 
 export default function SeguridadPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
@@ -167,13 +168,13 @@ export default function SeguridadPage() {
                 </div>
               </a>
               <a
-                href="tel:+18095551234"
+                href="tel:+18098501234"
                 className="bg-card flex items-center gap-3 rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md"
               >
                 <Phone className="text-primary h-5 w-5" />
                 <div>
                   <div className="text-foreground font-medium">Teléfono</div>
-                  <div className="text-muted-foreground text-sm">+1 (809) 555-1234</div>
+                  <div className="text-muted-foreground text-sm">+1 (809) 850-1234</div>
                 </div>
               </a>
             </div>

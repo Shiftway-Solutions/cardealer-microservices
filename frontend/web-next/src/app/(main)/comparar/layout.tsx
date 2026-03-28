@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Comparar Vehículos | OKLA - Marketplace de Vehículos en RD',
+  title: 'Comparar Vehículos',
   description:
     'Compara hasta 3 vehículos lado a lado. Especificaciones, precios, características y valoración de mercado para tomar la mejor decisión.',
   keywords: [

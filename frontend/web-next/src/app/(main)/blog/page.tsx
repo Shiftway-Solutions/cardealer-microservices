@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { blogPosts, blogCategories } from './blog-data';
 
 export const metadata = {
-  title: 'Blog | OKLA - Noticias del Mercado Automotriz RD',
+  title: 'Blog - Noticias del Mercado Automotriz RD',
   description:
     'Noticias, consejos y tendencias del mercado automotriz de República Dominicana. El blog oficial de OKLA.',
 };

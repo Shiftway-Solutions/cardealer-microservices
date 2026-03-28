@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ImportCalculator } from './import-calculator';
 
 export const metadata: Metadata = {
-  title: 'Calculadora de Importación de Vehículos a RD | OKLA',
+  title: 'Calculadora de Importación de Vehículos a RD',
   description:
     'Calcula los impuestos y costos de importar un vehículo a República Dominicana. Incluye arancel, ITBIS, selectivo, flete marítimo y más.',
   keywords: [
