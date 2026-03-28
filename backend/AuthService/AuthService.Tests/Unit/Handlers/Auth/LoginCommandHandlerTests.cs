@@ -67,6 +67,7 @@ public class LoginCommandHandlerTests
         _securityConfigMock.Setup(x => x.GetJwtExpiresMinutesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(60);
         _securityConfigMock.Setup(x => x.GetRefreshTokenDaysAsync(It.IsAny<CancellationToken>())).ReturnsAsync(7);
         _securityConfigMock.Setup(x => x.GetLockoutDurationMinutesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(15);
+        _securityConfigMock.Setup(x => x.GetMaxLoginAttemptsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(5);
 
         // Default captcha (not required)
         _captchaServiceMock.Setup(x => x.IsCaptchaRequired(It.IsAny<int>())).Returns(false);

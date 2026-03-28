@@ -114,31 +114,38 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 
         if (user == null)
         {
-            await TrackFailedLoginAttemptAsync(request.Email, null, cancellationToken);
+            await TrackFailedLoginAttemptAsync(request.Email, null, null, cancellationToken);
             throw new UnauthorizedException("Credenciales inválidas.");
         }
 
         // Verificar que PasswordHash no sea nulo
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
-            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, user, cancellationToken);
             throw new UnauthorizedException("Credenciales inválidas.");
         }
 
+        // Check lockout BEFORE password verification so locked-out users get the correct error message
+        if (user.IsLockedOut())
+            throw new UnauthorizedException("La cuenta está temporalmente bloqueada. Inténtalo más tarde.");
+
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
+            await TrackFailedLoginAttemptAsync(request.Email, user.Email, user, cancellationToken);
             throw new UnauthorizedException("Credenciales inválidas.");
         }
 
         if (!user.EmailConfirmed)
             throw new UnauthorizedException("Por favor, verifica tu email antes de iniciar sesión.");
 
-        if (user.IsLockedOut())
-            throw new UnauthorizedException("La cuenta está temporalmente bloqueada. Inténtalo más tarde.");
 
-        // Clear failed attempts on successful password verification
+        // Clear failed attempts on successful password verification (Redis + DB)
         await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
+        if (user.AccessFailedCount > 0)
+        {
+            user.ResetAccessFailedCount();
+            await _userRepository.UpdateAsync(user, cancellationToken);
+        }
 
         // AUTH-SEC-005: Check if this device was previously revoked
         var revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
@@ -359,7 +366,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     /// Sends security alerts after SECURITY_ALERT_THRESHOLD attempts.
     /// Lockout duration is read from ConfigurationService (admin panel: Seguridad → Tiempo de bloqueo).
     /// </summary>
-    private async Task TrackFailedLoginAttemptAsync(string email, string? userEmail, CancellationToken cancellationToken)
+    private async Task TrackFailedLoginAttemptAsync(string email, string? userEmail, ApplicationUser? user, CancellationToken cancellationToken)
     {
         var lockoutMinutes = await _securityConfig.GetLockoutDurationMinutesAsync(cancellationToken);
 
@@ -407,6 +414,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         if (attempts == CAPTCHA_REQUIRED_AFTER_ATTEMPTS)
         {
             _logger.LogInformation("CAPTCHA will be required for next login attempt from {Email}", email);
+        }
+
+        // Synchronize failed attempt count to the Identity-tracked field so user.IsLockedOut() activates
+        if (user != null)
+        {
+            var maxAttempts = await _securityConfig.GetMaxLoginAttemptsAsync(cancellationToken);
+            user.IncrementAccessFailedCount(maxAttempts, lockoutMinutes);
+            await _userRepository.UpdateAsync(user, cancellationToken);
         }
     }
 
