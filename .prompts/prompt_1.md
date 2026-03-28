@@ -1,28 +1,25 @@
-# CORRECCIÓN (Intento 1/3) — Sprint 10: IA, UX, Performance, Compliance Legal
-
-**Fecha:** 2026-03-27 15:36:04
+# CORRECCIÓN (Intento 2/3) — Sprint 1: Visitante Anónimo — Primera Impresión de OKLA
+**Fecha:** 2026-03-28 10:22:25
 **Fase:** FIX
 **Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://ought-feed-shipping-wright.trycloudflare.com)
-**Usuario:** Todos
+**Usuario:** Guest (sin login)
 **URL Base:** https://ought-feed-shipping-wright.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
-
 > Auditoría corriendo contra **https://ought-feed-shipping-wright.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
 > Asegúrate de que la infra esté levantada: `docker compose up -d`
 > Frontend: `cd frontend/web-next && pnpm dev`
 > Tunnel: `docker compose --profile tunnel up -d cloudflared`
 > Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)
 
-| Servicio                | URL                                                        |
-| ----------------------- | ---------------------------------------------------------- |
-| Frontend (tunnel)       | https://ought-feed-shipping-wright.trycloudflare.com       |
-| API (tunnel)            | https://ought-feed-shipping-wright.trycloudflare.com/api/* |
-| Auth Swagger (local)    | http://localhost:15001/swagger                             |
-| Gateway Swagger (local) | http://localhost:18443/swagger                             |
+| Servicio | URL |
+|----------|-----|
+| Frontend (tunnel) | https://ought-feed-shipping-wright.trycloudflare.com |
+| API (tunnel) | https://ought-feed-shipping-wright.trycloudflare.com/api/* |
+| Auth Swagger (local) | http://localhost:15001/swagger |
+| Gateway Swagger (local) | http://localhost:18443/swagger |
 
 ## Instrucciones — FASE DE CORRECCIÓN
-
 En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
 1. Lee la sección 'BUGS A CORREGIR' abajo
@@ -34,7 +31,6 @@ En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 ⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
 
 ## BUGS A CORREGIR
-
 _(El agente que hizo la auditoría documentó los hallazgos aquí.)_
 _(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
 
@@ -65,40 +61,24 @@ El ciclo nunca termina.
 ```
 
 ## Credenciales
-
-| Rol                 | Email                  | Password       |
-| ------------------- | ---------------------- | -------------- |
-| Admin               | admin@okla.local       | Admin123!@#    |
-| Buyer               | buyer002@okla-test.com | BuyerTest2026! |
-| Dealer              | nmateo@okla.com.do     | Dealer2026!@#  |
-| Vendedor Particular | gmoreno@okla.com.do    | $Gregory1      |
+| Rol | Email | Password |
+|-----|-------|----------|
+| Admin | admin@okla.local | Admin123!@# |
+| Buyer | buyer002@okla-test.com | BuyerTest2026! |
+| Dealer | nmateo@okla.com.do | Dealer2026!@# |
+| Vendedor Particular | gmoreno@okla.com.do | $Gregory1 |
 
 ---
 
 ## TAREAS
 
-- [x] Fix bugs de S10-T01: Auditar SearchAgent y chatbots IA
-  - Corregido: SupportAgent k8s/deployments.yaml replicas 0→1 (servicio no estaba corriendo)
-  - Corregido: RecoAgent k8s/deployments.yaml faltaba secretRef `recoagent-db-secret`
-- [x] Fix bugs de S10-T02: Auditar performance y Core Web Vitals
-  - Web Vitals en localhost son óptimos (FCP 636ms, TTFB 400ms, LCP 636ms) — sin bugs de código
-  - Performance issue en Cloudflare tunnel es infra (no código)
-- [x] Fix bugs de S10-T03: Auditar compliance legal RD
-  - Corregido: cookies/page.tsx fecha desactualizada "Enero 2026" → "Marzo 2026 (v2026.1)"
-  - Ley 172-13 correctamente documentada en privacidad/page.tsx, ARCO rights presentes
-  - Cookie consent banner funcional con accept/reject/configurar opciones
+- [ ] Fix bugs de S1-T01: Primera impresión: Homepage completa
+- [ ] Fix bugs de S1-T02: Navegación: ¿puedo encontrar lo que busco?
 
-- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-  - dotnet build: 0 errors, 0 warnings ✅
-  - pnpm lint: 0 errors (24 warnings pre-existentes) ✅
-  - pnpm typecheck: OK ✅
-  - pnpm test: 576/576 passed ✅
-  - pnpm build: Compiled successfully ✅
-  - dotnet test unit: Failed: 0 (fallos pre-existentes son integration tests con IHost) ✅
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
 
 ## Resultado
-
-- Sprint: 10 — IA, UX, Performance, Compliance Legal
+- Sprint: 1 — Visitante Anónimo — Primera Impresión de OKLA
 - Fase: FIX
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://ought-feed-shipping-wright.trycloudflare.com)
 - URL: https://ought-feed-shipping-wright.trycloudflare.com
