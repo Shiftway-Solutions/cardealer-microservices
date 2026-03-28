@@ -24,7 +24,7 @@ interface SimilarVehiclesProps {
   className?: string;
 }
 
-const MIN_RESULTS = 4; // Hide widget if fewer than 4 similar vehicles
+const MIN_RESULTS = 2; // Show widget with as few as 2 similar vehicles (small inventory)
 
 export function SimilarVehicles({
   vehicleId,
