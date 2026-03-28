@@ -93,6 +93,7 @@ import {
 } from '@/components/advertising/native-ads';
 import type { VehicleCardData } from '@/types';
 import type { SponsoredVehicle } from '@/types/ads';
+import { PLATFORM_STATS } from '@/lib/platform-stats';
 
 // =============================================================================
 // CONSTANTS
@@ -538,28 +539,29 @@ export default function VehiculosClient() {
         const ai = result.aiFilters;
 
         if (!result.isAiSearchEnabled) {
-          // AI disabled/degraded — preserve existing manual filters, just show a toast
-          // Do NOT call clearFilters() — the user may have manually set make/year/price
+          // AI disabled/degraded — fall back to plain text search so the user still
+          // gets results based on their query. Clear other filters to avoid confusion.
           setSearchInput(query.trim());
+          setFilters({ query: query.trim(), page: 1 } as Parameters<typeof setFilters>[0]);
           const msg =
             ai?.mensaje_usuario ||
-            'La búsqueda inteligente no está disponible en este momento. Usa los filtros manuales.';
+            'Búsqueda inteligente no disponible. Mostrando resultados por texto.';
           toast.info(msg);
           return;
         }
 
         if (ai.confianza === 0) {
-          // Claude temporarily overloaded (529) → mensaje_usuario is set → don't pollute filters
-          // Genuine low-confidence → also don't use raw NL text as a filter chip
-          // Preserve existing manual filters — do NOT clearFilters()
+          // Claude temporarily overloaded (529) or low-confidence — fall back to text search
+          // so the user still gets some results instead of seeing stale filters
           if (ai.mensaje_usuario) {
             toast.warning(ai.mensaje_usuario);
           } else {
             toast.warning(
-              'La búsqueda inteligente no pudo procesar tu consulta. Usa los filtros manuales.'
+              'La búsqueda inteligente no pudo procesar tu consulta. Mostrando resultados por texto.'
             );
           }
           setSearchInput(query.trim());
+          setFilters({ query: query.trim(), page: 1 } as Parameters<typeof setFilters>[0]);
           return;
         }
 
@@ -582,11 +584,11 @@ export default function VehiculosClient() {
           wasCached: result.wasCached,
         });
       } catch {
-        // On AI error, preserve existing manual filters — do NOT clearFilters()
-        // The user may have make/model/year/price set manually; wiping them is destructive
+        // On AI error, fall back to plain text search so the user still gets results
         setSearchInput(query.trim());
+        setFilters({ query: query.trim(), page: 1 } as Parameters<typeof setFilters>[0]);
         toast.error(
-          'La búsqueda inteligente no está disponible. Tus filtros actuales se mantienen.'
+          'La búsqueda inteligente no está disponible. Mostrando resultados por texto.'
         );
       } finally {
         setIsAiSearching(false);
@@ -830,7 +832,7 @@ export default function VehiculosClient() {
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
               <Star className="h-3 w-3 text-amber-500" />
-              <span>+2,400 vehículos activos</span>
+              <span>{PLATFORM_STATS.vehiclesPublished} vehículos activos</span>
             </div>
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
