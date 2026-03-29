@@ -44,7 +44,7 @@ function getPlanFeatures() {
       '⬆ Posición media (bajo dealers)',
       '🔵 Badge Vendedor OKLA',
       'KYC: email + teléfono verificados',
-      'Renovación de listing: $6.99',
+      'Renovación de listing: RD$579',
       '1 valoración PricingAgent IA por listing',
     ],
     verificado: [
@@ -148,11 +148,13 @@ export default function SellerSubscriptionPage() {
               label="Fotos por vehículo (máx)"
               showUnlimited={false}
             />
-            <PlanUsageBar
-              current={usage.featuredUsed}
-              max={featuredPerMonth}
-              label="Destacadas este mes"
-            />
+            {featuredPerMonth > 0 && (
+              <PlanUsageBar
+                current={usage.featuredUsed}
+                max={featuredPerMonth}
+                label="Destacadas este mes"
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -451,7 +453,7 @@ function ComparisonTable({ currentPlan }: { currentPlan: string }) {
     {
       label: 'Renovación listing',
       libre_seller: 'No incluida',
-      estandar: '$6.99',
+      estandar: 'RD$579',
       verificado: 'Incluida',
     },
     { label: 'PricingAgent IA', libre_seller: '—', estandar: '1 / listing', verificado: '2 / mes' },

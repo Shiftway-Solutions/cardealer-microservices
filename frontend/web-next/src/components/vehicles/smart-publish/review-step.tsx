@@ -160,7 +160,7 @@ export function ReviewStep({
                 <InfoRow icon={Car} label="Carrocería" value={data.bodyStyle} />
                 <InfoRow icon={Car} label="Tracción" value={data.driveType} />
                 <InfoRow icon={Car} label="Motor" value={data.engineSize} />
-                <InfoRow icon={Calendar} label="Condición" value={data.condition} />
+                <InfoRow icon={Calendar} label="Condición" value={data.condition === 'New' ? 'Nuevo' : data.condition === 'Used' ? 'Usado' : data.condition === 'CertifiedPreOwned' ? 'Certificado' : data.condition} />
                 <InfoRow icon={Car} label="Color Ext." value={data.exteriorColor} />
                 <InfoRow icon={Car} label="Color Int." value={data.interiorColor} />
                 <InfoRow

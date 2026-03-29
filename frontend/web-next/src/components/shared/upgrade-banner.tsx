@@ -51,7 +51,7 @@ const DEALER_MISSING_FEATURES: MissingFeature[] = [
 ];
 
 const SELLER_MISSING_FEATURES: MissingFeature[] = [
-  { icon: Camera, text: 'Hasta 50 fotos por publicación' },
+  { icon: Camera, text: 'Hasta 12 fotos por publicación' },
   { icon: Star, text: 'Badge de vendedor verificado' },
   { icon: BarChart3, text: 'Estadísticas detalladas de vistas' },
   { icon: Zap, text: 'Publicaciones permanentes sin expiración' },

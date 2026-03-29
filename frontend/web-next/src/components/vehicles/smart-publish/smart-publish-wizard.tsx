@@ -655,6 +655,49 @@ export function SmartPublishWizard({
   const mainStepIndex = STEP_ORDER.indexOf(currentStep);
   const isMainStep = mainStepIndex >= 0;
 
+  // BUG-S6-02 FIX: per-step validation before advancing
+  const validateAndGoToNext = useCallback(() => {
+    if (!isMainStep || mainStepIndex >= STEP_ORDER.length - 1) return;
+
+    if (currentStep === 'info') {
+      const missing: string[] = [];
+      if (!formData.make) missing.push('Marca');
+      if (!formData.model) missing.push('Modelo');
+      if (!formData.year) missing.push('Año');
+      if (!formData.bodyStyle) missing.push('Tipo de carrocería');
+      if (!formData.fuelType) missing.push('Combustible');
+      if (!formData.transmission) missing.push('Transmisión');
+      if (!formData.mileage || formData.mileage <= 0) missing.push('Kilometraje');
+      if (missing.length > 0) {
+        toast.error(`Completa los campos requeridos: ${missing.join(', ')}`);
+        return;
+      }
+    }
+
+    if (currentStep === 'photos') {
+      const uploaded = formData.images.filter(
+        img => img.url && !img.url.startsWith('blob:') && !img.isUploading
+      );
+      if (uploaded.length === 0) {
+        toast.error('Agrega al menos una foto antes de continuar');
+        return;
+      }
+    }
+
+    if (currentStep === 'pricing') {
+      if (!formData.price || formData.price <= 0) {
+        toast.error('Ingresa el precio del vehículo');
+        return;
+      }
+      if (!formData.province) {
+        toast.error('Selecciona la provincia del vehículo');
+        return;
+      }
+    }
+
+    setCurrentStep(STEP_ORDER[mainStepIndex + 1]);
+  }, [isMainStep, mainStepIndex, currentStep, formData]);
+
   const goToNext = useCallback(() => {
     if (isMainStep && mainStepIndex < STEP_ORDER.length - 1) {
       setCurrentStep(STEP_ORDER[mainStepIndex + 1]);
@@ -833,7 +876,7 @@ export function SmartPublishWizard({
                 ¡Bienvenido! Publica tu primer vehículo
               </h3>
               <p className="mt-1 text-xs text-emerald-700">
-                Publicar es fácil y rápido. Solo necesitas 3 pasos:
+                Publicar es fácil y rápido. Solo necesitas 6 pasos:
               </p>
               <div className="mt-2 flex flex-wrap gap-3">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
@@ -852,7 +895,25 @@ export function SmartPublishWizard({
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
                     3
                   </span>
-                  Precio y publicar
+                  Video
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    4
+                  </span>
+                  Vista 360°
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    5
+                  </span>
+                  Precio
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    6
+                  </span>
+                  Revisión
                 </span>
               </div>
               <p className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
@@ -1026,7 +1087,7 @@ export function SmartPublishWizard({
             onPublish={handlePublish}
             onSaveDraft={handleSaveDraft}
             onBack={() => setCurrentStep('pricing')}
-            isPublishing={createVehicle.isPending}
+            isPublishing={createVehicle.isPending || publishVehicle.isPending}
           />
         )}
 
@@ -1123,7 +1184,7 @@ export function SmartPublishWizard({
             </button>
 
             <button
-              onClick={goToNext}
+              onClick={validateAndGoToNext}
               className="flex items-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
             >
               Siguiente
