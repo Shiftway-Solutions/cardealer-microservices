@@ -18,16 +18,16 @@ public class GetOrCreateUserCommandValidator : AbstractValidator<GetOrCreateUser
             .NoXss();
 
         RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("First name is required")
             .MaximumLength(100)
             .NoSqlInjection()
-            .NoXss();
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.FirstName));
 
         RuleFor(x => x.LastName)
-            .NotEmpty().WithMessage("Last name is required")
             .MaximumLength(100)
             .NoSqlInjection()
-            .NoXss();
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.LastName));
 
         RuleFor(x => x.AvatarUrl!)
             .MaximumLength(500)
