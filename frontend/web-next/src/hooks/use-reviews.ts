@@ -54,6 +54,7 @@ export function useReviewsForTarget(
     queryFn: () => reviewService.getReviewsForTarget(targetType!, targetId!, params),
     enabled: !!targetType && !!targetId,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1,
   });
 }
 
@@ -81,6 +82,7 @@ export function useReviewStats(
     queryFn: () => reviewService.getReviewStats(targetType!, targetId!),
     enabled: !!targetType && !!targetId,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 }
 
@@ -96,6 +98,7 @@ export function useReviewSummary(
     queryFn: () => reviewService.getReviewSummary(targetType!, targetId!),
     enabled: !!targetType && !!targetId,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 }
 

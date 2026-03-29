@@ -937,6 +937,8 @@ export function Navbar() {
     enabled: isAuthenticated,
     refetchInterval: 30_000,
     staleTime: 10_000,
+    retry: 1,
+    retryDelay: 5_000,
   });
 
   const { data: notificationsData } = useQuery({
@@ -945,6 +947,8 @@ export function Navbar() {
     enabled: isAuthenticated,
     refetchInterval: 30_000,
     staleTime: 10_000,
+    retry: 1,
+    retryDelay: 5_000,
   });
 
   const recentNotifications = notificationsData?.notifications ?? [];
