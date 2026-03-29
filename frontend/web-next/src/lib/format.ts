@@ -62,6 +62,26 @@ export function formatFuelType(fuelType?: string | null): string {
 }
 
 /**
+ * Translate internal English transmission values to Spanish display labels.
+ */
+const TRANSMISSION_LABELS: Record<string, string> = {
+  automatic: 'Automática',
+  manual: 'Manual',
+  cvt: 'CVT',
+  'cvt automatic': 'CVT Automática',
+  'dual-clutch': 'Doble Embrague',
+  'semi-automatic': 'Semi-Automática',
+  automática: 'Automática',
+  automatic_cvt: 'CVT Automática',
+};
+
+export function formatTransmission(transmission?: string | null): string {
+  if (!transmission) return '—';
+  const key = transmission.toLowerCase().trim();
+  return TRANSMISSION_LABELS[key] ?? transmission;
+}
+
+/**
  * Normalize a city name that may be stored without spaces between words.
  * Handles cases like "SantoDomingoNorte" → "Santo Domingo Norte" coming from
  * data import issues in the DR vehicle database.

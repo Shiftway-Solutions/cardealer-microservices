@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { formatFuelType } from '@/lib/format';
+import { formatFuelType, formatTransmission } from '@/lib/format';
 import { useVehicleDtosForComparison } from '@/hooks/use-vehicles';
 import { useLocalComparison } from '@/hooks/use-comparisons';
 import type { VehicleDto } from '@/services/vehicles';
@@ -40,9 +40,15 @@ function getLocation(v: CompareVehicle): string {
   return [v.city, v.province].filter(Boolean).join(', ') || '—';
 }
 
-// Helper: get slug
+// Helper: get slug — must match backend GenerateSlug format: {year}-{make}-{model}-{shortId}
 function getSlug(v: CompareVehicle): string {
-  return v.slug || `${v.make}-${v.model}-${v.year}-${v.id}`.toLowerCase();
+  if (v.slug) return v.slug;
+  const baseSlug = `${v.year}-${v.make}-${v.model}`
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/--+/g, '-');
+  const shortId = v.id.replace(/-/g, '').slice(0, 8);
+  return `${baseSlug}-${shortId}`;
 }
 
 // Spec comparison rows — reads DIRECTLY from VehicleDto fields
@@ -79,7 +85,7 @@ const specRows: SpecRow[] = [
   {
     key: 'transmission',
     label: 'Transmisión',
-    format: v => v.transmission || '—',
+    format: v => formatTransmission(v.transmission),
   },
   {
     key: 'fuelType',
@@ -161,7 +167,7 @@ function CompareContent() {
   const vehicleIds = urlIds.length > 0 ? urlIds : localComparison.vehicleIds;
 
   // Fetch FULL VehicleDto data (not stripped VehicleCardData)
-  const { data: vehiclesData, isLoading } = useVehicleDtosForComparison(vehicleIds);
+  const { data: vehiclesData, isLoading, isError } = useVehicleDtosForComparison(vehicleIds);
 
   // Use the full VehicleDto directly — no stripping of specs
   const vehicles: CompareVehicle[] = React.useMemo(() => {
@@ -205,11 +211,15 @@ function CompareContent() {
     router.replace('/comparar');
   };
 
-  const shareComparison = () => {
+  const shareComparison = async () => {
     const ids = vehicles.map(v => v.id).join(',');
     const url = `${window.location.origin}/comparar?ids=${ids}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Enlace copiado al portapapeles');
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Enlace copiado al portapapeles');
+    } catch {
+      toast.error('No se pudo copiar el enlace');
+    }
   };
 
   // Get unique features across all vehicles
@@ -257,6 +267,19 @@ function CompareContent() {
         <div className="text-center">
           <div className="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
           <p className="text-muted-foreground mt-2">Cargando comparación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-2 font-semibold">Error al cargar los vehículos</p>
+          <p className="text-muted-foreground text-sm">
+            No se pudieron obtener los datos para la comparación.
+          </p>
         </div>
       </div>
     );
