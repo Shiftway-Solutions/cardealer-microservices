@@ -407,6 +407,8 @@ services:
       Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-your-google-client-id}"
       Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET:-your-google-client-secret}"
       FrontendUrl: "http://localhost:3000"
+      ADMIN_SEED_EMAIL: "${ADMIN_SEED_EMAIL:-admin@okla.local}"
+      ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:-Admin123!@#}"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"
@@ -465,6 +467,7 @@ services:
       Database__AutoMigrate: "true"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       RabbitMQ__User: "guest"
@@ -1462,6 +1465,137 @@ services:
       start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
+  # 🤖 AI AGENTS — RECO / SUPPORT / PRICING
+  # ──────────────────────────────────────────────────────────────────────
+
+  recoagent:
+    profiles: [ai]
+    build:
+      context: ./backend
+      dockerfile: RecoAgent/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recoagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      Claude__ApiKey: "${CLAUDE_API_KEY:-placeholder}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15156:8080"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:8080/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  supportagent:
+    profiles: [ai]
+    build:
+      context: ./backend
+      dockerfile: SupportAgent/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=supportagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      Claude__ApiKey: "${CLAUDE_API_KEY:-placeholder}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15157:8080"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:8080/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  pricingagent:
+    profiles: [ai]
+    build:
+      context: ./backend
+      dockerfile: PricingAgent/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "okla.com.do"
+      Jwt__Audience: "okla-api"
+      LlmGateway__Claude__ApiKey: "${CLAUDE_API_KEY:-placeholder}"
+      LlmGateway__Claude__Enabled: "true"
+    ports:
+      - "15159:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - okla-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:8080/api/pricing-agent/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ──────────────────────────────────────────────────────────────────────
   # 🏥 HEALTH CHECK SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
@@ -1491,6 +1625,8 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      # CORS extra origins — pasa la URL del tunnel cloudflared para CORS
+      CORS_EXTRA_ORIGINS: "${CLOUDFLARE_TUNNEL_URL:-}"
     ports:
       - "15147:80"
     depends_on:
@@ -1542,6 +1678,7 @@ services:
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
+      LlmService__ApiKey: "${CLAUDE_API_KEY:-${ANTHROPIC_API_KEY:-}}"
       OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
     ports:
       - "15148:80"
@@ -1648,6 +1785,8 @@ services:
       RabbitMQ__User: "guest"
       RabbitMQ__Password: "guest"
       Consul__Host: "http://consul:8500"
+      # CORS extra origins — pasa la URL del tunnel cloudflared para CORS (separados por coma)
+      CORS_EXTRA_ORIGINS: "${CLOUDFLARE_TUNNEL_URL:-}"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"
