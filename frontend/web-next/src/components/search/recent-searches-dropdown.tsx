@@ -118,18 +118,26 @@ export function RecentSearchesDropdown({
                     {search.resultCount} resultados
                   </span>
                 )}
-                <button
-                  type="button"
+                <span
+                  role="button"
+                  tabIndex={0}
                   onClick={e => {
                     e.preventDefault();
                     e.stopPropagation();
                     removeRecentSearch(search.id);
                   }}
-                  className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      removeRecentSearch(search.id);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors cursor-pointer"
                   aria-label={`Eliminar búsqueda: ${search.label}`}
                 >
                   <X className="h-3.5 w-3.5" />
-                </button>
+                </span>
               </div>
             </button>
           </li>

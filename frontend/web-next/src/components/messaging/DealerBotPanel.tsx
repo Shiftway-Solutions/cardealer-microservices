@@ -368,7 +368,6 @@ export default function DealerBotPanel({
       setShowAppointmentScheduler(true);
       setCalendarAutoShown(true); // Mark as auto-shown — won't auto-trigger again
     }
-     
   }, [chat.messages, calendarAutoShown, appointmentBooked, lastSchedulerMsgId]);
 
   const handleSend = () => {
@@ -414,7 +413,13 @@ export default function DealerBotPanel({
     <>
       {/* Header */}
       <div className="border-border bg-card flex items-center gap-3 border-b p-4 shadow-sm">
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={onBack}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onBack}
+          aria-label="Volver a chats"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
 

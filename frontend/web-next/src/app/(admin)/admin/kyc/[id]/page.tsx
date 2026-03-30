@@ -195,7 +195,7 @@ export default function KYCDetailPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/admin/kyc">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver a KYC">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -219,7 +219,7 @@ export default function KYCDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/kyc">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver a KYC">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>

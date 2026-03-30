@@ -102,7 +102,9 @@ function NotificationsError({ onRetry }: { onRetry: () => void }) {
       <CardContent className="flex flex-col items-center py-12 text-center">
         <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
         <h3 className="mb-2 font-semibold">Error al cargar notificaciones</h3>
-        <p className="mb-4 text-sm text-muted-foreground">No se pudieron cargar las notificaciones</p>
+        <p className="text-muted-foreground mb-4 text-sm">
+          No se pudieron cargar las notificaciones
+        </p>
         <Button variant="outline" onClick={onRetry}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Reintentar
@@ -119,10 +121,10 @@ function NotificationsError({ onRetry }: { onRetry: () => void }) {
 function EmptyState() {
   return (
     <div className="py-16 text-center">
-      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-        <Bell className="h-10 w-10 text-muted-foreground" />
+      <div className="bg-muted mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full">
+        <Bell className="text-muted-foreground h-10 w-10" />
       </div>
-      <h3 className="mb-2 text-lg font-medium text-foreground">No tienes notificaciones</h3>
+      <h3 className="text-foreground mb-2 text-lg font-medium">No tienes notificaciones</h3>
       <p className="text-muted-foreground">Las notificaciones sobre tu actividad aparecerán aquí</p>
     </div>
   );
@@ -172,13 +174,17 @@ function NotificationItem({
         <div className="flex items-start justify-between gap-2">
           <div>
             <h4
-              className={cn('font-medium', notification.isRead ? 'text-foreground' : 'text-foreground')}
+              className={cn(
+                notification.isRead
+                  ? 'text-muted-foreground font-medium'
+                  : 'text-foreground font-semibold'
+              )}
             >
               {notification.title}
             </h4>
-            <p className="mt-0.5 text-sm text-muted-foreground">{notification.message}</p>
+            <p className="text-muted-foreground mt-0.5 text-sm">{notification.message}</p>
           </div>
-          <span className="flex-shrink-0 text-xs text-muted-foreground">
+          <span className="text-muted-foreground flex-shrink-0 text-xs">
             {notificationsService.formatNotificationTime(notification.createdAt)}
           </span>
         </div>
@@ -205,7 +211,7 @@ function NotificationItem({
               onDelete(notification.id);
             }}
             disabled={isDeleting}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-600"
+            className="text-muted-foreground flex items-center gap-1 text-xs hover:text-red-600"
           >
             {isDeleting ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -226,13 +232,13 @@ function NotificationItem({
 
   if (notification.link) {
     return (
-      <Link href={notification.link} className="block border-b border-border last:border-0">
+      <Link href={notification.link} className="border-border block border-b last:border-0">
         {content}
       </Link>
     );
   }
 
-  return <div className="border-b border-border last:border-0">{content}</div>;
+  return <div className="border-border border-b last:border-0">{content}</div>;
 }
 
 // =============================================================================
@@ -331,7 +337,7 @@ export default function NotificationsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Notificaciones</h1>
+          <h1 className="text-foreground text-2xl font-bold">Notificaciones</h1>
         </div>
         <NotificationsError onRetry={refetch} />
       </div>
@@ -343,7 +349,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Notificaciones</h1>
+          <h1 className="text-foreground text-2xl font-bold">Notificaciones</h1>
           <p className="text-muted-foreground">
             {unreadCount > 0 ? `${unreadCount} sin leer` : 'Estás al día'}
           </p>
@@ -463,7 +469,7 @@ export default function NotificationsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Check className="mx-auto mb-3 h-12 w-12 text-green-500" />
-            <h3 className="mb-1 font-medium text-foreground">Todo al día</h3>
+            <h3 className="text-foreground mb-1 font-medium">Todo al día</h3>
             <p className="text-muted-foreground">No tienes notificaciones sin leer</p>
           </CardContent>
         </Card>

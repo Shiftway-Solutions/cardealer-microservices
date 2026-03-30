@@ -357,6 +357,7 @@ export interface AdminDealerDetail {
   createdAt: string;
   address: string;
   contactPerson: string;
+  paymentMethod?: string;
   stats: {
     totalVehicles: number;
     activeListings: number;

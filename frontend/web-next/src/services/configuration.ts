@@ -1267,7 +1267,7 @@ export const configurationService = {
 
   /** Get all configurations for the current environment */
   getAll: async (environment: string = ENV): Promise<ConfigurationItem[]> => {
-    const response = await apiClient.get<ConfigurationItem[]>('/api/configurations', {
+    const response = await apiClient.get<ConfigurationItem[]>('/api/admin/configurations', {
       params: { environment },
     });
     return response.data;
@@ -1290,7 +1290,7 @@ export const configurationService = {
   /** Get a single configuration by key */
   getByKey: async (key: string, environment: string = ENV): Promise<ConfigurationItem | null> => {
     try {
-      const response = await apiClient.get<ConfigurationItem>(`/api/configurations/${key}`, {
+      const response = await apiClient.get<ConfigurationItem>(`/api/admin/configurations/${key}`, {
         params: { environment },
       });
       return response.data;
@@ -1301,7 +1301,10 @@ export const configurationService = {
 
   /** Bulk upsert configurations */
   bulkUpsert: async (request: BulkUpsertRequest): Promise<ConfigurationItem[]> => {
-    const response = await apiClient.post<ConfigurationItem[]>('/api/configurations/bulk', request);
+    const response = await apiClient.post<ConfigurationItem[]>(
+      '/api/admin/configurations/bulk',
+      request
+    );
     return response.data;
   },
 
@@ -1313,7 +1316,7 @@ export const configurationService = {
     createdBy: string;
     description?: string;
   }): Promise<ConfigurationItem> => {
-    const response = await apiClient.post<ConfigurationItem>('/api/configurations', data);
+    const response = await apiClient.post<ConfigurationItem>('/api/admin/configurations', data);
     return response.data;
   },
 
@@ -1327,19 +1330,22 @@ export const configurationService = {
       changeReason?: string;
     }
   ): Promise<ConfigurationItem> => {
-    const response = await apiClient.put<ConfigurationItem>(`/api/configurations/${id}`, data);
+    const response = await apiClient.put<ConfigurationItem>(
+      `/api/admin/configurations/${id}`,
+      data
+    );
     return response.data;
   },
 
   /** Delete a configuration */
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/configurations/${id}`);
+    await apiClient.delete(`/api/admin/configurations/${id}`);
   },
 
   /** Get configuration history */
   getHistory: async (configId: string): Promise<ConfigurationHistory[]> => {
     const response = await apiClient.get<ConfigurationHistory[]>(
-      `/api/configurations/${configId}/history`
+      `/api/admin/configurations/${configId}/history`
     );
     return response.data;
   },

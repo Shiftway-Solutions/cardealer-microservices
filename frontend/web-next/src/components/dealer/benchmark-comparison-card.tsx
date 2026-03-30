@@ -154,7 +154,7 @@ export function BenchmarkComparisonCard() {
                 href="/cuenta/upgrade?plan=visible&type=dealer"
                 className="flex items-center gap-2"
               >
-                Activar plan Visible — Desde US$29/mes
+                Activar plan Visible — Desde RD$1,699/mes
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

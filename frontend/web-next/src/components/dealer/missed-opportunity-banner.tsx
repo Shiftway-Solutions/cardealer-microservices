@@ -141,7 +141,7 @@ export function MissedOpportunityBanner() {
                 href="/cuenta/upgrade?plan=visible&type=dealer"
                 className="flex items-center gap-2"
               >
-                Recuperar oportunidades — Desde US$29/mes
+                Recuperar oportunidades — Desde RD$1,699/mes
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

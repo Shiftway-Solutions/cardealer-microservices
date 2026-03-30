@@ -27,6 +27,8 @@ import {
   Check,
   Loader2,
   CreditCard,
+  AlertCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useDealerEmployees } from '@/hooks/use-dealer-employees';
@@ -92,6 +94,7 @@ export default function DealerSettingsPage() {
   // Get current dealer
   const { data: dealer, isLoading: dealerLoading } = useCurrentDealer();
   const dealerId = dealer?.id || '';
+  const hasDealerProfile = !!dealer;
 
   // Get settings
   const { data: settings, isLoading: settingsLoading } = useDealerSettings(dealerId);
@@ -104,7 +107,8 @@ export default function DealerSettingsPage() {
   const updateSecurity = useUpdateSecuritySettings(dealerId);
 
   // Payment gateway preferences
-  const { data: gatewayData, isLoading: gatewaysLoading } = usePaymentGatewaySettings();
+  const { data: gatewayData, isLoading: gatewaysLoading } =
+    usePaymentGatewaySettings(hasDealerProfile);
   const updateGateways = useUpdatePaymentGatewaySettings();
 
   // Local state for form
@@ -133,7 +137,7 @@ export default function DealerSettingsPage() {
     }
   }, [notifications, sessionTimeout, settings]);
 
-  const isLoading = dealerLoading || settingsLoading;
+  const isLoading = dealerLoading || (hasDealerProfile && settingsLoading);
 
   // Handle save
   const handleSave = async () => {
@@ -153,9 +157,102 @@ export default function DealerSettingsPage() {
     return <SettingsSkeleton />;
   }
 
+  if (!dealer) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-foreground text-2xl font-bold">Configuracion</h1>
+          <p className="text-muted-foreground">
+            Crea tu perfil de dealer para habilitar la configuracion publica y operativa.
+          </p>
+        </div>
+
+        <Card className="border-amber-200 bg-amber-50/70">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-foreground text-xl font-semibold">
+                    Todavia no tienes un concesionario configurado
+                  </h2>
+                  <p className="text-muted-foreground max-w-2xl text-sm leading-6">
+                    Cuando completes el registro de dealer podras administrar notificaciones,
+                    seguridad operativa, pasarelas de pago y compartir tu perfil publico.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button asChild>
+                  <Link href="/dealer/registro">
+                    Completar registro
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/cuenta/perfil">Revisar mi cuenta</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Accesos disponibles mientras completas el perfil</CardTitle>
+              <CardDescription>
+                Puedes revisar tu cuenta general antes de terminar el onboarding.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/cuenta/perfil">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Editar datos de la cuenta
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/cuenta/seguridad">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Seguridad de la cuenta
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/privacidad">
+                  <Lock className="mr-2 h-4 w-4" />
+                  Politica de privacidad
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lo que se activara despues</CardTitle>
+              <CardDescription>
+                Estas funciones dependen de un dealer creado y un perfil publico publicado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-gray-600">
+              <p>Perfil publico del concesionario con URL propia</p>
+              <p>Pasarelas de pago para suscripcion</p>
+              <p>Equipo, ubicaciones y documentos</p>
+              <p>Panel con leads, citas y reportes</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const isSaving = updateNotifications.isPending || updateSecurity.isPending;
   const activeEmployees = employees?.filter(e => e.status === 'Active') || [];
   const maxEmployees = Math.floor((dealer?.maxActiveListings || 15) / 3);
+  const publicProfileHref = dealer.slug ? `/dealers/${dealer.slug}` : '/dealer/registro';
 
   return (
     <div className="space-y-6">
@@ -544,17 +641,27 @@ export default function DealerSettingsPage() {
               <CardTitle className="text-lg">Acceso Rápido</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start">
-                <Globe className="mr-2 h-4 w-4" />
-                Ver Perfil Público
+              <Button variant="ghost" className="w-full justify-start" asChild>
+                <Link
+                  href={publicProfileHref}
+                  target={dealer.slug ? '_blank' : undefined}
+                  rel={dealer.slug ? 'noopener noreferrer' : undefined}
+                >
+                  <Globe className="mr-2 h-4 w-4" />
+                  Ver Perfil Público
+                </Link>
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Settings className="mr-2 h-4 w-4" />
-                Editar Perfil
+              <Button variant="ghost" className="w-full justify-start" asChild>
+                <Link href="/cuenta/perfil">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Editar Perfil
+                </Link>
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Lock className="mr-2 h-4 w-4" />
-                Privacidad
+              <Button variant="ghost" className="w-full justify-start" asChild>
+                <Link href="/privacidad">
+                  <Lock className="mr-2 h-4 w-4" />
+                  Privacidad
+                </Link>
               </Button>
             </CardContent>
           </Card>

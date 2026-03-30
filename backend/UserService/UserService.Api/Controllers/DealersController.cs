@@ -7,6 +7,9 @@ using UserService.Application.UseCases.Dealers.CreateDealer;
 using UserService.Application.UseCases.Dealers.GetDealer;
 using UserService.Application.UseCases.Dealers.UpdateDealer;
 using System.Security.Claims;
+using System.Text.Json;
+using UserService.Domain.Entities;
+using UserService.Domain.Interfaces;
 
 namespace UserService.Api.Controllers;
 
@@ -20,11 +23,14 @@ public class DealersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IConfiguration _configuration;
+    private readonly IDealerRepository _dealerRepository;
+    private static readonly JsonSerializerOptions SettingsJsonOptions = new(JsonSerializerDefaults.Web);
 
-    public DealersController(IMediator mediator, IConfiguration configuration)
+    public DealersController(IMediator mediator, IConfiguration configuration, IDealerRepository dealerRepository)
     {
         _mediator = mediator;
         _configuration = configuration;
+        _dealerRepository = dealerRepository;
     }
 
     /// <summary>
@@ -250,6 +256,107 @@ public class DealersController : ControllerBase
     }
 
     /// <summary>
+    /// Get dealer settings for the authenticated owner.
+    /// </summary>
+    [HttpGet("{dealerId:guid}/settings")]
+    [Authorize]
+    [ProducesResponseType(typeof(DealerSettingsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetDealerSettings(Guid dealerId)
+    {
+        var (dealer, error) = await GetOwnedDealerAsync(dealerId);
+        if (error != null)
+        {
+            return error;
+        }
+
+        var ownedDealer = dealer!;
+        return Ok(MapDealerSettings(ownedDealer));
+    }
+
+    /// <summary>
+    /// Update dealer notification preferences for the authenticated owner.
+    /// </summary>
+    [HttpPut("{dealerId:guid}/settings/notifications")]
+    [Authorize]
+    [ProducesResponseType(typeof(DealerNotificationSettingsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UpdateNotificationSettings(
+        Guid dealerId,
+        [FromBody] DealerNotificationSettingsDto request)
+    {
+        var (dealer, error) = await GetOwnedDealerAsync(dealerId);
+        if (error != null)
+        {
+            return error;
+        }
+
+        var ownedDealer = dealer!;
+        ownedDealer.NotificationSettingsJson = JsonSerializer.Serialize(request, SettingsJsonOptions);
+        await _dealerRepository.UpdateAsync(ownedDealer);
+
+        return Ok(ReadNotificationSettings(ownedDealer));
+    }
+
+    /// <summary>
+    /// Update dealer operational security preferences for the authenticated owner.
+    /// </summary>
+    [HttpPut("{dealerId:guid}/settings/security")]
+    [Authorize]
+    [ProducesResponseType(typeof(DealerSecuritySettingsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UpdateSecuritySettings(
+        Guid dealerId,
+        [FromBody] UpdateDealerSecuritySettingsRequest request)
+    {
+        var (dealer, error) = await GetOwnedDealerAsync(dealerId);
+        if (error != null)
+        {
+            return error;
+        }
+
+        var ownedDealer = dealer!;
+
+        if (request.TwoFactorEnabled.HasValue)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Type = "https://okla.com/errors/unsupported-setting",
+                Title = "Unsupported Setting",
+                Status = 400,
+                Detail = "La autenticación de dos factores se administra desde la seguridad general de la cuenta."
+            });
+        }
+
+        var settings = ReadSecuritySettings(ownedDealer);
+
+        if (request.SessionTimeoutMinutes.HasValue)
+        {
+            if (request.SessionTimeoutMinutes.Value < 5 || request.SessionTimeoutMinutes.Value > 1440)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Type = "https://okla.com/errors/validation",
+                    Title = "Validation Error",
+                    Status = 400,
+                    Detail = "El tiempo de expiración de sesión debe estar entre 5 y 1440 minutos."
+                });
+            }
+
+            settings.SessionTimeoutMinutes = request.SessionTimeoutMinutes.Value;
+        }
+
+        ownedDealer.SecuritySettingsJson = JsonSerializer.Serialize(settings, SettingsJsonOptions);
+        await _dealerRepository.UpdateAsync(ownedDealer);
+
+        return Ok(ReadSecuritySettings(ownedDealer));
+    }
+
+    /// <summary>
     /// Get badge verification status for a dealer (public endpoint).
     /// Returns the 4 criteria evaluation for the "Dealer Verificado OKLA" badge.
     /// </summary>
@@ -303,6 +410,99 @@ public class DealersController : ControllerBase
                 Status = 404,
                 Detail = ex.Message
             });
+        }
+    }
+
+    private async Task<(Dealer? Dealer, IActionResult? Error)> GetOwnedDealerAsync(Guid dealerId)
+    {
+        var userId = GetAuthenticatedUserId();
+        if (userId == null)
+        {
+            return (null, Unauthorized(new ProblemDetails
+            {
+                Type = "https://okla.com/errors/unauthorized",
+                Title = "Unauthorized",
+                Status = 401,
+                Detail = "No se pudo identificar al usuario autenticado."
+            }));
+        }
+
+        var dealer = await _dealerRepository.GetByIdAsync(dealerId);
+        if (dealer == null)
+        {
+            return (null, NotFound(new ProblemDetails
+            {
+                Type = "https://okla.com/errors/not-found",
+                Title = "Dealer Not Found",
+                Status = 404,
+                Detail = $"Dealer {dealerId} no fue encontrado."
+            }));
+        }
+
+        if (dealer.OwnerUserId != userId.Value)
+        {
+            return (null, Forbid());
+        }
+
+        return (dealer, null);
+    }
+
+    private static DealerSettingsDto MapDealerSettings(Dealer dealer)
+    {
+        return new DealerSettingsDto
+        {
+            DealerId = dealer.Id,
+            Notifications = ReadNotificationSettings(dealer),
+            Security = ReadSecuritySettings(dealer),
+            UpdatedAt = dealer.UpdatedAt ?? dealer.CreatedAt
+        };
+    }
+
+    private static DealerNotificationSettingsDto ReadNotificationSettings(Dealer dealer)
+    {
+        if (string.IsNullOrWhiteSpace(dealer.NotificationSettingsJson))
+        {
+            return new DealerNotificationSettingsDto();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<DealerNotificationSettingsDto>(
+                       dealer.NotificationSettingsJson,
+                       SettingsJsonOptions)
+                   ?? new DealerNotificationSettingsDto();
+        }
+        catch (JsonException)
+        {
+            return new DealerNotificationSettingsDto();
+        }
+    }
+
+    private static DealerSecuritySettingsDto ReadSecuritySettings(Dealer dealer)
+    {
+        if (string.IsNullOrWhiteSpace(dealer.SecuritySettingsJson))
+        {
+            return new DealerSecuritySettingsDto();
+        }
+
+        try
+        {
+            var settings = JsonSerializer.Deserialize<DealerSecuritySettingsDto>(
+                               dealer.SecuritySettingsJson,
+                               SettingsJsonOptions)
+                           ?? new DealerSecuritySettingsDto();
+
+            settings.TwoFactorEnabled = false;
+            if (settings.SessionTimeoutMinutes < 5)
+            {
+                settings.SessionTimeoutMinutes = 30;
+            }
+
+            return settings;
+        }
+        catch (JsonException)
+        {
+            return new DealerSecuritySettingsDto();
         }
     }
 

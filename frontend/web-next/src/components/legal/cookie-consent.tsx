@@ -91,11 +91,11 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[9998] p-4"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="border-border bg-card mx-auto max-w-4xl rounded-xl border shadow-2xl">
+      <div className="border-border bg-card pointer-events-auto mx-auto max-w-4xl rounded-xl border shadow-2xl">
         {/* Main banner */}
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
@@ -287,7 +287,7 @@ export function CookieSettingsButton() {
   return (
     <button
       onClick={handleReopen}
-      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed right-4 bottom-4 z-[9997] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
+      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed bottom-4 left-4 z-30 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
       aria-label="Configurar cookies"
     >
       <Cookie className="h-3.5 w-3.5" />
@@ -300,7 +300,7 @@ export function CookieSettingsButton() {
  * Re-opened cookie consent banner (when user clicks "Configurar cookies" button).
  */
 function ReopenedBanner({ onClose }: { onClose: () => void }) {
-  const [showConfig, setShowConfig] = useState(true);
+  const showConfig = true;
   const [preferences, setPreferences] = useState<CookiePreferences>(() => {
     return getStoredConsent() || DEFAULT_PREFERENCES;
   });
@@ -336,11 +336,11 @@ function ReopenedBanner({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[9998] p-4"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="border-border bg-card mx-auto max-w-4xl rounded-xl border shadow-2xl">
+      <div className="border-border bg-card pointer-events-auto mx-auto max-w-4xl rounded-xl border shadow-2xl">
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="bg-primary/10 rounded-lg p-2">

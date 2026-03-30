@@ -76,7 +76,8 @@ const DEFAULT_PRICING: PlatformPricing = {
   premiumListing: 2999,
   sellerPremiumPrice: 1699,
   individualListingPrice: 1699,
-  // Planes Dealer v5.0 (DOP mensuales = USD × 58) - LIBRE/VISIBLE/STARTER/PRO/ÉLITE/ENTERPRISE
+  // Planes Dealer v5.0 — Precios fijos en DOP (calculados originalmente a 58 RD$/USD, no se reconvierten)
+  // Nota: DOP_USD_EXCHANGE_RATE (60.5) en constants.ts es para conversión de vehículos, NO para planes
   dealerLibre: 0,
   dealerVisible: 1682, // $29 USD
   dealerStarter: 3422, // $59 USD

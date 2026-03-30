@@ -115,7 +115,7 @@ function SellerLeadsContent() {
         setTotalPages(result.totalPages ?? 1);
       }
     } catch (error) {
-      console.error('Error loading leads:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading leads:', error);
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ function SellerLeadsContent() {
         setStats(data.data ?? data);
       }
     } catch (error) {
-      console.error('Error loading stats:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading stats:', error);
     }
   }, []);
 
@@ -149,7 +149,7 @@ function SellerLeadsContent() {
         setLeadMessages(data.data ?? data ?? []);
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading messages:', error);
     }
   }
 
@@ -172,7 +172,7 @@ function SellerLeadsContent() {
         }
       }
     } catch (error) {
-      console.error('Error sending reply:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error sending reply:', error);
     } finally {
       setReplying(false);
     }
@@ -188,7 +188,7 @@ function SellerLeadsContent() {
       loadLeads();
       loadStats();
     } catch (error) {
-      console.error('Error updating status:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating status:', error);
     }
   }
 

@@ -2425,3 +2425,161 @@ test
 [2026-03-29 14:01:39] [AUDIT-SPRINT] Sprint 6 [reaudit] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
 [2026-03-29 14:22:11] [AUDIT-SPRINT] Sprint 6 [fix] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
 [2026-03-29 14:58:04] [MODIFICACIÓN] smart-publish-wizard.tsx — BUG-S6-T01: foto validation 1→3 (match review step). mis-vehiculos/page.tsx — BUG-S6-T02: formatPrice sin currency → con vehicle.currency
+[2026-03-29 15:09:57] [EJECUCIÓN] Loop Ciclo 1 completado — CI/CD success (run 23716583703) — READ escrito en prompt_1.md
+[2026-03-29 15:10:11] [AUDIT-SPRINT] Sprint 6 [reaudit] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 15:11:42] [AUDIT-SPRINT] Sprint 6 completado (ciclo completo)
+[2026-03-29 15:11:42] [AUDIT-SPRINT] Sprint 7 [audit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-29 18:47:35] [CREACIÓN] .prompts/agent/smart_monitor/GUIA-AGENTE-GEMMA3.md — guía detallada del agente con Gemma 3
+[2026-03-29 18:56:03] [MODIFICACIÓN] .vscode/tasks.json, .prompts/agent/start-monitor.py, infra/code-watch.sh — task y launchers migrados a Smart Monitor Gemma 3
+[2026-03-29 19:13:40] [BACKUP] .prompts/prompt_1.md — respaldo previo a documentación de auditoría Sprint 7 Dealer
+[2026-03-29 19:13:40] [MODIFICACIÓN] .prompts/prompt_1.md — documentación de hallazgos auditoría Sprint 7 Dealer y cierre con READ
+[2026-03-29 19:15:46] [AUDIT-SPRINT] Sprint 7 [fix] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-29 19:32:04] [BACKUP] frontend/web-next/src/services/dealers.ts — respaldo previo a fix Sprint 7 dealer
+[2026-03-29 19:32:05] [BACKUP] frontend/web-next/src/types/index.ts — respaldo previo a fix Sprint 7 dealer
+[2026-03-29 19:32:05] [MODIFICACIÓN] frontend/web-next/src/services/dealers.ts — preservar slug del dealer para perfil público
+[2026-03-29 19:32:29] [BACKUP] frontend/web-next/src/services/dealers.ts — respaldo previo a fix Sprint 7 dealer
+[2026-03-29 19:32:29] [BACKUP] frontend/web-next/src/types/index.ts — respaldo previo a fix Sprint 7 dealer
+[2026-03-29 19:32:29] [MODIFICACIÓN] frontend/web-next/src/services/dealers.ts — preservar slug del dealer para perfil público
+[2026-03-29 19:32:29] [MODIFICACIÓN] frontend/web-next/src/types/index.ts — agregar slug opcional al modelo Dealer
+[2026-03-29 19:39:46] [AUDIT-SPRINT] Sprint 7 [reaudit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-29T19:40:05] [EJECUCIÓN] Sprint 7 dealer fix — dashboard/configuracion robustecidos, slug preservado, middleware dealer desbloqueado, banner de cookies ajustado
+[2026-03-29T19:40:05] [EJECUCIÓN] Sprint 7 dealer validation — pnpm typecheck/lint/test/build OK, dotnet restore/build OK, dotnet test con fallos preexistentes en suites backend fuera del alcance
+[2026-03-29 19:59:04] [BACKUP] .prompts/agent/smart_monitor/agent.py — backup before smart_monitor runtime fixes
+[2026-03-29 19:59:04] [BACKUP] .prompts/agent/smart_monitor/observer.py — backup before smart_monitor runtime fixes
+[2026-03-29 19:59:04] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — backup before smart_monitor runtime fixes
+[2026-03-29 20:00:21] [MODIFICACIÓN] .prompts/agent/smart_monitor/agent.py — refresh live chat snapshot and activity state in smart_monitor loop
+[2026-03-29 20:00:21] [MODIFICACIÓN] .prompts/agent/smart_monitor/observer.py — fix VS Code detection and log rollover handling
+[2026-03-29 20:00:21] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — align VS Code process detection with smart_monitor
+[2026-03-29 20:37:22] [BACKUP] .prompts/agent/smart_monitor/agent.py — backup before focus action fix
+[2026-03-29 20:37:37] [MODIFICACIÓN] .prompts/agent/smart_monitor/agent.py — make focus_vscode confirm and focus Copilot chat input
+[2026-03-29 21:01:32] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo antes de agregar capa DOM dinámica
+[2026-03-29 21:01:49] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo antes de agregar capa DOM dinámica
+[2026-03-29 21:22:03] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo antes de instrumentar screenshots por acción
+[2026-03-29 21:27:53] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — screenshots por acción DOM/CDP para validar UI del chat
+[2026-03-29 21:30:11] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — ajuste de foco para textarea real del chat y screenshots de validación
+[2026-03-29 21:31:42] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — aceptación de focus-within para validar foco real del input del chat
+[2026-03-29 21:39:05] [CREACIÓN] .prompts/agent/tmp_focus_probe.py — sonda temporal para diagnosticar el composer de Copilot Chat
+[2026-03-29 21:40:56] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo antes de ajustar confirmación de foco del composer
+[2026-03-29 21:40:56] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — corregir foco/validación del composer de Copilot Chat
+[2026-03-29 23:26:41] [CREACIÓN] .prompts/agent/MANUAL_TERMINOLOGIA_OPERATIVA.md — manual práctico de terminología y lógica del smart monitor
+[2026-03-29 23:35:07] [BACKUP] .prompts/monitor_prompt1.py — respaldo previo al ajuste de tarea final AGENT_LOOP_PROMPT
+[2026-03-29 23:35:07] [BACKUP] .prompts/prompt_1.md — respaldo previo a sincronizar tarea final AGENT_LOOP_PROMPT
+[2026-03-29 23:37:42] [MODIFICACIÓN] .prompts/monitor_prompt1.py — agrega cierre obligatorio con .prompts/AGENT_LOOP_PROMPT.md antes de READ
+[2026-03-29 23:37:42] [MODIFICACIÓN] .prompts/prompt_1.md — sincroniza prompt activo con cierre obligatorio AGENT_LOOP_PROMPT antes de READ
+[2026-03-29 23:41:03] [BACKUP] .prompts/monitor_prompt1.py — respaldo antes de invertir orden READ y AGENT_LOOP_PROMPT
+[2026-03-29 23:41:03] [BACKUP] .prompts/prompt_1.md — respaldo antes de invertir orden READ y AGENT_LOOP_PROMPT
+[2026-03-29 23:41:42] [MODIFICACIÓN] .prompts/monitor_prompt1.py — invierte orden final: READ antes de ejecutar .prompts/AGENT_LOOP_PROMPT.md
+[2026-03-29 23:41:42] [MODIFICACIÓN] .prompts/prompt_1.md — corrige cierre del prompt activo: READ antes de ejecutar .prompts/AGENT_LOOP_PROMPT.md
+[2026-03-29 23:43:20] [BACKUP] .prompts/monitor_prompt1.py — respaldo antes de unificar READ + AGENT_LOOP_PROMPT en una sola tarea
+[2026-03-29 23:43:20] [BACKUP] .prompts/prompt_1.md — respaldo antes de unificar READ + AGENT_LOOP_PROMPT en una sola tarea
+[2026-03-29 23:43:47] [MODIFICACIÓN] .prompts/monitor_prompt1.py — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29 23:43:47] [MODIFICACIÓN] .prompts/prompt_1.md — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29 23:44:02] [MODIFICACIÓN] .prompts/monitor_prompt1.py — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29 23:44:02] [MODIFICACIÓN] .prompts/prompt_1.md — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29T23:44:12] [MODIFICACIÓN] .prompts/monitor_prompt1.py — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29T23:44:12] [MODIFICACIÓN] .prompts/prompt_1.md — unifica READ y AGENT_LOOP_PROMPT en una sola tarea de cierre
+[2026-03-29 23:44:44] [AUDIT-SPRINT] Sprint 7 [audit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 00:01:05] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — prevenir inyección accidental en Copilot Chat
+[2026-03-30 00:01:05] [BACKUP] .prompts/agent/smart_monitor/agent.py — aislar focus_vscode de input del chat
+[2026-03-30 00:01:45] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — deshabilitar fallback inseguro que inyecta 'Focus on Copilot Chat View'
+[2026-03-30 00:01:45] [MODIFICACIÓN] .prompts/agent/smart_monitor/agent.py — limitar focus_vscode a enfocar VS Code sin tocar el chat
+[2026-03-30 00:08:27] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — bloquear paste ciego si falla el foco del chat
+[2026-03-30 00:08:49] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — abortar envío si falla foco del chat y falla DOM send
+[2026-03-30 00:16:47] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — endurecer envío seguro y silenciar warning Node externo
+[2026-03-30 00:16:47] [BACKUP] .prompts/agent/AGENT_MANUAL.md — actualizar documentación del monitor
+[2026-03-30 00:16:47] [BACKUP] .vscode/tasks.json — evitar foco automático del terminal al lanzar Smart Monitor
+[2026-03-30 00:21:39] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo previo a endurecer task/docs
+[2026-03-30 00:21:57] [BACKUP] .prompts/agent/vscode_copilot_monitor.py - backup before task/docs changes
+[2026-03-30 00:21:57] [BACKUP] .prompts/agent/AGENT_MANUAL.md - backup before docs update
+[2026-03-30 00:21:57] [BACKUP] .vscode/tasks.json - backup before task presentation update
+[2026-03-30_00:22:13] [BACKUP] .prompts/agent/vscode_copilot_monitor.py - backup before task/docs changes
+[2026-03-30_00:22:13] [BACKUP] .prompts/agent/AGENT_MANUAL.md - backup before docs update
+[2026-03-30_00:22:13] [BACKUP] .vscode/tasks.json - backup before task presentation update
+[2026-03-30_00:23:11] [MODIFICATION] .vscode/tasks.json - monitor task no longer steals focus and suppresses external DEP0169 warning
+[2026-03-30_00:23:11] [MODIFICATION] .prompts/agent/AGENT_MANUAL.md - documented safe chat focus and send behavior
+[2026-03-30_00:32:00] [EXECUTION] smart monitor task restarted with quiet presentation and DEP0169 suppression
+[2026-03-30 00:36:42] [EJECUCIÓN] PROMPT_1_AUDIT — Inicio de auditoría dealer dashboard/perfil
+[2026-03-30 00:37:56] [EJECUCIÓN] BROWSER_ERROR — Tunnel URL returned ERR_HTTP_RESPONSE_CODE_FAILURE during dealer audit
+[2026-03-30 00:41:30] [EJECUCIÓN] TOOL_RETRY — Browser type tool invoked with wrong shape, retrying with element parameter
+[2026-03-30 00:42:20] [EJECUCIÓN] TOOL_RETRY — Browser type tool also requires ref parameter, retrying with element+ref
+[2026-03-30 00:54:07] [MODIFICACIÓN] .prompts/prompt_1.md — Documentar hallazgos Sprint 7 Dealer AUDIT
+[2026-03-30 00:55:03] [CREACIÓN] .prompts/prompt_6.md — Recreado con READ por regla de monitoreo global
+[2026-03-30 00:56:31] [MODIFICACIÓN] .prompts/prompt_1.md — Corregido READ como última línea
+[2026-03-30 00:56:45] [AUDIT-SPRINT] Sprint 7 [fix] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 01:43:05] [BACKUP] backend/Gateway/Gateway.Api/ocelot.dev.json — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:43:05] [BACKUP] backend/Gateway/Gateway.Api/ocelot.prod.json — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:43:05] [BACKUP] frontend/web-next/src/services/dealers.ts — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:43:05] [BACKUP] frontend/web-next/src/hooks/use-kyc.ts — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:43:05] [BACKUP] frontend/web-next/src/test/mocks/handlers.ts — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:43:05] [BACKUP] frontend/web-next/src/app/(main)/dealer/dealer-dashboard.integration.test.tsx — Backup before Sprint 7 dealer dashboard/config fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] backend/Gateway/Gateway.Api/ocelot.dev.json — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] backend/Gateway/Gateway.Api/ocelot.prod.json — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] frontend/web-next/src/services/dealers.ts — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] frontend/web-next/src/hooks/use-kyc.ts — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] frontend/web-next/src/test/mocks/handlers.ts — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:45:23] [MODIFICACIÓN] frontend/web-next/src/app/(main)/dealer/dealer-dashboard.integration.test.tsx — Sprint 7 dealer dashboard/config route and client fix
+[2026-03-30 01:54:49] [EJECUCIÓN] userservice recovery — Restarted userservice container after gateway 502 on /api/dealers/me
+[2026-03-30 02:11:37] [BACKUP] backend/UserService/UserService.Api/Program.cs
+[2026-03-30 02:11:37] [BACKUP] backend/UserService/UserService.Application/UseCases/Dealers/CreateDealerCommand.cs
+[2026-03-30 02:11:37] [BACKUP] backend/UserService/UserService.Tests/UseCases/Dealers/DealerRegistrationTests.cs
+[2026-03-30 02:13:30] [MODIFICACIÓN] backend/UserService/UserService.Api/Services/DemoDealerBootstrapper.cs — bootstrap demo dealer account for local Sprint 7 validation
+[2026-03-30 02:13:31] [MODIFICACIÓN] backend/UserService/UserService.Api/Program.cs — run demo dealer bootstrap after migrations in Development
+[2026-03-30 02:13:31] [MODIFICACIÓN] backend/UserService/UserService.Application/UseCases/Dealers/CreateDealerCommand.cs — sync owner user record when creating a dealer
+[2026-03-30 02:13:31] [MODIFICACIÓN] backend/UserService/UserService.Tests/UseCases/Dealers/DealerRegistrationTests.cs — cover owner sync on dealer creation
+[2026-03-30 02:39:18] [BACKUP] UserService dealer encryption and consumer files — pre-fix backups
+[2026-03-30 02:39:28] [BACKUP] UserService user configuration — pre-fix backup
+[2026-03-30 02:42:28] [BACKUP] UserRegisteredEventConsumer — pre-fix catch-filter backup
+[2026-03-30 02:43:03] [MODIFICACIÓN] backend/UserService/UserService.Infrastructure/Services/Messaging/UserRegisteredEventConsumer.cs — idempotent duplicate event handling + compile-fix for async catch
+[2026-03-30 02:43:03] [MODIFICACIÓN] backend/UserService/UserService.Infrastructure/Persistence/Configurations/DealerConfigurations.cs — widen encrypted dealer phone storage to text
+[2026-03-30 02:43:03] [MODIFICACIÓN] backend/UserService/UserService.Infrastructure/Persistence/Configurations/UserConfiguration.cs — widen encrypted user phone storage to text
+[2026-03-30 02:43:03] [CREACIÓN] backend/UserService/UserService.Infrastructure/Migrations/20260330064500_WidenEncryptedPhoneColumns.cs — schema migration for encrypted phone columns
+[2026-03-30 02:43:22] [BACKUP] WidenEncryptedPhoneColumns migration — pre-attribute backup
+[2026-03-30 02:43:43] [MODIFICACIÓN] backend/UserService/UserService.Infrastructure/Migrations/20260330064500_WidenEncryptedPhoneColumns.cs — add EF migration discovery attributes
+[2026-03-30 02:44:33] [DB] userservice — widened Dealers.Phone and Users.PhoneNumber to text for encrypted storage
+[2026-03-30 03:03:28] [EJECUCIÓN] runtime-recovery — Investigating postgres/authservice no-space recovery loop before container recreation
+[2026-03-30 03:03:47] [EJECUCIÓN] runtime-recovery — Recreating postgres_db and authservice containers to clear no-space recovery loop while preserving volumes
+[2026-03-30 03:05:54] [EJECUCIÓN] runtime-recovery — Restarting Docker Desktop to clear VM no-space condition blocking postgres recovery
+[2026-03-30 03:25:50] [DB] userservice — applied EF migrations via host dotnet ef against localhost:5433 after Docker Desktop recovery
+[2026-03-30 03:26:45] [BACKUP] userservice DB — backing up fresh but schema-drifted userservice database before recreate
+[2026-03-30 03:31:34] [BACKUP] backend/UserService/UserService.Infrastructure/Migrations/20260103222548_AddAccountTypeAndSellerFields.cs — backup before fixing broken AccountType migration chain
+[2026-03-30 03:31:34] [MODIFICACIÓN] backend/UserService/UserService.Infrastructure/Migrations/20260103222548_AddAccountTypeAndSellerFields.cs — convert existing integer AccountType to string instead of re-adding duplicate column
+[2026-03-30 03:43:19] [BACKUP] backend/AuthService/AuthService.Infrastructure/Migrations/20260301120000_AddDeviceFingerprintToUserSessions.cs — backup before fixing missing EF migration metadata
+[2026-03-30 03:43:19] [MODIFICACIÓN] backend/AuthService/AuthService.Infrastructure/Migrations/20260301120000_AddDeviceFingerprintToUserSessions.cs — add EF migration metadata so DeviceFingerprint migration is discoverable and can be applied
+[2026-03-30 03:44:19] [DB] authservice — apply missing 20260301120000_AddDeviceFingerprintToUserSessions migration after repairing EF metadata
+[2026-03-30 04:02:42] [BACKUP] UserService dealer settings files — backup before implementing dealer settings API
+[2026-03-30 04:16:00] [BACKUP] compose.yaml — backup before NuGet host-cache mount fix for dev containers
+[2026-03-30 04:16:00] [MODIFICACIÓN] compose.yaml — alinear NUGET_PACKAGES y cache de NuGet en servicios dealer del entorno local
+[2026-03-30 04:19:18] [EJECUCIÓN] docker compose up -d userservice gateway billingservice crmservice dealeranalyticsservice — reinicio tras fix de cache NuGet compartida
+[2026-03-30 04:20:07] [EJECUCIÓN] docker compose ps userservice gateway billingservice crmservice dealeranalyticsservice — verificación de salud post-reinicio
+[2026-03-30 04:24:17] [EJECUCIÓN] curl POST http://localhost:18443/api/auth/login — validar autenticación dealer canónica tras recuperación runtime
+[2026-03-30 04:28:32] [EJECUCIÓN] curl dealer settings GET/PUT/GET via gateway — validación E2E exitosa de endpoints de configuración
+[2026-03-30 04:33:32] [EJECUCIÓN] POST http://localhost:15002/api/admin/dealers/ab5ff40a-497a-462f-9297-541b371010d4/approve — activación administrativa del dealer recuperado
+[2026-03-30 04:33:49] [EJECUCIÓN] revalidación Sprint 7 dealer flow post-approve — endpoints privados y slug público
+[2026-03-30 04:45:39] [BACKUP] DealerAnalyticsService query files — backup before adding missing MediatR handlers
+[2026-03-30 04:45:39] [MODIFICACIÓN] DealerAnalyticsService.Application — agregar handlers faltantes para KPIs e inventory stats
+[2026-03-30 05:03:18] [BACKUP] DealerAnalyticsService overview query handlers — backup before adding missing analytics handlers
+[2026-03-30 05:03:18] [MODIFICACIÓN] DealerAnalyticsService.Application — completar handlers faltantes de overview e inventory analytics
+[2026-03-30 07:02:18] [GIT] push main af495d28+4d1fbb05 — Sprint 7 FIX: Redis resilience, analytics fallback, dealer settings gateway routes. CI/CD: success
+[2026-03-30 07:02:40] [AUDIT-SPRINT] Sprint 7 [reaudit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 07:28:35] [AUDIT-SPRINT] Sprint 7 [audit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 07:40:32] [AUDIT-SPRINT] Sprint 7 [audit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 07:51:33] [AUDIT-SPRINT] Sprint 7 [audit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 08:22:04] [AUDIT-SPRINT] Sprint 7 [fix] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 10:03:34] [MODIFICACIÓN] smart_monitor/agent.py, feedback.py, observer.py — Fix 3 bugs: (1) wait_before_action_secs usaba last_action_ts global en lugar de last_{action}_ts, (2) cycle_model normalization usaba campo inexistente rate_limit_active, (3) secs_since_last_action no incluía last_cycle_model_ts
+[2026-03-30 10:35:36] [AUDIT-SPRINT] Sprint 7 [reaudit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 10:58:07] [AUDIT-SPRINT] Sprint 7 [fix] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 11:21:43] [MODIFICACIÓN] RegisterDealerCommand.cs — Added slug generation for dealer onboarding
+[2026-03-30 11:21:43] [MODIFICACIÓN] UpdateDealerCommand.cs — Added slug regeneration on BusinessName/City change
+[2026-03-30 11:21:43] [MODIFICACIÓN] ListPublicDealersQuery.cs — Added Slug to PublicDealerListItem DTO and mapping
+[2026-03-30 11:21:43] [MODIFICACIÓN] next.config.ts — Added /iniciar-sesion → /login 301 redirect
+[2026-03-30 11:21:43] [MODIFICACIÓN] auth-flow.integration.test.tsx — Updated /iniciar-sesion to /login in test assertions
+[2026-03-30 11:21:43] [GIT] commit a63a6b8c + push main — Sprint 7 FIX phase 2
+[2026-03-30 11:22:37] [AUDIT-SPRINT] Sprint 7 [reaudit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 11:29:08] [AUDIT-SPRINT] Sprint 7 [fix] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 11:31:38] [AUDIT-SPRINT] Sprint 7 [reaudit] [TUNNEL] despachado: Dealer — Dashboard y Gestión del Concesionario
+[2026-03-30 11:43:08] [AUDIT-SPRINT] Sprint 7 completado (ciclo completo)
+[2026-03-30 11:43:09] [AUDIT-SPRINT] Sprint 8 [audit] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 12:16:40] [AUDIT-SPRINT] Sprint 8 [fix] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 13:00:57] [GATE] ✅ Completo — Sprint 8 FIX
+[2026-03-30 13:41:44] [MODIFICACIÓN] smart_monitor/observer.py brain.py agent.py — Fix 5 bugs: CDP timeout emergency, reorder overrides, context proxy, session max duration, log chat_len
+[2026-03-30 15:17:03] [GATE] ✅ Gate Pre-Commit passed — S8 Admin Panel fixes verified

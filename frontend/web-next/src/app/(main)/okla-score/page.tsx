@@ -78,13 +78,6 @@ function getOklaScoreJsonLd() {
       price: '0',
       priceCurrency: 'DOP',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '1250',
-      bestRating: '5',
-      worstRating: '1',
-    },
     author: {
       '@type': 'Organization',
       name: 'OKLA',

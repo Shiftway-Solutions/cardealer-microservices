@@ -125,7 +125,8 @@ export default function AdminKycPage() {
         setTotalPages(result.totalPages || 1);
       } catch (error: unknown) {
         if (!silent) {
-          console.error('Error fetching KYC profiles:', error);
+          if (process.env.NODE_ENV === 'development')
+            console.error('Error fetching KYC profiles:', error);
           toast.error('Error al cargar los perfiles KYC');
           setProfiles([]);
         }
@@ -235,7 +236,8 @@ export default function AdminKycPage() {
       window.open(response.url, '_blank', 'noopener,noreferrer');
     } catch (error: unknown) {
       const err = error as { response?: { status?: number }; message?: string };
-      console.error('[KYC] Error getting document URL:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('[KYC] Error getting document URL:', err);
 
       if (err.response?.status === 404) {
         toast.error('El documento no existe en el almacenamiento');
@@ -272,7 +274,8 @@ export default function AdminKycPage() {
       toast.success('Descarga iniciada');
     } catch (error: unknown) {
       const err = error as { response?: { status?: number }; message?: string };
-      console.error('[KYC Debug] Error downloading document:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('[KYC Debug] Error downloading document:', err);
 
       if (err.response?.status === 404) {
         toast.error('El documento no existe en el almacenamiento');
@@ -376,11 +379,13 @@ export default function AdminKycPage() {
               response?: { status?: number; data?: unknown };
               message?: string;
             };
-            console.error(`[KYC Viewer Debug] Failed to load document ${doc.id}:`, {
-              status: err.response?.status,
-              data: err.response?.data,
-              message: err.message,
-            });
+            if (process.env.NODE_ENV === 'development') {
+              console.error(`[KYC Viewer Debug] Failed to load document ${doc.id}:`, {
+                status: err.response?.status,
+                data: err.response?.data,
+                message: err.message,
+              });
+            }
           }
         }
       }
@@ -393,7 +398,7 @@ export default function AdminKycPage() {
         toast.error('No se pudieron cargar los documentos');
       }
     } catch (error) {
-      console.error('Error loading documents:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading documents:', error);
       toast.error('Error al cargar los documentos');
     }
   };
@@ -958,6 +963,7 @@ export default function AdminKycPage() {
                                     size="sm"
                                     onClick={() => handleOpenViewer(index)}
                                     title="Ver en pantalla completa con zoom (+/-)"
+                                    aria-label="Ver documento en pantalla completa"
                                     className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600"
                                   >
                                     <ZoomIn className="h-3.5 w-3.5" />
@@ -968,6 +974,7 @@ export default function AdminKycPage() {
                                     onClick={() => handleOpenDocument(doc.id)}
                                     disabled={loadingDocumentId === doc.id}
                                     title="Abrir imagen en nueva pestaña"
+                                    aria-label="Abrir documento en nueva pestaña"
                                     className="h-7 w-7 p-0 hover:bg-purple-50 hover:text-purple-600"
                                   >
                                     {loadingDocumentId === doc.id ? (
@@ -987,6 +994,7 @@ export default function AdminKycPage() {
                                     }
                                     disabled={loadingDocumentId === doc.id}
                                     title="Descargar documento"
+                                    aria-label="Descargar documento"
                                     className="hover:bg-primary/10 hover:text-primary h-7 w-7 p-0"
                                   >
                                     <Download className="h-3.5 w-3.5" />

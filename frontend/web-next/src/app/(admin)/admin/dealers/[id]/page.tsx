@@ -64,7 +64,7 @@ import { adminChangeDealerPlan } from '@/services/admin';
 
 export default function DealerDetailPage() {
   const params = useParams();
-  const dealerId = params?.id as string;
+  const dealerId = typeof params?.id === 'string' ? params.id : '';
   const [activeTab, setActiveTab] = useState('overview');
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
@@ -90,7 +90,7 @@ export default function DealerDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/dealers">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver a listado de dealers">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -137,6 +137,7 @@ export default function DealerDetailPage() {
                     value={planJustification}
                     onChange={e => setPlanJustification(e.target.value)}
                     className="min-h-[80px]"
+                    maxLength={500}
                   />
                 </div>
               </div>
@@ -193,7 +194,11 @@ export default function DealerDetailPage() {
             <AlertTriangle className="mr-2 h-4 w-4" />
             Advertir
           </Button>
-          <Button variant="outline" className="border-red-600 text-red-600">
+          <Button
+            variant="outline"
+            className="border-red-600 text-red-600"
+            aria-label="Suspender dealer"
+          >
             <Ban className="mr-2 h-4 w-4" />
             Suspender
           </Button>
@@ -404,7 +409,7 @@ export default function DealerDetailPage() {
                 </div>
                 <div className="flex justify-between py-2">
                   <span className="text-muted-foreground">Método de pago</span>
-                  <span className="text-white">Visa •••• 4242</span>
+                  <span className="text-white">{dealerData.paymentMethod || 'No registrado'}</span>
                 </div>
               </CardContent>
             </Card>

@@ -38,17 +38,20 @@ const mockDealer = {
 };
 
 const mockDealerStats = {
-  totalViews: 12500,
-  totalInquiries: 245,
+  totalListings: 35,
   activeListings: 32,
-  pendingListings: 3,
-  soldThisMonth: 8,
-  revenueThisMonth: 15200000,
-  responseRate: 95,
-  averageResponseTime: 2.5,
+  totalViews: 12500,
+  viewsThisMonth: 12500,
   viewsChange: 15,
+  totalInquiries: 245,
+  inquiriesThisMonth: 245,
   inquiriesChange: -5,
-  conversionRate: 12.5,
+  pendingInquiries: 12,
+  responseRate: 95,
+  avgResponseTimeMinutes: 45,
+  totalRevenue: 15200000,
+  revenueThisMonth: 15200000,
+  revenueChange: 12.5,
 };
 
 const mockVehicles = [
@@ -108,13 +111,64 @@ const mockLeads = [
 // Setup MSW server
 const server = setupServer(
   // Get current dealer
-  http.get(`${API_URL}/api/dealers/user/:userId`, () => {
+  http.get(`${API_URL}/api/dealers/me`, () => {
     return HttpResponse.json(mockDealer);
   }),
 
-  // Get dealer stats
-  http.get(`${API_URL}/api/dealers/:id/stats`, () => {
-    return HttpResponse.json(mockDealerStats);
+  http.get(`${API_URL}/api/dealers/owner/:userId`, () => {
+    return HttpResponse.json(mockDealer);
+  }),
+
+  // Get dealer KPIs
+  http.get(`${API_URL}/api/dealer-analytics/:id/kpis`, () => {
+    return HttpResponse.json({
+      totalViews: mockDealerStats.totalViews,
+      viewsChange: mockDealerStats.viewsChange,
+      totalContacts: mockDealerStats.totalInquiries,
+      contactsChange: mockDealerStats.inquiriesChange,
+      totalLeads: mockDealerStats.pendingInquiries,
+      leadsChange: 8,
+      totalSales: 8,
+      salesChange: 10,
+      totalRevenue: mockDealerStats.totalRevenue,
+      revenueChange: mockDealerStats.revenueChange,
+      conversionRate: mockDealerStats.responseRate,
+      conversionChange: 4,
+      avgResponseTime: mockDealerStats.avgResponseTimeMinutes,
+      responseTimeChange: -12,
+      activeListings: mockDealerStats.activeListings,
+      inventoryValue: 55000000,
+    });
+  }),
+
+  // Get dealer inventory stats
+  http.get(`${API_URL}/api/dealer-analytics/inventory/:id/stats`, () => {
+    return HttpResponse.json({
+      dealerId: mockDealer.id,
+      snapshotDate: '2026-03-30T00:00:00Z',
+      totalVehicles: mockDealerStats.totalListings,
+      activeVehicles: mockDealerStats.activeListings,
+      soldVehicles: 8,
+      totalInventoryValue: 55000000,
+      avgVehiclePrice: 1571428,
+      avgDaysOnMarket: 28,
+      vehiclesOver60Days: 4,
+      totalViews: mockDealerStats.totalViews,
+      uniqueViews: 9100,
+      totalContacts: mockDealerStats.totalInquiries,
+      totalFavorites: 120,
+      searchImpressions: 42000,
+      newLeads: mockDealerStats.pendingInquiries,
+      qualifiedLeads: 6,
+      convertedLeads: 3,
+      leadConversionRate: 12.5,
+      totalRevenue: mockDealerStats.totalRevenue,
+      avgTransactionValue: 1900000,
+      clickThroughRate: 5.5,
+      contactRate: 2,
+      inventoryTurnoverRate: 18,
+      agingRate: 11,
+    });
   }),
 
   // Get dealer vehicles
@@ -128,27 +182,9 @@ const server = setupServer(
     });
   }),
 
-  // Get dealer leads
-  http.get(`${API_URL}/api/crm/leads`, () => {
-    return HttpResponse.json({
-      items: mockLeads,
-      page: 1,
-      pageSize: 20,
-      totalItems: 2,
-      totalPages: 1,
-    });
-  }),
-
-  // Get lead stats
-  http.get(`${API_URL}/api/crm/leads/stats`, () => {
-    return HttpResponse.json({
-      total: 45,
-      new: 12,
-      contacted: 20,
-      qualified: 8,
-      closed: 5,
-      conversionRate: 11.1,
-    });
+  // Get recent dealer leads
+  http.get(`${API_URL}/api/crm/leads/recent/:count`, () => {
+    return HttpResponse.json(mockLeads);
   }),
 
   // Update vehicle status

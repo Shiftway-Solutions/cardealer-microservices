@@ -53,16 +53,38 @@ public class WhatsAppController : ControllerBase
     /// </summary>
     [HttpGet("webhook")]
     public IActionResult VerifyWebhook(
-        [FromQuery(Name = "hub.mode")] string mode,
-        [FromQuery(Name = "hub.verify_token")] string token,
-        [FromQuery(Name = "hub.challenge")] string challenge)
+        [FromQuery(Name = "hub.mode")] string? mode,
+        [FromQuery(Name = "hub.verify_token")] string? token,
+        [FromQuery(Name = "hub.challenge")] string? challenge)
     {
+        // Return a helpful message when required parameters are missing
+        if (string.IsNullOrEmpty(mode) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(challenge))
+        {
+            var missing = new List<string>();
+            if (string.IsNullOrEmpty(mode)) missing.Add("hub.mode");
+            if (string.IsNullOrEmpty(token)) missing.Add("hub.verify_token");
+            if (string.IsNullOrEmpty(challenge)) missing.Add("hub.challenge");
+
+            return BadRequest(new
+            {
+                error = "Missing required query parameters",
+                missing_parameters = missing,
+                example = "GET /api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=YOUR_VERIFY_TOKEN&hub.challenge=CHALLENGE_CODE",
+                documentation = "https://developers.facebook.com/docs/whatsapp/sample-app-endpoints"
+            });
+        }
+
         if (_whatsAppService.VerifyWebhook(mode, token, challenge))
         {
             return Ok(challenge);
         }
 
-        return Forbid();
+        return StatusCode(403, new
+        {
+            error = "Webhook verification failed",
+            reason = "Invalid hub.verify_token",
+            hint = "Ensure hub.verify_token matches the token configured in Meta WhatsApp Business settings"
+        });
     }
 
     /// <summary>

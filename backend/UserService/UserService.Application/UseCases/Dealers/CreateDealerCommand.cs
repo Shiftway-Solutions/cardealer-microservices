@@ -117,6 +117,16 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
 
         await _dealerRepository.AddAsync(dealer);
 
+        owner.AccountType = AccountType.Dealer;
+        owner.DealerId = dealer.Id;
+        owner.DealerRole = DealerRole.Owner;
+        owner.BusinessName = dealer.BusinessName;
+        owner.BusinessPhone = dealer.Phone;
+        owner.BusinessAddress = dealer.Address;
+        owner.RNC = dealer.TaxId;
+        owner.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(owner);
+
         _logger.LogInformation(
             "Created dealer registration {DealerId} (BusinessName={BusinessName}) for user {UserId} — status Pending",
             dealer.Id, dealer.BusinessName, request.OwnerUserId);

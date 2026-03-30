@@ -384,6 +384,7 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>

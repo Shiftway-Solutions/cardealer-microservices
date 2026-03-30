@@ -28,15 +28,18 @@ public class AdminDealersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all dealer registration requests. Supports filtering by verification status.
+    /// Get all dealer registration requests. Supports filtering by verification status and search.
     /// </summary>
     /// <param name="status">Filter by status: Pending, UnderReview, Verified, Rejected, Suspended</param>
+    /// <param name="searchTerm">Search by business name or email</param>
+    /// <param name="verificationStatus">Alternative string filter: Pending, Verified, Rejected, Suspended</param>
     /// <param name="page">Page number (1-based)</param>
     /// <param name="pageSize">Page size (default 20, max 100)</param>
     [HttpGet]
-    [ProducesResponseType(typeof(PaginatedDealersResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDealerRequests(
         [FromQuery] DealerVerificationStatus? status = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? verificationStatus = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -46,32 +49,67 @@ public class AdminDealersController : ControllerBase
 
         var allDealers = await _dealerRepository.GetAllAsync();
 
-        // Filter by status if provided
-        var filteredDealers = status.HasValue
-            ? allDealers.Where(d => d.VerificationStatus == status.Value)
-            : allDealers;
+        // Support both enum and string-based status filtering
+        var filteredDealers = allDealers.AsEnumerable();
+        if (status.HasValue)
+        {
+            filteredDealers = filteredDealers.Where(d => d.VerificationStatus == status.Value);
+        }
+        else if (!string.IsNullOrEmpty(verificationStatus) &&
+                 Enum.TryParse<DealerVerificationStatus>(verificationStatus, ignoreCase: true, out var parsedStatus))
+        {
+            filteredDealers = filteredDealers.Where(d => d.VerificationStatus == parsedStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filteredDealers = filteredDealers.Where(d =>
+                d.BusinessName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
 
         var totalCount = filteredDealers.Count();
         var dealers = filteredDealers
             .OrderByDescending(d => d.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(d => new DealerSummaryDto
+            .Select(d => new DealerDto
             {
                 Id = d.Id,
+                OwnerUserId = d.OwnerUserId,
                 BusinessName = d.BusinessName,
+                TradeName = d.TradeName,
+                Slug = d.Slug,
+                Description = d.Description,
                 DealerType = d.DealerType,
-                LogoUrl = d.LogoUrl,
+                Email = d.Email,
+                Phone = d.Phone,
+                WhatsApp = d.WhatsApp,
+                Website = d.Website,
+                Address = d.Address,
                 City = d.City,
                 State = d.State,
+                ZipCode = d.ZipCode,
+                Country = d.Country,
+                LogoUrl = d.LogoUrl,
+                BannerUrl = d.BannerUrl,
+                BusinessRegistrationNumber = d.BusinessRegistrationNumber,
                 VerificationStatus = d.VerificationStatus,
+                VerifiedAt = d.VerifiedAt,
+                RejectionReason = d.RejectionReason,
+                ActiveListings = d.ActiveListings,
+                MaxListings = d.MaxListings,
+                TotalListings = d.TotalListings,
+                TotalSales = d.TotalSales,
                 AverageRating = d.AverageRating,
                 TotalReviews = d.TotalReviews,
-                ActiveListings = d.ActiveListings
+                IsActive = d.IsActive,
+                CreatedAt = d.CreatedAt,
+                UpdatedAt = d.UpdatedAt
             })
             .ToList();
 
-        return Ok(new PaginatedDealersResponse
+        return Ok(new
         {
             Dealers = dealers,
             Page = page,
@@ -89,7 +127,7 @@ public class AdminDealersController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        return await GetDealerRequests(DealerVerificationStatus.Pending, page, pageSize);
+        return await GetDealerRequests(status: DealerVerificationStatus.Pending, page: page, pageSize: pageSize);
     }
 
     /// <summary>

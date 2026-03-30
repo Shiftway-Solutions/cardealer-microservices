@@ -157,17 +157,22 @@ export default function AdminMaintenancePage() {
       } catch (adminErr: unknown) {
         const axiosErr = adminErr as { response?: { status?: number } };
         if (axiosErr?.response?.status === 401) {
-          console.warn('No autorizado para listar ventanas de mantenimiento. Verifica tu sesión.');
+          if (process.env.NODE_ENV === 'development')
+            console.warn(
+              'No autorizado para listar ventanas de mantenimiento. Verifica tu sesión.'
+            );
           setError(
             'Sesión expirada o no autorizado. Inicia sesión como administrador para gestionar mantenimientos.'
           );
         } else {
-          console.warn('Error al cargar ventanas de mantenimiento:', adminErr);
+          if (process.env.NODE_ENV === 'development')
+            console.warn('Error al cargar ventanas de mantenimiento:', adminErr);
         }
         setAllWindows([]);
       }
     } catch (err) {
-      console.error('Error loading maintenance data:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error loading maintenance data:', err);
       setError('No se pudo conectar con el MaintenanceService. Verifica que esté ejecutándose.');
     } finally {
       setLoading(false);
@@ -198,7 +203,8 @@ export default function AdminMaintenancePage() {
       setSuccess('Modo mantenimiento activado exitosamente');
       await loadData();
     } catch (err) {
-      console.error('Error activating maintenance:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error activating maintenance:', err);
       setError('Error al activar el modo mantenimiento. Verifica tu autenticación.');
     } finally {
       setActionLoading(null);
@@ -213,7 +219,8 @@ export default function AdminMaintenancePage() {
       setSuccess('Modo mantenimiento desactivado');
       await loadData();
     } catch (err) {
-      console.error('Error deactivating maintenance:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error deactivating maintenance:', err);
       setError('Error al desactivar el modo mantenimiento.');
     } finally {
       setActionLoading(null);
@@ -256,7 +263,8 @@ export default function AdminMaintenancePage() {
       setSchedEndTime('');
       await loadData();
     } catch (err) {
-      console.error('Error scheduling maintenance:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error scheduling maintenance:', err);
       setError('Error al programar el mantenimiento.');
     } finally {
       setActionLoading(null);
@@ -270,7 +278,7 @@ export default function AdminMaintenancePage() {
       setSuccess('Mantenimiento iniciado');
       await loadData();
     } catch (err) {
-      console.error('Error starting maintenance:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error starting maintenance:', err);
       setError('Error al iniciar el mantenimiento.');
     } finally {
       setActionLoading(null);
@@ -284,7 +292,8 @@ export default function AdminMaintenancePage() {
       setSuccess('Mantenimiento completado');
       await loadData();
     } catch (err) {
-      console.error('Error completing maintenance:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error completing maintenance:', err);
       setError('Error al completar el mantenimiento.');
     } finally {
       setActionLoading(null);
@@ -304,7 +313,8 @@ export default function AdminMaintenancePage() {
       setCancelReason('');
       await loadData();
     } catch (err) {
-      console.error('Error cancelling maintenance:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error cancelling maintenance:', err);
       setError('Error al cancelar el mantenimiento.');
     } finally {
       setActionLoading(null);
@@ -318,7 +328,7 @@ export default function AdminMaintenancePage() {
       setSuccess('Ventana de mantenimiento eliminada');
       await loadData();
     } catch (err) {
-      console.error('Error deleting maintenance:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error deleting maintenance:', err);
       setError('Error al eliminar el mantenimiento.');
     } finally {
       setActionLoading(null);

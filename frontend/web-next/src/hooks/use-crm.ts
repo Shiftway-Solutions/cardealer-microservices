@@ -85,10 +85,11 @@ export function useSearchLeads(query: string) {
 /**
  * Get recent leads
  */
-export function useRecentLeads(count: number = 10) {
+export function useRecentLeads(count: number = 10, enabled: boolean = true) {
   return useQuery({
     queryKey: crmKeys.leadsRecent(count),
     queryFn: () => getRecentLeads(count),
+    enabled,
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

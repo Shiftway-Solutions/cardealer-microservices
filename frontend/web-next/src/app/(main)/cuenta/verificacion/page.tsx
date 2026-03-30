@@ -228,7 +228,8 @@ export default function VerificacionPage() {
       // profile is null = user hasn't started KYC yet (this is normal)
     } catch (error) {
       // Unexpected error (network, server error, etc.)
-      console.error('Error checking KYC profile:', error);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error checking KYC profile:', error);
     } finally {
       setIsLoading(false);
     }
@@ -396,7 +397,8 @@ export default function VerificacionPage() {
     // SECURITY: Prevent multiple submissions (race condition protection)
     // =========================================================================
     if (isSubmitting) {
-      console.warn('Submission already in progress, ignoring duplicate request');
+      if (process.env.NODE_ENV === 'development')
+        console.warn('Submission already in progress, ignoring duplicate request');
       return;
     }
 
@@ -516,7 +518,7 @@ export default function VerificacionPage() {
       toast.success('¡Verificación enviada! Te notificaremos cuando sea aprobada.');
       router.push('/cuenta?verification=submitted');
     } catch (error: unknown) {
-      console.error('Error submitting KYC:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error submitting KYC:', error);
 
       // Provide specific error messages based on error type
       let errorMessage = 'Error al enviar la verificación';
@@ -543,7 +545,8 @@ export default function VerificacionPage() {
       } else if (createdProfileId && err.message) {
         // Profile was created but subsequent step failed
         errorMessage = `Error en la verificación: ${err.message}. Tu perfil fue creado pero los documentos no se procesaron completamente. Por favor contacta soporte.`;
-        console.error('Partial submission - Profile ID:', createdProfileId);
+        if (process.env.NODE_ENV === 'development')
+          console.error('Partial submission - Profile ID:', createdProfileId);
       }
 
       toast.error(errorMessage);

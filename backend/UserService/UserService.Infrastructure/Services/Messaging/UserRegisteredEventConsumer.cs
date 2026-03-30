@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -188,11 +189,30 @@ public class UserRegisteredEventConsumer : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // Check if user already exists
-        var existingUser = await dbContext.Users.FindAsync(new object[] { @event.UserId }, cancellationToken);
+        // Idempotency: event replays can carry the same email with either the same
+        // or a different user id. Acknowledge duplicates instead of requeueing them.
+        var normalizedEmail = @event.Email.Trim().ToLowerInvariant();
+        var existingUser = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                u => u.Id == @event.UserId || u.Email.ToLower() == normalizedEmail,
+                cancellationToken);
+
         if (existingUser != null)
         {
-            _logger.LogInformation("User {UserId} already exists in UserService, skipping", @event.UserId);
+            if (existingUser.Id == @event.UserId)
+            {
+                _logger.LogInformation("User {UserId} already exists in UserService, skipping", @event.UserId);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Skipping duplicate UserRegisteredEvent for email {Email}. Existing user {ExistingUserId} already owns that email; incoming user id was {IncomingUserId}.",
+                    @event.Email,
+                    existingUser.Id,
+                    @event.UserId);
+            }
+
             return;
         }
 
@@ -233,10 +253,41 @@ public class UserRegisteredEventConsumer : BackgroundService
         };
 
         dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (await UserAlreadySyncedAsync(dbContext, @event, cancellationToken))
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Ignoring duplicate UserRegisteredEvent detected at save time for user {UserId} ({Email}).",
+                    @event.UserId,
+                    @event.Email);
+                return;
+            }
+
+            throw;
+        }
 
         _logger.LogInformation("Successfully synced user {UserId} ({Email}) from AuthService to UserService with FirstName={FirstName}, LastName={LastName}",
             @event.UserId, @event.Email, firstName, lastName);
+    }
+
+    private static Task<bool> UserAlreadySyncedAsync(
+        ApplicationDbContext dbContext,
+        UserRegisteredEvent @event,
+        CancellationToken cancellationToken)
+    {
+        var normalizedEmail = @event.Email.Trim().ToLowerInvariant();
+        return dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(
+                u => u.Id == @event.UserId || u.Email.ToLower() == normalizedEmail,
+                cancellationToken);
     }
 
     /// <summary>

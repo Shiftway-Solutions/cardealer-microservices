@@ -73,7 +73,8 @@ export default function EarlyBirdPage() {
         });
         setMembers([]);
       } catch (err) {
-        console.error('Error fetching early bird data:', err);
+        if (process.env.NODE_ENV === 'development')
+          console.error('Error fetching early bird data:', err);
         setError('No se pudieron cargar los datos del programa Early Bird.');
       } finally {
         setLoading(false);

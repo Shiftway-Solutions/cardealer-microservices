@@ -1,2 +1,0 @@
-Disena pruebas e2e en produccion para determinar me mejoras le vas hacer al sistema y Audita si el modelo de negocio de okla esta implementado en la plataforma.
-. Analiza el proyecto y reflexiona: ¿Qué tipo de auditoría realizaré para optimizar el código aplicando sus recomendaciones? O bien, ¿qué investigación llevaré a cabo para incorporar nuevas funcionalidades a la plataforma? Luego, actualiza el plan de tareas, elabora un plan de sprint y ponlo en marcha. Por último, ejecuta el prompt ubicado en ".prompts/prompt_1.md".

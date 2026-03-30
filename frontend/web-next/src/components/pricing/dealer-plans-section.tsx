@@ -136,7 +136,7 @@ export function DealerPlansSection() {
       color: 'slate',
       features: [
         { text: 'Hasta 20 fotos + video tour', included: true },
-        { text: '#1 GARANTIZADO en búsquedas', included: true },
+        { text: 'Máxima visibilidad en búsquedas', included: true },
         { text: '50 destacados/mes', included: true },
         { text: '$300 OKLA Coins/mes', included: true },
         { text: '👑 Badge Enterprise', included: true },

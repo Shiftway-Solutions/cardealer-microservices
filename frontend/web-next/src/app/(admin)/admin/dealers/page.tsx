@@ -464,7 +464,7 @@ export default function AdminDealersPage() {
                 <TableCell>
                   <div className="flex gap-1">
                     <Link href={`/admin/dealers/${dealer.id}`}>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" aria-label="Ver detalles del dealer">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
@@ -475,6 +475,7 @@ export default function AdminDealersPage() {
                         className="text-primary"
                         onClick={() => handleVerify(dealer.id)}
                         disabled={verifyMutation.isPending}
+                        aria-label="Verificar dealer"
                       >
                         {verifyMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -486,7 +487,12 @@ export default function AdminDealersPage() {
                     {dealer.status === 'active' && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600"
+                            aria-label="Suspender dealer"
+                          >
                             <Ban className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>

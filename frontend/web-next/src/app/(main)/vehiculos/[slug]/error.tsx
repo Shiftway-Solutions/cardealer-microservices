@@ -13,7 +13,7 @@ export default function VehicleDetailError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Vehicle detail error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Vehicle detail error:', error);
   }, [error]);
 
   return (

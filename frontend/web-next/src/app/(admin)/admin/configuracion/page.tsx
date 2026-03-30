@@ -168,7 +168,8 @@ export default function AdminConfigurationPage() {
           'Error al cargar la configuración. Verifica que el ConfigurationService esté disponible.'
         );
       }
-      console.error('Error loading configurations:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error loading configurations:', err);
     } finally {
       setLoading(false);
     }
@@ -254,7 +255,8 @@ export default function AdminConfigurationPage() {
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       setError('Error al guardar la configuración.');
-      console.error('Error saving configurations:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error saving configurations:', err);
     } finally {
       setSaving(false);
     }
@@ -280,7 +282,8 @@ export default function AdminConfigurationPage() {
       const flags = await configurationService.getFeatureFlags();
       setFeatureFlags(flags);
     } catch (err) {
-      console.error('Error toggling feature flag:', err);
+      if (process.env.NODE_ENV === 'development')
+        console.error('Error toggling feature flag:', err);
       setError('Error al actualizar feature flag.');
     }
   };
@@ -699,7 +702,7 @@ export default function AdminConfigurationPage() {
                             {provider.type}
                           </Badge>
                           {isEnabled ? (
-                            <Badge className="bg-primary/10 text-xs text-primary dark:bg-primary/95 dark:text-primary/60">
+                            <Badge className="bg-primary/10 text-primary dark:bg-primary/95 dark:text-primary/60 text-xs">
                               Activo
                             </Badge>
                           ) : (
@@ -886,9 +889,7 @@ export default function AdminConfigurationPage() {
             Restablecer
           </Button>
           <Button
-            className={
-              saved ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
-            }
+            className={saved ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'}
             onClick={handleSave}
             disabled={!hasChanges || saving}
           >

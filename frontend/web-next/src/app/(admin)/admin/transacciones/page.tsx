@@ -96,7 +96,8 @@ export default function TransaccionesPage() {
         // const data = await adminService.getTransactions({ search, status: statusFilter, gateway: gatewayFilter, type: typeFilter });
         setTransactions([]);
       } catch (err) {
-        console.error('Error fetching transactions:', err);
+        if (process.env.NODE_ENV === 'development')
+          console.error('Error fetching transactions:', err);
         setError('No se pudieron cargar las transacciones.');
       } finally {
         setLoading(false);
@@ -209,8 +210,8 @@ export default function TransaccionesPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <TrendingUp className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <TrendingUp className="text-primary h-6 w-6" />
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Ingresos Netos</p>

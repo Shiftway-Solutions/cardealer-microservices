@@ -214,7 +214,7 @@ function PaywallOverlay({
   onPurchaseClick?: () => void;
 }) {
   const checkoutUrl = vehicleId
-    ? `/checkout?product=okla-score-report&vehicleId=${vehicleId}`
+    ? `/checkout?product=okla-score-report&vehicleId=${encodeURIComponent(vehicleId)}`
     : '/checkout?product=okla-score-report';
 
   return (

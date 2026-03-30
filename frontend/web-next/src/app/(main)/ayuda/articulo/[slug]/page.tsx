@@ -201,9 +201,11 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
                 <p className="text-muted-foreground mb-4 text-sm">
                   Si no encontraste lo que buscabas, nuestro equipo está disponible para ayudarte.
                 </p>
-                <Button className="bg-primary hover:bg-primary/90 w-full">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Contactar Soporte
+                <Button asChild className="bg-primary hover:bg-primary/90 w-full">
+                  <Link href="/contacto">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Contactar Soporte
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

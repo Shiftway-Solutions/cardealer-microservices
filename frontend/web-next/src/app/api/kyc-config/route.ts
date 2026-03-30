@@ -36,12 +36,12 @@ export interface KYCBypassConfig {
   allowSaleWithoutKyc: boolean;
 }
 
-// Default configuration — KYC required for everyone (most restrictive)
+// Default configuration — KYC bypassed in development when ConfigurationService is unavailable
 const DEFAULT_CONFIG: KYCBypassConfig = {
-  bypassForIndividualSeller: false,
-  bypassForDealer: false,
-  requireKycIndividualSeller: true,
-  requireKycDealer: true,
+  bypassForIndividualSeller: process.env.NODE_ENV === 'development',
+  bypassForDealer: process.env.NODE_ENV === 'development',
+  requireKycIndividualSeller: process.env.NODE_ENV !== 'development',
+  requireKycDealer: process.env.NODE_ENV !== 'development',
   allowSaleWithoutKyc: false,
 };
 

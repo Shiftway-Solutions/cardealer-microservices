@@ -133,6 +133,13 @@ try
     });
 
     // 4. CORS configurado para múltiples frontends
+    // Extra origins from CORS_EXTRA_ORIGINS env var (comma-separated) — for cloudflared tunnels
+    var corsExtraOriginsRaw = builder.Configuration["CORS_EXTRA_ORIGINS"] ?? "";
+    var corsExtraOrigins = corsExtraOriginsRaw
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(o => !string.IsNullOrWhiteSpace(o))
+        .ToArray();
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("ReactPolicy", policy =>
@@ -140,14 +147,17 @@ try
             if (isDevelopment)
             {
                 // Permitir múltiples puertos de desarrollo
-                policy.WithOrigins(
-                        "http://localhost:5173",    // Vite default
-                        "http://localhost:5174",    // Frontend original
-                        "http://localhost:3000",    // React alternative
-                        "http://localhost:4200",    // Angular (si aplica)
-                        "http://localhost:8080",    // Frontend Docker
-                        "https://okla.local"        // HTTPS local (Caddy + mkcert)
-                      )
+                var devOrigins = new[]
+                {
+                    "http://localhost:5173",    // Vite default
+                    "http://localhost:5174",    // Frontend original
+                    "http://localhost:3000",    // React alternative
+                    "http://localhost:4200",    // Angular (si aplica)
+                    "http://localhost:8080",    // Frontend Docker
+                    "https://okla.local"        // HTTPS local (Caddy + mkcert)
+                }.Concat(corsExtraOrigins).ToArray();
+
+                policy.WithOrigins(devOrigins)
                       .AllowAnyMethod()
                       .AllowAnyHeader()
                       .AllowCredentials();
@@ -155,14 +165,17 @@ try
             else
             {
                 // Producción — URLs autorizadas de OKLA
-                policy.WithOrigins(
-                        "https://okla.com.do",
-                        "https://www.okla.com.do",
-                        "https://inelcasrl.com.do",
-                        "https://www.inelcasrl.com.do",
-                        "https://cardealer.app",
-                        "https://www.cardealer.app"
-                      )
+                var prodOrigins = new[]
+                {
+                    "https://okla.com.do",
+                    "https://www.okla.com.do",
+                    "https://inelcasrl.com.do",
+                    "https://www.inelcasrl.com.do",
+                    "https://cardealer.app",
+                    "https://www.cardealer.app"
+                }.Concat(corsExtraOrigins).ToArray();
+
+                policy.WithOrigins(prodOrigins)
                       .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                       .WithHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "X-CSRF-Token", "X-Correlation-Id")
                       .AllowCredentials()

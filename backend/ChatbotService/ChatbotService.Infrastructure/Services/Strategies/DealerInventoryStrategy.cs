@@ -125,6 +125,7 @@ public class DealerInventoryStrategy : IChatModeStrategy
         // Target: ≥60% input token cost reduction via Anthropic Prompt Caching.
         var systemPrompt = $@"## PERSONALIDAD
 Hablas en español dominicano natural — profesional con calidez caribeña.
+Siempre trata al usuario de 'tú' (tuteo). NUNCA uses 'usted' — el tono es cercano y de confianza.
 Eres conciso y directo (máx 4-5 oraciones). Usas emojis moderadamente (1-2 por respuesta).
 Entiendes modismos dominicanos:
 - ""yipeta"" = SUV, ""guagua"" = vehículo / van, ""pasola"" / ""motor"" = motocicleta
@@ -261,7 +262,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
             new()
             {
                 Name = "schedule_appointment",
-                Description = "Agenda una cita para que el cliente vea un vehículo. Los datos del cliente (nombre y teléfono) se obtienen automáticamente del sistema.",
+                Description = "Agenda una cita para que el cliente vea un vehículo. Los datos del cliente (nombre y teléfono) se obtienen automáticamente del sistema. Todas las fechas son en hora AST (UTC-4, República Dominicana). No agendar fechas pasadas.",
                 Parameters = new Dictionary<string, FunctionParameter>
                 {
                     ["vehicle_id"] = new() { Type = "string", Description = "ID del vehículo que quiere ver" },
@@ -452,6 +453,11 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
         var preferredDate = args.GetValueOrDefault("preferred_date")?.ToString() ?? "Por coordinar";
         var preferredTime = args.GetValueOrDefault("preferred_time")?.ToString() ?? "Por coordinar";
 
+        // ── Timezone context: all appointments are in AST (UTC-4, República Dominicana) ──
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Santo_Domingo");
+        var nowLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+        var timezoneNote = $"- Zona horaria: AST (UTC-4) — Hora actual RD: {nowLocal:HH:mm, dd/MMM/yyyy}";
+
         // Los datos del cliente se obtienen del perfil registrado en la plataforma
         var result = new FunctionCallResult
         {
@@ -460,6 +466,7 @@ Tienes acceso al inventario completo del dealer ({totalVehicles} vehículos disp
                 $"- Vehículo ID: {vehicleId}\n" +
                 $"- Fecha preferida: {preferredDate}\n" +
                 $"- Hora preferida: {preferredTime}\n" +
+                $"{timezoneNote}\n" +
                 $"- Datos del cliente: obtenidos automáticamente del perfil registrado.\n" +
                 $"Un asesor del dealer se pondrá en contacto para confirmar la cita."
         };

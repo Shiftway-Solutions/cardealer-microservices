@@ -109,11 +109,18 @@ export default function HomepageClient() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {HOMEPAGE_STATS.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-primary text-3xl font-bold md:text-4xl">{stat.value}</div>
+                <div className="text-primary text-3xl font-bold md:text-4xl">
+                  {stat.value}
+                  <span className="text-muted-foreground align-super text-xs font-normal">*</span>
+                </div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
           </div>
+          <p className="text-muted-foreground mt-6 text-center text-xs">
+            * Cifras proyectadas basadas en el mercado automotriz dominicano. La plataforma está en
+            crecimiento activo.
+          </p>
         </div>
       </section>
 

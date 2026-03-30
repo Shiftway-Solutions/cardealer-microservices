@@ -161,3 +161,18 @@ backend/ChatbotService/LlmServer/models/
 backend/DealerManagementService/DealerManagementService.Api/uploads/
 nohup.out
 *.webm
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Agent monitor screenshots (auto-generated)
+.prompts/agent/screenshots/
+.prompts/agent/.monitor_pid
+.prompts/agent/.monitor_state.json
+.prompts/agent/chat_dom_snapshot.json
+.prompts/agent/model_catalog.json
+.prompts/agent/model_picker_snapshot.json
+
+# DB backups (local only)
+.db-backups/

@@ -824,6 +824,25 @@ public class TakeOverSessionCommandHandler : IRequestHandler<TakeOverSessionComm
 
         await _sessionRepository.UpdateAsync(session, ct);
 
+        // ── Build conversation summary for the human agent ──
+        var messages = await _messageRepository.GetBySessionIdAsync(session.Id, ct);
+        var recentMessages = messages
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(10)
+            .Reverse()
+            .ToList();
+
+        var summaryLines = new List<string> { $"📋 Resumen de conversación ({recentMessages.Count} mensajes recientes):" };
+        foreach (var msg in recentMessages)
+        {
+            var sender = msg.IsFromBot ? "Bot" : "Cliente";
+            var text = msg.Content?.Length > 120 ? msg.Content[..120] + "…" : msg.Content;
+            summaryLines.Add($"  [{sender}] {text}");
+        }
+        if (!string.IsNullOrEmpty(request.Reason))
+            summaryLines.Add($"  Razón de handoff: {request.Reason}");
+        var conversationSummary = string.Join("\n", summaryLines);
+
         // Agregar mensaje de sistema informando al usuario
         var systemMsg = new ChatMessage
         {
@@ -839,11 +858,11 @@ public class TakeOverSessionCommandHandler : IRequestHandler<TakeOverSessionComm
         await _messageRepository.CreateAsync(systemMsg, ct);
 
         _logger.LogInformation(
-            "Handoff bot→human: Session {SessionId}, Agent: {AgentName} ({AgentId})",
-            session.Id, request.AgentName, request.AgentId);
+            "Handoff bot→human: Session {SessionId}, Agent: {AgentName} ({AgentId}), Summary: {Summary}",
+            session.Id, request.AgentName, request.AgentId, conversationSummary);
 
         return new HandoffResult(true,
-            $"Agente {request.AgentName} tomó control de la conversación",
+            $"Agente {request.AgentName} tomó control de la conversación\n\n{conversationSummary}",
             HandoffStatus.HumanActive);
     }
 }

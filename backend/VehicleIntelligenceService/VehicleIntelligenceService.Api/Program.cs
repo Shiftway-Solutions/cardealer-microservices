@@ -104,10 +104,17 @@ try
     builder.Services.AddAuthorization();
 
     // CORS — configurable origins from appsettings
-    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    // Also supports CORS_EXTRA_ORIGINS env var (comma-separated) for cloudflared tunnels
+    var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
         ?? (builder.Environment.IsDevelopment()
-            ? new[] { "http://localhost:3000", "http://localhost:5173" }
+            ? new[] { "http://localhost:3000", "http://localhost:5173", "https://okla.local" }
             : new[] { "https://okla.com.do", "https://www.okla.com.do" });
+
+    var corsExtraRaw = builder.Configuration["CORS_EXTRA_ORIGINS"] ?? "";
+    var corsExtraOrigins = corsExtraRaw
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(o => !string.IsNullOrWhiteSpace(o));
+    var allowedOrigins = configuredOrigins.Concat(corsExtraOrigins).ToArray();
 
     builder.Services.AddCors(options =>
     {

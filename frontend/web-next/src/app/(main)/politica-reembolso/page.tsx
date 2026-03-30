@@ -70,7 +70,7 @@ export default function PoliticaReembolsoPage() {
           <CardContent className="space-y-4 p-5">
             <div>
               <h3 className="text-foreground font-semibold">
-                Publicación de vehículos ($29/listado)
+                Publicación de vehículos (gratuito para vendedores individuales)
               </h3>
               <ul className="text-muted-foreground mt-2 space-y-2 text-sm">
                 <li className="flex items-start gap-2">
@@ -88,7 +88,7 @@ export default function PoliticaReembolsoPage() {
 
             <div className="border-border border-t pt-4">
               <h3 className="text-foreground font-semibold">
-                Suscripciones de dealer ($49–$299/mes)
+                Suscripciones de dealer (RD$499–RD$2,999/mes)
               </h3>
               <ul className="text-muted-foreground mt-2 space-y-2 text-sm">
                 <li className="flex items-start gap-2">

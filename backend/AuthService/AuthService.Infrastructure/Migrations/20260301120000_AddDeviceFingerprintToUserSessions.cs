@@ -1,3 +1,5 @@
+using AuthService.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AuthService.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260301120000_AddDeviceFingerprintToUserSessions")]
     public partial class AddDeviceFingerprintToUserSessions : Migration
     {
         /// <inheritdoc />

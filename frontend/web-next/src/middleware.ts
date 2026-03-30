@@ -569,34 +569,9 @@ export async function middleware(request: NextRequest) {
       return createRedirect(new URL(FORBIDDEN_PATH, request.url), request);
     }
 
-    // For dealer routes, verify dealerId exists for data-heavy pages
-    // Allow access to main portal pages (dashboard, perfil, registro, pricing, suscripcion)
-    // so dealers without a profile can still navigate and set up their account.
-    if (
-      pathname.startsWith('/dealer') &&
-      (userRoles.includes('dealer') || userRoles.includes('dealer_employee')) &&
-      !tokenPayload.dealerId
-    ) {
-      const dealerRoutesRequiringProfile = [
-        '/dealer/inventario',
-        '/dealer/analytics',
-        '/dealer/leads',
-        '/dealer/mensajes',
-        '/dealer/reportes',
-        '/dealer/documentos',
-        '/dealer/ubicaciones',
-        '/dealer/empleados',
-        '/dealer/citas',
-        '/dealer/facturacion',
-      ];
-      const needsProfile = dealerRoutesRequiringProfile.some(
-        route => pathname === route || pathname.startsWith(`${route}/`)
-      );
-      if (needsProfile) {
-        // Dealer without dealerId trying to access data pages - redirect to complete profile
-        return createRedirect(new URL('/dealer/registro', request.url), request);
-      }
-    }
+    // Do not redirect dealer portal pages based only on dealerId in the JWT.
+    // The claim can be stale or absent until the token refreshes after onboarding,
+    // and portal pages already render explicit onboarding or empty states.
   }
 
   // Add user info headers for server components

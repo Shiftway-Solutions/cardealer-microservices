@@ -57,12 +57,16 @@ public record InventoryStatsDto
     public int PendingVehicles { get; init; }
     public int SoldVehicles { get; init; }
     public int DraftVehicles { get; init; }
+    public int TotalViews { get; init; }
+    public int TotalContacts { get; init; }
+    public int NewLeads { get; init; }
 
     // Values
     public decimal TotalValue { get; init; }
     public decimal AvgPrice { get; init; }
     public decimal MinPrice { get; init; }
     public decimal MaxPrice { get; init; }
+    public decimal TotalRevenue { get; init; }
 
     // Timing
     public double AvgDaysOnMarket { get; init; }

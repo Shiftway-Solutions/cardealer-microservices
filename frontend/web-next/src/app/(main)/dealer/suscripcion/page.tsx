@@ -86,7 +86,7 @@ function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
       'Acceso completo a API OKLA',
       'Empleados ilimitados',
       'Marca blanca disponible',
-      'SLA garantizado + Soporte 24/7',
+      'SLA de respuesta + Soporte 24/7',
       'Badge Enterprise',
     ],
   } as Record<string, string[]>;
@@ -228,13 +228,13 @@ export default function DealerSubscriptionPage() {
     );
   }
 
-  const currentPlanInfo = dealerPlans.find(p => p.plan === dealer.plan);
+  const currentPlanInfo = dealerPlans.find(p => p.plan === (dealer.plan ?? '').toLowerCase());
+  // BUG#5 fix: guard against null/undefined to prevent NaN
+  const maxListings = dealer.maxActiveListings ?? -1;
+  const currentListings = dealer.currentActiveListings ?? 0;
   const vehicleUsagePercent =
-    dealer.maxActiveListings === -1
-      ? 10
-      : Math.min(100, (dealer.currentActiveListings / dealer.maxActiveListings) * 100);
-  const vehiclesRemaining =
-    dealer.maxActiveListings === -1 ? '∞' : dealer.maxActiveListings - dealer.currentActiveListings;
+    maxListings === -1 ? 10 : Math.min(100, (currentListings / maxListings) * 100);
+  const vehiclesRemaining = maxListings === -1 ? '∞' : maxListings - currentListings;
 
   return (
     <div className="space-y-6">
@@ -293,14 +293,22 @@ export default function DealerSubscriptionPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-bold">
-                    Plan {currentPlanInfo?.name || dealer.plan}
+                    Plan{' '}
+                    {currentPlanInfo?.name ||
+                      (dealer.plan
+                        ? dealer.plan.charAt(0).toUpperCase() + dealer.plan.slice(1)
+                        : 'Libre')}
                   </h2>
                   <Badge
                     className={
-                      dealer.isSubscriptionActive ? 'bg-primary' : 'bg-muted-foreground/50'
+                      dealer.isSubscriptionActive || dealer.plan === 'libre' || dealer.plan == null
+                        ? 'bg-primary'
+                        : 'bg-muted-foreground/50'
                     }
                   >
-                    {dealer.isSubscriptionActive ? 'Activo' : 'Inactivo'}
+                    {dealer.isSubscriptionActive || dealer.plan === 'libre' || dealer.plan == null
+                      ? 'Activo'
+                      : 'Inactivo'}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground">
@@ -362,9 +370,9 @@ export default function DealerSubscriptionPage() {
           </CardHeader>
           <CardContent>
             <div className="mb-2 flex items-end justify-between">
-              <span className="text-3xl font-bold">{dealer.currentActiveListings}</span>
+              <span className="text-3xl font-bold">{currentListings}</span>
               <span className="text-muted-foreground">
-                de {dealer.maxActiveListings === -1 ? '∞' : dealer.maxActiveListings}
+                de {maxListings === -1 ? '∞' : maxListings}
               </span>
             </div>
             <div className="bg-muted h-3 overflow-hidden rounded-full">

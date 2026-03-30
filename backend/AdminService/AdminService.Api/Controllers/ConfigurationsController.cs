@@ -106,6 +106,88 @@ public class ConfigurationsController : ControllerBase
         return Ok(entry);
     }
 
+    /// <summary>
+    /// Create a new configuration entry
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult Create([FromBody] UpdateConfigurationRequest request)
+    {
+        _logger.LogInformation("Creating configuration: {Key}={Value}", request.Key, request.Value);
+
+        if (string.IsNullOrWhiteSpace(request.Key))
+            return BadRequest(new { error = "Configuration key is required." });
+
+        var entry = new ConfigurationEntry(
+            request.Key,
+            request.Value,
+            request.Description,
+            request.Category ?? "general",
+            DateTime.UtcNow
+        );
+
+        _configurations[request.Key] = entry;
+        return Created($"/api/admin/configurations/{request.Key}", entry);
+    }
+
+    /// <summary>
+    /// Delete a configuration entry by key
+    /// </summary>
+    [HttpDelete("{key}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Delete(string key)
+    {
+        _logger.LogInformation("Deleting configuration: {Key}", key);
+
+        if (!_configurations.Remove(key))
+            return NotFound(new { error = $"Configuration key '{key}' not found." });
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Bulk upsert configurations
+    /// </summary>
+    [HttpPost("bulk")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult BulkUpsert([FromBody] BulkUpsertConfigRequest request)
+    {
+        _logger.LogInformation("Bulk upserting {Count} configurations", request.Items?.Count ?? 0);
+
+        var results = new List<ConfigurationEntry>();
+        if (request.Items != null)
+        {
+            foreach (var item in request.Items)
+            {
+                if (string.IsNullOrWhiteSpace(item.Key)) continue;
+                var entry = new ConfigurationEntry(
+                    item.Key,
+                    item.Value,
+                    item.Description,
+                    item.Category ?? "general",
+                    DateTime.UtcNow
+                );
+                _configurations[item.Key] = entry;
+                results.Add(entry);
+            }
+        }
+
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// Get configuration change history (stub — returns empty for now)
+    /// </summary>
+    [HttpGet("{configId}/history")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult GetHistory(string configId)
+    {
+        _logger.LogInformation("Getting history for configuration: {ConfigId}", configId);
+        return Ok(Array.Empty<object>());
+    }
+
     // ========================================
     // FEATURE FLAGS ENDPOINTS
     // ========================================
@@ -243,3 +325,8 @@ public record UpdateFeatureFlagRequest(
     bool IsEnabled,
     string? Description = null
 );
+
+public record BulkUpsertConfigRequest
+{
+    public List<UpdateConfigurationRequest>? Items { get; set; }
+}

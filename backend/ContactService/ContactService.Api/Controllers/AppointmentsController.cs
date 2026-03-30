@@ -290,6 +290,46 @@ public class AppointmentsController : ControllerBase
         return Ok(stubData);
     }
 
+    // ========================================
+    // DEALER APPOINTMENTS ENDPOINT (BUG#3 fix)
+    // ========================================
+
+    /// <summary>
+    /// Get all appointments for a specific dealer
+    /// </summary>
+    /// <param name="dealerId">Dealer ID</param>
+    /// <param name="status">Filter by status (pending, confirmed, completed, cancelled)</param>
+    /// <param name="page">Page number (default 1)</param>
+    /// <param name="pageSize">Page size (default 20)</param>
+    /// <returns>Paginated list of dealer appointments</returns>
+    [HttpGet("dealer/{dealerId:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult GetByDealer(
+        Guid dealerId,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var currentUserId = GetCurrentUserId();
+        _logger.LogInformation("Getting appointments for dealer {DealerId} by user {UserId}", dealerId, currentUserId);
+
+        // TODO: When implementing with MediatR, verify the current user owns this dealer profile
+        // TODO: Query appointments where SellerId = dealerId and optionally filter by status
+
+        // Stub: return empty appointments list (dealer has no appointments yet)
+        var stubData = new
+        {
+            Items = Array.Empty<object>(),
+            TotalCount = 0,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = 0
+        };
+
+        return Ok(stubData);
+    }
+
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value

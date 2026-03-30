@@ -546,4 +546,180 @@ public class GetTrendsQueryHandler : IRequestHandler<GetTrendsQuery, List<TrendD
             return new List<TrendDataPointDto>();
         }
     }
+
+    public class GetKpisQueryHandler : IRequestHandler<GetKpisQuery, KpiSummaryDto>
+    {
+        private readonly IDealerSnapshotRepository _snapshotRepository;
+        private readonly ILogger<GetKpisQueryHandler> _logger;
+
+        public GetKpisQueryHandler(
+            IDealerSnapshotRepository snapshotRepository,
+            ILogger<GetKpisQueryHandler> logger)
+        {
+            _snapshotRepository = snapshotRepository;
+            _logger = logger;
+        }
+
+        public async Task<KpiSummaryDto> Handle(GetKpisQuery request, CancellationToken ct)
+        {
+            _logger.LogInformation(
+                "Getting KPIs for dealer {DealerId} from {FromDate} to {ToDate}",
+                request.DealerId,
+                request.FromDate,
+                request.ToDate);
+
+            var compareDays = Math.Max(1, (request.ToDate.Date - request.FromDate.Date).Days);
+            var periodSnapshot = await _snapshotRepository.AggregateAsync(request.DealerId, request.FromDate, request.ToDate, ct);
+            var (currentSnapshot, previousSnapshot) = await _snapshotRepository.GetComparisonAsync(
+                request.DealerId,
+                request.ToDate,
+                compareDays,
+                ct);
+
+            return BuildKpis(periodSnapshot, currentSnapshot, previousSnapshot);
+        }
+
+        private static KpiSummaryDto BuildKpis(
+            Domain.Entities.DealerSnapshot period,
+            Domain.Entities.DealerSnapshot? current,
+            Domain.Entities.DealerSnapshot? previous)
+        {
+            return new KpiSummaryDto
+            {
+                TotalViews = period.TotalViews,
+                ViewsChange = CalculateChange(previous?.TotalViews ?? 0, current?.TotalViews ?? 0),
+                TotalContacts = period.TotalContacts,
+                ContactsChange = CalculateChange(previous?.TotalContacts ?? 0, current?.TotalContacts ?? 0),
+                TotalLeads = period.QualifiedLeads,
+                LeadsChange = CalculateChange(previous?.QualifiedLeads ?? 0, current?.QualifiedLeads ?? 0),
+                TotalSales = period.ConvertedLeads,
+                SalesChange = CalculateChange(previous?.ConvertedLeads ?? 0, current?.ConvertedLeads ?? 0),
+                TotalRevenue = period.TotalRevenue,
+                RevenueChange = CalculateChange((double)(previous?.TotalRevenue ?? 0m), (double)(current?.TotalRevenue ?? 0m)),
+                ConversionRate = period.LeadConversionRate,
+                ConversionChange = CalculateChange(previous?.LeadConversionRate ?? 0, current?.LeadConversionRate ?? 0),
+                AvgResponseTime = period.AvgResponseTimeMinutes,
+                ResponseTimeChange = CalculateChange(previous?.AvgResponseTimeMinutes ?? 0, current?.AvgResponseTimeMinutes ?? 0),
+                ActiveListings = period.ActiveVehicles,
+                InventoryValue = period.TotalInventoryValue
+            };
+        }
+
+        private static double CalculateChange(int previous, int current)
+        {
+            if (previous == 0)
+            {
+                return current > 0 ? 100 : 0;
+            }
+
+            return (current - previous) / (double)previous * 100;
+        }
+
+        private static double CalculateChange(double previous, double current)
+        {
+            if (previous == 0)
+            {
+                return current > 0 ? 100 : 0;
+            }
+
+            return ((current - previous) / previous) * 100;
+        }
+    }
+
+    public class GetSnapshotComparisonQueryHandler : IRequestHandler<GetSnapshotComparisonQuery, SnapshotComparisonDto>
+    {
+        private readonly IDealerSnapshotRepository _snapshotRepository;
+        private readonly ILogger<GetSnapshotComparisonQueryHandler> _logger;
+
+        public GetSnapshotComparisonQueryHandler(
+            IDealerSnapshotRepository snapshotRepository,
+            ILogger<GetSnapshotComparisonQueryHandler> logger)
+        {
+            _snapshotRepository = snapshotRepository;
+            _logger = logger;
+        }
+
+        public async Task<SnapshotComparisonDto> Handle(GetSnapshotComparisonQuery request, CancellationToken ct)
+        {
+            _logger.LogInformation(
+                "Getting snapshot comparison for dealer {DealerId} on {CurrentDate}",
+                request.DealerId,
+                request.CurrentDate);
+
+            var compareDays = request.CompareDays > 0 ? request.CompareDays : 30;
+            var (currentSnapshot, previousSnapshot) = await _snapshotRepository.GetComparisonAsync(
+                request.DealerId,
+                request.CurrentDate,
+                compareDays,
+                ct);
+
+            var current = currentSnapshot ?? Domain.Entities.DealerSnapshot.CreateEmpty(request.DealerId, request.CurrentDate);
+
+            return new SnapshotComparisonDto
+            {
+                Current = MapSnapshot(current),
+                Previous = previousSnapshot != null ? MapSnapshot(previousSnapshot) : null,
+                ViewsChange = CalculateChange(previousSnapshot?.TotalViews ?? 0, current.TotalViews),
+                ContactsChange = CalculateChange(previousSnapshot?.TotalContacts ?? 0, current.TotalContacts),
+                LeadsChange = CalculateChange(previousSnapshot?.QualifiedLeads ?? 0, current.QualifiedLeads),
+                SalesChange = CalculateChange(previousSnapshot?.ConvertedLeads ?? 0, current.ConvertedLeads),
+                RevenueChange = CalculateChange((double)(previousSnapshot?.TotalRevenue ?? 0m), (double)current.TotalRevenue),
+                ConversionRateChange = CalculateChange(previousSnapshot?.LeadConversionRate ?? 0, current.LeadConversionRate),
+                InventoryValueChange = CalculateChange((double)(previousSnapshot?.TotalInventoryValue ?? 0m), (double)current.TotalInventoryValue)
+            };
+        }
+
+        private static DealerSnapshotDto MapSnapshot(Domain.Entities.DealerSnapshot snapshot)
+        {
+            return new DealerSnapshotDto
+            {
+                Id = snapshot.Id,
+                DealerId = snapshot.DealerId,
+                SnapshotDate = snapshot.SnapshotDate,
+                TotalVehicles = snapshot.TotalVehicles,
+                ActiveVehicles = snapshot.ActiveVehicles,
+                SoldVehicles = snapshot.SoldVehicles,
+                TotalInventoryValue = snapshot.TotalInventoryValue,
+                AvgVehiclePrice = snapshot.AvgVehiclePrice,
+                AvgDaysOnMarket = snapshot.AvgDaysOnMarket,
+                VehiclesOver60Days = snapshot.VehiclesOver60Days,
+                TotalViews = snapshot.TotalViews,
+                UniqueViews = snapshot.UniqueViews,
+                TotalContacts = snapshot.TotalContacts,
+                TotalFavorites = snapshot.TotalFavorites,
+                SearchImpressions = snapshot.SearchImpressions,
+                NewLeads = snapshot.NewLeads,
+                QualifiedLeads = snapshot.QualifiedLeads,
+                ConvertedLeads = snapshot.ConvertedLeads,
+                LeadConversionRate = snapshot.LeadConversionRate,
+                TotalRevenue = snapshot.TotalRevenue,
+                AvgTransactionValue = snapshot.AvgTransactionValue,
+                ClickThroughRate = snapshot.ClickThroughRate,
+                ContactRate = snapshot.ContactRate,
+                FavoriteRate = snapshot.FavoriteRate,
+                InventoryTurnoverRate = snapshot.InventoryTurnoverRate,
+                AgingRate = snapshot.AgingRate
+            };
+        }
+
+        private static double CalculateChange(int previous, int current)
+        {
+            if (previous == 0)
+            {
+                return current > 0 ? 100 : 0;
+            }
+
+            return (current - previous) / (double)previous * 100;
+        }
+
+        private static double CalculateChange(double previous, double current)
+        {
+            if (previous == 0)
+            {
+                return current > 0 ? 100 : 0;
+            }
+
+            return ((current - previous) / previous) * 100;
+        }
+    }
 }

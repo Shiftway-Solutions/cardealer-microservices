@@ -226,6 +226,9 @@ jobs:
             recoagent:
               - 'backend/RecoAgent/**'
               - 'backend/_Shared/**'
+            pricingagent:
+              - 'backend/PricingAgent/**'
+              - 'backend/_Shared/**'
             chatbotservice:
               - 'backend/ChatbotService/ChatbotService.Api/**'
               - 'backend/ChatbotService/ChatbotService.Application/**'
@@ -537,6 +540,54 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/llm-server:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/llm-server:latest
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache,mode=max
+
+      - name: "🐳 Build & Push SearchAgent"
+        if: steps.filter.outputs.searchagent == 'true' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/SearchAgent/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/searchagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/searchagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/searchagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/searchagent:cache,mode=max
+
+      - name: "🐳 Build & Push RecoAgent"
+        if: steps.filter.outputs.recoagent == 'true' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/RecoAgent/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/recoagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/recoagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recoagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recoagent:cache,mode=max
+
+      - name: "🐳 Build & Push SupportAgent"
+        if: steps.filter.outputs.supportagent == 'true' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/SupportAgent/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/supportagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/supportagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/supportagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/supportagent:cache,mode=max
+
+      - name: "🐳 Build & Push PricingAgent"
+        if: steps.filter.outputs.pricingagent == 'true' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/PricingAgent/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/pricingagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/pricingagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/pricingagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/pricingagent:cache,mode=max
 
       - name: "🐳 Build & Push Frontend Web"
         if: steps.filter.outputs.frontend-web == 'true' && github.ref == 'refs/heads/main'

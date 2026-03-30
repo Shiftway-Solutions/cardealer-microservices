@@ -143,6 +143,8 @@ public class Dealer
     public bool HomeDelivery { get; set; } = false;
     public string? BusinessHours { get; set; } // JSON con horarios
     public string? SocialMediaLinks { get; set; } // JSON con links
+    public string? NotificationSettingsJson { get; set; } // JSON con preferencias de notificaciones
+    public string? SecuritySettingsJson { get; set; } // JSON con preferencias operativas de seguridad
 
     // ========================================
     // SUSCRIPCIÓN

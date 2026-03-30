@@ -21,7 +21,7 @@ import type { VehicleCardData } from '@/types';
 export const revalidate = 120;
 
 export const metadata: Metadata = {
-  title: 'Vehículos en Venta | OKLA',
+  title: 'Vehículos en Venta',
   description:
     'Encuentra los mejores vehículos en venta en República Dominicana. Miles de opciones nuevas y usadas verificadas en OKLA. ¡Busca, compara y contacta vendedores hoy!',
   keywords: [

@@ -89,7 +89,7 @@ const faqCategories: FAQCategory[] = [
       {
         question: '¿Cuánto cuesta publicar un anuncio?',
         answer:
-          'Los anuncios básicos son GRATIS. Ofrecemos opciones premium desde RD$499 que incluyen mayor visibilidad, destacado en búsquedas, y badge especial. Los dealers tienen planes mensuales con beneficios adicionales.',
+          'Los anuncios básicos son GRATIS con el plan Libre. El plan Estándar (desde RD$579) incluye mayor visibilidad y destacado en búsquedas. El plan Verificado (RD$2,029/mes) ofrece badge especial, posicionamiento premium y soporte prioritario. Los dealers tienen planes mensuales desde RD$1,682.',
       },
       {
         question: '¿Cuánto tiempo dura mi anuncio?',
@@ -245,7 +245,7 @@ export default function AyudaPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
+      <section className="from-primary to-primary/80 bg-gradient-to-br py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-3xl font-bold md:text-4xl">¿En qué podemos ayudarte?</h1>
@@ -277,11 +277,11 @@ export default function AyudaPage() {
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg border p-4 transition-colors hover:border-primary hover:bg-primary/5',
+                  'hover:border-primary hover:bg-primary/5 flex items-center gap-3 rounded-lg border p-4 transition-colors',
                   activeCategory === category.id && 'border-primary bg-primary/5'
                 )}
               >
-                <category.icon className="h-5 w-5 text-primary" />
+                <category.icon className="text-primary h-5 w-5" />
                 <span className="text-foreground font-medium">{category.name}</span>
               </button>
             ))}
@@ -303,7 +303,7 @@ export default function AyudaPage() {
                   <Button
                     variant="link"
                     onClick={() => setSearchQuery('')}
-                    className="mt-2 text-primary"
+                    className="text-primary mt-2"
                   >
                     Limpiar búsqueda
                   </Button>
@@ -316,11 +316,11 @@ export default function AyudaPage() {
                       id={category.id}
                       className={cn(
                         'overflow-hidden transition-shadow',
-                        activeCategory === category.id && 'ring-2 ring-primary'
+                        activeCategory === category.id && 'ring-primary ring-2'
                       )}
                     >
                       <div className="border-border bg-muted/50 flex items-center gap-3 border-b px-6 py-4">
-                        <category.icon className="h-5 w-5 text-primary" />
+                        <category.icon className="text-primary h-5 w-5" />
                         <h2 className="text-foreground font-semibold">{category.name}</h2>
                       </div>
                       <CardContent className="p-6 pt-0">
@@ -347,9 +347,9 @@ export default function AyudaPage() {
                     <div className="mt-6 space-y-4">
                       <a
                         href={`mailto:${config.supportEmail}`}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
+                        className="hover:border-primary hover:bg-primary/5 flex items-center gap-3 rounded-lg border p-3 transition-colors"
                       >
-                        <Mail className="h-5 w-5 text-primary" />
+                        <Mail className="text-primary h-5 w-5" />
                         <div>
                           <div className="text-foreground font-medium">Email</div>
                           <div className="text-muted-foreground text-sm">{config.supportEmail}</div>
@@ -358,9 +358,9 @@ export default function AyudaPage() {
 
                       <a
                         href={config.phoneHref}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
+                        className="hover:border-primary hover:bg-primary/5 flex items-center gap-3 rounded-lg border p-3 transition-colors"
                       >
-                        <Phone className="h-5 w-5 text-primary" />
+                        <Phone className="text-primary h-5 w-5" />
                         <div>
                           <div className="text-foreground font-medium">Teléfono</div>
                           <div className="text-muted-foreground text-sm">{config.supportPhone}</div>
@@ -371,9 +371,9 @@ export default function AyudaPage() {
                         href={config.whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
+                        className="hover:border-primary hover:bg-primary/5 flex items-center gap-3 rounded-lg border p-3 transition-colors"
                       >
-                        <MessageCircle className="h-5 w-5 text-primary" />
+                        <MessageCircle className="text-primary h-5 w-5" />
                         <div>
                           <div className="text-foreground font-medium">WhatsApp</div>
                           <div className="text-muted-foreground text-sm">Chat en vivo</div>

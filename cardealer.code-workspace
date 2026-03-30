@@ -36,7 +36,6 @@
   "settings": {
     "editor.minimap.enabled": false,
     "chat.tools.terminal.autoApprove": {
-      
       "cd": true,
       "echo": true,
       "ls": true,
@@ -126,5 +125,6 @@
       "Invoke-Expression": false,
       "iex": false,
     },
+    "github.copilot.chat.agentDebugLog.enabled": true,
   },
 }

@@ -49,6 +49,7 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
               alt={review.reviewerName}
               width={40}
               height={40}
+              sizes="40px"
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ export default function PublicarFotosPage() {
   const isMobile = useIsMobile();
 
   // Initialize photos from existing vehicle data
-  useState(() => {
+  useEffect(() => {
     if (vehicle?.images) {
       setPhotos(
         vehicle.images.map(
@@ -87,7 +87,7 @@ export default function PublicarFotosPage() {
         )
       );
     }
-  });
+  }, [vehicle?.images]);
 
   const totalRequired = photoCategories.reduce((acc, cat) => acc + cat.required, 0);
   const uploadedCount = photos.length;

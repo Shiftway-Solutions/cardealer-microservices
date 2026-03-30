@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(email);
     } catch (error) {
-      console.error('Error al reenviar código:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error al reenviar código:', error);
       toast.error('Error al reenviar el código. Intenta de nuevo.');
     } finally {
       setIsLoading(false);

@@ -188,7 +188,7 @@ export default function ReportarContenidoPage() {
                       setValue('tipoInfraccion', value, { shouldValidate: true })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="tipoInfraccion">
                       <SelectValue placeholder="Seleccione el tipo de infracción" />
                     </SelectTrigger>
                     <SelectContent>
@@ -261,7 +261,7 @@ export default function ReportarContenidoPage() {
                       <Input
                         id="telefonoReclamante"
                         type="tel"
-                        placeholder="809-555-0123"
+                        placeholder="809-000-0000"
                         {...register('telefonoReclamante')}
                       />
                       {errors.telefonoReclamante && (

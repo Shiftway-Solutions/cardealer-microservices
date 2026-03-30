@@ -422,6 +422,7 @@ export default function BannersPage() {
                     src={banner.image}
                     alt={banner.title}
                     className="h-full w-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -490,6 +491,7 @@ export default function BannersPage() {
                     size="sm"
                     className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
                     onClick={() => setDeleteTarget(banner)}
+                    aria-label="Eliminar banner"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

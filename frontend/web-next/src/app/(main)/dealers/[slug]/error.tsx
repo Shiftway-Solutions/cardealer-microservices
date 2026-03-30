@@ -13,7 +13,7 @@ export default function DealerError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Dealer profile error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Dealer profile error:', error);
   }, [error]);
 
   return (

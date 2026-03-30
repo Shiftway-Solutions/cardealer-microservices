@@ -89,7 +89,8 @@ export default function PromocionesPage() {
         // const data = await adminService.getPromotions({ search, status: statusFilter });
         setPromotions([]);
       } catch (err) {
-        console.error('Error fetching promotions:', err);
+        if (process.env.NODE_ENV === 'development')
+          console.error('Error fetching promotions:', err);
         setError('No se pudieron cargar las promociones.');
       } finally {
         setLoading(false);
@@ -257,19 +258,24 @@ export default function PromocionesPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Editar promoción">
                       <Edit className="h-4 w-4" />
                     </Button>
                     {promo.status === 'active' ? (
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Pausar promoción">
                         <Pause className="h-4 w-4" />
                       </Button>
                     ) : promo.status === 'paused' ? (
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Reanudar promoción">
                         <Play className="h-4 w-4" />
                       </Button>
                     ) : null}
-                    <Button variant="ghost" size="icon" className="text-red-500">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500"
+                      aria-label="Eliminar promoción"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

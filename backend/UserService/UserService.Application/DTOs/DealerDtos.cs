@@ -182,6 +182,39 @@ public class UpdateDealerRequest
     public bool? IsActive { get; set; }
 }
 
+public class DealerNotificationSettingsDto
+{
+    public bool EmailNewLead { get; set; } = true;
+    public bool EmailMessages { get; set; } = true;
+    public bool EmailAppointments { get; set; } = true;
+    public bool EmailWeeklyReport { get; set; } = true;
+    public bool SmsNewLead { get; set; } = false;
+    public bool SmsAppointments { get; set; } = true;
+    public bool PushMessages { get; set; } = true;
+    public bool PushLeads { get; set; } = true;
+}
+
+public class DealerSecuritySettingsDto
+{
+    public bool TwoFactorEnabled { get; set; } = false;
+    public int SessionTimeoutMinutes { get; set; } = 30;
+    public string? LastPasswordChange { get; set; }
+}
+
+public class DealerSettingsDto
+{
+    public Guid DealerId { get; set; }
+    public DealerNotificationSettingsDto Notifications { get; set; } = new();
+    public DealerSecuritySettingsDto Security { get; set; } = new();
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class UpdateDealerSecuritySettingsRequest
+{
+    public bool? TwoFactorEnabled { get; set; }
+    public int? SessionTimeoutMinutes { get; set; }
+}
+
 /// <summary>
 /// Request to verify/reject a dealer
 /// </summary>

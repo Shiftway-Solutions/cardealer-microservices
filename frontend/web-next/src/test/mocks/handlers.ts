@@ -389,6 +389,12 @@ export const homepageHandlers = [
 // =============================================================================
 
 export const dealerHandlers = [
+  // Get current dealer
+  http.get(`${API_URL}/api/dealers/me`, async () => {
+    await delay(50);
+    return HttpResponse.json(mockDealer);
+  }),
+
   // Get dealer by ID
   http.get(`${API_URL}/api/dealers/:id`, async ({ params }) => {
     await delay(50);
@@ -405,9 +411,63 @@ export const dealerHandlers = [
   }),
 
   // Get dealer by user ID
-  http.get(`${API_URL}/api/dealers/user/:userId`, async () => {
+  http.get(`${API_URL}/api/dealers/owner/:userId`, async () => {
     await delay(50);
     return HttpResponse.json(mockDealer);
+  }),
+
+  // Get dealer KPI stats
+  http.get(`${API_URL}/api/dealer-analytics/:dealerId/kpis`, async () => {
+    await delay(50);
+    return HttpResponse.json({
+      totalViews: 12500,
+      viewsChange: 15,
+      totalContacts: 245,
+      contactsChange: -5,
+      totalLeads: 45,
+      leadsChange: 8,
+      totalSales: 8,
+      salesChange: 10,
+      totalRevenue: 15200000,
+      revenueChange: 12.5,
+      conversionRate: 95,
+      conversionChange: 4,
+      avgResponseTime: 45,
+      responseTimeChange: -12,
+      activeListings: 32,
+      inventoryValue: 55000000,
+    });
+  }),
+
+  // Get dealer inventory stats
+  http.get(`${API_URL}/api/dealer-analytics/inventory/:dealerId/stats`, async () => {
+    await delay(50);
+    return HttpResponse.json({
+      dealerId: 'dealer-123',
+      snapshotDate: '2026-03-30T00:00:00Z',
+      totalVehicles: 35,
+      activeVehicles: 32,
+      soldVehicles: 8,
+      totalInventoryValue: 55000000,
+      avgVehiclePrice: 1571428,
+      avgDaysOnMarket: 28,
+      vehiclesOver60Days: 4,
+      totalViews: 12500,
+      uniqueViews: 9100,
+      totalContacts: 245,
+      totalFavorites: 120,
+      searchImpressions: 42000,
+      newLeads: 12,
+      qualifiedLeads: 6,
+      convertedLeads: 3,
+      leadConversionRate: 12.5,
+      totalRevenue: 15200000,
+      avgTransactionValue: 1900000,
+      clickThroughRate: 5.5,
+      contactRate: 2,
+      inventoryTurnoverRate: 18,
+      agingRate: 11,
+    });
   }),
 
   // Get dealer vehicles

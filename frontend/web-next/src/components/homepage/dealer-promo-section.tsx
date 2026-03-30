@@ -144,7 +144,10 @@ export function DealerPromoSection({
   className,
 }: DealerPromoSectionProps) {
   const realSlots = dealers.slice(0, totalSlots);
-  const emptyCount = Math.max(0, totalSlots - realSlots.length);
+  // When no real dealers are present, cap placeholders at 4 to avoid
+  // showing a full grid of empty "Tu marca aquí" slots (BUG-005).
+  const maxEmpty = realSlots.length === 0 ? 4 : totalSlots - realSlots.length;
+  const emptyCount = Math.max(0, Math.min(maxEmpty, totalSlots - realSlots.length));
 
   return (
     <section className={cn('bg-card py-12 lg:py-16', className)}>

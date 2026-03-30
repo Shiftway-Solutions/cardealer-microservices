@@ -53,7 +53,7 @@ import { cn } from '@/lib/utils';
 // STAT CARD COMPONENT
 // ============================================================================
 
-function StatCard({
+function _StatCard({
   title,
   value,
   description,
@@ -392,9 +392,9 @@ function AddPaymentMethodDialog({
   onSuccess?: () => void;
 }) {
   const [selectedGateway] = React.useState<PaymentGateway>('PayPal');
-  const [setAsDefault, setSetAsDefault] = React.useState(true);
+  const [setAsDefault, _setSetAsDefault] = React.useState(true);
   const [, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState('');
+  const [_error, setError] = React.useState('');
   const [step, setStep] = React.useState<IntegrationStep>('select');
   const [tokenizationResponse, setTokenizationResponse] =
     React.useState<TokenizationInitResponse | null>(null);
@@ -489,7 +489,8 @@ function AddPaymentMethodDialog({
       const isLocalhost = event.origin.includes('localhost') || event.origin.includes('127.0.0.1');
 
       if (!isDev && !isLocalhost && !allowedOrigins.includes(event.origin)) {
-        console.warn(`[Security] Blocked postMessage from unauthorized origin: ${event.origin}`);
+        if (process.env.NODE_ENV === 'development')
+          console.warn(`[Security] Blocked postMessage from unauthorized origin: ${event.origin}`);
         return;
       }
 
@@ -516,7 +517,8 @@ function AddPaymentMethodDialog({
             onSuccess?.();
             onOpenChange(false);
           } catch (err) {
-            console.error('Error completing tokenization:', err);
+            if (process.env.NODE_ENV === 'development')
+              console.error('Error completing tokenization:', err);
             setError('Error al guardar la tarjeta');
             setStep('select');
           }
@@ -744,7 +746,7 @@ export default function PaymentsPage() {
 
   // Fetch billing summary (used for Early Bird status check)
   const {
-    data: summary,
+    data: _summary,
     isLoading: isLoadingSummary,
     error: summaryError,
   } = useQuery({

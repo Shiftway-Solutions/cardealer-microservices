@@ -26,7 +26,9 @@ export default function PublicarPage() {
   // For seller account type, also check if seller profile is configured
   const isSeller = user?.accountType === 'seller';
   const sellerQuery = useSellerByUserId(isSeller ? user?.id : undefined);
+  // In development, skip seller profile check when UserService may be unavailable
   const sellerProfileMissing =
+    process.env.NODE_ENV !== 'development' &&
     isSeller &&
     !sellerQuery.isLoading &&
     canSell &&

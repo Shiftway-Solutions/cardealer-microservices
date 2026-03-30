@@ -47,8 +47,8 @@ export default function UserDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-muted-foreground">Cargando usuario...</span>
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <span className="text-muted-foreground ml-3">Cargando usuario...</span>
       </div>
     );
   }
@@ -57,16 +57,18 @@ export default function UserDetailPage() {
     return (
       <div className="space-y-4">
         <Link href="/admin/usuarios">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Volver a usuarios">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <Card className="border-destructive">
           <CardContent className="py-8 text-center">
-            <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive" />
+            <AlertTriangle className="text-destructive mx-auto mb-4 h-10 w-10" />
             <p className="text-lg font-medium">No se pudo cargar el usuario</p>
             <p className="text-muted-foreground text-sm">
-              {error instanceof Error ? error.message : 'El usuario no existe o hubo un error de conexión.'}
+              {error instanceof Error
+                ? error.message
+                : 'El usuario no existe o hubo un error de conexión.'}
             </p>
           </CardContent>
         </Card>
@@ -75,7 +77,10 @@ export default function UserDetailPage() {
   }
 
   const displayName = userData.name || 'Sin nombre';
-  const location = [userData.city, userData.province].filter(Boolean).join(', ') || userData.country || 'No especificada';
+  const location =
+    [userData.city, userData.province].filter(Boolean).join(', ') ||
+    userData.country ||
+    'No especificada';
 
   const typeLabel: Record<string, string> = {
     buyer: 'Comprador',
@@ -95,7 +100,7 @@ export default function UserDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/usuarios">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver a usuarios">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -172,7 +177,11 @@ export default function UserDetailPage() {
                         : 'bg-yellow-100 text-yellow-700'
                   }
                 >
-                  {userData.status === 'active' ? 'Activo' : userData.status === 'suspended' ? 'Suspendido' : userData.status}
+                  {userData.status === 'active'
+                    ? 'Activo'
+                    : userData.status === 'suspended'
+                      ? 'Suspendido'
+                      : userData.status}
                 </Badge>
                 <Badge className={typeBadgeColor[userData.type] || 'bg-gray-600'}>
                   {typeLabel[userData.type] || userData.type}
@@ -199,7 +208,7 @@ export default function UserDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-muted-foreground text-xs">Último acceso</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {userData.lastActiveAt ? formatDate(userData.lastActiveAt) : 'Sin datos'}
               </p>
             </div>
@@ -282,19 +291,19 @@ export default function UserDetailPage() {
                 <CardTitle>Información Personal</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between border-b border-border py-2">
+                <div className="border-border flex justify-between border-b py-2">
                   <span className="text-muted-foreground">Nombre completo</span>
                   <span className="font-medium">{displayName}</span>
                 </div>
-                <div className="flex justify-between border-b border-border py-2">
+                <div className="border-border flex justify-between border-b py-2">
                   <span className="text-muted-foreground">Email</span>
                   <span className="font-medium">{userData.email}</span>
                 </div>
-                <div className="flex justify-between border-b border-border py-2">
+                <div className="border-border flex justify-between border-b py-2">
                   <span className="text-muted-foreground">Teléfono</span>
                   <span className="font-medium">{userData.phone || 'No registrado'}</span>
                 </div>
-                <div className="flex justify-between border-b border-border py-2">
+                <div className="border-border flex justify-between border-b py-2">
                   <span className="text-muted-foreground">Ubicación</span>
                   <span className="font-medium">{location}</span>
                 </div>
@@ -316,7 +325,7 @@ export default function UserDetailPage() {
                   <div className="space-y-4">
                     {userData.recentActivity.slice(0, 4).map(activity => (
                       <div key={activity.id} className="flex items-start gap-3">
-                        <div className="rounded-full bg-muted p-1.5">
+                        <div className="bg-muted rounded-full p-1.5">
                           <Clock className="text-muted-foreground h-3 w-3" />
                         </div>
                         <div className="flex-1">
@@ -324,13 +333,17 @@ export default function UserDetailPage() {
                           {activity.target && (
                             <p className="text-muted-foreground text-xs">{activity.target}</p>
                           )}
-                          <p className="text-muted-foreground text-xs">{formatDate(activity.timestamp)}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatDate(activity.timestamp)}
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-sm">Sin actividad reciente registrada.</p>
+                  <p className="text-muted-foreground text-sm">
+                    Sin actividad reciente registrada.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -348,7 +361,7 @@ export default function UserDetailPage() {
                   {userData.recentActivity.map(activity => (
                     <div
                       key={activity.id}
-                      className="flex items-center justify-between rounded-lg bg-muted/50 p-4"
+                      className="bg-muted/50 flex items-center justify-between rounded-lg p-4"
                     >
                       <div className="flex items-center gap-4">
                         <Clock className="text-muted-foreground h-5 w-5" />
@@ -360,7 +373,9 @@ export default function UserDetailPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">{formatDate(activity.timestamp)}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {formatDate(activity.timestamp)}
+                        </p>
                         {activity.ipAddress && (
                           <p className="text-muted-foreground text-xs">IP: {activity.ipAddress}</p>
                         )}
@@ -386,21 +401,22 @@ export default function UserDetailPage() {
                   {userData.vehicles.map(vehicle => (
                     <div
                       key={vehicle.id}
-                      className="flex items-center justify-between rounded-lg bg-muted/50 p-4"
+                      className="bg-muted/50 flex items-center justify-between rounded-lg p-4"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="rounded-lg bg-muted p-3">
-                          <Car className="h-5 w-5 text-muted-foreground" />
+                        <div className="bg-muted rounded-lg p-3">
+                          <Car className="text-muted-foreground h-5 w-5" />
                         </div>
                         <div>
                           <p className="font-medium">{vehicle.title}</p>
                           <p className="text-muted-foreground text-sm">
-                            Estado: {vehicle.status} · Creado: {new Date(vehicle.createdAt).toLocaleDateString('es-DO')}
+                            Estado: {vehicle.status} · Creado:{' '}
+                            {new Date(vehicle.createdAt).toLocaleDateString('es-DO')}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-primary">
+                        <p className="text-primary font-bold">
                           RD$ {vehicle.price.toLocaleString()}
                         </p>
                       </div>
@@ -408,7 +424,9 @@ export default function UserDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">Este usuario no tiene vehículos publicados.</p>
+                <p className="text-muted-foreground text-sm">
+                  Este usuario no tiene vehículos publicados.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -420,33 +438,51 @@ export default function UserDetailPage() {
               <CardTitle>Seguridad de la Cuenta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+              <div className="bg-muted/50 flex items-center justify-between rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Shield className={`h-5 w-5 ${userData.emailVerified ? 'text-primary' : 'text-yellow-600'}`} />
+                  <Shield
+                    className={`h-5 w-5 ${userData.emailVerified ? 'text-primary' : 'text-yellow-600'}`}
+                  />
                   <div>
                     <p className="font-medium">Email Verificado</p>
                     <p className="text-muted-foreground text-sm">{userData.email}</p>
                   </div>
                 </div>
-                <Badge className={userData.emailVerified ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}>
+                <Badge
+                  className={
+                    userData.emailVerified
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }
+                >
                   {userData.emailVerified ? 'Verificado' : 'Pendiente'}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+              <div className="bg-muted/50 flex items-center justify-between rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Phone className={`h-5 w-5 ${userData.phone ? 'text-primary' : 'text-yellow-600'}`} />
+                  <Phone
+                    className={`h-5 w-5 ${userData.phone ? 'text-primary' : 'text-yellow-600'}`}
+                  />
                   <div>
                     <p className="font-medium">Teléfono</p>
-                    <p className="text-muted-foreground text-sm">{userData.phone || 'No registrado'}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {userData.phone || 'No registrado'}
+                    </p>
                   </div>
                 </div>
-                <Badge className={userData.phone ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}>
+                <Badge
+                  className={
+                    userData.phone ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'
+                  }
+                >
                   {userData.phone ? 'Registrado' : 'Pendiente'}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+              <div className="bg-muted/50 flex items-center justify-between rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Shield className={`h-5 w-5 ${userData.twoFactorEnabled ? 'text-primary' : 'text-yellow-600'}`} />
+                  <Shield
+                    className={`h-5 w-5 ${userData.twoFactorEnabled ? 'text-primary' : 'text-yellow-600'}`}
+                  />
                   <div>
                     <p className="font-medium">Autenticación 2FA</p>
                     <p className="text-muted-foreground text-sm">
@@ -454,7 +490,13 @@ export default function UserDetailPage() {
                     </p>
                   </div>
                 </div>
-                <Badge className={userData.twoFactorEnabled ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}>
+                <Badge
+                  className={
+                    userData.twoFactorEnabled
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }
+                >
                   {userData.twoFactorEnabled ? 'Activo' : 'Pendiente'}
                 </Badge>
               </div>

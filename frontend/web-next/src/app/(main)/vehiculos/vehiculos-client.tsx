@@ -587,9 +587,7 @@ export default function VehiculosClient() {
         // On AI error, fall back to plain text search so the user still gets results
         setSearchInput(query.trim());
         setFilters({ query: query.trim(), page: 1 } as Parameters<typeof setFilters>[0]);
-        toast.error(
-          'La búsqueda inteligente no está disponible. Mostrando resultados por texto.'
-        );
+        toast.error('La búsqueda inteligente no está disponible. Mostrando resultados por texto.');
       } finally {
         setIsAiSearching(false);
       }

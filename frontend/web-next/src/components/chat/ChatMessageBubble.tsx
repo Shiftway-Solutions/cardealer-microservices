@@ -77,7 +77,7 @@ export function ChatMessageBubble({
   if (!isFromBot) {
     return (
       <div className="flex items-start justify-end gap-2.5 px-4 py-1.5">
-        <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-sm text-white">
+        <div className="bg-primary max-w-[75%] rounded-2xl rounded-tr-md px-4 py-2.5 text-sm text-white">
           <p className="break-words whitespace-pre-wrap">{content}</p>
           <span className="mt-1 block text-right text-[10px] text-white/60">
             {formatTime(timestamp)}
@@ -95,7 +95,7 @@ export function ChatMessageBubble({
         {/* Text content */}
         <div className="rounded-2xl rounded-tl-md bg-gray-100 px-4 py-2.5 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
           <BotMessageContent content={content} />
-          <span className="mt-1 block text-right text-[10px] text-gray-400">
+          <span className="mt-1 block text-right text-[10px] text-gray-500 dark:text-gray-400">
             {formatTime(timestamp)}
           </span>
         </div>
@@ -119,7 +119,7 @@ export function ChatMessageBubble({
               <button
                 key={`${reply.text}-${idx}`}
                 onClick={() => onQuickReply(reply)}
-                className="rounded-full border border-primary bg-white px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white dark:bg-gray-900 dark:hover:bg-primary"
+                className="border-primary text-primary hover:bg-primary dark:hover:bg-primary rounded-full border bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:text-white dark:bg-gray-900"
               >
                 {reply.text}
               </button>
@@ -144,6 +144,7 @@ function BotAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | nul
           alt={name}
           width={32}
           height={32}
+          sizes="32px"
           className="h-full w-full object-cover"
         />
       </div>
@@ -151,7 +152,7 @@ function BotAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | nul
   }
 
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/90">
+    <div className="from-primary to-primary/90 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br">
       <Bot className="h-4 w-4 text-white" />
     </div>
   );
@@ -188,9 +189,9 @@ function VehicleCardInline({ card }: { card: VehicleCard }) {
         <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{card.subtitle}</p>
 
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-primary">{formatVehiclePrice(card.price)}</span>
+          <span className="text-primary text-lg font-bold">{formatVehiclePrice(card.price)}</span>
           {card.originalPrice && card.originalPrice > card.price && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-xs text-gray-500 line-through">
               {formatVehiclePrice(card.originalPrice)}
             </span>
           )}
@@ -216,7 +217,7 @@ function VehicleCardInline({ card }: { card: VehicleCard }) {
             href={card.detailsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 mt-2.5 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-white transition-colors"
           >
             Ver detalles
             <ExternalLink className="h-3 w-3" />

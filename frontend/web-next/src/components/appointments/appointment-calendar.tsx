@@ -252,13 +252,20 @@ export function AppointmentCalendar({
                 onClick={prevMonth}
                 disabled={!canGoPrev}
                 className="h-8 w-8 p-0"
+                aria-label="Mes anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-semibold">
                 {MONTHS_ES[currentMonth]} {currentYear}
               </span>
-              <Button variant="ghost" size="sm" onClick={nextMonth} className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={nextMonth}
+                className="h-8 w-8 p-0"
+                aria-label="Mes siguiente"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

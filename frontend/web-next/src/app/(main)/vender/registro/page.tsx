@@ -271,7 +271,8 @@ export default function SellerRegistrationPage() {
         setCurrentStep(1);
       } catch (loginErr) {
         // If auto-login fails, just notify user to verify email and log in manually
-        console.warn('Auto-login failed after registration', loginErr);
+        if (process.env.NODE_ENV === 'development')
+          console.warn('Auto-login failed after registration', loginErr);
         toast.success('¡Cuenta creada!', {
           description: 'Inicia sesión para continuar con tu perfil de vendedor.',
         });
@@ -351,7 +352,8 @@ export default function SellerRegistrationPage() {
 
           // Check for 401 Unauthorized (auth token issue)
           if (error?.response?.status === 401 || error?.status === 401) {
-            console.error('🔐 Auth token issue - status 401. User:', user.id);
+            if (process.env.NODE_ENV === 'development')
+              console.error('🔐 Auth token issue - status 401. User:', user.id);
             setGlobalError(
               'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión y intenta de nuevo.'
             );
@@ -361,7 +363,11 @@ export default function SellerRegistrationPage() {
 
           // Check for 404 (endpoint not found)
           if (error?.response?.status === 404 || error?.status === 404) {
-            console.error('🚫 Endpoint not found - status 404. URL:', error?.response?.config?.url);
+            if (process.env.NODE_ENV === 'development')
+              console.error(
+                '🚫 Endpoint not found - status 404. URL:',
+                error?.response?.config?.url
+              );
             setGlobalError(
               'El servicio de conversión no está disponible temporalmente. Por favor, intenta en unos momentos.'
             );
@@ -371,7 +377,8 @@ export default function SellerRegistrationPage() {
           // Generic error message
           const message =
             error?.message || error?.response?.data?.detail || 'Error al convertirse a vendedor.';
-          console.error('❌ Profile submit error:', { error, userID: user.id });
+          if (process.env.NODE_ENV === 'development')
+            console.error('❌ Profile submit error:', { error, userID: user.id });
           setGlobalError(message);
           submissionFailed = true;
         }
@@ -424,7 +431,8 @@ export default function SellerRegistrationPage() {
       }
     } catch (err) {
       const error = err as { message?: string; status?: number };
-      console.error('❌ handleProfileSubmit caught error:', error);
+      if (process.env.NODE_ENV === 'development')
+        console.error('❌ handleProfileSubmit caught error:', error);
       setGlobalError(error.message || 'Error al crear el perfil de vendedor.');
       submissionFailed = true;
     } finally {
@@ -452,7 +460,7 @@ export default function SellerRegistrationPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="text-primary mx-auto h-8 w-8 animate-spin" />
           <p className="mt-4 text-gray-500">Cargando...</p>
         </div>
       </div>
@@ -464,7 +472,7 @@ export default function SellerRegistrationPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="text-primary mx-auto h-8 w-8 animate-spin" />
           <p className="mt-4 text-gray-500">Redirigiendo...</p>
         </div>
       </div>

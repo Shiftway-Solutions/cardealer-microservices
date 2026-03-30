@@ -35,7 +35,7 @@ export const kycKeys = {
 /**
  * Hook to get current user's KYC profile
  */
-export function useKYCProfile() {
+export function useKYCProfile(options?: { enabled?: boolean }) {
   const { user, isAuthenticated } = useAuth();
 
   return useQuery({
@@ -49,7 +49,7 @@ export function useKYCProfile() {
         return null;
       }
     },
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?.id && (options?.enabled ?? true),
     staleTime: 1 * 60 * 1000, // 1 minute - faster refresh for status changes
     retry: false,
   });
@@ -65,13 +65,24 @@ export function useKYCProfile() {
  */
 export function useCanSell() {
   const { user } = useAuth();
-  const { data: profile, isLoading: isKycLoading, isError } = useKYCProfile();
   const { config: kycConfig, isLoading: isConfigLoading } = useKycConfig();
 
-  const isLoading = isKycLoading || isConfigLoading;
+  const devBypass = process.env.NODE_ENV === 'development';
+  const bypassFromConfig = isKycBypassedForAccountType(kycConfig, user?.accountType);
+  const shouldFetchProfile = !devBypass && !isConfigLoading && !bypassFromConfig;
+  const {
+    data: profile,
+    isLoading: isKycLoading,
+    isError,
+  } = useKYCProfile({
+    enabled: shouldFetchProfile,
+  });
+
+  const isLoading = isConfigLoading || (shouldFetchProfile && isKycLoading);
 
   // Check if KYC is bypassed for this user's account type
-  const isBypassed = isKycBypassedForAccountType(kycConfig, user?.accountType);
+  // In development, bypass KYC when ConfigurationService is unavailable
+  const isBypassed = devBypass || bypassFromConfig;
 
   const canSell = isBypassed || (profile ? isVerifiedForSelling(profile) : false);
   const isPending =

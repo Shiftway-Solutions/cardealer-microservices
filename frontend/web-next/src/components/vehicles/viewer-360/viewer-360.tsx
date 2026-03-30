@@ -309,6 +309,8 @@ export function Viewer360({
       {/* Canvas */}
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label="Vista 360° del vehículo — arrastra para rotar"
         className={`h-full w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handlePointerDown}
         onMouseMove={handlePointerMove}

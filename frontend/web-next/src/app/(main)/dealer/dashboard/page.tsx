@@ -72,7 +72,7 @@ export default function DealerDashboardPage() {
 
 function DealerDashboardContent() {
   const { dealer, stats, isLoading: dealerLoading } = useDealerDashboard();
-  const { data: leads, isLoading: leadsLoading } = useRecentLeads(5);
+  const { data: leads, isLoading: leadsLoading } = useRecentLeads(5, !!dealer);
   const { data: appointments, isLoading: appointmentsLoading } = useUpcomingAppointments(
     dealer?.id ?? '',
     4
@@ -85,6 +85,61 @@ function DealerDashboardContent() {
   const maxListings = dealer?.maxActiveListings ?? 3;
   const activeListings = dealer?.currentActiveListings ?? 0;
   const isAtListingLimit = maxListings !== -1 && activeListings >= maxListings;
+
+  if (!dealerLoading && !dealer) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-foreground text-2xl font-bold">Portal Dealer</h1>
+            <p className="text-muted-foreground">Activa tu perfil para desbloquear el portal</p>
+          </div>
+        </div>
+
+        <Card className="border-amber-200 bg-amber-50/70">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <h2 className="text-foreground text-xl font-semibold">
+                      Completa tu perfil de dealer
+                    </h2>
+                    <p className="text-muted-foreground max-w-2xl text-sm leading-6">
+                      Tu cuenta ya tiene acceso al portal, pero todavia no existe un perfil de
+                      concesionario activo. Completa el registro para habilitar inventario,
+                      configuracion publica, leads, citas y facturacion.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-amber-800">
+                    <Badge variant="secondary">Inventario</Badge>
+                    <Badge variant="secondary">Leads</Badge>
+                    <Badge variant="secondary">Citas</Badge>
+                    <Badge variant="secondary">Perfil publico</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button asChild>
+                  <Link href="/dealer/registro">
+                    Completar registro
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/cuenta/perfil">Revisar mi cuenta</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

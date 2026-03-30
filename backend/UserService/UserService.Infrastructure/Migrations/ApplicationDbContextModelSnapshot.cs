@@ -223,6 +223,9 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<DateTime?>("ModeratedListingsUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("NotificationSettingsJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<bool>("OffersWarranty")
                         .HasColumnType("boolean");
 
@@ -231,8 +234,7 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PrimaryColor")
                         .HasMaxLength(10)
@@ -247,6 +249,9 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<DateTime?>("RncVerifiedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SecuritySettingsJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<string>("Slug")
                         .HasColumnType("text");
@@ -1819,8 +1824,7 @@ namespace UserService.Infrastructure.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PlatformPermissions")
                         .HasColumnType("text");

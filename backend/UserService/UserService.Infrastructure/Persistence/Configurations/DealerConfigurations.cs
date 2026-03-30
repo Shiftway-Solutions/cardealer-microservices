@@ -36,7 +36,7 @@ public class DealerConfiguration : IEntityTypeConfiguration<Dealer>
 
         builder.Property(d => d.Phone)
             .IsRequired()
-            .HasMaxLength(30);
+            .HasColumnType("text");
 
         builder.Property(d => d.WhatsApp)
             .HasMaxLength(30);
@@ -107,6 +107,12 @@ public class DealerConfiguration : IEntityTypeConfiguration<Dealer>
             .HasColumnType("jsonb"); // PostgreSQL JSON
 
         builder.Property(d => d.SocialMediaLinks)
+            .HasColumnType("jsonb");
+
+        builder.Property(d => d.NotificationSettingsJson)
+            .HasColumnType("jsonb");
+
+        builder.Property(d => d.SecuritySettingsJson)
             .HasColumnType("jsonb");
 
         // Índices

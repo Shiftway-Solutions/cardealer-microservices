@@ -9,9 +9,9 @@ using AdminService.Application.UseCases.Dealers;
 namespace AdminService.Infrastructure.External;
 
 /// <summary>
-/// Client for managing dealers via DealerManagementService.
-/// This is the authoritative source of dealer data (own DB, rich domain model).
-/// Returns empty results when DealerManagementService is unavailable.
+/// Client for managing dealers via UserService.
+/// UserService is the authoritative source of dealer data.
+/// Returns empty results when UserService is unavailable.
 /// </summary>
 public class DealerService : IDealerService
 {
@@ -45,25 +45,32 @@ public class DealerService : IDealerService
             queryParams["page"] = page.ToString();
             queryParams["pageSize"] = pageSize.ToString();
             if (!string.IsNullOrEmpty(search)) queryParams["searchTerm"] = search;
-            if (!string.IsNullOrEmpty(status)) queryParams["status"] = status;
             if (verified.HasValue)
             {
                 queryParams["verificationStatus"] = verified.Value ? "Verified" : "Pending";
             }
 
-            var url = $"api/dealers?{queryParams}";
-            _logger.LogInformation("Fetching dealers from DealerManagementService: {Url}", url);
+            // UserService admin endpoint: GET /api/admin/dealers
+            var url = $"api/admin/dealers?{queryParams}";
+            _logger.LogInformation("Fetching dealers from UserService: {Url}", url);
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<DealerMgmtListResponse>(JsonOptions, cancellationToken);
+                var result = await response.Content.ReadFromJsonAsync<UserServiceDealerListResponse>(JsonOptions, cancellationToken);
                 if (result?.Dealers != null)
                 {
-                    var dealers = result.Dealers.Select(MapToDealerDto).ToList();
+                    var dealers = result.Dealers.Select(MapUserServiceDealerToAdmin).ToList();
 
-                    // Apply plan filter client-side (DealerManagementService GET list doesn't filter by plan)
+                    // Apply status filter client-side (map admin status to UserService status)
+                    if (!string.IsNullOrEmpty(status))
+                    {
+                        dealers = dealers.Where(d =>
+                            string.Equals(d.Status, status, StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+
+                    // Apply plan filter client-side
                     if (!string.IsNullOrEmpty(plan))
                     {
                         dealers = dealers.Where(d =>
@@ -81,14 +88,14 @@ public class DealerService : IDealerService
             }
             else
             {
-                _logger.LogWarning("DealerManagementService returned {StatusCode} for dealer list", response.StatusCode);
+                _logger.LogWarning("UserService returned {StatusCode} for dealer list", response.StatusCode);
             }
 
             return new PaginatedDealerResult { Items = new(), Total = 0, Page = page, PageSize = pageSize };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching dealers from DealerManagementService");
+            _logger.LogError(ex, "Error fetching dealers from UserService");
             return new PaginatedDealerResult { Items = new(), Total = 0, Page = page, PageSize = pageSize };
         }
     }
@@ -97,53 +104,12 @@ public class DealerService : IDealerService
     {
         try
         {
-            // DealerManagementService exposes GET /api/dealers/statistics
-            var url = "api/dealers/statistics";
-            _logger.LogInformation("Fetching dealer stats from DealerManagementService: {Url}", url);
-
-            var response = await _httpClient.GetAsync(url, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var stats = await response.Content.ReadFromJsonAsync<DealerMgmtStatsResponse>(JsonOptions, cancellationToken);
-                if (stats != null)
-                {
-                    // Map DealerManagementService plan counts to v2 tier names using PlanConfiguration
-                    var libre = 0; // Free tier not tracked in stats.ByPlan
-                    var visible = stats.ByPlan?.Starter ?? 0; // v1 Starter → v2 Visible
-                    var pro = stats.ByPlan?.Pro ?? 0;
-                    var elite = stats.ByPlan?.Enterprise ?? 0;
-
-                    return new DealerStatsDto
-                    {
-                        Total = stats.TotalDealers,
-                        Active = stats.ActiveDealers,
-                        Pending = stats.PendingVerification,
-                        Suspended = Math.Max(0, stats.TotalDealers - stats.ActiveDealers - stats.PendingVerification),
-                        TotalMrr = elite * CarDealer.Contracts.Enums.PlanConfiguration.PriceElite
-                                 + pro * CarDealer.Contracts.Enums.PlanConfiguration.PricePro
-                                 + visible * CarDealer.Contracts.Enums.PlanConfiguration.PriceVisible,
-                        ByPlan = new DealerPlanBreakdown
-                        {
-                            Libre = libre,
-                            Visible = visible,
-                            Pro = pro,
-                            Elite = elite
-                        }
-                    };
-                }
-            }
-            else
-            {
-                _logger.LogWarning("DealerManagementService stats returned {StatusCode}", response.StatusCode);
-            }
-
-            // If stats endpoint returns minimal data, fetch all dealers and compute
+            // UserService has no dedicated statistics endpoint; compute from dealer list
             return await ComputeStatsFromListAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching dealer stats from DealerManagementService");
+            _logger.LogError(ex, "Error computing dealer stats");
             return new DealerStatsDto();
         }
     }
@@ -152,22 +118,22 @@ public class DealerService : IDealerService
     {
         try
         {
-            var url = $"api/dealers/{dealerId}";
-            _logger.LogInformation("Fetching dealer {DealerId} from DealerManagementService", dealerId);
+            var url = $"api/admin/dealers/{dealerId}";
+            _logger.LogInformation("Fetching dealer {DealerId} from UserService", dealerId);
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
-                var dealer = await response.Content.ReadFromJsonAsync<DealerMgmtDto>(JsonOptions, cancellationToken);
+                var dealer = await response.Content.ReadFromJsonAsync<UserServiceDealerDto>(JsonOptions, cancellationToken);
                 if (dealer != null)
                 {
-                    return MapToDealerDto(dealer);
+                    return MapUserServiceDealerToAdmin(dealer);
                 }
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogDebug("Dealer {DealerId} not found in DealerManagementService", dealerId);
+                _logger.LogDebug("Dealer {DealerId} not found in UserService", dealerId);
                 return null;
             }
 
@@ -184,11 +150,11 @@ public class DealerService : IDealerService
     {
         try
         {
-            // DealerManagementService: POST /api/dealers/{id}/verify with body { approved, rejectionReason }
-            var url = $"api/dealers/{dealerId}/verify";
-            _logger.LogInformation("Verifying dealer {DealerId} via DealerManagementService", dealerId);
+            // UserService: POST /api/admin/dealers/{id}/approve
+            var url = $"api/admin/dealers/{dealerId}/approve";
+            _logger.LogInformation("Verifying dealer {DealerId} via UserService", dealerId);
 
-            var payload = new { DealerId = dealerId, Approved = true, RejectionReason = (string?)null };
+            var payload = new { Notes = "Approved by admin via AdminService" };
             var response = await _httpClient.PostAsJsonAsync(url, payload, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -206,11 +172,11 @@ public class DealerService : IDealerService
     {
         try
         {
-            // Use update endpoint to set status to Suspended
+            // UserService: PUT /api/dealers/{id} with IsActive=false
             var url = $"api/dealers/{dealerId}";
             _logger.LogInformation("Suspending dealer {DealerId}: {Reason}", dealerId, reason);
 
-            var payload = new { Status = "Suspended", Description = $"Suspended by admin: {reason}" };
+            var payload = new { IsActive = false };
             var response = await _httpClient.PutAsJsonAsync(url, payload, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -231,7 +197,7 @@ public class DealerService : IDealerService
             var url = $"api/dealers/{dealerId}";
             _logger.LogInformation("Reactivating dealer {DealerId}", dealerId);
 
-            var payload = new { Status = "Active", Description = "Reactivated by admin" };
+            var payload = new { IsActive = true };
             var response = await _httpClient.PutAsJsonAsync(url, payload, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -275,37 +241,25 @@ public class DealerService : IDealerService
         try
         {
             // Check if dealer profile already exists for this user
-            var checkUrl = $"api/dealers/user/{userId}";
+            var checkUrl = $"api/dealers/owner/{userId}";
             var checkResponse = await _httpClient.GetAsync(checkUrl, cancellationToken);
             if (checkResponse.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Dealer profile already exists for user {UserId}", userId);
-                var existingDto = await checkResponse.Content.ReadFromJsonAsync<DealerMgmtDto>(JsonOptions, cancellationToken);
-                return existingDto != null ? MapToDealerDto(existingDto) : null;
+                var existingDto = await checkResponse.Content.ReadFromJsonAsync<UserServiceDealerDto>(JsonOptions, cancellationToken);
+                return existingDto != null ? MapUserServiceDealerToAdmin(existingDto) : null;
             }
-
-            // Generate a temporary RNC using the user ID prefix
-            var tempRnc = $"TEMP-{userId.ToString().Substring(0, 8).ToUpper()}";
 
             var payload = new
             {
-                UserId = userId,
+                OwnerUserId = userId,
                 BusinessName = businessName,
-                RNC = tempRnc,
-                LegalName = businessName,
-                TradeName = (string?)null,
-                Type = "Independent",
                 Email = email,
                 Phone = phone,
-                MobilePhone = phone,
-                Website = (string?)null,
                 Address = "Pendiente de completar",
                 City = "Pendiente",
-                Province = "Pendiente",
-                ZipCode = (string?)null,
-                Description = (string?)null,
-                EstablishedDate = (DateTime?)null,
-                EmployeeCount = (int?)null
+                State = "Pendiente",
+                DealerType = 0 // Independent
             };
 
             var url = "api/dealers";
@@ -316,12 +270,12 @@ public class DealerService : IDealerService
 
             if (response.IsSuccessStatusCode)
             {
-                var created = await response.Content.ReadFromJsonAsync<DealerMgmtDto>(JsonOptions, cancellationToken);
+                var created = await response.Content.ReadFromJsonAsync<UserServiceDealerDto>(JsonOptions, cancellationToken);
                 if (created != null)
                 {
                     _logger.LogInformation(
                         "Created dealer profile {DealerId} for user {UserId}", created.Id, userId);
-                    return MapToDealerDto(created);
+                    return MapUserServiceDealerToAdmin(created);
                 }
             }
             else
@@ -378,31 +332,21 @@ public class DealerService : IDealerService
     }
 
     // =========================================================================
-    // MAPPING: DealerManagementService DealerDto → AdminDealerDto
+    // MAPPING: UserService DealerDto → AdminDealerDto
     // =========================================================================
 
-    private static AdminDealerDto MapToDealerDto(DealerMgmtDto dealer)
+    private static AdminDealerDto MapUserServiceDealerToAdmin(UserServiceDealerDto dealer)
     {
-        // Use PlanConfiguration to map any internal name to v2 frontend key
-        var plan = CarDealer.Contracts.Enums.PlanConfiguration.GetFrontendKey(dealer.CurrentPlan);
+        // Derive status from IsActive + VerificationStatus
+        var status = dealer.IsActive
+            ? (dealer.VerificationStatus == "Verified" ? "active" : "pending")
+            : (dealer.VerificationStatus == "Rejected" ? "rejected" : "suspended");
 
-        // Map DealerManagementService status → frontend-compatible status
-        var status = (dealer.Status ?? "Pending").ToLowerInvariant() switch
-        {
-            "active" => "active",
-            "suspended" or "deactivated" => "suspended",
-            "rejected" => "rejected",
-            _ => "pending"
-        };
+        var verified = string.Equals(dealer.VerificationStatus, "Verified", StringComparison.OrdinalIgnoreCase);
 
-        var verified = (dealer.VerificationStatus ?? "Pending").ToLowerInvariant() switch
-        {
-            "verified" or "approved" => true,
-            _ => false
-        };
-
-        // Use v2 prices from PlanConfiguration (instead of hardcoded old v1 prices)
-        var mrr = CarDealer.Contracts.Enums.PlanConfiguration.GetMonthlyPrice(dealer.CurrentPlan);
+        // Default to "libre" plan (UserService doesn't track subscription plan directly)
+        var plan = "libre";
+        var mrr = 0m;
 
         return new AdminDealerDto
         {
@@ -413,104 +357,69 @@ public class DealerService : IDealerService
             Status = status,
             Verified = verified,
             Plan = plan,
-            VehiclesCount = dealer.CurrentActiveListings,
-            SalesCount = 0, // TODO: Get from analytics
-            Rating = 0, // TODO: Get from ReviewService
-            ReviewsCount = 0, // TODO: Get from ReviewService
-            Location = !string.IsNullOrEmpty(dealer.City) ? $"{dealer.City}, {dealer.Province}" : "N/A",
+            VehiclesCount = dealer.ActiveListings,
+            SalesCount = dealer.TotalSales,
+            Rating = (double)dealer.AverageRating,
+            ReviewsCount = dealer.TotalReviews,
+            Location = !string.IsNullOrEmpty(dealer.City) ? $"{dealer.City}, {dealer.State}" : "N/A",
             CreatedAt = dealer.CreatedAt.ToString("O"),
             Mrr = mrr,
-            DocumentsCount = dealer.Documents?.Count ?? 0,
-            PendingDocuments = dealer.Documents?
-                .Count(d => string.Equals(d.VerificationStatus, "Pending", StringComparison.OrdinalIgnoreCase)) ?? 0
+            DocumentsCount = 0,
+            PendingDocuments = 0
         };
     }
 
 }
 
 // =========================================================================
-// DTOs FOR DEALERMANAGEMENTSERVICE RESPONSES
+// DTOs FOR USERSERVICE RESPONSES
 // =========================================================================
 
-internal class DealerMgmtListResponse
+/// <summary>
+/// Matches UserService AdminDealersController paginated response.
+/// </summary>
+internal class UserServiceDealerListResponse
 {
-    public List<DealerMgmtDto> Dealers { get; set; } = new();
+    public List<UserServiceDealerDto> Dealers { get; set; } = new();
     public int TotalCount { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
-    public int TotalPages { get; set; }
 }
 
-internal class DealerMgmtDto
+/// <summary>
+/// Matches UserService DealerDto field names (camelCase JSON).
+/// </summary>
+internal class UserServiceDealerDto
 {
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     public string BusinessName { get; set; } = string.Empty;
-    public string? RNC { get; set; }
-    public string? LegalName { get; set; }
     public string? TradeName { get; set; }
-    public string? Type { get; set; }
-    public string? Status { get; set; }
-    public string? VerificationStatus { get; set; }
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
-    public string? MobilePhone { get; set; }
+    public string? Slug { get; set; }
+    public string? Description { get; set; }
+    public string? DealerType { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string? WhatsApp { get; set; }
     public string? Website { get; set; }
-    public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? Province { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
     public string? ZipCode { get; set; }
     public string? Country { get; set; }
-    public string? Description { get; set; }
     public string? LogoUrl { get; set; }
     public string? BannerUrl { get; set; }
-    public DateTime? EstablishedDate { get; set; }
-    public int? EmployeeCount { get; set; }
-    public string? CurrentPlan { get; set; }
-    public DateTime? SubscriptionStartDate { get; set; }
-    public DateTime? SubscriptionEndDate { get; set; }
-    public bool IsSubscriptionActive { get; set; }
-    public int MaxActiveListings { get; set; }
-    public int CurrentActiveListings { get; set; }
-    public int RemainingListings { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? VerifiedAt { get; set; }
-    public List<DealerMgmtDocumentDto>? Documents { get; set; }
-    public List<DealerMgmtLocationDto>? Locations { get; set; }
-}
-
-internal class DealerMgmtDocumentDto
-{
-    public Guid Id { get; set; }
-    public string Type { get; set; } = string.Empty;
-    public string FileName { get; set; } = string.Empty;
+    public string? BusinessRegistrationNumber { get; set; }
     public string? VerificationStatus { get; set; }
     public DateTime? VerifiedAt { get; set; }
     public string? RejectionReason { get; set; }
-}
-
-internal class DealerMgmtLocationDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? City { get; set; }
-    public string? Province { get; set; }
-    public bool IsPrimary { get; set; }
+    public int ActiveListings { get; set; }
+    public int MaxListings { get; set; }
+    public int TotalListings { get; set; }
+    public int TotalSales { get; set; }
+    public decimal AverageRating { get; set; }
+    public int TotalReviews { get; set; }
     public bool IsActive { get; set; }
-}
-
-internal class DealerMgmtStatsResponse
-{
-    public int TotalDealers { get; set; }
-    public int ActiveDealers { get; set; }
-    public int PendingVerification { get; set; }
-    public DealerMgmtPlanBreakdown? ByPlan { get; set; }
-}
-
-internal class DealerMgmtPlanBreakdown
-{
-    public int Starter { get; set; }
-    public int Pro { get; set; }
-    public int Enterprise { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

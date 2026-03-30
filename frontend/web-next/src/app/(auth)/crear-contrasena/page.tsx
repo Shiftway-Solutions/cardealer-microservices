@@ -83,7 +83,7 @@ export default function SetPasswordPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">¡Contraseña establecida!</h1>
+          <h1 className="text-foreground text-2xl font-bold">¡Contraseña establecida!</h1>
           <p className="text-muted-foreground">
             Ahora puedes iniciar sesión con tu email y contraseña además de con tu cuenta social.
           </p>
@@ -101,7 +101,7 @@ export default function SetPasswordPage() {
       {/* Back link */}
       <Link
         href="/cuenta/seguridad"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver a configuración
@@ -109,7 +109,7 @@ export default function SetPasswordPage() {
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-foreground">Crear contraseña</h1>
+        <h1 className="text-foreground text-2xl font-bold">Crear contraseña</h1>
         <p className="text-muted-foreground">
           Establece una contraseña para acceder a tu cuenta con email además de tu cuenta social.
         </p>
@@ -128,7 +128,7 @@ export default function SetPasswordPage() {
         <div className="space-y-2">
           <Label htmlFor="password">Nueva contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -144,8 +144,9 @@ export default function SetPasswordPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -178,7 +179,7 @@ export default function SetPasswordPage() {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
@@ -197,8 +198,9 @@ export default function SetPasswordPage() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>

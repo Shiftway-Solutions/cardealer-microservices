@@ -6,12 +6,12 @@
     4,
     5,
     6,
-    7,
-    8
+    7
   ],
-  "sprint_actual": 9,
-  "inicio": "2026-03-25T00:57:02.850230",
+  "sprint_actual": 8,
+  "inicio": "2026-03-28T00:00:00.000000",
   "phase": "fix",
-  "fix_attempt": 2,
-  "use_local": true
+  "fix_attempt": 1,
+  "use_local": true,
+  "force_tunnel": true
 }

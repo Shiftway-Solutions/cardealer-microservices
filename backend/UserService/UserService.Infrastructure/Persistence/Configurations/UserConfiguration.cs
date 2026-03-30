@@ -29,7 +29,7 @@ namespace UserService.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100);
 
             builder.Property(u => u.PhoneNumber)
-                .HasMaxLength(20);
+                .HasColumnType("text");
 
             builder.Property(u => u.IsActive)
                 .IsRequired()

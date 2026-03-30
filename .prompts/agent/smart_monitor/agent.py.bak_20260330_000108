@@ -1,0 +1,633 @@
+#!/usr/bin/env python3
+"""
+agent.py — Entry Point del Smart Monitor con Gemma 3
+=====================================================
+Orquesta el ciclo completo: Observar → Pensar → Actuar → Aprender.
+
+Reutiliza los ejecutores de acción del monitor v7 (AppleScript, CDP, Playwright)
+y delega las decisiones a Gemma 3 local via Ollama.
+
+Uso:
+  python3 -m smart_monitor.agent                     # loop continuo
+  python3 -m smart_monitor.agent --once              # un ciclo
+  python3 -m smart_monitor.agent --status            # estado actual
+  python3 -m smart_monitor.agent --interval 30       # poll cada 30s
+  python3 -m smart_monitor.agent --debug             # verbose
+  python3 -m smart_monitor.agent --dry-run           # no ejecutar acciones
+"""
+
+import argparse
+import json
+import logging
+import os
+import signal
+import sys
+import time
+from datetime import datetime
+from dataclasses import asdict
+from pathlib import Path
+
+# ─── Path setup ───────────────────────────────────────────────────────────────
+REPO_ROOT = Path(__file__).parent.parent.parent.parent
+AGENT_DIR = Path(__file__).parent.parent
+
+# Add parent dirs so we can import the old monitor and the smart_monitor package
+sys.path.insert(0, str(AGENT_DIR))
+sys.path.insert(0, str(AGENT_DIR / "smart_monitor"))
+
+# ─── Smart monitor modules ────────────────────────────────────────────────────
+from smart_monitor.observer import Observer, Observation
+from smart_monitor.brain import Brain, Decision
+from smart_monitor.memory import Memory, seed_initial_lessons
+from smart_monitor.feedback import FeedbackLoop
+
+# ─── Action executors (reuse from the battle-tested v7 monitor) ───────────────
+import vscode_copilot_monitor as v7
+
+# ─── Constants ────────────────────────────────────────────────────────────────
+DEFAULT_INTERVAL  = 20   # poll every 20s
+STATE_FILE        = AGENT_DIR / "smart_monitor" / ".agent_state.json"
+PID_FILE          = AGENT_DIR / "smart_monitor" / ".agent_pid"
+LOG_FILE          = REPO_ROOT / ".github" / "smart-monitor.log"
+
+# Minimum seconds between sending the same action type (anti-spam)
+ACTION_COOLDOWNS = {
+    "send_continue":     60,
+    "open_new_chat":     90,
+    "stop_and_new_chat": 90,
+    "cycle_model":      120,
+    "focus_vscode":      30,
+}
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logger = logging.getLogger("smart_monitor")
+
+
+def setup_logging(debug: bool = False) -> None:
+    level = logging.DEBUG if debug else logging.INFO
+    fmt = "[%(asctime)s] [%(levelname)s] %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S"
+
+    # Console
+    handler_console = logging.StreamHandler(sys.stdout)
+    handler_console.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+
+    # File
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    handler_file = logging.FileHandler(str(LOG_FILE), encoding="utf-8")
+    handler_file.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+
+    root = logging.getLogger("smart_monitor")
+    root.setLevel(level)
+    root.addHandler(handler_console)
+    root.addHandler(handler_file)
+
+
+# ─── State persistence ────────────────────────────────────────────────────────
+def load_state() -> dict:
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def save_state(state: dict) -> None:
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+def default_state() -> dict:
+    now = time.time()
+    return {
+        "last_activity_ts":       now,
+        "last_action_ts":         0.0,
+        "last_action_type":       "",
+        "last_continue_ts":       0.0,
+        "last_new_chat_ts":       0.0,
+        "last_rate_limit_ts":     0.0,
+        "error_continue_count":   0,
+        "rate_limit_count":       0,
+        "new_chat_count":         0,
+        "continue_count":         0,
+        "log_path":               "",
+        "log_offset":             0,
+        "chat_hash":              "",
+        "chat_len":               0,
+        "last_snapshot_body_hash": "",
+        "last_snapshot_mtime":    0.0,
+        "post_action_ts":         0.0,
+        "post_action_type":       "",
+        "post_action_retry_count": 0,
+        "model_completion_seen_ts": 0.0,
+        # Smart monitor specific
+        "cycle_count":            0,
+        "gemma_decisions":        0,
+        "fallback_decisions":     0,
+        "override_decisions":     0,
+        "total_actions":          0,
+    }
+
+
+def refresh_live_chat_state(state: dict) -> None:
+    """Refresh chat_len and chat_snapshot.txt directly from the live CDP session."""
+    if not v7.is_cdp_available():
+        state["chat_len"] = 0
+        return
+
+    chat_text = v7.read_chat_via_cdp()
+    if not chat_text:
+        state["chat_len"] = 0
+        return
+
+    previous_hash = state.get("chat_hash", "")
+    _, has_changed = v7.classify_chat_text(chat_text, previous_hash)
+
+    state["chat_hash"] = v7._text_hash(chat_text)
+    state["chat_len"] = len(chat_text)
+
+    should_write_snapshot = has_changed
+    if not should_write_snapshot:
+        try:
+            should_write_snapshot = (
+                not v7.CHAT_SNAPSHOT_FILE.exists()
+                or v7.CHAT_SNAPSHOT_FILE.stat().st_size == 0
+            )
+        except Exception:
+            should_write_snapshot = True
+
+    if should_write_snapshot:
+        try:
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            v7.CHAT_SNAPSHOT_FILE.write_text(
+                f"# Chat Snapshot -- {ts}\n\n{chat_text}\n",
+                encoding="utf-8",
+            )
+        except Exception as exc:
+            logger.debug(f"Failed to refresh chat snapshot from CDP: {exc}")
+
+
+# ─── Action Executor ──────────────────────────────────────────────────────────
+
+class ActionExecutor:
+    """
+    Translates Brain decisions into real VS Code actions.
+    Reuses the proven executors from vscode_copilot_monitor.py (v7).
+    """
+
+    def __init__(self, state: dict, dry_run: bool = False):
+        self._state = state
+        self._dry_run = dry_run
+
+    def execute(self, decision: Decision) -> bool:
+        """
+        Execute a decision. Returns True if the action was performed.
+        Respects cooldowns to avoid spamming VS Code.
+        """
+        action = decision.action
+        now = time.time()
+
+        if action == "wait":
+            return True  # nothing to do
+
+        # Respect wait_before_action_secs from the brain
+        if decision.wait_before_action_secs > 0:
+            logger.info(
+                f"Brain requested {decision.wait_before_action_secs}s wait before {action}"
+            )
+            # Don't actually sleep — just skip this cycle and let the timer expire
+            if now - self._state.get("last_action_ts", 0) < decision.wait_before_action_secs:
+                logger.debug("Skipping action — wait timer not expired yet")
+                return False
+
+        # Cooldown check
+        cooldown = ACTION_COOLDOWNS.get(action, 30)
+        last_same = self._state.get(f"last_{action}_ts", 0.0)
+        elapsed = now - last_same
+        if elapsed < cooldown:
+            logger.info(
+                f"Action {action} on cooldown ({cooldown - elapsed:.0f}s remaining)"
+            )
+            return False
+
+        if self._dry_run:
+            logger.info(f"[DRY-RUN] Would execute: {action} ({decision.reasoning})")
+            return True
+
+        logger.info(
+            f"EXECUTING: {action} (confidence={decision.confidence:.0%}, "
+            f"source={decision.source}) — {decision.reasoning}"
+        )
+
+        ok = False
+        try:
+            if action == "send_continue":
+                ok = self._send_continue()
+            elif action == "open_new_chat":
+                ok = self._open_new_chat()
+            elif action == "stop_and_new_chat":
+                ok = self._stop_and_new_chat()
+            elif action == "cycle_model":
+                ok = self._cycle_model()
+            elif action == "focus_vscode":
+                ok = self._focus_vscode()
+            else:
+                logger.warning(f"Unknown action: {action}")
+                return False
+        except Exception as e:
+            logger.error(f"Action {action} failed: {e}")
+            return False
+
+        if ok:
+            self._state["last_action_ts"] = now
+            self._state["last_action_type"] = action
+            self._state[f"last_{action}_ts"] = now
+            self._state["total_actions"] = self._state.get("total_actions", 0) + 1
+
+            # Update v7-compatible counters
+            if action == "send_continue":
+                self._state["last_continue_ts"] = now
+                self._state["continue_count"] = self._state.get("continue_count", 0) + 1
+                self._state["error_continue_count"] = self._state.get("error_continue_count", 0) + 1
+            elif action in ("open_new_chat", "stop_and_new_chat"):
+                self._state["last_new_chat_ts"] = now
+                self._state["new_chat_count"] = self._state.get("new_chat_count", 0) + 1
+                self._state["error_continue_count"] = 0
+            elif action == "cycle_model":
+                self._state["last_rate_limit_ts"] = now
+                self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
+
+            # Set post-action verification
+            self._state["post_action_ts"] = now
+            self._state["post_action_type"] = action
+            self._state["post_action_retry_count"] = 0
+
+            v7.notify("OKLA Smart Monitor", f"{action}: {decision.reasoning[:60]}")
+
+        return ok
+
+    # ─── Individual action implementations ────────────────────────────────────
+
+    def _send_continue(self) -> bool:
+        return v7.vscode_send_continue()
+
+    def _open_new_chat(self) -> bool:
+        ok = v7.vscode_open_new_chat()
+        if ok:
+            time.sleep(1.0)
+            v7.send_loop_prompt()
+        return ok
+
+    def _stop_and_new_chat(self) -> bool:
+        return v7.open_new_chat_with_stop()
+
+    def _cycle_model(self) -> bool:
+        old = v7.get_current_model()
+        new = v7.cycle_model(self._state, direction=1)
+        logger.info(f"Model cycled: {old} → {new}")
+        # After cycling model, also send continue to resume
+        time.sleep(2.0)
+        v7.vscode_send_continue()
+        self._state["last_continue_ts"] = time.time()
+        self._state["continue_count"] = self._state.get("continue_count", 0) + 1
+        return True
+
+    def _focus_vscode(self) -> bool:
+        if v7.is_chat_input_focused():
+            return True
+
+        v7.vscode_focus()
+        try:
+            return v7._focus_chat_input()
+        except Exception:
+            return v7.is_vscode_focused()
+
+
+# ─── Post-Action Verification ────────────────────────────────────────────────
+
+def handle_post_action(state: dict, obs: Observation, feedback: FeedbackLoop) -> bool:
+    """
+    If a post-action verification is active, check if normalized.
+    Returns True if we should skip the normal decision cycle.
+    """
+    post_ts = state.get("post_action_ts", 0.0)
+    if post_ts == 0.0:
+        return False
+
+    action_type = state.get("post_action_type", "")
+    retry_count = state.get("post_action_retry_count", 0)
+    now = time.time()
+    elapsed = now - post_ts
+
+    # Check feedback loop for normalization
+    obs_dict = obs.to_dict()
+    outcome = feedback.check_outcome(obs_dict)
+
+    if outcome == "resolved":
+        logger.info(
+            f"POST-ACTION ({action_type}): normalized in {elapsed:.0f}s — back to monitoring"
+        )
+        state["post_action_ts"] = 0.0
+        state["post_action_type"] = ""
+        state["post_action_retry_count"] = 0
+        state["error_continue_count"] = 0
+        return False  # continue normal cycle
+
+    if elapsed < 120:
+        remaining = 120 - elapsed
+        logger.info(
+            f"POST-ACTION ({action_type}): waiting for normalization "
+            f"({elapsed:.0f}s / 120s, {remaining:.0f}s left)"
+        )
+        return True  # skip normal cycle, keep waiting
+
+    # Timeout — 2 minutes with no normalization
+    if retry_count == 0:
+        # First retry: resend same command
+        logger.warning(
+            f"POST-ACTION ({action_type}): no normalization after {elapsed:.0f}s — retrying"
+        )
+        feedback.force_close_tracking(outcome="no_effect", notes="Retrying same action")
+        state["post_action_ts"] = now
+        state["post_action_retry_count"] = 1
+        return False  # let the brain decide again (it will likely pick the same action)
+
+    # Retry also failed — escalate
+    logger.warning(
+        f"POST-ACTION ({action_type}): retry also failed — escalating to new chat"
+    )
+    feedback.force_close_tracking(outcome="escalated", notes="Escalated after retry timeout")
+    state["post_action_ts"] = 0.0
+    state["post_action_type"] = ""
+    state["post_action_retry_count"] = 0
+    # Don't return True — let brain decide with fresh observation (likely open_new_chat)
+    return False
+
+
+# ─── Main Cycle ───────────────────────────────────────────────────────────────
+
+def run_cycle(
+    state: dict,
+    memory: Memory,
+    brain: Brain,
+    feedback: FeedbackLoop,
+    executor: ActionExecutor,
+    dry_run: bool = False,
+) -> dict:
+    """
+    Single observe → think → act → learn cycle.
+    """
+    now = time.time()
+    state["cycle_count"] = state.get("cycle_count", 0) + 1
+    previous_log_path = state.get("log_path", "")
+
+    # ═══ OBSERVE ═══
+    refresh_live_chat_state(state)
+    observer = Observer(state)
+    obs = observer.observe()
+
+    # Update state with observer's new offsets
+    offsets = observer.get_updated_offsets()
+    state.update(offsets)
+
+    # Update activity tracking from snapshot
+    if obs.snapshot_body_changed:
+        state["last_activity_ts"] = now
+        state["last_snapshot_body_hash"] = obs.snapshot_body_hash
+        state["error_continue_count"] = 0
+    elif obs.log_new_lines_count > 0 or (
+        offsets.get("log_path") and offsets.get("log_path") != previous_log_path
+    ):
+        state["last_activity_ts"] = now
+    if obs.snapshot_mtime > state.get("last_snapshot_mtime", 0.0):
+        state["last_snapshot_mtime"] = obs.snapshot_mtime
+
+    # ═══ POST-ACTION CHECK ═══
+    if handle_post_action(state, obs, feedback):
+        return state  # in verification mode — skip thinking/acting
+
+    # ═══ THINK ═══
+    recent = memory.get_recent_decisions(limit=5)
+    decision = brain.decide(obs, recent)
+
+    # Track decision source
+    if decision.source == "gemma3":
+        state["gemma_decisions"] = state.get("gemma_decisions", 0) + 1
+    elif decision.source == "fallback":
+        state["fallback_decisions"] = state.get("fallback_decisions", 0) + 1
+    elif decision.source == "override":
+        state["override_decisions"] = state.get("override_decisions", 0) + 1
+
+    # Log decision
+    if decision.action != "wait" or logger.isEnabledFor(logging.DEBUG):
+        logger.info(
+            f"Cycle #{state['cycle_count']} | Decision: {decision.action} "
+            f"(conf={decision.confidence:.0%}, src={decision.source}) "
+            f"— {decision.reasoning[:80]}"
+        )
+
+    # ═══ RECORD (before acting — so we have the episode_id for tracking) ═══
+    episode_id = memory.record_episode(obs.to_dict(), asdict(decision))
+
+    # ═══ ACT ═══
+    if decision.action != "wait":
+        executed = executor.execute(decision)
+        if executed:
+            feedback.start_tracking(episode_id, decision.action)
+        else:
+            # Action blocked by cooldown or error
+            memory.update_outcome(episode_id, "no_effect", 0, "Blocked by cooldown or execution error")
+    else:
+        # wait → immediately resolved
+        memory.update_outcome(episode_id, "resolved", 0, "wait — no action needed")
+
+    return state
+
+
+# ─── CLI Commands ─────────────────────────────────────────────────────────────
+
+def cmd_status(state: dict, memory: Memory) -> None:
+    now = time.time()
+    print("\n=== OKLA Smart Monitor — Gemma 3 Agent ===")
+    print(f"  Ciclos totales    : {state.get('cycle_count', 0)}")
+    print(f"  Decisiones Gemma  : {state.get('gemma_decisions', 0)}")
+    print(f"  Decisiones fallback: {state.get('fallback_decisions', 0)}")
+    print(f"  Decisiones override: {state.get('override_decisions', 0)}")
+    print(f"  Acciones totales  : {state.get('total_actions', 0)}")
+    print()
+
+    last_act = state.get("last_activity_ts", 0)
+    if last_act:
+        print(f"  Última actividad  : hace {now - last_act:.0f}s")
+    last_action = state.get("last_action_ts", 0)
+    if last_action:
+        print(f"  Última acción     : {state.get('last_action_type', '?')} hace {now - last_action:.0f}s")
+    print(f"  Rate limits       : {state.get('rate_limit_count', 0)}")
+    print(f"  Nuevos chats      : {state.get('new_chat_count', 0)}")
+    print(f"  Continues         : {state.get('continue_count', 0)}")
+    print()
+
+    # Memory stats
+    print(f"  Episodios en DB   : {memory.get_episode_count()}")
+    print(f"  Lecciones activas : {memory.get_lesson_count()}")
+    print()
+
+    # Recent decisions
+    recent = memory.get_recent_decisions(limit=5)
+    if recent:
+        print("  Últimas 5 decisiones:")
+        for d in recent:
+            print(f"    [{d.get('timestamp_human', '?')}] {d.get('action', '?')} "
+                  f"({d.get('source', '?')}) → {d.get('outcome', '?')}")
+    print()
+
+    # Lessons
+    lessons = memory.get_all_lessons()
+    if lessons:
+        print(f"  Lecciones ({len(lessons)}):")
+        for l in lessons[:5]:
+            conf = l.get("confidence", 0)
+            print(f"    [{conf:.0%}] {l.get('lesson', '')[:80]}")
+        if len(lessons) > 5:
+            print(f"    ... y {len(lessons) - 5} más")
+    print()
+
+    # Ollama connectivity
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://localhost:11434/api/tags", timeout=3) as resp:
+            data = json.loads(resp.read())
+            models = [m["name"] for m in data.get("models", [])]
+            gemma = [m for m in models if "gemma" in m.lower()]
+            print(f"  Ollama modelos    : {', '.join(gemma) if gemma else 'Gemma NO encontrado'}")
+            print(f"  Ollama total      : {len(models)} modelos")
+    except Exception as e:
+        print(f"  Ollama            : NO DISPONIBLE ({e})")
+    print()
+
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="OKLA Smart Monitor — Gemma 3 Agent",
+    )
+    parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL,
+                        help=f"Seconds between cycles (default: {DEFAULT_INTERVAL})")
+    parser.add_argument("--once", action="store_true",
+                        help="Run one cycle and exit")
+    parser.add_argument("--status", action="store_true",
+                        help="Show status and exit")
+    parser.add_argument("--debug", action="store_true",
+                        help="Verbose output")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Don't execute actions — only show decisions")
+    args = parser.parse_args()
+
+    setup_logging(debug=args.debug)
+
+    # Initialize components
+    memory = Memory()
+    seed_initial_lessons(memory)
+
+    state = load_state()
+    if not state:
+        state = default_state()
+        logger.info("First run — initializing state")
+        save_state(state)
+
+    if args.status:
+        cmd_status(state, memory)
+        memory.close()
+        return
+
+    brain = Brain(memory=memory)
+    feedback = FeedbackLoop(memory)
+    executor = ActionExecutor(state, dry_run=args.dry_run)
+
+    # Fresh start: reset timers
+    now = time.time()
+    state["last_activity_ts"] = now
+    state["post_action_ts"] = 0.0
+    state["post_action_type"] = ""
+    state["post_action_retry_count"] = 0
+    state["model_completion_seen_ts"] = 0.0
+
+    # Sync snapshot mtime
+    from smart_monitor.observer import CHAT_SNAPSHOT_FILE
+    try:
+        if CHAT_SNAPSHOT_FILE.exists():
+            state["last_snapshot_mtime"] = CHAT_SNAPSHOT_FILE.stat().st_mtime
+            content = CHAT_SNAPSHOT_FILE.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            import re, hashlib
+            body = [l for l in (lines[1:] if lines else []) if not re.match(r"^\s*\d+%\s*$", l)]
+            state["last_snapshot_body_hash"] = hashlib.md5("\n".join(body).encode()).hexdigest()
+    except Exception:
+        pass
+
+    save_state(state)
+
+    logger.info(
+        f"Smart Monitor started — interval={args.interval}s, "
+        f"dry_run={args.dry_run}, "
+        f"episodes={memory.get_episode_count()}, "
+        f"lessons={memory.get_lesson_count()}"
+    )
+
+    def one_cycle():
+        nonlocal state
+        state = run_cycle(state, memory, brain, feedback, executor, dry_run=args.dry_run)
+        save_state(state)
+
+    if args.once:
+        one_cycle()
+        memory.close()
+        return
+
+    # Singleton check
+    if PID_FILE.exists():
+        try:
+            existing_pid = int(PID_FILE.read_text().strip())
+            if existing_pid != os.getpid():
+                os.kill(existing_pid, 0)  # throws if process doesn't exist
+                logger.warning(f"Agent already running (PID {existing_pid}). Exiting.")
+                memory.close()
+                sys.exit(0)
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass  # stale PID
+
+    PID_FILE.write_text(str(os.getpid()))
+
+    # Graceful shutdown
+    def _shutdown(signum, frame):
+        logger.info("Shutting down (signal received)")
+        memory.close()
+        try:
+            PID_FILE.unlink()
+        except Exception:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
+
+    # Main loop
+    while True:
+        try:
+            one_cycle()
+        except KeyboardInterrupt:
+            logger.info("Stopped by user (Ctrl+C)")
+            break
+        except Exception as e:
+            logger.error(f"Unexpected error in cycle: {e}", exc_info=True)
+        time.sleep(args.interval)
+
+    memory.close()
+    try:
+        PID_FILE.unlink()
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    main()

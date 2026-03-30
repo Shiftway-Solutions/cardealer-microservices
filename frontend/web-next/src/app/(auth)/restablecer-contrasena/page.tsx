@@ -57,7 +57,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Enlace inválido</h1>
+          <h1 className="text-foreground text-2xl font-bold">Enlace inválido</h1>
           <p className="text-muted-foreground">
             El enlace de recuperación no es válido o ha expirado. Por favor solicita uno nuevo.
           </p>
@@ -110,7 +110,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">¡Contraseña actualizada!</h1>
+          <h1 className="text-foreground text-2xl font-bold">¡Contraseña actualizada!</h1>
           <p className="text-muted-foreground">
             Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva
             contraseña.
@@ -128,7 +128,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-foreground">Nueva contraseña</h1>
+        <h1 className="text-foreground text-2xl font-bold">Nueva contraseña</h1>
         <p className="text-muted-foreground">Crea una contraseña segura para tu cuenta.</p>
       </div>
 
@@ -145,7 +145,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className="space-y-2">
           <Label htmlFor="password">Nueva contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -161,8 +161,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -195,7 +196,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
           <div className="relative">
-            <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
@@ -214,8 +215,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+              className="text-muted-foreground hover:text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
               tabIndex={-1}
+              aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>

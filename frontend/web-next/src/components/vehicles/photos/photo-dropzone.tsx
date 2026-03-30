@@ -159,7 +159,8 @@ export function PhotoDropzone({
 
           {/* Tip */}
           <p className="mt-1 text-xs text-gray-400">
-            💡 Las publicaciones con {maxPhotos >= 8 ? '8+' : `${maxPhotos}`} fotos reciben 3 veces más contactos
+            💡 Las publicaciones con {maxPhotos >= 8 ? '8+' : `${maxPhotos}`} fotos reciben 3 veces
+            más contactos
           </p>
         </div>
       )}

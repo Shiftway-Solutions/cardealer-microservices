@@ -387,7 +387,7 @@ export default function AdminUsersPage() {
                     <td className="p-4">
                       <div className="flex justify-end gap-2">
                         <Link href={`/admin/usuarios/${user.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" aria-label="Ver usuario">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -397,6 +397,7 @@ export default function AdminUsersPage() {
                             size="sm"
                             onClick={() => handleVerify(user.id)}
                             disabled={verifyMutation.isPending}
+                            aria-label="Verificar usuario"
                           >
                             {verifyMutation.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -411,6 +412,7 @@ export default function AdminUsersPage() {
                             size="sm"
                             onClick={() => handleStatusChange(user.id, 'suspended')}
                             disabled={updateStatusMutation.isPending}
+                            aria-label="Suspender usuario"
                           >
                             <UserX className="h-4 w-4 text-amber-600" />
                           </Button>
@@ -421,13 +423,14 @@ export default function AdminUsersPage() {
                             size="sm"
                             onClick={() => handleStatusChange(user.id, 'active')}
                             disabled={updateStatusMutation.isPending}
+                            aria-label="Reactivar usuario"
                           >
                             <UserCheck className="text-primary h-4 w-4" />
                           </Button>
                         )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" aria-label="Eliminar usuario">
                               <Ban className="h-4 w-4 text-red-600" />
                             </Button>
                           </AlertDialogTrigger>

@@ -89,6 +89,36 @@ public class CreateDealerTests
     }
 
     [Fact]
+    public async Task Handle_WithValidRequest_SyncsOwnerDealerFields()
+    {
+        // Arrange
+        var request = CreateValidRequest();
+        var user = new User { Id = request.OwnerUserId, Email = "owner@test.com", AccountType = AccountType.Buyer };
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(request.OwnerUserId)).ReturnsAsync(user);
+        _dealerRepoMock.Setup(r => r.GetByOwnerIdAsync(request.OwnerUserId)).ReturnsAsync((Dealer?)null);
+        _dealerRepoMock.Setup(r => r.AddAsync(It.IsAny<Dealer>()))
+            .ReturnsAsync((Dealer dealer) => dealer);
+
+        var command = new CreateDealerCommand(request);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        _userRepoMock.Verify(r => r.UpdateAsync(It.Is<User>(u =>
+            u.Id == request.OwnerUserId &&
+            u.AccountType == AccountType.Dealer &&
+            u.DealerId == result.Id &&
+            u.DealerRole == DealerRole.Owner &&
+            u.BusinessName == request.BusinessName &&
+            u.BusinessPhone == request.Phone &&
+            u.BusinessAddress == request.Address &&
+            u.RNC == request.TaxId
+        )), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_WithValidRequest_PublishesDealerRegistrationRequestedEvent()
     {
         // Arrange

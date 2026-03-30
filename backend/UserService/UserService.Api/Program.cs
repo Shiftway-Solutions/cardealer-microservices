@@ -27,6 +27,7 @@ using Consul;
 using ServiceDiscovery.Application.Interfaces;
 using ServiceDiscovery.Infrastructure.Services;
 using UserService.Api.Middleware;
+using UserService.Api.Services;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
@@ -68,6 +69,7 @@ try
         {
             options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHealthChecks();
@@ -226,6 +228,7 @@ try
     builder.Services.AddScoped<ICommunicationPreferenceRepository, UserService.Infrastructure.Persistence.CommunicationPreferenceRepository>();
     builder.Services.AddScoped<IConsentRecordRepository, UserService.Infrastructure.Persistence.ConsentRecordRepository>();
     builder.Services.AddScoped<IErrorReporter, UserService.Infrastructure.Services.ErrorReporter>();
+    builder.Services.AddScoped<DemoDealerBootstrapper>();
 
     // Application Services - External clients
     builder.Services.AddHttpClient<UserService.Application.Interfaces.IRoleServiceClient, UserService.Infrastructure.External.RoleServiceClient>(client =>
@@ -506,6 +509,8 @@ try
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
             context.Database.Migrate();
+            var demoDealerBootstrapper = services.GetRequiredService<DemoDealerBootstrapper>();
+            await demoDealerBootstrapper.BootstrapAsync();
             Log.Information("Database migrations applied successfully.");
         }
         catch (Exception ex)

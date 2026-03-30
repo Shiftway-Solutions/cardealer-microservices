@@ -270,7 +270,7 @@ export function FinancingCalculator() {
                 onChange={e => setInterestRate(e.target.value)}
               />
               <p className="text-muted-foreground text-xs">
-                Promedio del mercado DR: 10-14% anual (fuente: SIB 2025)
+                Promedio del mercado DR: 10-14% anual (fuente: SIB 2026)
               </p>
             </div>
 
@@ -306,7 +306,7 @@ export function FinancingCalculator() {
             {result ? (
               <>
                 {/* Cuota mensual */}
-                <div className="rounded-xl bg-gradient-to-br from-primary to-primary/80 p-6 text-center text-white">
+                <div className="from-primary to-primary/80 rounded-xl bg-gradient-to-br p-6 text-center text-white">
                   <p className="mb-1 text-sm text-white/80">Tu cuota mensual</p>
                   <p className="text-4xl font-bold">{formatRD(result.monthlyPayment)}</p>
                   <p className="mt-1 text-sm text-white/70">por {months} meses</p>

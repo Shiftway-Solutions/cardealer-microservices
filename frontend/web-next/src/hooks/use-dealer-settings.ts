@@ -137,10 +137,11 @@ export function useChangePassword(dealerId: string) {
 /**
  * Get the authenticated dealer's payment gateway enable/disable preferences.
  */
-export function usePaymentGatewaySettings() {
+export function usePaymentGatewaySettings(enabled: boolean = true) {
   return useQuery({
     queryKey: dealerSettingsKeys.paymentGateways(),
     queryFn: getPaymentGatewaySettings,
+    enabled,
     staleTime: 5 * 60 * 1000,
   });
 }

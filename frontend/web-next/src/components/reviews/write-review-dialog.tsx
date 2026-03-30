@@ -121,6 +121,7 @@ export function WriteReviewDialog({
             size="sm"
             className="h-8 w-8 p-0"
             onClick={() => onOpenChange(false)}
+            aria-label="Cerrar diálogo"
           >
             <X className="h-4 w-4" />
           </Button>

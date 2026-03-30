@@ -3,7 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+
+const ALLOWED_PROVIDERS = ['google', 'facebook', 'apple'] as const;
+type OAuthProvider = (typeof ALLOWED_PROVIDERS)[number];
 
 /**
  * Security (CWE-601): Validates that a redirect URL is a safe relative path.
@@ -27,9 +31,12 @@ export default function OAuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const provider = params.provider as string;
-  const [error, setError] = useState<string | null>(null);
-  const [_isProcessing, setIsProcessing] = useState(true);
+  const rawProvider = params.provider as string;
+  const provider = ALLOWED_PROVIDERS.includes(rawProvider as OAuthProvider) ? rawProvider : null;
+  const [error, setError] = useState<string | null>(
+    provider ? null : `Proveedor de autenticación no válido: ${rawProvider}`
+  );
+  const [_isProcessing, setIsProcessing] = useState(provider !== null);
   const { refreshUser } = useAuth();
 
   // Prevent duplicate calls (React StrictMode causes useEffect to run twice)
@@ -62,8 +69,8 @@ export default function OAuthCallbackPage() {
 
       try {
         // Send the authorization code to our backend to exchange for tokens
-        // BFF pattern: empty NEXT_PUBLIC_API_URL in prod = same-origin, proxied by Next.js rewrites
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:18443';
+        // BFF pattern: empty NEXT_PUBLIC_API_URL = same-origin, proxied by Caddy/Next.js rewrites
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
         const response = await fetch(`${apiUrl}/api/auth/oauth/${provider}/callback`, {
           method: 'POST',
           headers: {
@@ -81,7 +88,8 @@ export default function OAuthCallbackPage() {
 
         // Security: Do NOT log token data
         if (!response.ok) {
-          console.error('OAuth authentication failed with status:', response.status);
+          if (process.env.NODE_ENV === 'development')
+            console.error('OAuth authentication failed with status:', response.status);
           // Provide more helpful error messages based on common OAuth errors
           let errorMessage = data.message || data.error || 'Error al autenticar con el proveedor';
 
@@ -93,7 +101,7 @@ export default function OAuthCallbackPage() {
               'Error de configuración: La URL de redirección no coincide. Contacta al soporte.';
           }
 
-          console.error('OAuth error:', errorMessage);
+          if (process.env.NODE_ENV === 'development') console.error('OAuth error:', errorMessage);
           throw new Error(errorMessage);
         }
 
@@ -119,11 +127,12 @@ export default function OAuthCallbackPage() {
           const safeRedirect = isValidRedirect(rawRedirect) ? rawRedirect : '/';
           router.push(safeRedirect);
         } else {
-          console.error('No tokens received from OAuth callback');
+          if (process.env.NODE_ENV === 'development')
+            console.error('No tokens received from OAuth callback');
           throw new Error('No se recibieron tokens de autenticación');
         }
       } catch (err) {
-        console.error('OAuth callback error:', err);
+        if (process.env.NODE_ENV === 'development') console.error('OAuth callback error:', err);
         setError(err instanceof Error ? err.message : 'Error al completar la autenticación');
         setIsProcessing(false);
       }
@@ -153,12 +162,7 @@ export default function OAuthCallbackPage() {
           </div>
           <h1 className="text-foreground mb-2 text-xl font-semibold">Error de Autenticación</h1>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/login')}
-            className="rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700"
-          >
-            Volver al Login
-          </button>
+          <Button onClick={() => router.push('/login')}>Volver al Login</Button>
         </div>
       </div>
     );
@@ -170,7 +174,7 @@ export default function OAuthCallbackPage() {
         <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-600" />
         <h1 className="text-foreground mb-2 text-xl font-semibold">Completando autenticación...</h1>
         <p className="text-muted-foreground">
-          Conectando con {provider.charAt(0).toUpperCase() + provider.slice(1)}
+          Conectando con {provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : '...'}
         </p>
       </div>
     </div>

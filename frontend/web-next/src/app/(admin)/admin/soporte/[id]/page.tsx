@@ -108,7 +108,7 @@ export default function SupportTicketDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/soporte">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver a soporte">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -181,7 +181,7 @@ export default function SupportTicketDetailPage() {
                               <span className="text-muted-foreground text-xs">
                                 {formatDate(msg.timestamp)}
                               </span>
-                              <span className="text-sm font-medium text-primary/80">
+                              <span className="text-primary/80 text-sm font-medium">
                                 {msg.sender}
                               </span>
                             </>
@@ -390,7 +390,7 @@ export default function SupportTicketDetailPage() {
                     <div className="rounded-lg bg-slate-700/50 p-3 transition-colors hover:bg-slate-700">
                       <p className="text-sm font-medium text-white">{related.id}</p>
                       <p className="text-muted-foreground truncate text-xs">{related.subject}</p>
-                      <Badge className="mt-1 bg-primary text-xs">Resuelto</Badge>
+                      <Badge className="bg-primary mt-1 text-xs">Resuelto</Badge>
                     </div>
                   </Link>
                 ))}

@@ -823,7 +823,7 @@ services:
       RabbitMQ__Port: "5672"
       Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
-      ServiceUrls__DealerManagementService: "http://dealermanagementservice:80"
+      ServiceUrls__DealerManagementService: "http://userservice:80"
     ports:
       - "15007:80"
     depends_on:

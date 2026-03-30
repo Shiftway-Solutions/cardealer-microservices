@@ -840,7 +840,8 @@ export function SubscriptionPlanManager() {
           );
         }
       } catch {
-        console.warn('[PlanManager] Could not load live plans, using defaults');
+        if (process.env.NODE_ENV === 'development')
+          console.warn('[PlanManager] Could not load live plans, using defaults');
       } finally {
         setIsLoadingPlans(false);
       }

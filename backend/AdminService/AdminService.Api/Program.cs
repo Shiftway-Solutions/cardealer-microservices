@@ -1,3 +1,4 @@
+using AdminService.Api.Handlers;
 using AdminService.Application.Interfaces;
 using AdminService.Application.Services;
 using AdminService.Infrastructure.External;
@@ -275,14 +276,17 @@ try
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     }).AddStandardResilience(configuration);
 
-    // Dealer Service Client (for admin dealer management → DealerManagementService)
+    // Dealer Service Client (for admin dealer management → UserService)
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddTransient<AuthHeaderForwardingHandler>();
     builder.Services.AddHttpClient<IDealerService, DealerService>(client =>
     {
-        var baseAddress = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://dealermanagementservice:8080";
+        var baseAddress = builder.Configuration["ServiceUrls:DealerManagementService"] ?? "http://userservice:80";
         client.BaseAddress = new Uri(baseAddress);
         client.Timeout = TimeSpan.FromSeconds(30);
         client.DefaultRequestHeaders.Add("Accept", "application/json");
-    }).AddStandardResilience(configuration);
+    }).AddHttpMessageHandler<AuthHeaderForwardingHandler>()
+    .AddStandardResilience(configuration);
 
     // Review Service Client (for admin review management → ReviewService)
     builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client =>

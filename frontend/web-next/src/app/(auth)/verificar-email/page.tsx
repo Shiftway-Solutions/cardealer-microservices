@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Loader2, Mail, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { authService } from '@/services/auth';
 
 type VerificationState = 'pending' | 'verifying' | 'success' | 'error';
@@ -99,7 +100,7 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Verifica tu email</h1>
+          <h1 className="text-foreground text-2xl font-bold">Verifica tu email</h1>
           <p className="text-muted-foreground">
             Te hemos enviado un email con un enlace de verificación. Revisa tu bandeja de entrada y
             haz clic en el enlace para activar tu cuenta.
@@ -116,8 +117,8 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
         </div>
 
         {/* Resend section */}
-        <div className="space-y-3 border-t border-border pt-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-border space-y-3 border-t pt-4">
+          <p className="text-muted-foreground text-sm">
             ¿No recibiste el email? Ingresa tu correo para reenviarlo:
           </p>
 
@@ -134,7 +135,11 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
           )}
 
           <div className="flex gap-2">
+            <Label htmlFor="resend-email" className="sr-only">
+              Email para reenviar verificación
+            </Label>
             <Input
+              id="resend-email"
               type="email"
               placeholder="tu@email.com"
               value={email}
@@ -176,7 +181,7 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Verificando tu email</h1>
+          <h1 className="text-foreground text-2xl font-bold">Verificando tu email</h1>
           <p className="text-muted-foreground">
             Por favor espera mientras verificamos tu dirección de email...
           </p>
@@ -194,7 +199,7 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">¡Email verificado!</h1>
+          <h1 className="text-foreground text-2xl font-bold">¡Email verificado!</h1>
           <p className="text-muted-foreground">
             Tu cuenta ha sido activada exitosamente. Ya puedes iniciar sesión y comenzar a explorar
             OKLA.
@@ -216,15 +221,15 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-foreground">Error de verificación</h1>
+        <h1 className="text-foreground text-2xl font-bold">Error de verificación</h1>
         <p className="text-muted-foreground">
           {error || 'No pudimos verificar tu email. El enlace puede haber expirado.'}
         </p>
       </div>
 
       {/* Resend section */}
-      <div className="space-y-3 border-t border-border pt-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="border-border space-y-3 border-t pt-4">
+        <p className="text-muted-foreground text-sm">
           Ingresa tu email para solicitar un nuevo enlace de verificación:
         </p>
 
@@ -235,7 +240,11 @@ function VerifyEmailForm({ token, emailParam, redirectTo }: VerifyEmailFormProps
         )}
 
         <div className="flex gap-2">
+          <Label htmlFor="resend-email-error" className="sr-only">
+            Email para reenviar verificación
+          </Label>
           <Input
+            id="resend-email-error"
             type="email"
             placeholder="tu@email.com"
             value={email}

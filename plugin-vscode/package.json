@@ -1,0 +1,196 @@
+{
+  "name": "copilot-model-cycler",
+  "displayName": "Copilot Model Cycler",
+  "description": "Rota modelos Claude/Copilot, detecta rate limits, abre nuevo chat con el AGENT_LOOP_PROMPT automáticamente",
+  "version": "3.0.0",
+  "publisher": "gregory-local",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "modelCycler.cycleNext",
+        "title": "Copilot Cycler: → Siguiente modelo"
+      },
+      {
+        "command": "modelCycler.cyclePrev",
+        "title": "Copilot Cycler: ← Modelo anterior"
+      },
+      {
+        "command": "modelCycler.pickModel",
+        "title": "Copilot Cycler: 🎯 Elegir modelo de mi lista"
+      },
+      {
+        "command": "modelCycler.trackAndSend",
+        "title": "Copilot Cycler: Enviar + Contar mensaje"
+      },
+      {
+        "command": "modelCycler.resetSession",
+        "title": "Copilot Cycler: 🔄 Nuevo chat + enviar AGENT_LOOP_PROMPT"
+      },
+      {
+        "command": "modelCycler.handleRateLimit",
+        "title": "Copilot Cycler: ⚡ Rate Limit detectado → ciclar modelo + Continuar"
+      },
+      {
+        "command": "modelCycler.handleChatError",
+        "title": "Copilot Cycler: 🚨 Error en chat → nuevo chat + AGENT_LOOP_PROMPT"
+      },
+      {
+        "command": "modelCycler.resetCounter",
+        "title": "Copilot Cycler: ↺ Reiniciar contador de mensajes"
+      },
+      {
+        "command": "modelCycler.showStatus",
+        "title": "Copilot Cycler: ℹ Ver estado de sesión"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "modelCycler.trackAndSend",
+        "key": "enter",
+        "mac": "enter",
+        "when": "chatInputHasFocus && !suggestWidgetVisible && !inlineChatFocused && !compositeInputBox.inFirst"
+      },
+      {
+        "command": "modelCycler.cycleNext",
+        "key": "ctrl+shift+period",
+        "mac": "cmd+shift+period"
+      },
+      {
+        "command": "modelCycler.cyclePrev",
+        "key": "ctrl+shift+comma",
+        "mac": "cmd+shift+comma"
+      },
+      {
+        "command": "modelCycler.pickModel",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m"
+      },
+      {
+        "command": "modelCycler.handleRateLimit",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "chatInputHasFocus"
+      },
+      {
+        "command": "modelCycler.handleChatError",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "chatInputHasFocus"
+      },
+      {
+        "command": "modelCycler.resetSession",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "chatInputHasFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Copilot Model Cycler",
+      "properties": {
+        "modelCycler.models": {
+          "type": "array",
+          "description": "Lista de modelos de más poderoso a menos poderoso",
+          "default": [
+            "claude-opus-4-6",
+            "claude-opus-4-5",
+            "claude-sonnet-4-6",
+            "claude-sonnet-4-5",
+            "claude-sonnet-4"
+          ]
+        },
+        "modelCycler.modelLabels": {
+          "type": "object",
+          "default": {
+            "claude-opus-4-6": "Opus 4.6 ⚡⚡⚡",
+            "claude-opus-4-5": "Opus 4.5 ⚡⚡⚡",
+            "claude-sonnet-4-6": "Sonnet 4.6 ⚡⚡",
+            "claude-sonnet-4-5": "Sonnet 4.5 ⚡⚡",
+            "claude-sonnet-4": "Sonnet 4 ⚡"
+          }
+        },
+        "modelCycler.session.maxMessages": {
+          "type": "number",
+          "default": 25,
+          "description": "Mensajes antes de abrir nuevo chat automáticamente (0 = desactivado)"
+        },
+        "modelCycler.session.warningAt": {
+          "type": "number",
+          "default": 20,
+          "description": "Advertir cuando quedan N mensajes para el límite"
+        },
+        "modelCycler.session.autoReset": {
+          "type": "boolean",
+          "default": true,
+          "description": "Abrir nuevo chat automáticamente al llegar al límite"
+        },
+        "modelCycler.session.resetModel": {
+          "type": "string",
+          "enum": [
+            "keep",
+            "top",
+            "cycle"
+          ],
+          "default": "top",
+          "description": "Al resetear: top=volver a Opus 4.6 | keep=mismo | cycle=siguiente"
+        },
+        "modelCycler.session.promptFilePath": {
+          "type": "string",
+          "default": ".prompts/prompt_1.md",
+          "description": "Ruta relativa al workspace del archivo de prompt a enviar al nuevo chat"
+        },
+        "modelCycler.session.continuationDelay": {
+          "type": "number",
+          "default": 1000,
+          "description": "ms de espera antes de enviar el prompt al nuevo chat"
+        },
+        "modelCycler.session.rateLimitCycleTo": {
+          "type": "string",
+          "enum": [
+            "next",
+            "top"
+          ],
+          "default": "next",
+          "description": "Rate limit: ciclar al siguiente modelo (next) o ir al más poderoso disponible (top)"
+        },
+        "modelCycler.monitoring.pollInterval": {
+          "type": "number",
+          "default": 3000,
+          "description": "Intervalo en ms para monitorear el log de Copilot (0 = desactivado)"
+        },
+        "modelCycler.monitoring.continueDelay": {
+          "type": "number",
+          "default": 600,
+          "description": "ms de espera antes de enviar 'Continuar' tras detectar rate limit"
+        },
+        "modelCycler.monitoring.rateLimitCooldown": {
+          "type": "number",
+          "default": 2000,
+          "description": "ms de cooldown tras manejar un rate limit (evita re-trigger inmediato)"
+        },
+        "modelCycler.monitoring.errorCooldown": {
+          "type": "number",
+          "default": 3000,
+          "description": "ms de cooldown tras manejar un error de chat (evita re-trigger inmediato)"
+        },
+        "modelCycler.showStatusBar": {
+          "type": "boolean",
+          "default": true
+        },
+        "modelCycler.notifyOnSwitch": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}

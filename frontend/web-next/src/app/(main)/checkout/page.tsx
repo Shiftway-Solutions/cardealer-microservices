@@ -255,6 +255,11 @@ function CheckoutContent() {
     cvv: '',
   });
 
+  // Clear sensitive card data on unmount (PCI best practice)
+  React.useEffect(() => {
+    return () => setCardData({ number: '', name: '', expiry: '', cvv: '' });
+  }, []);
+
   // Auto-select first gateway when loaded
   React.useEffect(() => {
     if (availableGateways.length > 0 && !paymentMethod) {

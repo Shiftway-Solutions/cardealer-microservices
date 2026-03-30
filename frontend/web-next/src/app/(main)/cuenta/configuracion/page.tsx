@@ -182,7 +182,7 @@ export default function SettingsPage() {
         setOriginalApp(settings.app);
         setOriginalNotifications(settings.notifications);
       } catch (err) {
-        console.error('Error loading settings:', err);
+        if (process.env.NODE_ENV === 'development') console.error('Error loading settings:', err);
         setError('No se pudieron cargar las configuraciones. Intenta de nuevo.');
       } finally {
         setIsLoading(false);
@@ -219,7 +219,7 @@ export default function SettingsPage() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      console.error('Error saving settings:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error saving settings:', err);
       setError('No se pudieron guardar los cambios. Intenta de nuevo.');
     } finally {
       setIsSaving(false);

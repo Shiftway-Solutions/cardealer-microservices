@@ -85,7 +85,7 @@ export default function ReclamacionesPage() {
 
   const onSubmit = async (data: ReclamacionFormData) => {
     // Sanitize all inputs before sending
-    const sanitizedData = {
+    const _sanitizedData = {
       tipoReclamacion: sanitizeText(data.tipoReclamacion, { maxLength: 50 }),
       descripcion: sanitizeText(data.descripcion.trim(), { maxLength: 5000 }),
       nombreCompleto: sanitizeText(data.nombreCompleto.trim(), { maxLength: 100 }),
@@ -184,7 +184,7 @@ export default function ReclamacionesPage() {
                       setValue('tipoReclamacion', value, { shouldValidate: true })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="tipoReclamacion">
                       <SelectValue placeholder="Seleccione el tipo de reclamación" />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,7 +269,7 @@ export default function ReclamacionesPage() {
                       <Input
                         id="telefono"
                         type="tel"
-                        placeholder="809-555-0123"
+                        placeholder="809-000-0000"
                         {...register('telefono')}
                       />
                       {errors.telefono && (

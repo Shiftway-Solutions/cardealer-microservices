@@ -205,9 +205,7 @@ export function SellerContactCard({ vehicle, className }: SellerContactCardProps
                     <Link href={`/registro?redirect=/vehiculos/${vehicle.slug}`}>Registrarme</Link>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="flex-1">
-                    <Link href={`/ingresar?redirect=/vehiculos/${vehicle.slug}`}>
-                      Ya tengo cuenta
-                    </Link>
+                    <Link href={`/login?redirect=/vehiculos/${vehicle.slug}`}>Ya tengo cuenta</Link>
                   </Button>
                 </div>
               </div>
