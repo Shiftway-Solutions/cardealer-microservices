@@ -216,6 +216,7 @@ export interface NotificationPreferences {
 export interface Dealer {
   id: string;
   userId: string;
+  slug?: string;
 
   // Business Info
   businessName: string;
