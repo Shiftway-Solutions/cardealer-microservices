@@ -34,6 +34,7 @@ namespace UserService.Infrastructure.Persistence
         public async Task<Dealer?> GetBySlugAsync(string slug)
         {
             return await _context.Dealers
+                .AsNoTracking()
                 .Include(d => d.Employees)
                 .FirstOrDefaultAsync(d => d.Slug == slug && d.IsActive);
         }
@@ -41,6 +42,7 @@ namespace UserService.Infrastructure.Persistence
         public async Task<IEnumerable<Dealer>> GetForSitemapAsync()
         {
             return await _context.Dealers
+                .AsNoTracking()
                 .Where(d => d.IsActive && d.Slug != null)
                 .Select(d => new Dealer
                 {
@@ -57,6 +59,7 @@ namespace UserService.Infrastructure.Persistence
         public async Task<IEnumerable<Dealer>> GetAllAsync(int page = 1, int pageSize = 10)
         {
             return await _context.Dealers
+                .AsNoTracking()
                 .Where(d => d.IsActive)
                 .OrderByDescending(d => d.CreatedAt)
                 .Skip((page - 1) * pageSize)
@@ -73,7 +76,7 @@ namespace UserService.Infrastructure.Persistence
             int page = 1,
             int pageSize = 10)
         {
-            var query = _context.Dealers.Where(d => d.IsActive).AsQueryable();
+            var query = _context.Dealers.AsNoTracking().Where(d => d.IsActive).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -119,7 +122,7 @@ namespace UserService.Infrastructure.Persistence
             DealerType? dealerType,
             bool? isVerified)
         {
-            var query = _context.Dealers.Where(d => d.IsActive).AsQueryable();
+            var query = _context.Dealers.AsNoTracking().Where(d => d.IsActive).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {

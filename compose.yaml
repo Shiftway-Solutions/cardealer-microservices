@@ -257,6 +257,8 @@ services:
         "--save",
         "60",
         "1000",
+        "--stop-writes-on-bgsave-error",
+        "no",
       ]
     deploy:
       resources:
@@ -399,7 +401,7 @@ services:
       RabbitMQ__Password: "guest"
       RabbitMQ__User: "guest"
       RabbitMQ__Enabled: "true"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       ConfigurationService__BaseUrl: "http://host.docker.internal:15124"
       # OAuth Providers - Use environment variables or docker secrets
@@ -473,7 +475,7 @@ services:
       RabbitMQ__User: "guest"
       RabbitMQ__Password: "guest"
       RabbitMQ__Enabled: "true"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
@@ -569,7 +571,7 @@ services:
       RabbitMQ__Enabled: "true"
       RabbitMQ__UserName: "guest"
       RabbitMQ__Password: "guest"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       Consul__Enabled: "false"
       # Storage configuration - AWS S3 Enabled
@@ -632,6 +634,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
       Database__Provider: "PostgreSQL"
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=userservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
@@ -643,7 +646,7 @@ services:
       RabbitMQ__User: "guest"
       RabbitMQ__Password: "guest"
       RabbitMQ__Enabled: "true"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       # FASE 2: Observability
       Logging__Seq__ServerUrl: "http://seq:80"
@@ -675,6 +678,7 @@ services:
       - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
       - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
       - ./backend/_Shared/ServiceDiscovery:/app/_Shared/ServiceDiscovery
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [
@@ -711,7 +715,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
     ports:
@@ -764,7 +768,7 @@ services:
       RabbitMQ__Enabled: "true"
       RabbitMQ__Username: "guest"
       RabbitMQ__Password: "guest"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
     ports:
       - "15005:80"
@@ -817,7 +821,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       ServiceUrls__DealerManagementService: "http://dealermanagementservice:80"
     ports:
@@ -875,7 +879,7 @@ services:
       RabbitMQ__User: "guest"
       RabbitMQ__Password: "guest"
       RabbitMQ__Enabled: "false"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       Consul__Host: "http://consul:8500"
       # Observability
       Logging__Seq__ServerUrl: "http://seq:80"
@@ -929,7 +933,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15101:80"
     depends_on:
@@ -970,6 +974,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
       Database__Provider: "PostgreSQL"
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=billingservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
@@ -987,8 +992,8 @@ services:
       RabbitMQ__User: "guest"
       RabbitMQ__Password: "guest"
       RabbitMQ__Enabled: "true"
-      Redis__Host: "redis:6379"
-      Redis__Connection: "redis:6379"
+      Redis__Host: "redis"
+      Redis__Connection: "redis:6379,abortConnect=false"
       Idempotency__Enabled: "true"
       Idempotency__DefaultTtlSeconds: "86400"
       Idempotency__ProcessingTimeoutSeconds: "120"
@@ -1026,6 +1031,7 @@ services:
       - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
       - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
       - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [
@@ -1057,6 +1063,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
       Database__Provider: "PostgreSQL"
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=dealeranalyticsservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
@@ -1065,7 +1072,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15041:80"
     depends_on:
@@ -1086,6 +1093,7 @@ services:
       - ./backend/_Shared/CarDealer.Shared.Resilience:/app/_Shared/CarDealer.Shared.Resilience
       - ./backend/ErrorService/ErrorService.Domain:/app/ErrorService/ErrorService.Domain
       - ./backend/ErrorService/ErrorService.Shared:/app/ErrorService/ErrorService.Shared
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [
@@ -1113,6 +1121,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
       Database__Provider: "PostgreSQL"
       Database__ConnectionStrings__PostgreSQL: "Host=postgres_db;Port=5432;Database=crmservice;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
       Database__AutoMigrate: "true"
@@ -1121,7 +1130,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15106:80"
     depends_on:
@@ -1135,6 +1144,7 @@ services:
       - ./backend/CRMService:/app/CRMService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
       - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [
@@ -1176,7 +1186,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "5066:80"
     depends_on:
@@ -1232,7 +1242,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "5059:80"
     depends_on:
@@ -1287,7 +1297,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15110:80"
     depends_on:
@@ -1342,7 +1352,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15112:80"
     depends_on:
@@ -1395,7 +1405,7 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
     ports:
       - "15126:80"
     depends_on:
@@ -1436,7 +1446,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=searchagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
-      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1484,7 +1494,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=recoagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
-      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1528,7 +1538,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=supportagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
-      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
@@ -1571,7 +1581,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__Redis: "redis:6379,abortConnect=false"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "okla.com.do"
       Jwt__Audience: "okla-api"
@@ -1730,7 +1740,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       Azul__MerchantId: "${AZUL_MERCHANT_ID:-placeholder}"
       Azul__AuthKey: "${AZUL_AUTH_KEY:-placeholder}"
-      Redis__ConnectionString: "redis:6379"
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
       Idempotency__DefaultTTLSeconds: "86400"
       Idempotency__ProcessingTimeoutSeconds: "120"
     ports:
@@ -1772,11 +1782,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
-      Redis__Connection: "redis:6379"
+      Redis__Host: "redis"
+      Redis__Connection: "redis:6379,abortConnect=false"
       RateLimiting__Enabled: "true"
       RateLimiting__DefaultLimit: "100"
       RateLimiting__DefaultWindowSeconds: "60"
@@ -1822,6 +1833,7 @@ services:
       - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
       - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
       - ./backend/_Shared/CarDealer.Shared.RateLimiting:/app/_Shared/CarDealer.Shared.RateLimiting
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [
@@ -1862,7 +1874,7 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Services__ConfigurationService: "http://host.docker.internal:15124"
@@ -1919,7 +1931,7 @@ services:
       Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
       Jwt__Issuer: "AuthService-Dev"
       Jwt__Audience: "OKLA-Dev"
-      Redis__Host: "redis:6379"
+      Redis__Host: "redis"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
     ports:
