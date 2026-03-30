@@ -296,9 +296,6 @@ frontend (pnpm dev en host, NO Docker)
 
 READ
 
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
 ---
 
 ## Resultado
@@ -306,9 +303,14 @@ _(documentar aquí lo encontrado)_
 - Fase: AUDIT
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://numerous-neck-favorite-equity.trycloudflare.com)
 - URL: https://numerous-neck-favorite-equity.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO
+- Bugs encontrados: 5 (2 MEDIUM, 3 LOW)
+  1. MEDIUM: Admin Dealers muestra 0 dealers — datos no fluyen UserService→AdminService
+  2. MEDIUM: /admin/configuracion error — ConfigurationService (HOST:15124) no corriendo
+  3. MEDIUM: /admin/logs error — AuditService (puerto 15112) no existe en compose
+  4. LOW: /admin/roles — error inesperado cargando roles de RoleService
+  5. LOW: /admin/search-agent — VehicleSearchService (perfil ai) no corriendo
 
 ---
 
-_Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+READ
