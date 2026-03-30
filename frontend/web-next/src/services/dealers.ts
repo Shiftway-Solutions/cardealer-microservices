@@ -4,6 +4,11 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import {
+  dealerAnalyticsService,
+  type DealerSnapshot,
+  type KpiSummary,
+} from '@/services/dealer-analytics';
 import type {
   Dealer,
   DealerType,
@@ -20,6 +25,7 @@ import type {
 export interface DealerDto {
   id: string;
   userId: string;
+  slug?: string;
   businessName: string;
   legalName?: string;
   rnc?: string;
@@ -171,6 +177,31 @@ export interface DealerStatsDto {
   revenueChange: number;
 }
 
+function mapAnalyticsToDealerStats(
+  dealer: Dealer,
+  kpis: KpiSummary,
+  inventoryStats: DealerSnapshot
+): DealerStatsDto {
+  return {
+    totalListings:
+      inventoryStats.totalVehicles ?? dealer.currentActiveListings ?? kpis.activeListings,
+    activeListings:
+      kpis.activeListings ?? inventoryStats.activeVehicles ?? dealer.currentActiveListings,
+    totalViews: kpis.totalViews ?? inventoryStats.totalViews,
+    viewsThisMonth: kpis.totalViews ?? inventoryStats.totalViews,
+    viewsChange: kpis.viewsChange ?? 0,
+    totalInquiries: kpis.totalContacts ?? inventoryStats.totalContacts,
+    inquiriesThisMonth: kpis.totalContacts ?? inventoryStats.totalContacts,
+    inquiriesChange: kpis.contactsChange ?? 0,
+    pendingInquiries: inventoryStats.newLeads ?? 0,
+    responseRate: dealer.responseRate ?? kpis.conversionRate ?? 0,
+    avgResponseTimeMinutes: dealer.avgResponseTimeMinutes ?? kpis.avgResponseTime ?? 0,
+    totalRevenue: kpis.totalRevenue ?? inventoryStats.totalRevenue,
+    revenueThisMonth: kpis.totalRevenue ?? inventoryStats.totalRevenue,
+    revenueChange: kpis.revenueChange ?? 0,
+  };
+}
+
 // ============================================================
 // TRANSFORM FUNCTIONS
 // ============================================================
@@ -179,6 +210,7 @@ export function transformDealer(dto: DealerDto): Dealer {
   return {
     id: dto.id,
     userId: dto.userId,
+    slug: dto.slug,
     businessName: dto.businessName,
     legalName: dto.legalName,
     rnc: dto.rnc,
@@ -279,7 +311,7 @@ export async function getDealerBySlug(slug: string): Promise<Dealer> {
  */
 export async function getDealerByUserId(userId: string): Promise<Dealer | null> {
   try {
-    const response = await apiClient.get<DealerDto>(`/api/dealers/user/${userId}`);
+    const response = await apiClient.get<DealerDto>(`/api/dealers/owner/${userId}`);
     return transformDealer(response.data);
   } catch {
     return null;
@@ -316,10 +348,43 @@ export async function updateDealer(id: string, data: UpdateDealerRequest): Promi
 
 /**
  * Get dealer statistics
+ * Falls back gracefully when DealerAnalyticsService (--profile ai) is not running.
  */
 export async function getDealerStats(dealerId: string): Promise<DealerStatsDto> {
-  const response = await apiClient.get<DealerStatsDto>(`/api/dealers/${dealerId}/stats`);
-  return response.data;
+  const dealer = await getDealerById(dealerId);
+
+  // Analytics service may not be running in all environments (requires --profile ai).
+  // Resolve KPIs and inventory stats independently so partial data is usable.
+  const [kpis, inventoryStats] = await Promise.all([
+    dealerAnalyticsService.getKpis(dealerId).catch(() => null),
+    dealerAnalyticsService.getInventoryStats(dealerId).catch(() => null),
+  ]);
+
+  if (!kpis && !inventoryStats) {
+    // Analytics service unavailable — return minimal stats from dealer profile
+    return {
+      totalListings: dealer.currentActiveListings ?? 0,
+      activeListings: dealer.currentActiveListings ?? 0,
+      totalViews: 0,
+      viewsThisMonth: 0,
+      viewsChange: 0,
+      totalInquiries: 0,
+      inquiriesThisMonth: 0,
+      inquiriesChange: 0,
+      pendingInquiries: 0,
+      responseRate: dealer.responseRate ?? 0,
+      avgResponseTimeMinutes: dealer.avgResponseTimeMinutes ?? 0,
+      totalRevenue: 0,
+      revenueThisMonth: 0,
+      revenueChange: 0,
+    };
+  }
+
+  return mapAnalyticsToDealerStats(
+    dealer,
+    kpis ?? ({} as KpiSummary),
+    inventoryStats ?? ({} as DealerSnapshot)
+  );
 }
 
 /**

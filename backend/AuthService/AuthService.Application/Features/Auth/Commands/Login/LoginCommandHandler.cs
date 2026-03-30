@@ -83,7 +83,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
         // US-18.3: Check if CAPTCHA is required based on failed attempts
         var failedAttemptsKey = $"login_failed:{request.Email.ToLowerInvariant()}";
-        var failedAttemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        string? failedAttemptsStr = null;
+        try
+        {
+            failedAttemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Redis unavailable (MISCONF, connection refused, etc.) — proceed with 0 failed attempts
+            _logger.LogWarning(ex, "Redis unavailable reading failed-attempts counter for {Email} — assuming 0", request.Email);
+        }
         var failedAttempts = 0;
         if (!string.IsNullOrEmpty(failedAttemptsStr))
         {
@@ -140,7 +149,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
 
 
         // Clear failed attempts on successful password verification (Redis + DB)
-        await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
+        try
+        {
+            await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Redis unavailable clearing failed-attempts for {Email} — continuing login", request.Email);
+        }
         if (user.AccessFailedCount > 0)
         {
             user.ResetAccessFailedCount();
@@ -148,13 +164,21 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         }
 
         // AUTH-SEC-005: Check if this device was previously revoked
-        var revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
-            user.Id,
-            _requestContext.IpAddress,
-            _requestContext.UserAgent ?? "unknown",
-            cancellationToken);
+        RevokedDeviceCheckResult? revokedDeviceCheck = null;
+        try
+        {
+            revokedDeviceCheck = await _revokedDeviceService.CheckIfDeviceIsRevokedAsync(
+                user.Id,
+                _requestContext.IpAddress,
+                _requestContext.UserAgent ?? "unknown",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Redis unavailable for revoked-device check for user {UserId} — skipping check", user.Id);
+        }
 
-        if (revokedDeviceCheck.IsRevoked)
+        if (revokedDeviceCheck?.IsRevoked == true)
         {
             _logger.LogWarning(
                 "AUTH-SEC-005: Login attempt from revoked device. User: {UserId}, Fingerprint: {Fingerprint}",
@@ -371,7 +395,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         var lockoutMinutes = await _securityConfig.GetLockoutDurationMinutesAsync(cancellationToken);
 
         var failedAttemptsKey = $"login_failed:{email.ToLowerInvariant()}";
-        var attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        string? attemptsStr = null;
+        try
+        {
+            attemptsStr = await _cache.GetStringAsync(failedAttemptsKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Redis unavailable reading failed-attempts for {Email}", email);
+        }
 
         int attempts = 1;
         if (!string.IsNullOrEmpty(attemptsStr) && int.TryParse(attemptsStr, out var existing))
@@ -380,10 +412,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         }
 
         // Update failed attempts counter — cache TTL = lockout window from admin config
-        await _cache.SetStringAsync(failedAttemptsKey, attempts.ToString(), new DistributedCacheEntryOptions
+        try
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(lockoutMinutes)
-        }, cancellationToken);
+            await _cache.SetStringAsync(failedAttemptsKey, attempts.ToString(), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(lockoutMinutes)
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Redis unavailable writing failed-attempts for {Email}", email);
+        }
 
         _logger.LogWarning("Failed login attempt {Attempts} for {Email} from IP {IP}",
             attempts, email, _requestContext.IpAddress);
