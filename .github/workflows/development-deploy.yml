@@ -1,0 +1,440 @@
+# =============================================================================
+# DEVELOPMENT DEPLOY — Auto-deploy al stack Docker local en el runner Mac
+# =============================================================================
+#
+# Flujo: push a `development` → lint/tests rápidos → docker compose build
+#        solo servicios que cambiaron → docker compose up -d --no-deps
+#
+# Diferencias vs smart-cicd.yml (main):
+#   ✅ Build nativo ARM64 — SIN QEMU, SIN linux/amd64 → 3-5× más rápido
+#   ✅ SIN push a GHCR — solo imagen local para Docker Desktop
+#   ✅ SIN deploy a DOKS/K8s — solo levanta containers localmente
+#   ✅ Solo reconstruye los servicios que cambiaron
+#   ✅ Tiempo objetivo: < 4 min por servicio cambiado
+#
+# Prerequisito: el stack base debe estar levantado en tu Mac:
+#   docker compose up -d   (infra: postgres + redis + rabbitmq)
+# =============================================================================
+
+name: "🔧 Development — Local Deploy"
+
+on:
+  push:
+    branches: [development]
+  workflow_dispatch:
+    inputs:
+      force_services:
+        description: "Forzar rebuild de servicios específicos (ej: authservice gateway)"
+        required: false
+        default: ""
+        type: string
+      profile:
+        description: "Profile de infra a levantar si no está up"
+        required: false
+        default: "core"
+        type: choice
+        options: ["core", "vehicles", "ai", "business", "frontend"]
+
+concurrency:
+  group: dev-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  NODE_VERSION: "20.x"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  NUGET_XMLDOC_MODE: "skip"
+  NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
+
+# =============================================================================
+# JOB 1 — Detectar qué cambió
+# =============================================================================
+jobs:
+  detect-changes:
+    name: "🔍 Detect Changes"
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 3
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend-web }}
+      authservice: ${{ steps.filter.outputs.authservice }}
+      userservice: ${{ steps.filter.outputs.userservice }}
+      vehiclessaleservice: ${{ steps.filter.outputs.vehiclessaleservice }}
+      mediaservice: ${{ steps.filter.outputs.mediaservice }}
+      contactservice: ${{ steps.filter.outputs.contactservice }}
+      notificationservice: ${{ steps.filter.outputs.notificationservice }}
+      adminservice: ${{ steps.filter.outputs.adminservice }}
+      errorservice: ${{ steps.filter.outputs.errorservice }}
+      roleservice: ${{ steps.filter.outputs.roleservice }}
+      billingservice: ${{ steps.filter.outputs.billingservice }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      chatbotservice: ${{ steps.filter.outputs.chatbotservice }}
+      dealeranalyticsservice: ${{ steps.filter.outputs.dealeranalyticsservice }}
+      searchagent: ${{ steps.filter.outputs.searchagent }}
+      recoagent: ${{ steps.filter.outputs.recoagent }}
+      supportagent: ${{ steps.filter.outputs.supportagent }}
+      pricingagent: ${{ steps.filter.outputs.pricingagent }}
+      shared: ${{ steps.filter.outputs.shared }}
+      any_backend: ${{ steps.any.outputs.backend }}
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: "🔍 Detect changed paths"
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            authservice:
+              - 'backend/AuthService/**'
+              - 'backend/_Shared/**'
+            userservice:
+              - 'backend/UserService/**'
+              - 'backend/_Shared/**'
+            vehiclessaleservice:
+              - 'backend/VehiclesSaleService/**'
+              - 'backend/_Shared/**'
+            mediaservice:
+              - 'backend/MediaService/**'
+              - 'backend/_Shared/**'
+            contactservice:
+              - 'backend/ContactService/**'
+              - 'backend/_Shared/**'
+            notificationservice:
+              - 'backend/NotificationService/**'
+              - 'backend/_Shared/**'
+            adminservice:
+              - 'backend/AdminService/**'
+              - 'backend/_Shared/**'
+            errorservice:
+              - 'backend/ErrorService/**'
+              - 'backend/_Shared/**'
+            roleservice:
+              - 'backend/RoleService/**'
+              - 'backend/_Shared/**'
+            billingservice:
+              - 'backend/BillingService/**'
+              - 'backend/_Shared/**'
+            gateway:
+              - 'backend/Gateway/**'
+              - 'backend/_Shared/**'
+            chatbotservice:
+              - 'backend/ChatbotService/**'
+              - 'backend/_Shared/**'
+            dealeranalyticsservice:
+              - 'backend/DealerAnalyticsService/**'
+              - 'backend/_Shared/**'
+            searchagent:
+              - 'backend/SearchAgent/**'
+            recoagent:
+              - 'backend/RecoAgent/**'
+            supportagent:
+              - 'backend/SupportAgent/**'
+            pricingagent:
+              - 'backend/PricingAgent/**'
+            shared:
+              - 'backend/_Shared/**'
+            frontend-web:
+              - 'frontend/web-next/**'
+              - '!frontend/web-next/**/*.md'
+
+      - name: "📊 Compute any_backend"
+        id: any
+        run: |
+          if [[ \
+            "${{ steps.filter.outputs.authservice }}" == "true" || \
+            "${{ steps.filter.outputs.userservice }}" == "true" || \
+            "${{ steps.filter.outputs.vehiclessaleservice }}" == "true" || \
+            "${{ steps.filter.outputs.mediaservice }}" == "true" || \
+            "${{ steps.filter.outputs.contactservice }}" == "true" || \
+            "${{ steps.filter.outputs.notificationservice }}" == "true" || \
+            "${{ steps.filter.outputs.adminservice }}" == "true" || \
+            "${{ steps.filter.outputs.errorservice }}" == "true" || \
+            "${{ steps.filter.outputs.roleservice }}" == "true" || \
+            "${{ steps.filter.outputs.billingservice }}" == "true" || \
+            "${{ steps.filter.outputs.gateway }}" == "true" || \
+            "${{ steps.filter.outputs.chatbotservice }}" == "true" || \
+            "${{ steps.filter.outputs.dealeranalyticsservice }}" == "true" || \
+            "${{ steps.filter.outputs.searchagent }}" == "true" || \
+            "${{ steps.filter.outputs.recoagent }}" == "true" || \
+            "${{ steps.filter.outputs.supportagent }}" == "true" || \
+            "${{ steps.filter.outputs.pricingagent }}" == "true" \
+          ]]; then
+            echo "backend=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend=false" >> $GITHUB_OUTPUT
+          fi
+
+  # =============================================================================
+  # JOB 2 — Tests rápidos (lint + typecheck + unit) — PARALELO
+  # =============================================================================
+  quick-checks:
+    name: "✅ Quick Checks"
+    needs: detect-changes
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 8
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      # ── FRONTEND ──────────────────────────────────────────────────────────
+      - name: "📦 Setup pnpm"
+        if: needs.detect-changes.outputs.frontend == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: "📦 Setup Node.js"
+        if: needs.detect-changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: "📦 Cache pnpm store"
+        if: needs.detect-changes.outputs.frontend == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+
+      - name: "📦 Install frontend deps"
+        if: needs.detect-changes.outputs.frontend == 'true'
+        working-directory: frontend/web-next
+        run: pnpm install --frozen-lockfile
+
+      - name: "🔍 Frontend lint + typecheck + tests"
+        if: needs.detect-changes.outputs.frontend == 'true'
+        working-directory: frontend/web-next
+        env:
+          CI: "true"
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test -- --run
+
+      # ── BACKEND ───────────────────────────────────────────────────────────
+      - name: "🔧 Setup .NET"
+        if: needs.detect-changes.outputs.any_backend == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "📦 Cache NuGet"
+        if: needs.detect-changes.outputs.any_backend == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: "🔨 Build + Unit Tests (servicios cambiados)"
+        if: needs.detect-changes.outputs.any_backend == 'true'
+        run: |
+          changed() { [ "$1" = "true" ]; }
+          FAILED=""
+
+          run_svc() {
+            local SVC="$1"
+            local SLN="backend/$SVC/${SVC}.sln"
+            [ -f "$SLN" ] || return
+            echo "── $SVC ──"
+            dotnet restore "$SLN" --verbosity quiet || { FAILED="$FAILED $SVC"; return; }
+            dotnet build   "$SLN" --no-restore -c Release /p:TreatWarningsAsErrors=true --verbosity minimal || { FAILED="$FAILED $SVC"; return; }
+            TEST_DIR="backend/$SVC/${SVC}.Tests"
+            if [ -d "$TEST_DIR" ]; then
+              dotnet test "$SLN" --no-build -c Release \
+                --filter "Category!=Integration&Category!=E2E&FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~E2ETests" \
+                --logger "console;verbosity=minimal" \
+                --blame-hang --blame-hang-timeout 2min \
+              || FAILED="$FAILED $SVC"
+            fi
+          }
+
+          changed "${{ needs.detect-changes.outputs.authservice }}"        && run_svc "AuthService"
+          changed "${{ needs.detect-changes.outputs.userservice }}"         && run_svc "UserService"
+          changed "${{ needs.detect-changes.outputs.vehiclessaleservice }}" && run_svc "VehiclesSaleService"
+          changed "${{ needs.detect-changes.outputs.mediaservice }}"        && run_svc "MediaService"
+          changed "${{ needs.detect-changes.outputs.contactservice }}"      && run_svc "ContactService"
+          changed "${{ needs.detect-changes.outputs.notificationservice }}" && run_svc "NotificationService"
+          changed "${{ needs.detect-changes.outputs.adminservice }}"        && run_svc "AdminService"
+          changed "${{ needs.detect-changes.outputs.errorservice }}"        && run_svc "ErrorService"
+          changed "${{ needs.detect-changes.outputs.roleservice }}"         && run_svc "RoleService"
+          changed "${{ needs.detect-changes.outputs.billingservice }}"      && run_svc "BillingService"
+          changed "${{ needs.detect-changes.outputs.gateway }}"             && run_svc "Gateway"
+          changed "${{ needs.detect-changes.outputs.chatbotservice }}"      && run_svc "ChatbotService"
+          changed "${{ needs.detect-changes.outputs.dealeranalyticsservice }}" && run_svc "DealerAnalyticsService"
+
+          if [ -n "$FAILED" ]; then
+            echo "::error::Build/tests fallaron en:$FAILED"
+            exit 1
+          fi
+
+  # =============================================================================
+  # JOB 3 — Docker Compose Build + Deploy Local (solo servicios cambiados)
+  # =============================================================================
+  local-deploy:
+    name: "🐳 Local Deploy (Docker Desktop)"
+    needs: [detect-changes, quick-checks]
+    if: needs.quick-checks.result == 'success'
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v6
+
+      - name: "🔍 Compute services to rebuild"
+        id: services
+        run: |
+          # Servicios forzados manualmente (workflow_dispatch)
+          FORCED="${{ github.event.inputs.force_services }}"
+
+          # Servicios que cambiaron (detección automática)
+          AUTO=""
+          [ "${{ needs.detect-changes.outputs.authservice }}"           = "true" ] && AUTO="$AUTO authservice"
+          [ "${{ needs.detect-changes.outputs.userservice }}"            = "true" ] && AUTO="$AUTO userservice"
+          [ "${{ needs.detect-changes.outputs.vehiclessaleservice }}"    = "true" ] && AUTO="$AUTO vehiclessaleservice"
+          [ "${{ needs.detect-changes.outputs.mediaservice }}"           = "true" ] && AUTO="$AUTO mediaservice"
+          [ "${{ needs.detect-changes.outputs.contactservice }}"         = "true" ] && AUTO="$AUTO contactservice"
+          [ "${{ needs.detect-changes.outputs.notificationservice }}"    = "true" ] && AUTO="$AUTO notificationservice"
+          [ "${{ needs.detect-changes.outputs.adminservice }}"            = "true" ] && AUTO="$AUTO adminservice"
+          [ "${{ needs.detect-changes.outputs.errorservice }}"           = "true" ] && AUTO="$AUTO errorservice"
+          [ "${{ needs.detect-changes.outputs.roleservice }}"            = "true" ] && AUTO="$AUTO roleservice"
+          [ "${{ needs.detect-changes.outputs.billingservice }}"         = "true" ] && AUTO="$AUTO billingservice"
+          [ "${{ needs.detect-changes.outputs.gateway }}"                = "true" ] && AUTO="$AUTO gateway"
+          [ "${{ needs.detect-changes.outputs.chatbotservice }}"         = "true" ] && AUTO="$AUTO chatbotservice"
+          [ "${{ needs.detect-changes.outputs.dealeranalyticsservice }}" = "true" ] && AUTO="$AUTO dealeranalyticsservice"
+          [ "${{ needs.detect-changes.outputs.searchagent }}"            = "true" ] && AUTO="$AUTO searchagent"
+          [ "${{ needs.detect-changes.outputs.recoagent }}"              = "true" ] && AUTO="$AUTO recoagent"
+          [ "${{ needs.detect-changes.outputs.supportagent }}"           = "true" ] && AUTO="$AUTO supportagent"
+          [ "${{ needs.detect-changes.outputs.pricingagent }}"           = "true" ] && AUTO="$AUTO pricingagent"
+          [ "${{ needs.detect-changes.outputs.frontend }}"               = "true" ] && AUTO="$AUTO frontend-next"
+
+          # Fusionar, deduplicar, limpiar
+          ALL=$(echo "$FORCED $AUTO" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
+          echo "list=$ALL" >> $GITHUB_OUTPUT
+          echo "Services to rebuild: [$ALL]"
+
+      - name: "🐗 Ensure infra base is running"
+        run: |
+          # Levanta solo la infra base si no está corriendo (postgres, redis, rabbitmq)
+          # No usa perfil — solo los servicios sin perfil (siempre disponibles)
+          if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then
+            echo "⚡ Levantando infra base (postgres + redis + rabbitmq + seq + jaeger)..."
+            docker compose up -d
+            sleep 5
+          else
+            echo "✅ Infra base ya está corriendo"
+          fi
+
+      - name: "🐳 Build changed services (native ARM64 — no QEMU)"
+        run: |
+          SERVICES="${{ steps.services.outputs.list }}"
+          if [ -z "$SERVICES" ]; then
+            echo "ℹ️  Ningún servicio cambió — nada que rebuild"
+            exit 0
+          fi
+
+          echo "=== Build local (ARM64 nativo) ==="
+          echo "Servicios: $SERVICES"
+          FAILED=""
+
+          for SVC in $SERVICES; do
+            echo ""
+            echo "── 🔨 Building $SVC..."
+            # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
+            # --no-cache asegura que el código nuevo quede reflejado
+            # --parallel false para no saturar la RAM del Mac
+            if docker compose build --no-cache "$SVC" 2>&1; then
+              echo "  ✅ $SVC build OK"
+            else
+              echo "  ❌ $SVC build FALLÓ"
+              FAILED="$FAILED $SVC"
+            fi
+          done
+
+          if [ -n "$FAILED" ]; then
+            echo "::error::Docker build falló en:$FAILED"
+            exit 1
+          fi
+
+      - name: "🚀 Restart changed services"
+        run: |
+          SERVICES="${{ steps.services.outputs.list }}"
+          if [ -z "$SERVICES" ]; then
+            echo "ℹ️  Nada que reiniciar"
+            exit 0
+          fi
+
+          echo "=== Reiniciando servicios ==="
+          FAILED=""
+
+          for SVC in $SERVICES; do
+            echo "── 🔄 Restarting $SVC..."
+            # --no-deps para no derribar dependencias (postgres, redis, etc.)
+            # Si el container no existía, up lo crea; si existe, lo recrea con la nueva imagen
+            if docker compose up -d --no-deps --force-recreate "$SVC" 2>&1; then
+              echo "  ✅ $SVC → running"
+            else
+              echo "  ❌ $SVC no pudo reiniciar"
+              FAILED="$FAILED $SVC"
+            fi
+          done
+
+          if [ -n "$FAILED" ]; then
+            echo "::error::Restart falló en:$FAILED"
+            exit 1
+          fi
+
+      - name: "🔥 Health check post-deploy"
+        run: |
+          echo "=== Health Checks (30s timeout por endpoint) ==="
+          sleep 8  # Dar tiempo a los containers para arrangue inicial
+
+          check() {
+            local name="$1"
+            local url="$2"
+            local expected="${3:-200}"
+            local code
+            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+            if [ "$code" = "$expected" ]; then
+              echo "  ✅ $name — HTTP $code"
+            else
+              echo "  ⚠️  $name — esperado $expected, recibido $code [$url]"
+            fi
+          }
+
+          check "Gateway"      "http://localhost:18443/health"
+          check "AuthService"  "http://localhost:18443/api/auth/health"
+          check "Frontend"     "http://localhost:3000"
+          echo ""
+          echo "Stack local actualizado en:"
+          echo "  https://okla.local  (si Caddy está levantado)"
+          echo "  http://localhost:3000 (frontend directo)"
+          echo "  http://localhost:18443 (gateway API)"
+
+      - name: "📋 Summary"
+        if: always()
+        run: |
+          echo "## 🐳 Development Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Servicio | Estado |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          for SVC in ${{ steps.services.outputs.list }}; do
+            STATUS=$(docker compose ps --status running "$SVC" 2>/dev/null | grep -c "$SVC" || echo "0")
+            if [ "$STATUS" -gt "0" ]; then
+              echo "| \`$SVC\` | ✅ running |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| \`$SVC\` | ❌ stopped |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY

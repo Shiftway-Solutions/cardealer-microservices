@@ -20,7 +20,7 @@ name: 🔍 PR Checks
 
 on:
   pull_request:
-    branches: [main, staging, "sprint/**"]
+    branches: [main, staging, development, "sprint/**"]
 
 # Evita ejecuciones duplicadas
 concurrency:

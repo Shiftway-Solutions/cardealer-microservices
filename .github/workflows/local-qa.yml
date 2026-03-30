@@ -25,6 +25,8 @@ on:
       - "feature/**"
       - "hotfix/**"
       - "fix/**"
+      # development se maneja con development-deploy.yml (build + compose up)
+      # local-qa.yml aquí está excluido para evitar doble ejecución en development
   workflow_dispatch:
     inputs:
       skip_smoke:
