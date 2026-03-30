@@ -35,6 +35,12 @@ public class UpdateDealerCommandHandler : IRequestHandler<UpdateDealerCommand, D
         // Update only provided fields
         if (request.BusinessName != null) dealer.BusinessName = request.BusinessName;
         if (request.TradeName != null) dealer.TradeName = request.TradeName;
+
+        // Regenerate slug if BusinessName or City changed
+        if (request.BusinessName != null || request.City != null)
+        {
+            dealer.Slug = GenerateSlug(dealer.BusinessName, request.City ?? dealer.City);
+        }
         if (request.Description != null) dealer.Description = request.Description;
         if (request.DealerType.HasValue) dealer.DealerType = request.DealerType.Value;
 
@@ -118,8 +124,27 @@ public class UpdateDealerCommandHandler : IRequestHandler<UpdateDealerCommand, D
             MaxListings = dealer.MaxListings,
             IsFeatured = dealer.IsFeatured,
             FeaturedUntil = dealer.FeaturedUntil,
+            Slug = dealer.Slug,
             CreatedAt = dealer.CreatedAt,
             UpdatedAt = dealer.UpdatedAt
         };
+    }
+
+    private static string GenerateSlug(string businessName, string? city)
+    {
+        var raw = string.IsNullOrWhiteSpace(city)
+            ? businessName
+            : $"{businessName} {city}";
+
+        var slug = raw.ToLowerInvariant()
+            .Replace('á', 'a').Replace('é', 'e').Replace('í', 'i')
+            .Replace('ó', 'o').Replace('ú', 'u').Replace('ñ', 'n')
+            .Replace('ü', 'u');
+
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[\s-]+", "-");
+        slug = slug.Trim('-');
+
+        return slug;
     }
 }

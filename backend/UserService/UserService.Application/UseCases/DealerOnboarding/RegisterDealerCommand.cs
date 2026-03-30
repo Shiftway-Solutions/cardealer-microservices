@@ -70,6 +70,7 @@ public class RegisterDealerCommandHandler : IRequestHandler<RegisterDealerComman
         {
             Id = Guid.NewGuid(),
             BusinessName = request.BusinessName,
+            Slug = GenerateSlug(request.BusinessName),
             Email = request.Email,
             Phone = request.Phone ?? string.Empty,
             OwnerUserId = request.UserId,
@@ -102,5 +103,23 @@ public class RegisterDealerCommandHandler : IRequestHandler<RegisterDealerComman
             StepsCompleted = new List<string>(),
             Progress = 0
         };
+    }
+
+    private static string GenerateSlug(string businessName, string? city = null)
+    {
+        var raw = string.IsNullOrWhiteSpace(city)
+            ? businessName
+            : $"{businessName} {city}";
+
+        var slug = raw.ToLowerInvariant()
+            .Replace('á', 'a').Replace('é', 'e').Replace('í', 'i')
+            .Replace('ó', 'o').Replace('ú', 'u').Replace('ñ', 'n')
+            .Replace('ü', 'u');
+
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[\s-]+", "-");
+        slug = slug.Trim('-');
+
+        return slug;
     }
 }

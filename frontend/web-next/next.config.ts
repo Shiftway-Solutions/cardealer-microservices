@@ -327,6 +327,12 @@ const nextConfig: NextConfig = {
         destination: '/registro/:path*',
         permanent: false,
       },
+      // Redirect legacy /iniciar-sesion to /login (old Spanish route removed)
+      {
+        source: '/iniciar-sesion',
+        destination: '/login',
+        permanent: true,
+      },
       // Redirect /preguntas-frecuentes to canonical /faq (SEO + user expectations)
       {
         source: '/preguntas-frecuentes',

@@ -65,6 +65,7 @@ public class PublicDealerListItem
     public string CreatedAt { get; set; } = string.Empty;
     public string? VerifiedAt { get; set; }
     public string? Description { get; set; }
+    public string? Slug { get; set; }
 }
 
 public class ListPublicDealersQueryHandler : IRequestHandler<ListPublicDealersQuery, PublicDealerListResponse>
@@ -130,6 +131,7 @@ public class ListPublicDealersQueryHandler : IRequestHandler<ListPublicDealersQu
                 CreatedAt = d.CreatedAt.ToString("o"),
                 VerifiedAt = d.VerifiedAt?.ToString("o"),
                 Description = d.Description,
+                Slug = d.Slug,
             }).ToList(),
             Pagination = new PaginationInfo
             {

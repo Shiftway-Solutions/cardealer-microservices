@@ -468,13 +468,13 @@ describe('Token Refresh Flow', () => {
       delete storage['okla_refresh_token'];
       mockAuthContext.user = null;
       mockAuthContext.isAuthenticated = false;
-      mockPush('/iniciar-sesion');
+      mockPush('/login');
     });
 
     await mockAuthContext.refreshUser();
 
     expect(mockAuthContext.isAuthenticated).toBe(false);
-    expect(mockPush).toHaveBeenCalledWith('/iniciar-sesion');
+    expect(mockPush).toHaveBeenCalledWith('/login');
   });
 });
 
@@ -620,7 +620,7 @@ describe('Protected Routes', () => {
     // Simulate protected route check
     const requireAuth = () => {
       if (!mockAuthContext.isAuthenticated) {
-        mockReplace('/iniciar-sesion?redirect=/dashboard');
+        mockReplace('/login?redirect=/dashboard');
         return false;
       }
       return true;
@@ -629,7 +629,7 @@ describe('Protected Routes', () => {
     const hasAccess = requireAuth();
 
     expect(hasAccess).toBe(false);
-    expect(mockReplace).toHaveBeenCalledWith('/iniciar-sesion?redirect=/dashboard');
+    expect(mockReplace).toHaveBeenCalledWith('/login?redirect=/dashboard');
   });
 
   it('should allow authenticated users', () => {
@@ -638,7 +638,7 @@ describe('Protected Routes', () => {
 
     const requireAuth = () => {
       if (!mockAuthContext.isAuthenticated) {
-        mockReplace('/iniciar-sesion');
+        mockReplace('/login');
         return false;
       }
       return true;
@@ -658,7 +658,7 @@ describe('Protected Routes', () => {
 
     const requireAuth = (redirectTo: string) => {
       if (!mockAuthContext.isAuthenticated) {
-        mockReplace(`/iniciar-sesion?redirect=${encodeURIComponent(redirectTo)}`);
+        mockReplace(`/login?redirect=${encodeURIComponent(redirectTo)}`);
         return false;
       }
       return true;
@@ -666,7 +666,7 @@ describe('Protected Routes', () => {
 
     requireAuth(targetPath);
 
-    expect(mockReplace).toHaveBeenCalledWith('/iniciar-sesion?redirect=%2Fmis-favoritos');
+    expect(mockReplace).toHaveBeenCalledWith('/login?redirect=%2Fmis-favoritos');
   });
 });
 
