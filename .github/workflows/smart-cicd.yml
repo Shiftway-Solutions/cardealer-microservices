@@ -46,7 +46,7 @@ jobs:
   ci:
     name: "🔨 CI — Build, Test & Push Images"
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 30
+    timeout-minutes: 120 # QEMU linux/amd64 cross-compile on ARM64 = ~20-30 min/service
     outputs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
 
