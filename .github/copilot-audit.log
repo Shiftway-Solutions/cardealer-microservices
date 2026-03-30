@@ -2583,3 +2583,5 @@ test
 [2026-03-30 13:00:57] [GATE] ✅ Completo — Sprint 8 FIX
 [2026-03-30 13:41:44] [MODIFICACIÓN] smart_monitor/observer.py brain.py agent.py — Fix 5 bugs: CDP timeout emergency, reorder overrides, context proxy, session max duration, log chat_len
 [2026-03-30 15:17:03] [GATE] ✅ Gate Pre-Commit passed — S8 Admin Panel fixes verified
+[2026-03-30 15:56:28] [MODIFICACIÓN] .gitignore + smart-cicd.yml — Fix CI/CD stuck: untrack 743 .bak_ files, gitignore bak pattern, timeout 30->120min
+[2026-03-30 16:47:44] [AUDIT-SPRINT] Sprint 8 [reaudit] [TUNNEL] despachado: Admin — Panel de Administración Completo

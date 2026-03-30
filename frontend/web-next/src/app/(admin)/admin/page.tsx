@@ -229,7 +229,7 @@ export default function AdminDashboardPage() {
   const platformStats = [
     {
       title: 'Usuarios Totales',
-      value: stats?.totalUsers.toLocaleString() || '0',
+      value: (stats?.totalUsers ?? 0).toLocaleString() || '0',
       change: stats?.usersChange
         ? `${stats.usersChange > 0 ? '+' : ''}${stats.usersChange}%`
         : '~0%',
@@ -240,7 +240,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: 'Vehículos Activos',
-      value: stats?.activeVehicles.toLocaleString() || '0',
+      value: (stats?.activeVehicles ?? 0).toLocaleString() || '0',
       change: stats?.vehiclesChange
         ? `${stats.vehiclesChange > 0 ? '+' : ''}${stats.vehiclesChange}%`
         : '~0%',
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: 'Dealers Activos',
-      value: stats?.activeDealers.toLocaleString() || '0',
+      value: (stats?.activeDealers ?? 0).toLocaleString() || '0',
       change: stats?.dealersChange
         ? `${stats.dealersChange > 0 ? '+' : ''}${stats.dealersChange}`
         : '~0',
@@ -348,10 +348,11 @@ export default function AdminDashboardPage() {
                       <div
                         className="h-3 w-3 rounded-full"
                         style={{
-                          backgroundColor: PLAN_COLORS[plan.plan.toLowerCase()] || '#6b7280',
+                          backgroundColor:
+                            PLAN_COLORS[(plan.plan ?? '').toLowerCase()] || '#6b7280',
                         }}
                       />
-                      <span className="capitalize">{plan.plan}</span>
+                      <span className="capitalize">{plan.plan ?? 'N/A'}</span>
                       <Badge variant="secondary" className="text-xs">
                         {plan.count} dealers
                       </Badge>
@@ -414,8 +415,10 @@ export default function AdminDashboardPage() {
                             {d.name}
                           </Link>
                           <p className="text-muted-foreground text-xs">
-                            Plan {d.previousPlan} •{' '}
-                            {new Date(d.cancelledAt).toLocaleDateString('es-DO')}
+                            Plan {d.previousPlan ?? '—'} •{' '}
+                            {d.cancelledAt
+                              ? new Date(d.cancelledAt).toLocaleDateString('es-DO')
+                              : '—'}
                           </p>
                           {d.reason && (
                             <p className="text-muted-foreground text-xs italic">
@@ -424,7 +427,7 @@ export default function AdminDashboardPage() {
                           )}
                         </div>
                         <span className="shrink-0 font-medium text-red-600">
-                          -{formatPrice(d.mrrLost)}
+                          -{formatPrice(d.mrrLost ?? 0)}
                         </span>
                       </div>
                     ))}
@@ -609,15 +612,16 @@ export default function AdminDashboardPage() {
                         <Badge
                           variant="outline"
                           style={{
-                            borderColor: PLAN_COLORS[dealer.plan.toLowerCase()] || '#6b7280',
-                            color: PLAN_COLORS[dealer.plan.toLowerCase()] || '#6b7280',
+                            borderColor:
+                              PLAN_COLORS[(dealer.plan ?? '').toLowerCase()] || '#6b7280',
+                            color: PLAN_COLORS[(dealer.plan ?? '').toLowerCase()] || '#6b7280',
                           }}
                         >
-                          {dealer.plan}
+                          {dealer.plan ?? 'N/A'}
                         </Badge>
                       </td>
                       <td className="py-2 pr-4 text-right font-semibold">
-                        {dealer.conversationCount.toLocaleString('es-DO')}
+                        {(dealer.conversationCount ?? 0).toLocaleString('es-DO')}
                       </td>
                       <td className="py-2 text-right">{(dealer.avgPerDay ?? 0).toFixed(1)}</td>
                     </tr>
@@ -704,12 +708,14 @@ export default function AdminDashboardPage() {
                         <p className="text-foreground text-sm font-medium">{item.action}</p>
                         <p className="text-muted-foreground text-sm">{item.subject}</p>
                         <p className="text-muted-foreground text-xs">
-                          {new Date(item.timestamp).toLocaleString('es-DO', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                          {item.timestamp
+                            ? new Date(item.timestamp).toLocaleString('es-DO', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                day: 'numeric',
+                                month: 'short',
+                              })
+                            : '—'}
                         </p>
                       </div>
                     </div>
