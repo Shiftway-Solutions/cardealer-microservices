@@ -1715,7 +1715,7 @@ services:
   # ──────────────────────────────────────────────────────────────────────
 
   azulpaymentservice:
-    profiles: [business]
+    profiles: [coming-soon]
     build:
       context: ./backend
       dockerfile: AzulPaymentService/Dockerfile
@@ -1908,7 +1908,7 @@ services:
 
   # ComplianceService - Puerto 15151 (Cumplimiento Regulatorio General)
   spyneintegrationservice:
-    profiles: [business]
+    profiles: [coming-soon]
     build:
       context: ./backend
       dockerfile: SpyneIntegrationService/SpyneIntegrationService.Api/Dockerfile.dev
@@ -1963,7 +1963,7 @@ services:
 
   # ReportingService - Puerto 15161 (Reportes Generales)
   frontend-web:
-    profiles: [frontend]
+    profiles: [coming-soon]
     build:
       context: ./frontend/web
       dockerfile: Dockerfile.dev
