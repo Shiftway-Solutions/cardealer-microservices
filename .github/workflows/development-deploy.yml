@@ -46,8 +46,6 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
   NUGET_XMLDOC_MODE: "skip"
   NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
-  # All profiles loaded so cross-profile depends_on (e.g. frontend-next → gateway) resolves
-  COMPOSE_PROFILES: "core,frontend,vehicles,ai,business"
 
 # =============================================================================
 # JOB 1 — Detectar qué cambió
@@ -354,7 +352,7 @@ jobs:
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
             # --parallel false para no saturar la RAM del Mac
-            if docker compose build --no-cache "$SVC" 2>&1; then
+            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
               echo "  ✅ $SVC build OK"
             else
               echo "  ❌ $SVC build FALLÓ"
@@ -382,7 +380,7 @@ jobs:
             echo "── 🔄 Restarting $SVC..."
             # --no-deps para no derribar dependencias (postgres, redis, etc.)
             # Si el container no existía, up lo crea; si existe, lo recrea con la nueva imagen
-            if docker compose up -d --no-deps --force-recreate "$SVC" 2>&1; then
+            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose up -d --no-deps --force-recreate "$SVC" 2>&1; then
               echo "  ✅ $SVC → running"
             else
               echo "  ❌ $SVC no pudo reiniciar"
