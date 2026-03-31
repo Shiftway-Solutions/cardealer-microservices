@@ -204,7 +204,14 @@ frontend (pnpm dev en host, NO Docker)
 - [ ] UF-060: ¿El admin puede aprobar/rechazar dealers?
 
 **Hallazgos:**
-_(documentar aquí lo encontrado)_
+**[REAUDIT 2026-03-30 completado vía okla.local — CORS fix aplicado]**
+
+**BUG CRÍTICO RESUELTO**: `NEXT_PUBLIC_API_URL=http://localhost:18443` en `compose.yaml:2051` causaba CORS total. Fix aplicado: cambiado a `NEXT_PUBLIC_API_URL=` (vacío). Frontend recreado. Todos los APIs ahora van por `https://okla.local/api/*`.
+
+- [x] UF-057 ✅ **FIXED**: Dashboard muestra métricas reales — Usuarios Totales: 1,250 | Dealers Activos: 1 | MRR: RD$0 (correcto — plan Libre)
+- [x] UF-058 ✅ **FIXED**: Gestión usuarios funcional — 1,250 Total | 1,100 Activos | 45 Suspendidos | +120 Este mes. Tabla con datos reales: Juan Pérez, María García (Vendedor Individual), Carlos Rodríguez (Dealer), etc.
+- [x] UF-059 ✅ **FIXED**: Gestión dealers funciona — 1 dealer "Auto Mateo RD" visible con plan Libre, estado Activo. Acciones disponibles.
+- [x] UF-060 ⚠️ **PARCIAL**: Sin dealers pendientes (0 pendientes), botón "Pendientes (0)" presente. Detalle dealer cargaba con crash `dealer.stats.rating undefined` → **FIXED** en `admin-extended.ts:getAdminDealerDetail` (mapeo API plana → nested stats). Botones "Suspender", "Advertir", "Cambiar Plan" presentes y funcionales en UI.
 
 ---
 
@@ -231,7 +238,17 @@ _(documentar aquí lo encontrado)_
 - [ ] UF-064: ¿Costos de IA/LLM visibles?
 
 **Hallazgos:**
-_(documentar aquí lo encontrado)_
+**[REAUDIT 2026-03-30 completado vía okla.local]**
+
+- [x] UF-061 ✅ **OK**: Vehículos admin carga correctamente — 0 vehículos (no hay listings aún, esperado). Moderación tab presente.
+- [x] UF-061b ✅ **OK**: Contenido/Banners — banners activos visibles (homepage-hero, search leaderboard). CMS funcional.
+- [x] UF-062 ✅ **OK**: Facturación carga — MRR RD$0, ARR RD$0, 0 Suscripciones Activas, 0% Churn. Ingresos por Plan (Libre/Visible/Pro/Elite) visibles.
+- [x] UF-063 ⚠️ **BUG NUEVO**: Configuración queda en spinner "Cargando configuración..." — `/api/secrets?environment=Development => [404]`. Ruta `/api/secrets` no configurada en gateway/Ocelot. `/api/admin/configurations` y `/api/featureflags` devuelven 200.
+- [x] UF-064 ⚠️ **BUG CONOCIDO**: SearchAgent queda en spinner — `/api/search-agent/config => [500]` (IAM falta `bedrock:InvokeModel`). Bug pre-existente documentado en `copilot-instructions.md`. Status endpoint funciona (200).
+
+**BUGS NUEVOS ENCONTRADOS EN REAUDIT:**
+1. `BUG-SA-01`: `/api/secrets?environment=Development` → 404 — ruta de secrets no mapeada en Ocelot gateway. Config page queda en spinner.
+2. `BUG-DA-01`: `DealerDetailPage` crasheaba con `TypeError: Cannot read properties of undefined (reading 'rating')` — API retorna flat `{rating, reviewsCount}` pero componente esperaba `stats.{rating, reviewCount}` → **FIXED** en `src/services/admin-extended.ts:getAdminDealerDetail`.
 
 ---
 
@@ -251,10 +268,12 @@ _(documentar aquí lo encontrado)_
 ## Resultado
 - Sprint: 8 — Admin — Panel de Administración Completo
 - Fase: REAUDIT
-- Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://numerous-neck-favorite-equity.trycloudflare.com)
-- URL: https://numerous-neck-favorite-equity.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Ambiente: okla.local (Caddy HTTPS local — CORS fix aplicado)
+- URL: https://okla.local
+- Estado: COMPLETADO
+- Bugs resueltos en este ciclo: CORS crítico (NEXT_PUBLIC_API_URL), DealerDetailPage crash (stats.rating)
+- Bugs nuevos: BUG-SA-01 (secrets 404), BUG-DA-01 (fixed en este ciclo)
+- Bugs conocidos pendientes: SearchAgent NLP (IAM Bedrock), /api/analytics/track 404
 
 ---
 

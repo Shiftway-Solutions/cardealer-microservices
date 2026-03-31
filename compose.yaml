@@ -2048,7 +2048,7 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-      - NEXT_PUBLIC_API_URL=http://localhost:18443
+      - NEXT_PUBLIC_API_URL=
       - NEXT_PUBLIC_SITE_URL=http://localhost:3000
       - INTERNAL_API_URL=http://gateway:80
     restart: unless-stopped

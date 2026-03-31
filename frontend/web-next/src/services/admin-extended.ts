@@ -557,8 +557,16 @@ export async function getPendingPayments(): Promise<PendingPayment[]> {
 }
 
 export async function getRevenueByPlan(): Promise<PlanRevenue[]> {
-  const response = await apiClient.get<PlanRevenue[]>('/api/admin/billing/revenue-by-plan');
-  return response.data;
+  const response = await apiClient.get('/api/admin/billing/revenue-by-plan');
+  const raw = response.data;
+  // API returns { byPlan: [...] } wrapper — extract and map to PlanRevenue[]
+  const plans = Array.isArray(raw) ? raw : Array.isArray(raw?.byPlan) ? raw.byPlan : [];
+  return plans.map((p: Record<string, unknown>) => ({
+    plan: (p.planName ?? p.planKey ?? p.plan ?? 'N/A') as string,
+    revenue: (p.totalMrr ?? p.revenue ?? 0) as number,
+    count: (p.dealerCount ?? p.count ?? 0) as number,
+    percentage: (p.percentOfMrr ?? p.percentage ?? 0) as number,
+  }));
 }
 
 export async function exportBillingReport(format: 'pdf' | 'csv' = 'pdf'): Promise<Blob> {
@@ -702,8 +710,31 @@ export async function getAdminReviewStats(): Promise<AdminReviewStats> {
 // ============================================================
 
 export async function getAdminDealerDetail(id: string): Promise<AdminDealerDetail> {
-  const response = await apiClient.get<AdminDealerDetail>(`/api/admin/dealers/${id}`);
-  return response.data;
+  const response = await apiClient.get<
+    AdminDealerDetail & {
+      rating?: number;
+      reviewsCount?: number;
+      vehiclesCount?: number;
+      salesCount?: number;
+      mrr?: number;
+      location?: string;
+    }
+  >(`/api/admin/dealers/${id}`);
+  const raw = response.data;
+  if (!raw.stats) {
+    raw.stats = {
+      rating: raw.rating ?? 0,
+      reviewCount: raw.reviewsCount ?? 0,
+      totalVehicles: raw.vehiclesCount ?? 0,
+      activeListings: raw.vehiclesCount ?? 0,
+      totalSales: raw.salesCount ?? 0,
+      monthlyRevenue: raw.mrr ?? 0,
+    };
+  }
+  if (!raw.address && raw.location) {
+    raw.address = raw.location;
+  }
+  return raw;
 }
 
 export async function getDealerVehicles(dealerId: string): Promise<DealerVehicle[]> {
