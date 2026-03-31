@@ -1,28 +1,25 @@
-# CORRECCIÓN (Intento 2/3) — Sprint 12: SupportAgent — Soporte al Usuario
-
-**Fecha:** 2026-03-31 04:38:29
+# CORRECCIÓN (Intento 3/3) — Sprint 12: SupportAgent — Soporte al Usuario
+**Fecha:** 2026-03-31 05:48:31
 **Fase:** FIX
 **Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
 **Usuario:** Buyer (buyer002@okla-test.com / BuyerTest2026!)
 **URL Base:** https://resource-resist-boating-committee.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
-
 > Auditoría corriendo contra **https://resource-resist-boating-committee.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
 > Asegúrate de que la infra esté levantada: `docker compose up -d`
 > Frontend: `cd frontend/web-next && pnpm dev`
 > Tunnel: `docker compose --profile tunnel up -d cloudflared`
 > Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)
 
-| Servicio                | URL                                                               |
-| ----------------------- | ----------------------------------------------------------------- |
-| Frontend (tunnel)       | https://resource-resist-boating-committee.trycloudflare.com       |
-| API (tunnel)            | https://resource-resist-boating-committee.trycloudflare.com/api/* |
-| Auth Swagger (local)    | http://localhost:15001/swagger                                    |
-| Gateway Swagger (local) | http://localhost:18443/swagger                                    |
+| Servicio | URL |
+|----------|-----|
+| Frontend (tunnel) | https://resource-resist-boating-committee.trycloudflare.com |
+| API (tunnel) | https://resource-resist-boating-committee.trycloudflare.com/api/* |
+| Auth Swagger (local) | http://localhost:15001/swagger |
+| Gateway Swagger (local) | http://localhost:18443/swagger |
 
 ## Instrucciones — FASE DE CORRECCIÓN
-
 En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
 1. Lee la sección 'BUGS A CORREGIR' abajo
@@ -34,7 +31,6 @@ En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 ⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
 
 ## BUGS A CORREGIR
-
 _(El agente que hizo la auditoría documentó los hallazgos aquí.)_
 _(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
 
@@ -42,35 +38,23 @@ Revisa el último reporte en `audit-reports/` o los hallazgos del prompt anterio
 Corrige todos los bugs encontrados:
 
 ## Credenciales
-
-| Rol                 | Email                  | Password       |
-| ------------------- | ---------------------- | -------------- |
-| Admin               | admin@okla.local       | Admin123!@#    |
-| Buyer               | buyer002@okla-test.com | BuyerTest2026! |
-| Dealer              | nmateo@okla.com.do     | Dealer2026!@#  |
-| Vendedor Particular | gmoreno@okla.com.do    | $Gregory1      |
+| Rol | Email | Password |
+|-----|-------|----------|
+| Admin | admin@okla.local | Admin123!@# |
+| Buyer | buyer002@okla-test.com | BuyerTest2026! |
+| Dealer | nmateo@okla.com.do | Dealer2026!@# |
+| Vendedor Particular | gmoreno@okla.com.do | $Gregory1 |
 
 ---
 
 ## TAREAS
 
-- [x] Fix bugs de S12-T01: SupportAgent: preguntas de soporte
-  - BUG-S12-02 (API key inválida): FIXED — added try-catch in SendMessageCommandHandler around Claude API call; returns graceful fallback 200 response instead of 500 when API key is invalid/expired
-  - FIX FILE: backend/SupportAgent/SupportAgent.Application/Features/Chat/Commands/SendMessageCommandHandler.cs
+- [ ] Fix bugs de S12-T01: SupportAgent: preguntas de soporte
 
-- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-  - dotnet restore: ✅
-  - dotnet build /p:TreatWarningsAsErrors=true: ✅ 0 errors, 0 warnings
-  - pnpm lint: ✅ 0 errors (17 warnings pre-existing)
-  - pnpm typecheck: ✅ 0 errors
-  - pnpm install --frozen-lockfile: ✅
-  - CI=true pnpm test -- --run: ✅ 576 tests passed
-  - pnpm build: ✅ Compiled successfully
-  - dotnet test unit: ✅ all unit tests pass (integration tests fail as expected - missing Trait annotations, pre-existing)
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
 - [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` como último paso
 
 ## Resultado
-
 - Sprint: 12 — SupportAgent — Soporte al Usuario
 - Fase: FIX
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)

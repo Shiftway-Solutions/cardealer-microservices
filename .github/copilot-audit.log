@@ -2639,3 +2639,9 @@ test
 [2026-03-31 05:26:19] [MODIFICACION] smart_monitor agent.py actions.py - Fix continue_count reset, screenshots reales OCR, audit log mejorado
 [2026-03-31 05:27:01] [AUDIT-SPRINT] Sprint 12 [reaudit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
 [2026-03-31 05:37:09] [MODIFICACIÓN] .github/workflows/development-deploy.yml — fix curl exit code in health check step (set -e bash compat)
+[2026-03-31 05:44:51] [CREACIÓN] brain_gpt.py + --learn mode — smart-monitor learning mode with manual approval
+[2026-03-31 05:48:32] [AUDIT-SPRINT] Sprint 12 [fix] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 05:55:46] [BACKUP] .prompts/agent/smart_monitor/actions.py — redesign keyboard-first + vscode:// + code chat CLI
+[2026-03-31 06:51:44] [GATE] Iniciando...
+[2026-03-31 07:00:49] [MODIFICACIÓN] .vscode/argv.json, actions.py, agent.py, vscode_chat_reader.py — Fix CDP: add remote-debugging-port 9222; fix CSS selectors; write diagnostic snapshot when CDP unavailable
+[2026-03-31 07:05:09] [MODIFICACIÓN] SupportAgent/LocalFaqMatcher.cs — FIX 3/3 BUG-S12-01/02 local FAQ bank para respuestas sin Claude API

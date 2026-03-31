@@ -167,6 +167,26 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
                 sessionId, detectedModule, sw.ElapsedMilliseconds);
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // LOCAL FAQ BANK: Deterministic answers for common questions
+        // Resolved in <1 ms without requiring the Claude API.
+        // ══════════════════════════════════════════════════════════════
+        if (cachedFaqResponse == null && isFaqCandidate)
+        {
+            var localFaq = LocalFaqMatcher.TryMatch(processedMessage);
+            if (localFaq != null)
+            {
+                cachedFaqResponse = localFaq;
+                // Seed the runtime cache so follow-up repetitions are instant
+                if (!piiResult.DetectionInfo.WasSanitized)
+                    _faqCache.Set(processedMessage, localFaq);
+
+                _logger.LogInformation(
+                    "LocalFAQ match. Session={SessionId}, Module={Module}, Latency={Latency}ms",
+                    sessionId, detectedModule, sw.ElapsedMilliseconds);
+            }
+        }
+
         string responseText;
         int inputTokens = 0, outputTokens = 0;
 
