@@ -2,8 +2,13 @@
 # DEVELOPMENT DEPLOY — Auto-deploy al stack Docker local en el runner Mac
 # =============================================================================
 #
-# Flujo: push a `development` → lint/tests rápidos → docker compose build
-#        solo servicios que cambiaron → docker compose up -d --no-deps
+# ⚠️  PUSH AUTOMÁTICO DESACTIVADO — Usar workflow_dispatch (GitHub UI Actions tab)
+#     o deploy-local.sh para deploys directos a Docker Desktop.
+#
+# Motivo: Docker Desktop credential store (macOS keychain) se bloquea en sesiones
+#         no interactivas. Solución permanente en la Mac:
+#           security set-keychain-settings ~/Library/Keychains/login.keychain-db
+#         (deshabilita auto-lock del keychain)
 #
 # Diferencias vs smart-cicd.yml (main):
 #   ✅ Build nativo ARM64 — SIN QEMU, SIN linux/amd64 → 3-5× más rápido
@@ -19,8 +24,11 @@
 name: "🔧 Development — Local Deploy"
 
 on:
-  push:
-    branches: [development]
+  # ⚠️  Push automático DESACTIVADO — docker-credential-desktop falla con keychain
+  #      bloqueado en sesiones no interactivas. Ejecutar manualmente desde la pestaña
+  #      Actions o reactivar solo cuando el Mac esté desbloqueado continuamente.
+  # push:
+  #   branches: [development]
   workflow_dispatch:
     inputs:
       force_services:
@@ -362,13 +370,20 @@ jobs:
             echo "── 🔨 Building $SVC..."
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
-            # DOCKER_BUILDKIT=0: legacy builder respects DOCKER_CONFIG (not daemon-level credentials)
             # COMPOSE_PROFILES: ensures cross-profile depends_on references resolve
-            if DOCKER_BUILDKIT=0 COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
-              echo "  ✅ $SVC build OK"
+            # Note: keychain error is non-fatal — warn and skip if Docker Desktop locked
+            BUILD_OUT=$(DOCKER_BUILDKIT=0 COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1)
+            BUILD_RC=$?
+            echo "$BUILD_OUT"
+            if [ $BUILD_RC -ne 0 ]; then
+              if echo "$BUILD_OUT" | grep -q "keychain cannot be accessed"; then
+                echo "::warning::⚠️ $SVC build skipped — macOS keychain locked. Unlock keychain and retrigger: security set-keychain-settings ~/Library/Keychains/login.keychain-db"
+              else
+                echo "  ❌ $SVC build FALLÓ"
+                FAILED="$FAILED $SVC"
+              fi
             else
-              echo "  ❌ $SVC build FALLÓ"
-              FAILED="$FAILED $SVC"
+              echo "  ✅ $SVC build OK"
             fi
           done
 
