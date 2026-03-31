@@ -50,11 +50,15 @@ async function fetchSponsoredVehicles(
       }
     }
   } catch {
-    // Fall back to local demo data
+    // Ad server not available — return empty to avoid showing stale demo links
   }
 
-  // Use demo data from ad engine
-  return generateSponsoredVehiclesForSlot(slot, params?.count);
+  // Only use demo data in development when NEXT_PUBLIC_USE_DEMO_ADS is set
+  if (process.env.NEXT_PUBLIC_USE_DEMO_ADS === 'true') {
+    return generateSponsoredVehiclesForSlot(slot, params?.count);
+  }
+
+  return [];
 }
 
 /**
