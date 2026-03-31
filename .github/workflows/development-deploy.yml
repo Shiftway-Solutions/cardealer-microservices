@@ -46,6 +46,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "true"
   NUGET_XMLDOC_MODE: "skip"
   NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
+  # All profiles loaded so cross-profile depends_on (e.g. frontend-next → gateway) resolves
+  COMPOSE_PROFILES: "core,frontend,vehicles,ai,business"
 
 # =============================================================================
 # JOB 1 — Detectar qué cambió
