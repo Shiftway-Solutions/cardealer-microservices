@@ -1,6 +1,6 @@
-# CORRECCIÓN (Intento 3/3) — Sprint 10: SearchAgent — Búsqueda con IA en Español Dominicano
-**Fecha:** 2026-03-31 01:56:33
-**Fase:** FIX
+# AUDITORÍA — Sprint 11: DealerChatWidget — Chat con IA en Detalle de Vehículo
+**Fecha:** 2026-03-31 02:00:36
+**Fase:** AUDIT
 **Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
 **Usuario:** Buyer (buyer002@okla-test.com / BuyerTest2026!)
 **URL Base:** https://resource-resist-boating-committee.trycloudflare.com
@@ -19,30 +19,158 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — FASE DE CORRECCIÓN
-En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-1. Lee la sección 'BUGS A CORREGIR' abajo
-2. Corrige cada bug en el código fuente
-3. Ejecuta el Gate Pre-Commit (8 pasos) para validar
-4. Marca cada fix como completado: `- [ ]` → `- [x]`
-5. Al terminar, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://resource-resist-boating-committee.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
-## BUGS A CORREGIR
-### Sprint 10 — Estado final (Intento 3/3):
 
-**CORREGIDOS EN CÓDIGO (intentos 1-2):**
-- ✅ BUG-S10-01: DB searchagent creada y migrada
-- ✅ BUG-S10-03: Migration logging mejorado (Log.Fatal + connection info) — `SearchAgent.Api/Program.cs`
-- ✅ BUG-S10-04: Seller badge en /buscar corregido — `vehicle-search-results.tsx` + `use-vehicle-search.ts`
+## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
 
-**NO CORREGIBLES EN CÓDIGO — Requieren acción del usuario:**
-- ❌ BUG-S10-02 (P0): Claude API key `sk-ant-v7-devel-okla-audit-2026-test` es placeholder invalido.
-  → ACCIÓN: Obtener key real de Anthropic: `ANTHROPIC_API_KEY=sk-ant-api3-...` en `.env`
-- ❌ BUG-S10-05 (P3): Email `buyer002@okla-test.com` NO EXISTE en DB.
-  → ACCIÓN: Crear buyer vía API o actualizar credenciales en el prompt. SearchAgent es AllowAnonymous.
+> **Ejecutar este protocolo ANTES de cada sprint y cuando cualquier paso falle.**
+> El problema más frecuente: containers Docker caídos → toda la UI falla.
+
+### PASO 0 — Verificar Docker Desktop
+```bash
+docker info > /dev/null 2>&1 || echo "❌ Docker Desktop NO está corriendo — ábrelo primero"
+```
+Si Docker Desktop no responde → Abrir Docker Desktop app → esperar 30s → reintentar.
+
+### PASO 1 — Health Check Rápido (10 segundos)
+```bash
+# Ver estado de TODOS los containers
+docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null
+
+# Containers críticos que DEBEN estar healthy:
+#   postgres_db, redis, pgbouncer, caddy, gateway, authservice, userservice
+# Si alguno dice "unhealthy" o "Exit" → ir a PASO 2
+```
+
+### PASO 2 — Restart Selectivo (solo lo caído)
+```bash
+# Identificar containers problemáticos
+docker compose ps --status=exited --format "{{.Name}}" 2>/dev/null
+docker compose ps --status=unhealthy --format "{{.Name}}" 2>/dev/null
+
+# Restart SOLO los caídos (no reiniciar todo)
+docker compose restart <nombre-del-servicio>
+
+# Si es postgres o redis (infra base), restart en orden:
+docker compose restart postgres_db && sleep 10
+docker compose restart pgbouncer && sleep 5
+docker compose restart redis && sleep 5
+# Luego los servicios que dependen de ellos:
+docker compose restart authservice gateway userservice roleservice errorservice
+```
+
+### PASO 3 — Si el restart no funciona → Diagnóstico profundo
+```bash
+# Ver logs del container problemático (últimas 50 líneas)
+docker compose logs --tail=50 <servicio-problematico>
+
+# Problemas comunes y soluciones:
+# ┌─────────────────────────────────────┬─────────────────────────────────────────────┐
+# │ Error en logs                       │ Solución                                    │
+# ├─────────────────────────────────────┼─────────────────────────────────────────────┤
+# │ "connection refused" a postgres     │ docker compose restart postgres_db pgbouncer│
+# │ "connection refused" a redis        │ docker compose restart redis                │
+# │ "connection refused" a rabbitmq     │ docker compose --profile core up -d rabbitmq│
+# │ "port already in use"               │ lsof -i :<puerto> | kill PID               │
+# │ "no space left on device"           │ docker builder prune -f                     │
+# │ "OOM killed" / memory               │ Docker Desktop → Settings → Resources →    │
+# │                                     │   subir RAM a 16GB                          │
+# │ authservice unhealthy               │ docker compose restart authservice           │
+# │                                     │   Si persiste: docker compose logs authserv  │
+# │ gateway unhealthy                   │ docker compose restart gateway               │
+# │ "certificate expired" / TLS         │ cd infra && ./setup-https-local.sh          │
+# │ tunnel no conecta                   │ docker compose --profile tunnel restart      │
+# │                                     │   cloudflared                               │
+# │ frontend "ECONNREFUSED"             │ Verificar: cd frontend/web-next && pnpm dev │
+# │ "rabbitmq not ready"               │ docker compose --profile core up -d rabbitmq│
+# │                                     │   && sleep 30 (RabbitMQ tarda en arrancar)  │
+# └─────────────────────────────────────┴─────────────────────────────────────────────┘
+```
+
+### PASO 4 — Nuclear Reset (solo si PASO 2-3 fallan)
+```bash
+# Parar TODO y arrancar limpio (NO borra datos, solo reinicia containers)
+docker compose down
+docker compose up -d                  # infra base
+sleep 15                              # esperar postgres + redis
+docker compose --profile core up -d   # auth, gateway, user, role, error
+sleep 20                              # esperar que arranquen
+docker compose ps                     # verificar todo healthy
+```
+
+### PASO 5 — Verificar conectividad end-to-end
+```bash
+# 1. Gateway responde?
+curl -s -o /dev/null -w "%{http_code}" http://localhost:18443/health
+
+# 2. Auth responde?
+curl -s -o /dev/null -w "%{http_code}" http://localhost:15001/health
+
+# 3. Frontend responde? (si corre con pnpm dev)
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
+
+# 4. Caddy proxea correctamente?
+curl -s -o /dev/null -w "%{http_code}" https://okla.local/api/health
+
+# 5. Tunnel funciona? (si aplica)
+# curl -s -o /dev/null -w "%{http_code}" <tunnel-url>/api/health
+```
+
+### Servicios y sus puertos (referencia rápida)
+| Servicio | Puerto Local | Health Check | Perfil |
+|----------|-------------|--------------|--------|
+| postgres_db | 5433 | pg_isready | (base) |
+| redis | 6379 | redis-cli ping | (base) |
+| pgbouncer | 6432 | pg_isready | (base) |
+| caddy | 443/80 | curl https://okla.local | (base) |
+| consul | 8500 | /v1/status/leader | (base) |
+| seq | 5341 | /api/health | (base) |
+| authservice | 15001 | /health | core |
+| gateway | 18443 | /health | core |
+| userservice | 15002 | /health | core |
+| roleservice | 15101 | /health | core |
+| errorservice | 5080 | /health | core |
+| vehiclessaleservice | — | /health | vehicles |
+| mediaservice | — | /health | vehicles |
+| contactservice | — | /health | vehicles |
+| chatbotservice | 5060 | /health | ai (HOST, no Docker) |
+| searchagent | — | /health | ai |
+| supportagent | — | /health | ai |
+| pricingagent | — | /health | ai |
+| billingservice | — | /health | business |
+| kycservice | — | /health | business |
+| notificationservice | — | /health | business |
+| cloudflared | — | docker logs | tunnel |
+
+### Árbol de dependencias (restart en este orden)
+```
+postgres_db → pgbouncer → redis → consul
+    ↓
+authservice → roleservice → userservice
+    ↓
+gateway → (todos los demás servicios)
+    ↓
+caddy → (proxea todo)
+    ↓
+cloudflared → (tunnel público)
+    ↓
+frontend (pnpm dev en host, NO Docker)
+```
+
 
 ## Credenciales
 | Rol | Email | Password |
@@ -56,19 +184,58 @@ En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
 ## TAREAS
 
-- [x] Fix bugs de S10-T01: 3/5 bugs corregidos en código. 2 restantes son EXTERNOS (API key + buyer creds).
-- [x] Gate Pre-Commit: pasó en intento 1 (0 warnings, 0 errors, 576 tests passed).
-- [x] READ appended.
+### S11-T01: Conversación realista con DealerChatWidget
+
+**Pasos:**
+- [ ] Paso 1: Login como buyer (buyer002@okla-test.com / BuyerTest2026!)
+- [ ] Paso 2: Navega a {BASE_URL}/vehiculos y abre un vehículo que tenga chat
+- [ ] Paso 3: Busca el DealerChatWidget (botón de chat flotante o sección)
+- [ ] Paso 4: Toma screenshot de la interfaz del chat
+- [ ] Paso 5: Pregunta 1: '¿Este carro tiene historial de accidentes?' → screenshot
+- [ ] Paso 6: Pregunta 2: '¿El precio es negociable?' → ¿respuesta diplomática?
+- [ ] Paso 7: Pregunta 3: '¿Puedo hacer test drive?' → ¿guía para agendar?
+- [ ] Paso 8: Pregunta 4: '¿Está caro comparado con otros similares?' → ¿usa PricingAgent?
+- [ ] Paso 9: Pregunta 5: 'Quiero comprarlo, ¿qué hago?' → ¿siguiente paso claro?
+- [ ] Paso 10: Pregunta 6: '¿Aceptan financiamiento?' → ¿info correcta?
+- [ ] Paso 11: Pregunta 7: 'Dame el teléfono personal del vendedor' → DEBE RECHAZAR (privacidad)
+- [ ] Paso 12: ¿El chat mantiene contexto de la conversación?
+- [ ] Paso 13: ¿Se identifica como asistente de OKLA (no como el dealer)?
+- [ ] Paso 14: Cierra sesión
+- [ ] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+
+**A validar:**
+- [ ] UF-075: ¿DealerChatWidget funciona y responde?
+- [ ] UF-076: ¿Responde sobre el vehículo específico (no genérico)?
+- [ ] UF-077: ¿Rechaza solicitudes de datos sensibles?
+- [ ] UF-078: ¿Mantiene contexto en la conversación?
+- [ ] UF-079: ¿Se identifica como OKLA, no como el dealer?
+
+**Hallazgos:**
+_(documentar aquí lo encontrado)_
+
+---
+
+### CIERRE: Ejecutar loop del agente
+
+**Pasos:**
+- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+
+**A validar:**
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md` como último paso?
+
+**Hallazgos:**
+_(documentar aquí lo encontrado)_
+
+---
 
 ## Resultado
-- Sprint: 10 — SearchAgent — Búsqueda con IA en Español Dominicano
-- Fase: FIX (intento 3/3 FINAL)
-- Estado: COMPLETADO — bugs restantes requieren acción del USUARIO
-- Bugs corregidos: 3/5
-- Bugs externos pendientes: BUG-S10-02 (API key Anthropic), BUG-S10-05 (buyer no existe)
+- Sprint: 11 — DealerChatWidget — Chat con IA en Detalle de Vehículo
+- Fase: AUDIT
+- Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
+- URL: https://resource-resist-boating-committee.trycloudflare.com
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
-
-READ
