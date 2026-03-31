@@ -2600,3 +2600,29 @@ test
 [2026-03-30 21:19:24] [MODIFICACIÓN] .prompts/prompt_1.md — sprint 8 FIX phase complete, all tasks marked, READ appended
 [2026-03-30 21:25:36] [MODIFICACIÓN] development-deploy.yml — re-enable push trigger + unlock keychain step (security set-keychain-settings already run locally)
 [2026-03-30 21:35:35] [CREACIÓN] .git/hooks/post-push — deploy automático a Docker Desktop en push a development
+[2026-03-30 22:27:19] [AUDIT-SPRINT] Sprint 8 [fix] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 22:27:21] [REAUDIT] Sprint8 Admin Panel completed — CORS fix + DealerDetail crash fix pushed to development
+[2026-03-30 22:29:20] [AUDIT-SPRINT] Sprint 8 [reaudit] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 22:30:20] [AUDIT-SPRINT] Sprint 8 completado (ciclo completo)
+[2026-03-30 22:30:21] [AUDIT-SPRINT] Sprint 9 [audit] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-30 22:52:56] [MODIFICACIÓN] .prompts/agent/smart_monitor/brain.py,.prompts/agent/smart_monitor/observer.py — stall recovery moved to deterministic overrides
+[2026-03-30 23:32:52] [AUDIT-SPRINT] Sprint 9 [fix] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-30 23:43:23] [AUDIT-SPRINT] Sprint 9 [reaudit] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-31 00:42:54] [MODIFICACIÓN] VehiclesController.cs — Added seller fields to GetSimilar response (BUG-S9-02)
+[2026-03-31 00:42:54] [AUDIT-SPRINT] Sprint 9 [fix] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-31 00:46:25] [AUDIT-SPRINT] Sprint 9 [reaudit] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-31 00:50:25] [AUDIT-SPRINT] Sprint 9 [fix] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-31 00:53:56] [AUDIT-SPRINT] Sprint 9 [reaudit] [TUNNEL] despachado: Detalle de Vehículo — La Página Más Importante
+[2026-03-31 00:59:56] [AUDIT-SPRINT] Sprint 9 completado (ciclo completo)
+[2026-03-31 00:59:56] [AUDIT-SPRINT] Sprint 10 [audit] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:23:57] [AUDIT-SPRINT] Sprint 10 [fix] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:43:59] [AUDIT-SPRINT] Sprint 10 [reaudit] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:49:30] [AUDIT-SPRINT] Sprint 10 [fix] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:52:32] [AUDIT-SPRINT] Sprint 10 [reaudit] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:56:34] [AUDIT-SPRINT] Sprint 10 [fix] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 01:58:36] [AUDIT-SPRINT] Sprint 10 [reaudit] [TUNNEL] despachado: SearchAgent — Búsqueda con IA en Español Dominicano
+[2026-03-31 02:00:36] [AUDIT-SPRINT] Sprint 10 completado (ciclo completo)
+[2026-03-31 02:00:38] [AUDIT-SPRINT] Sprint 11 [audit] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 02:24:09] [AUDIT-SPRINT] Sprint 11 [fix] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 02:55:41] [AUDIT-SPRINT] Sprint 11 [reaudit] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 03:40:30] [GATE] Sprint 11 REAUDIT 1/3 — Gate completo: dotnet build 0W/0E, lint 0E, typecheck 0E, tests 576/576, build OK, dotnet test pre-existing only

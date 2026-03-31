@@ -4129,6 +4129,23 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/chat/accept-disclosure",
+      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "DownstreamPathTemplate": "/api/chat/accept-disclosure",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatbotservice",
+          "Port": 80
+        }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/chat/message",
       "UpstreamHttpMethod": ["POST", "OPTIONS"],
       "DownstreamPathTemplate": "/api/chat/message",
