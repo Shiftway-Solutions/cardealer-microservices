@@ -336,10 +336,14 @@ jobs:
 
       - name: "🔓 Configure Docker for CI (disable keychain credsStore)"
         run: |
-          # macOS keychain is inaccessible in non-interactive runner sessions.
-          # Remove credsStore so Docker uses anonymous access for public images.
-          # DOCKER_CONFIG stays as ~/.docker/ so 'docker compose' plugin works.
-          [ -f ~/.docker/config.json ] && python3 -c "import json,os; p=os.path.expanduser('~/.docker/config.json'); c=json.load(open(p)); [c.pop(k,None) for k in ('credsStore','credStore')]; json.dump(c,open(p,'w'),indent=2); print('credsStore removed')" || true
+          # Docker Desktop re-adds credsStore to ~/.docker/config.json in the background.
+          # Fix: use a temp DOCKER_CONFIG dir WITHOUT credsStore + symlink plugins so
+          # 'docker compose' and other CLI plugins are still found by Docker CLI.
+          TMPDIR=$(mktemp -d)
+          python3 -c "import json,os; c=json.load(open(os.path.expanduser('~/.docker/config.json'))); [c.pop(k,None) for k in ('credsStore','credStore')]; json.dump(c,open('$TMPDIR/config.json','w'),indent=2)"
+          ln -s ~/.docker/cli-plugins "$TMPDIR/cli-plugins" 2>/dev/null || true
+          echo "DOCKER_CONFIG=$TMPDIR" >> $GITHUB_ENV
+          echo "✅ DOCKER_CONFIG=$TMPDIR (no credsStore, plugins symlinked)"
 
       - name: "🐳 Build changed services (native ARM64 — no QEMU)"
         run: |
