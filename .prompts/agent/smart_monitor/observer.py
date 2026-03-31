@@ -52,6 +52,22 @@ CHAT_ERROR_PATTERNS = [
     (re.compile(r"rate.limit|429|Too Many Requests|quota.*exhaust|exhausted.*quota|RateLimitError", re.I), "rate_limited"),
     (re.compile(r"overloaded|503|502|500|Internal Server Error|capacity|overloaded_error", re.I), "hard_error"),
     (re.compile(r"cancelled|canceled", re.I), "cancelled"),
+    # VS Code Copilot suggests switching agent/model (rate limit on model, model unavailable)
+    (re.compile(
+        r"switch.*(?:model|agent)"
+        r"|change.*model"
+        r"|not.*available.*model"
+        r"|model.*not.*available"
+        r"|your.*agent.*limit"
+        r"|request.*limit.*reached"
+        r"|try.*(?:a )?different.*model"
+        r"|this model.*(?:isn.t|is not).*available"
+        r"|unable.*to.*use.*model"
+        r"|model.*unavailable"
+        r"|please.*switch.*model"
+        r"|agent.*request.*limit",
+        re.I,
+    ), "agent_switch"),
     # Context window / token limit saturation messages from Copilot Chat UI
     (re.compile(
         r"context.*(?:full|limit|too.long|length|exceeded|window)"
@@ -140,6 +156,10 @@ class Observation:
     # Context saturation (any source)
     context_saturated: bool = False          # True when ANY context-full signal fires
     context_saturations_count: int = 0       # consecutive saturations on current model
+    # Chat UI model switch trigger
+    # True when rate_limited / hard_error / agent_switch detected in chat or log
+    # → agent should call cycle_chat_ui_model() to switch immediately in current session
+    chat_ui_switch_needed: bool = False
 
     # CDP
     cdp_available: bool = False
@@ -205,7 +225,8 @@ class Observation:
             f" | proxy_bytes: {self.cdp_context_proxy_bytes:,}"
             f" | proxy_lleno: {'SÍ' if self.cdp_context_proxy_full else 'NO'}"
             f" | SATURADO: {'⚠️ SÍ' if self.context_saturated else 'NO'}"
-            f" (saturaciones_consecutivas={self.context_saturations_count})",
+            f" (saturaciones_consecutivas={self.context_saturations_count})"
+            f" | SWITCH_UI: {'⚠️ SÍ' if self.chat_ui_switch_needed else 'NO'}",
             "",
             f"VS CODE: {'corriendo' if self.vscode_running else 'DETENIDO'}"
             f" | foco: {'SÍ' if self.vscode_focused else 'NO'}",
@@ -441,6 +462,14 @@ class Observer:
             or "context_full" in obs.snapshot_errors
         )
         obs.context_saturations_count = self._state.get("context_saturations_count", 0)
+
+        # Chat UI switch trigger: rate limit / hard error / agent_switch in any source
+        obs.chat_ui_switch_needed = (
+            obs.log_dominant_event in ("rate_limited", "hard_error")
+            or "rate_limited" in obs.snapshot_errors
+            or "hard_error" in obs.snapshot_errors
+            or "agent_switch" in obs.snapshot_errors
+        )
 
     def _observe_vscode(self, obs: Observation) -> None:
         """Verifica si VS Code está corriendo y tiene foco."""

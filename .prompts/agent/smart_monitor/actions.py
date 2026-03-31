@@ -672,6 +672,190 @@ def open_new_chat_with_stop() -> bool:
     return True
 
 
+# ─── Chat UI model rotation: click the VS Code chat model selector ────────────
+#
+# Triggered when the chat UI shows a rate-limit / hard-error / "switch model" message.
+# This rotates the model IN THE CURRENT OPEN CHAT SESSION — no new chat needed.
+#
+# Different from cycle_model_next() (state.vscdb write → takes effect on NEXT session).
+#
+# Tier 1: CDP Playwright — find the model selector button → click → type model name
+#         into the VS Code QuickPick → Enter
+# Tier 2: vscode://command/workbench.action.chat.changeModel → type model name → Enter
+# Tier 3: AppleScript accessibility — scan VS Code window buttons by label → click → Enter
+
+# CSS selectors for the VS Code chat model selector button (tried in order)
+_CHAT_MODEL_BTN_SELECTORS = [
+    'button[aria-label*="Select model" i]',
+    'button[aria-label*="Change model" i]',
+    'button[aria-label*="model" i][class*="action"]',
+    '[class*="interactive-input"] button[class*="model"]',
+    '[class*="chat-input"] button[class*="model"]',
+    '[class*="chatInput"] button[class*="model"]',
+    'button[aria-label*="Claude" i]',
+    'button[aria-label*="GPT" i]',
+    'button[aria-label*="Sonnet" i]',
+    'button[aria-label*="Haiku" i]',
+    'button[aria-label*="Opus" i]',
+]
+
+VSCODE_CMD_CHAT_CHANGE_MODEL = "workbench.action.chat.changeModel"
+
+
+def _quickpick_select(model_family: str) -> bool:
+    """
+    After a VS Code QuickPick is open, type the model family name to filter
+    and press Enter to select it.
+    Uses pbcopy + Cmd+V to avoid char-by-char key code issues.
+    """
+    try:
+        ensure_vscode_focused()
+        time.sleep(0.3)
+        subprocess.run(["pbcopy"], input=model_family.encode("utf-8"), check=True)
+        run_applescript(
+            'tell application "System Events" to tell process "Code"\n'
+            '    keystroke "v" using {command down}\n'
+            '    delay 0.5\n'
+            f'    key code {_KEY_ENTER}\n'
+            'end tell'
+        )
+        return True
+    except Exception as e:
+        logger.debug(f"_quickpick_select error: {e}")
+        return False
+
+
+def cycle_chat_ui_model(state: dict) -> str:
+    """
+    Rotate the model in the CURRENT VS Code chat session by interacting with the UI.
+
+    Use case: VS Code chat shows a rate-limit error, a hard error, or a
+    "switch to a different model" message.  This switches models WITHOUT
+    opening a new chat session — the new model is active immediately.
+
+    Model pool and index are tracked on state['chat_ui_model_index'], which is
+    independent from the CLI-rotation index used by cycle_model_next().
+
+    Tiers:
+      1. CDP: find the model selector button in the chat panel → click it →
+         type the model family name into the opened QuickPick → Enter
+      2. vscode:// command → QuickPick filter keyboard interaction
+         (fallback when CDP unavailable or button not found)
+      3. AppleScript accessibility → scan window buttons by aria description → click
+
+    Returns the new model ID (e.g. 'copilot/claude-opus-4.6') or '' on failure.
+    """
+    pool = get_model_pool()
+    if not pool:
+        logger.warning("cycle_chat_ui_model: empty pool")
+        return ""
+
+    current_idx = state.get("chat_ui_model_index", 0)
+    if not (0 <= current_idx < len(pool)):
+        current_idx = 0
+
+    new_idx   = (current_idx + 1) % len(pool)
+    new_model = pool[new_idx]
+
+    if not _MODEL_ID_RE.match(new_model):
+        logger.warning(f"cycle_chat_ui_model: invalid model id '{new_model}'")
+        return ""
+
+    # Extract the family part: "copilot/claude-sonnet-4.6" → "claude-sonnet-4.6"
+    model_family = new_model.split("/", 1)[-1] if "/" in new_model else new_model
+
+    logger.info(
+        f"cycle_chat_ui_model: {pool[current_idx]} → {new_model} "
+        f"(index {current_idx}→{new_idx}, family='{model_family}')"
+    )
+
+    success = False
+
+    # ── Tier 1: CDP — find model selector button → click → QuickPick filter ──
+    if is_cdp_available():
+        try:
+            import asyncio as _asyncio
+
+            async def _cdp_click_model():
+                import asyncio
+                playwright, browser, page = await _cdp_connect_page()
+                try:
+                    if page is None:
+                        return False
+                    for sel in _CHAT_MODEL_BTN_SELECTORS:
+                        try:
+                            btn = await page.wait_for_selector(sel, timeout=1200)
+                            if btn:
+                                await btn.click()
+                                await asyncio.sleep(0.8)
+                                # QuickPick filter: type model family, then Enter
+                                await page.keyboard.insert_text(model_family)
+                                await asyncio.sleep(0.4)
+                                await page.keyboard.press("Enter")
+                                return True
+                        except Exception:
+                            continue
+                    return False
+                finally:
+                    await _cdp_close(playwright, browser)
+
+            if _asyncio.run(_cdp_click_model()):
+                success = True
+                logger.info("cycle_chat_ui_model: ✅ via CDP click → QuickPick filter")
+        except Exception as e:
+            logger.debug(f"cycle_chat_ui_model CDP error: {e}")
+
+    # ── Tier 2: vscode:// command → QuickPick keyboard interaction ────────────
+    if not success:
+        dispatched = vscode_exec_command(VSCODE_CMD_CHAT_CHANGE_MODEL)
+        if dispatched:
+            time.sleep(0.9)   # wait for QuickPick to open
+            if _quickpick_select(model_family):
+                success = True
+                logger.info("cycle_chat_ui_model: ✅ via vscode:// command → QuickPick filter")
+
+    # ── Tier 3: AppleScript accessibility → find button by label ─────────────
+    if not success:
+        try:
+            ensure_vscode_focused()
+            time.sleep(0.4)
+            as_script = (
+                'tell application "System Events" to tell process "Code"\n'
+                '    set win to first window whose subrole is "AXStandardWindow"\n'
+                '    repeat with b in (every button of win)\n'
+                '        set lbl to ""\n'
+                '        try\n'
+                '            set lbl to description of b\n'
+                '        end try\n'
+                '        if lbl contains "model" or lbl contains "Claude" '
+                'or lbl contains "GPT" or lbl contains "Sonnet" then\n'
+                '            click b\n'
+                '            return "ok"\n'
+                '        end if\n'
+                '    end repeat\n'
+                '    return "not_found"\n'
+                'end tell'
+            )
+            result = run_applescript(as_script)
+            if "ok" in result:
+                time.sleep(0.8)
+                if _quickpick_select(model_family):
+                    success = True
+                    logger.info("cycle_chat_ui_model: ✅ via AppleScript accessibility")
+            else:
+                logger.debug("cycle_chat_ui_model: AppleScript did not find model button")
+        except Exception as e:
+            logger.debug(f"cycle_chat_ui_model AppleScript error: {e}")
+
+    if success:
+        state["chat_ui_model_index"] = new_idx
+        logger.info(f"cycle_chat_ui_model: now using {new_model} in chat UI")
+    else:
+        logger.warning("cycle_chat_ui_model: all tiers failed — chat UI model unchanged")
+
+    return new_model if success else ""
+
+
 # ─── Screenshot + OCR ──────────────────────────────────────────────────────────
 
 _SCREENSHOTS_DIR = AGENT_DIR / "smart_monitor" / "screenshots"

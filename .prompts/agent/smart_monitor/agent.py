@@ -65,6 +65,7 @@ from smart_monitor.actions import (
     send_loop_prompt,
     open_new_chat_with_stop,
     cycle_model_next,
+    cycle_chat_ui_model,
 )
 
 # ─── Constants ────────────────────────────────────────────────────────────────
@@ -84,8 +85,9 @@ ACTION_COOLDOWNS = {
     "send_continue":     60,
     "open_new_chat":     90,
     "stop_and_new_chat": 90,
-    "cycle_model":      120,
-    "focus_vscode":      30,
+    "cycle_model":           120,
+    "cycle_chat_ui_model":    90,   # Chat UI model switch (rate-limit/hard-error/agent-switch)
+    "focus_vscode":           30,
 }
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -309,8 +311,9 @@ class ManualApprovalGate:
             "send_continue":     "▶️   ENVIAR CONTINUE",
             "open_new_chat":     "🆕  ABRIR NUEVO CHAT",
             "stop_and_new_chat": "⏹️🆕 PARAR Y NUEVO CHAT",
-            "cycle_model":       "🔄  CAMBIAR MODELO",
-            "focus_vscode":      "🖥️  ENFOCAR VS Code",
+            "cycle_model":           "🔄  CAMBIAR MODELO (CLI)",
+            "cycle_chat_ui_model":   "🔄🖥️ CAMBIAR MODELO (Chat UI)",
+            "focus_vscode":          "🖥️  ENFOCAR VS Code",
         }.get(decision.action, f"❓ {decision.action.upper()}")
 
         print(f"  Modelo   : {model_label}")
@@ -503,6 +506,8 @@ class ActionExecutor:
                 ok = self._stop_and_new_chat()
             elif action == "cycle_model":
                 ok = self._cycle_model()
+            elif action == "cycle_chat_ui_model":
+                ok = self._cycle_chat_ui_model_ui()
             elif action == "focus_vscode":
                 ok = self._focus_vscode()
             else:
@@ -578,6 +583,10 @@ class ActionExecutor:
                 self._state["last_rate_limit_ts"] = now
                 self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
                 self._state["context_saturations_count"] = 0   # explicit rotation resets counter
+            elif action == "cycle_chat_ui_model":
+                self._state["chat_ui_switches"] = self._state.get("chat_ui_switches", 0) + 1
+                self._state["last_rate_limit_ts"] = now
+                self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
 
             # Set post-action verification
             self._state["post_action_ts"] = now
@@ -602,6 +611,15 @@ class ActionExecutor:
 
     def _stop_and_new_chat(self) -> bool:
         return open_new_chat_with_stop()
+
+    def _cycle_chat_ui_model_ui(self) -> bool:
+        """Switch model in the CURRENT chat session via UI interaction (no new chat needed)."""
+        new = cycle_chat_ui_model(self._state)
+        if not new:
+            logger.warning("_cycle_chat_ui_model_ui: all tiers failed")
+            return False
+        logger.info(f"Chat UI model switched to {new} (in current session)")
+        return True
 
     def _cycle_model(self) -> bool:
         new = cycle_model_next(self._state)
@@ -739,6 +757,7 @@ def _print_cycle_summary(state: dict, obs, decision) -> None:
         "open_new_chat": "🆕",
         "stop_and_new_chat": "⏹️🆕",
         "cycle_model": "🔄",
+        "cycle_chat_ui_model": "🔄🖥️",
         "focus_vscode": "🖥️",
     }.get(decision.action, "❓")
 
@@ -839,6 +858,26 @@ def run_cycle(
 
     # ═══ VERBOSE OUTPUT — Mostrar análisis de Gemma 3 en terminal ═══
     _print_cycle_summary(state, obs, decision)
+
+    # ─── Chat UI override: rate-limit / hard-error / agent-switch detected ────
+    # When the chat UI signals a model-level error (rate limit, model unavailable,
+    # "switch agent" suggestion), override whatever Gemma decided and switch the
+    # model IN THE CURRENT CHAT SESSION immediately — no new chat needed.
+    # This is independent from context saturation (which opens a new chat).
+    if obs.chat_ui_switch_needed and decision.action not in ("wait", "cycle_chat_ui_model"):
+        logger.info(
+            f"OVERRIDE → cycle_chat_ui_model "
+            f"(chat_ui_switch_needed=True, original_decision={decision.action})"
+        )
+        decision = Decision(
+            action="cycle_chat_ui_model",
+            confidence=0.95,
+            reasoning=(
+                f"Chat UI señala error de modelo ({obs.log_dominant_event}) — "
+                f"cambiando modelo en la sesión actual sin abrir nuevo chat"
+            ),
+            source="override",
+        )
 
     # Si Gemma3 está offline, NO ejecutar ninguna acción
     if decision.source == "gemma3_offline":
