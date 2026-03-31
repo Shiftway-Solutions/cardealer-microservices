@@ -37,9 +37,7 @@ REPO_ROOT    = AGENT_DIR.parent.parent           # repo root
 
 CHAT_SNAPSHOT_FILE = AGENT_DIR / "chat_snapshot.txt"
 LOOP_PROMPT_FILE   = REPO_ROOT / ".prompts" / "AGENT_LOOP_PROMPT.md"
-VSCODE_SETTINGS    = (
-    Path.home() / "Library" / "Application Support" / "Code" / "User" / "settings.json"
-)
+# model_catalog.json: secondary fallback for get_model_pool() when state.vscdb is unavailable
 MODEL_CATALOG_FILE = AGENT_DIR / "model_catalog.json"
 
 # ─── CDP ───────────────────────────────────────────────────────────────────────
@@ -275,69 +273,122 @@ def classify_chat_text(current_text: str, prev_hash: str) -> tuple:
     return ("success" if has_changed else "unknown"), has_changed
 
 
-# ─── Model management ───────────────────────────────────────────────────────────
+# ─── Model management (code chat CLI model) ────────────────────────────────────
+#
+# `code chat` uses the model stored at key "chat.currentLanguageModel.panel"
+# in VS Code's SQLite state database (~/.vscode/User/globalStorage/state.vscdb).
+# Format: "copilot/<model-family>" e.g. "copilot/claude-sonnet-4.6"
+#
+# The available pool comes from "chatModelRecentlyUsed" in the same DB.
+# This is the CORRECT rotation mechanism — settings.json has no effect on
+# which model the code chat CLI session uses.
+
+_VSCODE_STATE_DB = (
+    Path.home()
+    / "Library" / "Application Support" / "Code" / "User"
+    / "globalStorage" / "state.vscdb"
+)
+
+# Validation: only accept model IDs of the form vendor/family (e.g. copilot/gpt-5.4)
+_MODEL_ID_RE = re.compile(r'^[a-zA-Z0-9][\w.\-]*/[\w.\-]+$')
+
+# Built-in fallback pool if the state DB is unavailable
+_FALLBACK_POOL = [
+    "copilot/claude-sonnet-4.6",
+    "copilot/gpt-5.4",
+    "copilot/claude-opus-4.6",
+    "copilot/claude-haiku-4.5",
+]
+
+
+def _state_db_query(sql: str, params: tuple = ()) -> Optional[str]:
+    """Execute a read-only SQL query against the VS Code state DB. Returns first column of first row."""
+    try:
+        import sqlite3 as _sqlite3
+        with _sqlite3.connect(str(_VSCODE_STATE_DB), timeout=5.0) as con:
+            cur = con.execute(sql, params)
+            row = cur.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.debug(f"_state_db_query error: {e}")
+        return None
+
+
+def _state_db_write(sql: str, params: tuple = ()) -> bool:
+    """Execute a write SQL statement against the VS Code state DB."""
+    try:
+        import sqlite3 as _sqlite3
+        with _sqlite3.connect(str(_VSCODE_STATE_DB), timeout=5.0) as con:
+            con.execute("PRAGMA journal_mode=DELETE;")
+            con.execute(sql, params)
+            con.commit()
+        return True
+    except Exception as e:
+        logger.error(f"_state_db_write error: {e}")
+        return False
+
 
 def get_current_model() -> str:
-    """Read the active model ID from VS Code settings.json."""
-    try:
-        raw = VSCODE_SETTINGS.read_text(encoding="utf-8")
-        m = re.search(r'"github\.copilot\.chat\.languageModel"\s*:\s*"([^"]+)"', raw)
-        return m.group(1) if m else ""
-    except Exception:
-        return ""
+    """
+    Return the model currently selected for 'code chat' CLI sessions.
+    Reads 'chat.currentLanguageModel.panel' from the VS Code state DB.
+    Format: 'copilot/claude-sonnet-4.6'
+    """
+    val = _state_db_query(
+        "SELECT value FROM ItemTable WHERE key='chat.currentLanguageModel.panel';"
+    )
+    return val or ""
 
 
 def get_model_pool() -> list:
-    """Return ordered model IDs from model_catalog.json. Empty list if unavailable."""
+    """
+    Return the ordered list of model IDs available for 'code chat' CLI sessions.
+    Reads 'chatModelRecentlyUsed' from the VS Code state DB.
+    Falls back to model_catalog.json ordered_ids, then to _FALLBACK_POOL.
+    """
+    # Primary: VS Code state DB (most accurate — reflects what the user has access to)
+    raw = _state_db_query("SELECT value FROM ItemTable WHERE key='chatModelRecentlyUsed';")
+    if raw:
+        try:
+            pool = json.loads(raw)
+            if isinstance(pool, list) and pool:
+                # Only keep valid copilot/* model IDs
+                valid = [m for m in pool if _MODEL_ID_RE.match(str(m))]
+                if valid:
+                    return valid
+        except Exception:
+            pass
+
+    # Secondary: model_catalog.json (ordered_ids may be populated by older discovery)
     try:
         catalog = json.loads(MODEL_CATALOG_FILE.read_text(encoding="utf-8"))
         ordered = catalog.get("ordered_ids", [])
         if ordered:
+            logger.debug("get_model_pool: using model_catalog.json fallback")
             return list(ordered)
     except Exception:
         pass
-    return []
 
-
-def _write_model_to_settings(model_id: str) -> bool:
-    """
-    Write model_id to VS Code settings.json.
-    Only accepts IDs matching [a-z0-9][a-z0-9.\\-]+ to prevent injection.
-    """
-    if not model_id or not re.fullmatch(r"[a-z0-9][a-z0-9.\-]+", model_id):
-        logger.warning(f"_write_model_to_settings: invalid id '{model_id}'")
-        return False
-    try:
-        raw = VSCODE_SETTINGS.read_text(encoding="utf-8")
-        pattern = r'"github\.copilot\.chat\.languageModel"\s*:\s*"[^"]*"'
-        replacement = f'"github.copilot.chat.languageModel": "{model_id}"'
-        if re.search(pattern, raw):
-            new_raw = re.sub(pattern, replacement, raw)
-        else:
-            # Setting not present yet — insert after opening brace
-            new_raw = raw.replace("{", '{\n  ' + replacement + ',', 1)
-        VSCODE_SETTINGS.write_text(new_raw, encoding="utf-8")
-        logger.info(f"Model written to settings.json: {model_id}")
-        return True
-    except Exception as e:
-        logger.error(f"_write_model_to_settings error: {e}")
-        return False
+    logger.debug("get_model_pool: using built-in fallback pool")
+    return list(_FALLBACK_POOL)
 
 
 def cycle_model_next(state: dict) -> str:
     """
-    Cycle to the next model using state['model_index'] (index-based, no DOM).
-    Fixes the v7 slug-mismatch bug where DOM label ≠ catalog ID.
+    Rotate the model used by 'code chat' CLI sessions.
 
-    Updates state in-place.
-    Returns the new model ID, or current if pool is empty.
+    1. Reads current pool from VS Code state DB (chatModelRecentlyUsed).
+    2. Picks the next model in the pool (index-based, no DOM dependency).
+    3. Writes the new model to 'chat.currentLanguageModel.panel' in state.vscdb.
+       This is the ONLY key that controls which model code chat uses.
+
+    Returns the new model ID string, or '' on failure.
     """
     pool = get_model_pool()
     if not pool:
-        logger.warning("cycle_model_next: empty pool — cannot cycle")
+        logger.warning("cycle_model_next: empty pool — cannot rotate model")
         return state.get("current_model", "")
 
-    # Use state index as ground truth (not DOM, which is unreliable)
     current_idx = state.get("model_index", 0)
     if not (0 <= current_idx < len(pool)):
         current_idx = 0
@@ -345,18 +396,28 @@ def cycle_model_next(state: dict) -> str:
     new_idx   = (current_idx + 1) % len(pool)
     new_model = pool[new_idx]
 
+    if not _MODEL_ID_RE.match(new_model):
+        logger.warning(f"cycle_model_next: skipping invalid model id '{new_model}'")
+        return state.get("current_model", pool[current_idx])
+
     logger.info(
         f"cycle_model_next: {pool[current_idx]} → {new_model} "
         f"(index {current_idx} → {new_idx} of {len(pool)})"
     )
 
-    if _write_model_to_settings(new_model):
-        state["current_model"] = new_model
-        state["model_index"]   = new_idx
-        return new_model
+    # Write to state.vscdb — this is what code chat reads at session start
+    ok = _state_db_write(
+        "UPDATE ItemTable SET value=? WHERE key='chat.currentLanguageModel.panel';",
+        (new_model,),
+    )
+    if not ok:
+        logger.warning("cycle_model_next: DB write failed — model not changed")
+        return state.get("current_model", pool[current_idx])
 
-    # settings write failed — return current model unchanged
-    return state.get("current_model", pool[current_idx])
+    state["current_model"] = new_model
+    state["model_index"]   = new_idx
+    logger.info(f"cycle_model_next: wrote '{new_model}' to state.vscdb → code chat will use it on next session")
+    return new_model
 
 
 # ─── Snapshot freshness guard ───────────────────────────────────────────────────
