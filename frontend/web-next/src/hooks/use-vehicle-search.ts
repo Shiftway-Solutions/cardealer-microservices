@@ -335,22 +335,15 @@ async function fetchVehicles(filters: VehicleSearchFilters): Promise<VehicleSear
     const result = await searchVehicles(params);
 
     // Transform PaginatedResponse<VehicleCardData> to VehicleSearchResponse
+    // Spread item first to preserve VehicleCardData fields (dealerName, isVerified, etc.)
     const vehicles: VehicleSearchResult[] = result.items.map(item => ({
-      id: item.id,
-      slug: item.slug,
+      ...item,
       title: `${item.year} ${item.make} ${item.model}${item.trim ? ' ' + item.trim : ''}`,
-      make: item.make,
-      model: item.model,
-      year: item.year,
-      price: item.price,
-      mileage: item.mileage,
-      transmission: item.transmission,
-      fuelType: item.fuelType,
       bodyType: '',
       location: item.location || '',
       imageUrl: item.imageUrl || '/placeholder-car.jpg',
       dealRating: item.dealRating as VehicleSearchResult['dealRating'],
-      isVerified: item.isCertified,
+      isVerified: item.isCertified || item.isVerified,
       isFeatured: false,
     }));
 
