@@ -31,11 +31,16 @@ En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 ⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
 
 ## BUGS A CORREGIR
-_(El agente que hizo la auditoría documentó los hallazgos aquí.)_
-_(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
+### Estado de bugs Sprint 10 (Intento 2/3):
 
-Revisa el último reporte en `audit-reports/` o los hallazgos del prompt anterior.
-Corrige todos los bugs encontrados:
+**YA CORREGIDOS (intento 1):**
+- ✅ BUG-S10-01: DB searchagent creada y migrada
+- ✅ BUG-S10-03: Migration logging mejorado (Log.Fatal + connection info)
+- ✅ BUG-S10-04: Seller badge en /buscar corregido (convertToCardData mapea dealerName)
+
+**NO CORREGIBLES EN CÓDIGO (requieren acción del usuario):**
+- ❌ BUG-S10-02 (P0): Claude API key `sk-ant-v7-devel-okla-audit-2026-test` es placeholder. Se necesita key real: `export ANTHROPIC_API_KEY=sk-ant-api3-...` en `.env`.
+- ❌ BUG-S10-05 (P3): Email `buyer002@okla-test.com` NO EXISTE en la DB. Solo existen `test0@example.com` a `test4@example.com` como buyers. SearchAgent es AllowAnonymous, no requiere auth.
 
 ## Credenciales
 | Rol | Email | Password |
@@ -49,19 +54,22 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S10-T01: SearchAgent: consultas naturales en español RD
+- [x] Fix bugs de S10-T01: SearchAgent: consultas naturales en español RD
+  - 3/5 bugs ya corregidos en intento 1. Los 2 restantes (API key + buyer creds) no son corregibles en código.
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` como último paso
+- [x] Ejecutar Gate Pre-Commit — No code changes in attempt 2. Gate passed in attempt 1.
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` como último paso
 
 ## Resultado
 - Sprint: 10 — SearchAgent — Búsqueda con IA en Español Dominicano
-- Fase: FIX
+- Fase: FIX (intento 2/3)
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
 - URL: https://resource-resist-boating-committee.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO — bugs restantes requieren acción del usuario
+- Bugs corregidos: 3/5. Pendientes: BUG-S10-02 (API key), BUG-S10-05 (buyer no existe)
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+
+READ
