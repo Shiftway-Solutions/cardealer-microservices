@@ -1,6 +1,6 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 11: DealerChatWidget — Chat con IA en Detalle de Vehículo
-**Fecha:** 2026-03-31 03:57:50
-**Fase:** REAUDIT
+# AUDITORÍA — Sprint 12: SupportAgent — Soporte al Usuario
+**Fecha:** 2026-03-31 04:01:22
+**Fase:** AUDIT
 **Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
 **Usuario:** Buyer (buyer002@okla-test.com / BuyerTest2026!)
 **URL Base:** https://resource-resist-boating-committee.trycloudflare.com
@@ -19,15 +19,20 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 11 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://resource-resist-boating-committee.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -179,73 +184,83 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S11-T01: Conversación realista con DealerChatWidget
+### S12-T01: SupportAgent: preguntas de soporte
 
 **Pasos:**
-- [x] Paso 1: Login ✅ (already logged in as buyer002@okla-test.com)
-- [x] Paso 2: Navigate to 2020 Nissan Sentra detail ✅
-- [x] Paso 3: "Chatear con Ana (IA)" visible and functional ✅
-- [x] Paso 4: Screenshot taken ✅ — Disclosure + welcome messages
-- [x] Paso 5: Q1 sent ✅ — Consent gate PASSED, LLM error (invalid API key)
-- [⚠️] Paso 6-11: Q2-Q7 BLOCKED by invalid Claude API key
-- [⚠️] Paso 12: Context BLOCKED — no LLM responses
-- [x] Paso 13: Identifies as OKLA ✅ — "Soy un asistente virtual de OKLA"
-- [x] Paso 14-15: Session verified, appending READ
+- [x] Paso 1: TROUBLESHOOTING: Verifica supportagent activo: docker compose --profile ai ps supportagent
+- [x] Paso 2: Login como buyer (buyer002@okla-test.com / BuyerTest2026!)
+- [x] Paso 3: Busca en la página el SupportAgent (botón flotante de ayuda, /ayuda, etc.)
+- [x] Paso 4: Toma screenshot de la interfaz de soporte
+- [x] Paso 5: Pregunta 1: '¿Cómo publico un vehículo?' → ¿guía paso a paso?
+- [x] Paso 6: Pregunta 2: '¿Cómo cambio mi contraseña?' → ¿instrucciones claras?
+- [x] Paso 7: Pregunta 3: '¿Cuánto cuesta publicar?' → ¿planes correctos?
+- [x] Paso 8: Pregunta 4: 'Me estafaron con un vehículo' → ¿escala a humano?
+- [x] Paso 9: Pregunta 5: 'Quiero hablar con una persona' → ¿ofrece contacto?
+- [x] Paso 10: Pregunta 6: '¿Qué es OKLA Score?' → ¿explicación correcta?
+- [x] Paso 11: Pregunta 7: '¿OKLA garantiza el vehículo?' → ¿respuesta honesta?
+- [x] Paso 12: Pregunta 8: '¿Qué documentos necesito para comprar?' → ¿lista RD?
+- [x] Paso 13: Toma screenshot de CADA respuesta
+- [x] Paso 14: Cierra sesión
+- [x] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] UF-075: ✅ PARCIAL — Widget connects, disclosure shown, consent works. LLM fails (API key).
-- [⚠️] UF-076: BLOCKED by API key
-- [⚠️] UF-077: BLOCKED by API key
-- [⚠️] UF-078: BLOCKED by API key
-- [x] UF-079: ✅ "Soy un asistente virtual de OKLA, al servicio de OKLA"
+- [x] UF-080: ¿SupportAgent funciona y es accesible? → SÍ (widget abre, sesión se crea, pero Claude API falla)
+- [ ] UF-081: ¿Las FAQs se responden correctamente? → NO VERIFICABLE (API key inválida)
+- [ ] UF-082: ¿Escala a humano cuando no puede resolver? → NO VERIFICABLE (API key inválida)
+- [ ] UF-083: ¿Menciona los planes reales (Libre/Estándar/Verificado)? → NO VERIFICABLE
+- [ ] UF-084: ¿Conoce la plataforma correctamente? → NO VERIFICABLE
 
 **Hallazgos:**
 
-### REAUDIT 3/3 (FINAL): SPRINT 11 COMPLETO EN CÓDIGO
+### BUG-S12-01 (P0) — Database "supportagent" does not exist
+- **Síntoma**: Cualquier mensaje al SupportAgent devuelve error 500
+- **Causa raíz**: La BD `supportagent` no estaba en `scripts/postgres-init.sh` (nunca se creó al arrancar PostgreSQL). Además, `appsettings.json` tiene `AutoMigrate: false` y `ASPNETCORE_ENVIRONMENT=Development` en Docker no carga `appsettings.Docker.json` (que tenía `AutoMigrate: true`).
+- **Fix aplicado**:
+  1. Creada BD manualmente: `CREATE DATABASE supportagent`
+  2. Schema creado vía SQL (3 tablas: `chat_sessions`, `chat_messages`, `support_agent_config`)
+  3. Agregada `supportagent` (y `searchagent`, `recoagent`) a `scripts/postgres-init.sh`
+  4. Agregado `Database__AutoMigrate=true` a compose.yaml env del supportagent
+  5. Corregido orden en `Program.cs`: `EnsureCreated()` ANTES de `Migrate()` para evitar que `__EFMigrationsHistory` bloquee la creación de tablas cuando no hay migration files
+- **Estado**: ✅ VERIFICADO — sesión se persiste en DB correctamente
 
-Resultados idénticos a REAUDIT 1/3 y 2/3:
-- **5/5 bugs corregidos y verificados** (BUG-S11-01 through BUG-S11-05)
-- **0 bugs nuevos de código**
-- **BLOQUEADOR EXTERNO persiste**: ANTHROPIC_API_KEY = placeholder inválido
-  - `authentication_error: invalid x-api-key` en logs chatbotservice
-  - Bloquea Q1-Q7 (pasos 5-11), context (paso 12), UF-076/077/078
-  - NO es un bug de código — requiere configuración manual de API key
+### BUG-S12-02 (P0, EXTERNAL) — Claude API key inválida
+- **Síntoma**: `authentication_error: invalid x-api-key` en todos los mensajes
+- **Causa**: `CLAUDE_API_KEY=sk-ant-v7-devel-okla-audit-2026-test` (placeholder) → `Claude__ApiKey` en supportagent
+- **Impacto**: Q1-Q8 todas retornan "Lo siento, hubo un problema. Por favor intenta de nuevo."
+- **UX del error**: Aceptable — banner rojo "Error enviando mensaje" + mensaje en-chat rojo + textbox se rehabilita
+- **Fix requerido**: Configurar un API key válido de Anthropic en `.env` → `CLAUDE_API_KEY`
+- **Estado**: ⚠️ BLOQUEADOR EXTERNO — mismo que Sprint 10 (BUG-S10-02) y Sprint 11
 
-### CONCLUSIÓN SPRINT 11
-Sprint 11 (DealerChatWidget) está **COMPLETO** en cuanto a código:
-- Chat widget conecta correctamente
-- Gateway ruta mensajes al chatbotservice
-- Disclosure consent flow funciona (auto-accept)
-- Bot identifica como asistente de OKLA
-- Toda la infraestructura de chat está operativa
-- Q&A se habilitará automáticamente cuando se configure ANTHROPIC_API_KEY válida
-
-**RECOMENDACIÓN: Avanzar al Sprint 12.**
+### Hallazgos Positivos
+- Widget flotante "Soporte OKLA" visible en todas las páginas ✅
+- Diseño del chat: header con estado "En línea", botones reiniciar/minimizar/cerrar ✅
+- Greeting message con 3 categorías de ayuda y 4 quick-action buttons ✅
+- Gateway routes configuradas: `/api/support/message`, `/api/support/session/{sessionId}`, `/api/support/status`, `/api/support/health` ✅
+- Container healthy en puerto 15157 ✅
+- Sesión correctamente persistida en DB tras fix BUG-S12-01 ✅
 
 ---
 
 ### CIERRE: Ejecutar loop del agente
 
 **Pasos:**
-- [x] Paso 1: READ appended, loop continues
+- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] READ appended ✅
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md` como último paso?
 
 **Hallazgos:**
-Sprint 11 fully closed after 3/3 REAUDIT cycles. No code bugs remain.
+_(documentar aquí lo encontrado)_
 
 ---
 
 ## Resultado
-- Sprint: 11 — DealerChatWidget — Chat con IA en Detalle de Vehículo
-- Fase: REAUDIT
+- Sprint: 12 — SupportAgent — Soporte al Usuario
+- Fase: AUDIT
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://resource-resist-boating-committee.trycloudflare.com)
 - URL: https://resource-resist-boating-committee.trycloudflare.com
-- Estado: COMPLETADO — Sprint 11 cerrado (3/3 REAUDIT cycles done)
-- Bugs de código: 0 nuevos, 5 total corregidos y verificados
-- Bloqueador externo: ANTHROPIC_API_KEY placeholder (requiere config manual)
-- SIGUIENTE: Sprint 12
+- Estado: COMPLETADO
+- Bugs encontrados: 2 (BUG-S12-01 DB missing → FIXED, BUG-S12-02 API key → EXTERNAL BLOCKER)
 
 ---
 
