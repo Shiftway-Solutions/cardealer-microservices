@@ -60,6 +60,7 @@ from smart_monitor.actions import (
     vscode_focus,
     is_vscode_focused,
     ensure_chat_focused,
+    ensure_vscode_focused,
     vscode_send_continue,
     vscode_open_new_chat,
     send_loop_prompt,
@@ -171,13 +172,39 @@ def default_state() -> dict:
 
 def refresh_live_chat_state(state: dict) -> None:
     """Refresh chat_len and chat_snapshot.txt directly from the live CDP session.
-    
+
     Fix 1: Track consecutive CDP timeouts — signals VS Code under stress.
     Fix 3: Accumulate snapshot diff bytes as a proxy for total context size.
     Fix 5: Log chat_len and proxy_bytes in every cycle for diagnostics.
+    RC5-FIX: When CDP is unavailable, write the diagnostic snapshot ONCE only.
+      Previously, writing the snapshot on EVERY cycle updated its mtime to ~now,
+      causing _snapshot_is_fresh(3.0) to ALWAYS return True → all send_continue,
+      vscode_open_new_chat, and open_new_chat_with_stop calls were silently
+      blocked forever (ok=False) — the root cause of the 08:44–08:48 stall.
     """
     if not is_cdp_available():
         state["chat_len"] = 0
+        # RC5-FIX: Only write the diagnostic once — not on every cycle.
+        # Writing every cycle thrashes chat_snapshot.txt's mtime → always fresh
+        # → _snapshot_is_fresh(3.0) blocks all action-sends indefinitely.
+        try:
+            existing = (
+                CHAT_SNAPSHOT_FILE.read_text(encoding="utf-8")
+                if CHAT_SNAPSHOT_FILE.exists() else ""
+            )
+            if "CDP no disponible" not in existing:
+                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                diag = (
+                    f"# Chat Snapshot — {ts}\n\n"
+                    f"[CDP no disponible — puerto 9222 no está abierto]\n\n"
+                    f"Para habilitar la lectura del chat:\n"
+                    f"  1. Se agregó 'remote-debugging-port': 9222 a ~/.vscode/argv.json\n"
+                    f"  2. Reinicia VS Code para que tome efecto\n\n"
+                    f"Mientras tanto, el agente monitorea via log de Copilot Chat.\n"
+                )
+                CHAT_SNAPSHOT_FILE.write_text(diag, encoding="utf-8")
+        except Exception:
+            pass
         # CDP endpoint unavailable (not a playwright timeout)
         return
 
@@ -567,6 +594,14 @@ class ActionExecutor:
                 self._state["context_proxy_bytes"] = 0
                 self._state["context_proxy_last_hash"] = ""
                 self._state["cdp_consecutive_timeouts"] = 0
+                # RC1-FIX (CRITICO): Resetear last_activity_ts tras nuevo chat exitoso.
+                # Sin esto, secs_since_last_activity = now - last_activity_ts sigue
+                # calculando desde la actividad ANTERIOR del modelo (puede ser 30+ min)
+                # → el override de open_new_chat/send_continue vuelve a disparar al
+                # siguiente ciclo (90s después) → bucle infinito de 8+ open_new_chat.
+                # Con este fix: last_activity_ts=now → secs_since_last_activity=0
+                # → el threshold de 1800s (CDP ciego) protege por 30 min más.
+                self._state["last_activity_ts"] = now
                 # Auto-rotate model after MODEL_ROTATION_ON_SATURATION consecutive new-chats.
                 # This prevents the same model from immediately re-saturating its context
                 # on the very next sprint loop without stopping the Python agent.
@@ -603,9 +638,15 @@ class ActionExecutor:
         return vscode_send_continue()
 
     def _open_new_chat(self) -> bool:
+        # RC4-FIX: Forzar foco VS Code antes de abrir nuevo chat y enviar el
+        # loop prompt.  Sin esto, si otra app está en front, el URL command puede
+        # ser procesado pero el prompt enviado via AppleScript/CLI falla
+        # silenciosamente → nuevo chat abre pero el modelo no recibe instrucciones.
+        ensure_vscode_focused()
+        time.sleep(0.3)
         ok = vscode_open_new_chat()
         if ok:
-            time.sleep(1.0)
+            time.sleep(1.5)  # darle tiempo al chat de estar listo antes del prompt
             send_loop_prompt()
         return ok
 

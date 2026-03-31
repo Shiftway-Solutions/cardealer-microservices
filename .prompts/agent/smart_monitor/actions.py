@@ -233,18 +233,28 @@ def read_chat_via_cdp() -> Optional[str]:
                 if page is None:
                     return None
 
+                # Selectors ordered by specificity — prefer narrow ones first.
+                # Updated 2026-03-31 based on actual VS Code 1.99 DOM snapshot:
+                #   - ".value .rendered-markdown" removed  (class doesn't exist in current VS Code)
+                #   - ".rendered-markdown" added           (base class, always present)
+                #   - ".chat-markdown-part" added          (wrapper div around rendered markdown)
+                #   - ".chat-thinking-title-detail-text" added  (thinking/reasoning blocks)
+                #   - ".interactive-item-container" kept   (outer container per message)
                 selectors = [
-                    ".value .rendered-markdown",
+                    ".rendered-markdown",
+                    ".chat-markdown-part",
+                    ".chat-thinking-title-detail-text",
                     ".chat-request-part",
                     ".interactive-item-container",
-                    ".chat-list-item",
                 ]
+                seen_texts: set[str] = set()
                 all_texts: list[str] = []
                 for sel in selectors:
                     try:
                         for el in page.query_selector_all(sel):
                             txt = el.inner_text().strip()
-                            if txt:
+                            if txt and txt not in seen_texts:
+                                seen_texts.add(txt)
                                 all_texts.append(txt)
                     except Exception:
                         pass
@@ -292,13 +302,30 @@ _VSCODE_STATE_DB = (
 # Validation: only accept model IDs of the form vendor/family (e.g. copilot/gpt-5.4)
 _MODEL_ID_RE = re.compile(r'^[a-zA-Z0-9][\w.\-]*/[\w.\-]+$')
 
-# Built-in fallback pool if the state DB is unavailable
-_FALLBACK_POOL = [
-    "copilot/claude-sonnet-4.6",
-    "copilot/gpt-5.4",
-    "copilot/claude-opus-4.6",
-    "copilot/claude-haiku-4.5",
+# Ordered model pool: 0.33x tier first (cost-efficient), then 0x tier (free fallback).
+# This is the canonical rotation order when the agent switches models on rate-limit.
+_PRIORITY_POOL: list[str] = [
+    # ── Tier 1: 0.33x multiplier (priority) ──────────────────────────────────
+    "copilot/claude-haiku-4.5",        # Claude Haiku 4.5     · 160K ctx
+    "copilot/gemini-3-flash-preview",  # Gemini 3 Flash       · 173K ctx
+    "copilot/gpt-5.1-codex-mini",      # GPT-5.1-Codex-Mini   · 256K ctx
+    "copilot/gpt-5.4-mini",            # GPT-5.4 mini         · (unspec)
+    # ── Tier 2: 0x multiplier (free fallback) ────────────────────────────────
+    "copilot/gpt-4.1",                 # GPT-4.1              · 128K ctx
+    "copilot/gpt-5-mini",              # GPT-5 mini           · 192K ctx
+    "copilot/oswe-vscode-prime",        # Raptor mini (Preview)· 264K ctx
 ]
+
+# Map model IDs → numeric priority tier (lower = higher priority)
+_MODEL_TIER: dict[str, int] = {
+    "copilot/claude-haiku-4.5":       0,
+    "copilot/gemini-3-flash-preview": 0,
+    "copilot/gpt-5.1-codex-mini":     0,
+    "copilot/gpt-5.4-mini":           0,
+    "copilot/gpt-4.1":                1,
+    "copilot/gpt-5-mini":             1,
+    "copilot/oswe-vscode-prime":       1,
+}
 
 
 def _state_db_query(sql: str, params: tuple = ()) -> Optional[str]:
@@ -342,35 +369,51 @@ def get_current_model() -> str:
 
 def get_model_pool() -> list:
     """
-    Return the ordered list of model IDs available for 'code chat' CLI sessions.
-    Reads 'chatModelRecentlyUsed' from the VS Code state DB.
-    Falls back to model_catalog.json ordered_ids, then to _FALLBACK_POOL.
+    Return the ordered model pool for 'code chat' CLI sessions.
+
+    Priority order:
+      1. 0.33x models (cost-efficient) — claude-haiku-4.5, gemini-3-flash-preview,
+         gpt-5.1-codex-mini, gpt-5.4-mini
+      2. 0x models (free fallback) — gpt-4.1, gpt-5-mini, oswe-vscode-prime
+
+    Strategy:
+      - Read what models the user has access to from VS Code state DB
+        (chatModelRecentlyUsed).
+      - Intersect with _PRIORITY_POOL and sort by _MODEL_TIER.
+      - If the intersection is empty, return the full _PRIORITY_POOL so the
+        agent can still attempt rotation (VS Code will reject unknowns gracefully).
     """
-    # Primary: VS Code state DB (most accurate — reflects what the user has access to)
+    db_available: set[str] = set()
     raw = _state_db_query("SELECT value FROM ItemTable WHERE key='chatModelRecentlyUsed';")
     if raw:
         try:
             pool = json.loads(raw)
-            if isinstance(pool, list) and pool:
-                # Only keep valid copilot/* model IDs
-                valid = [m for m in pool if _MODEL_ID_RE.match(str(m))]
-                if valid:
-                    return valid
+            if isinstance(pool, list):
+                db_available = {m for m in pool if _MODEL_ID_RE.match(str(m))}
         except Exception:
             pass
 
-    # Secondary: model_catalog.json (ordered_ids may be populated by older discovery)
-    try:
-        catalog = json.loads(MODEL_CATALOG_FILE.read_text(encoding="utf-8"))
-        ordered = catalog.get("ordered_ids", [])
-        if ordered:
-            logger.debug("get_model_pool: using model_catalog.json fallback")
-            return list(ordered)
-    except Exception:
-        pass
+    if db_available:
+        # Keep only our desired models that are confirmed available, sorted by tier
+        intersection = [m for m in _PRIORITY_POOL if m in db_available]
+        if intersection:
+            logger.debug(
+                f"get_model_pool: {len(intersection)} priority models available "
+                f"(tier-0={sum(1 for m in intersection if _MODEL_TIER.get(m,9)==0)}, "
+                f"tier-1={sum(1 for m in intersection if _MODEL_TIER.get(m,9)==1)})"
+            )
+            return intersection
+        # None of our priority models in DB — sort all DB models by tier, fallback to unknown tier last
+        db_sorted = sorted(
+            db_available,
+            key=lambda m: (_MODEL_TIER.get(m, 9), m)
+        )
+        logger.debug("get_model_pool: no priority models in DB, using tier-sorted DB pool")
+        return db_sorted
 
-    logger.debug("get_model_pool: using built-in fallback pool")
-    return list(_FALLBACK_POOL)
+    # No DB data — use _PRIORITY_POOL directly
+    logger.debug("get_model_pool: state DB unavailable, using _PRIORITY_POOL")
+    return list(_PRIORITY_POOL)
 
 
 def cycle_model_next(state: dict) -> str:
@@ -587,8 +630,18 @@ def stop_current_response() -> bool:
     Fallback: Cmd+ESC keyboard shortcut  (requires chat focus — key code 53)
 
     Returns True if the stop command was dispatched.
+
+    Fix RC2: siempre forzar foco a VS Code antes del URL command.  Si Safari (u
+    otra app) está en primer plano, el comando vscode:// puede ser ignorado por
+    macOS al no tener asociación activa.  Forzar el foco garantiza que el handler
+    de URLs de VS Code procese el comando.
     """
-    # Primary: URL protocol command — most reliable, no focus dependency
+    # RC2-FIX: Forzar foco a VS Code ANTES del URL command para que macOS lo
+    # procese correctamente aunque otra app (Safari, Terminal) esté en front.
+    ensure_vscode_focused()
+    time.sleep(0.2)
+
+    # Primary: URL protocol command
     if vscode_exec_command(VSCODE_CMD_CHAT_STOP):
         logger.info("stop_current_response: dispatched via vscode:// URL protocol")
         time.sleep(0.6)
@@ -639,15 +692,29 @@ def open_new_chat_with_stop() -> bool:
     """
     Full context-recovery sequence:
       1. Abort if chat snapshot is still fresh (agent generating — don't interrupt)
-      2. Stop current response (vscode:// command → Cmd+ESC fallback)
-      3. Open new chat session (vscode:// command → Cmd+N fallback)
-      4. Send AGENT_LOOP_PROMPT to resume the sprint loop
+      2. Force VS Code focus (RC3-FIX: garantiza que stop+new_chat+prompt lleguen)
+      3. Stop current response (vscode:// command → Cmd+ESC fallback)
+      4. Open new chat session (vscode:// command → Cmd+N fallback)
+      5. Send AGENT_LOOP_PROMPT to resume the sprint loop
 
     Returns True if the new chat was opened successfully.
+
+    Fix RC3: forzar foco VS Code al inicio de la secuencia completa.  Sin esto,
+    si Safari u otra app está en front: (a) los screenshots quedan vacíos, (b) el
+    send_loop_prompt via AppleScript falla silenciosamente, (c) el nuevo chat
+    abre pero el modelo nunca recibe el prompt → stall inmediato.
     """
     if _snapshot_is_fresh(3.0):
         logger.warning("open_new_chat_with_stop: snapshot fresh — aborting")
         return False
+
+    # RC3-FIX: Traer VS Code al frente ANTES de todas las acciones.
+    # Necesario para que: (1) screenshots sean válidos, (2) URL commands
+    # sean procesados, (3) el loop prompt llegue via AppleScript/CLI.
+    focused = ensure_vscode_focused()
+    if not focused:
+        logger.warning("open_new_chat_with_stop: VS Code no responde al foco — continuando")
+    time.sleep(0.3)
 
     notify("OKLA Smart Monitor", "Contexto lleno → deteniendo y abriendo nuevo chat")
 
