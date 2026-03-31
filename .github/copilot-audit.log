@@ -2626,3 +2626,13 @@ test
 [2026-03-31 02:24:09] [AUDIT-SPRINT] Sprint 11 [fix] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
 [2026-03-31 02:55:41] [AUDIT-SPRINT] Sprint 11 [reaudit] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
 [2026-03-31 03:40:30] [GATE] Sprint 11 REAUDIT 1/3 — Gate completo: dotnet build 0W/0E, lint 0E, typecheck 0E, tests 576/576, build OK, dotnet test pre-existing only
+[2026-03-31 03:41:44] [AUDIT-SPRINT] Sprint 11 [fix] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 03:45:47] [AUDIT-SPRINT] Sprint 11 [reaudit] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 03:54:19] [AUDIT-SPRINT] Sprint 11 [fix] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 03:57:51] [AUDIT-SPRINT] Sprint 11 [reaudit] [TUNNEL] despachado: DealerChatWidget — Chat con IA en Detalle de Vehículo
+[2026-03-31 04:01:22] [AUDIT-SPRINT] Sprint 11 completado (ciclo completo)
+[2026-03-31 04:01:23] [AUDIT-SPRINT] Sprint 12 [audit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 04:30:26] [AUDIT-SPRINT] Sprint 12 [fix] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 04:33:28] [AUDIT-SPRINT] Sprint 12 [reaudit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 04:38:30] [AUDIT-SPRINT] Sprint 12 [fix] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 05:24:39] [MODIFICACIÓN] SupportAgent.Application/Features/Chat/Commands/SendMessageCommandHandler.cs — add try-catch around Claude API call for graceful fallback BUG-S12-02
