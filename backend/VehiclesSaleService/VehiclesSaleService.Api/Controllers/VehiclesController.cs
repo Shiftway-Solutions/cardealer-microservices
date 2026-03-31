@@ -555,6 +555,18 @@ public class VehiclesController : ControllerBase
             v.ViewCount,
             v.FavoriteCount,
             v.CreatedAt,
+            v.SellerId,
+            v.SellerName,
+            SellerType = v.SellerType.ToString(),
+            v.SellerPhone,
+            v.SellerEmail,
+            v.SellerWhatsApp,
+            v.SellerVerified,
+            v.SellerRating,
+            v.SellerReviewCount,
+            v.SellerCity,
+            v.SellerState,
+            v.SellerLogoUrl,
             Images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
             {
                 i.Id,
