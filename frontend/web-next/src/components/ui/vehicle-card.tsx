@@ -23,7 +23,7 @@ import { DealRatingBadge, type DealRating } from './deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
+import { getVehicleFallbackImage, isValidImageUrl } from '@/lib/vehicle-image-fallbacks';
 import { vehicleService } from '@/services/vehicles';
 import { vehicleKeys } from '@/hooks/use-vehicles';
 import { useLocalComparison } from '@/hooks/use-comparisons';
@@ -73,12 +73,14 @@ export function VehicleCard({
     () => getVehicleFallbackImage(vehicle.id, vehicle.make),
     [vehicle.id, vehicle.make]
   );
-  // Use fallback when the original image fails or is not provided
+  // Use fallback when the original image fails or is not provided.
+  // isValidImageUrl rejects '/placeholder-car.jpg' so make-specific Unsplash
+  // fallbacks are used when the vehicle has no real photos in the DB.
   const effectiveImageUrl = imageError
     ? fallbackError
       ? '/images/car-placeholder.svg'
       : fallbackImage
-    : vehicle.imageUrl || fallbackImage;
+    : isValidImageUrl(vehicle.imageUrl) ? vehicle.imageUrl : fallbackImage;
 
   const handleImageError = React.useCallback(() => {
     if (!imageError) {
