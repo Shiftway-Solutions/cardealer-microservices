@@ -362,8 +362,9 @@ jobs:
             echo "── 🔨 Building $SVC..."
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
-            # --parallel false para no saturar la RAM del Mac
-            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
+            # DOCKER_BUILDKIT=0: legacy builder respects DOCKER_CONFIG (not daemon-level credentials)
+            # COMPOSE_PROFILES: ensures cross-profile depends_on references resolve
+            if DOCKER_BUILDKIT=0 COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
               echo "  ✅ $SVC build OK"
             else
               echo "  ❌ $SVC build FALLÓ"
