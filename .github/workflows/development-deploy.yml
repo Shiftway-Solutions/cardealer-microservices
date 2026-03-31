@@ -415,7 +415,7 @@ jobs:
             local url="$2"
             local expected="${3:-200}"
             local code
-            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || code="000"
             if [ "$code" = "$expected" ]; then
               echo "  ✅ $name — HTTP $code"
             else

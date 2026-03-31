@@ -2637,3 +2637,5 @@ test
 [2026-03-31 04:38:30] [AUDIT-SPRINT] Sprint 12 [fix] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
 [2026-03-31 05:24:39] [MODIFICACIÓN] SupportAgent.Application/Features/Chat/Commands/SendMessageCommandHandler.cs — add try-catch around Claude API call for graceful fallback BUG-S12-02
 [2026-03-31 05:26:19] [MODIFICACION] smart_monitor agent.py actions.py - Fix continue_count reset, screenshots reales OCR, audit log mejorado
+[2026-03-31 05:27:01] [AUDIT-SPRINT] Sprint 12 [reaudit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 05:37:09] [MODIFICACIÓN] .github/workflows/development-deploy.yml — fix curl exit code in health check step (set -e bash compat)
