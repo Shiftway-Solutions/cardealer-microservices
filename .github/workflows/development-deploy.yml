@@ -334,16 +334,12 @@ jobs:
             echo "✅ Infra base ya está corriendo"
           fi
 
-      - name: "🔓 Configure Docker for CI (bypass locked macOS keychain)"
+      - name: "🔓 Configure Docker for CI (disable keychain credsStore)"
         run: |
-          # macOS keychain may be inaccessible in non-interactive runner sessions
-          # (error: "keychain cannot be accessed because the current session does not allow user interaction")
-          # Fix: point DOCKER_CONFIG to a temp dir with a plain config (no credsStore)
-          # This allows pulling public images without keychain access.
-          TMPDIR=$(mktemp -d)
-          echo '{"auths":{}}' > "$TMPDIR/config.json"
-          echo "DOCKER_CONFIG=$TMPDIR" >> $GITHUB_ENV
-          echo "✅ DOCKER_CONFIG=$TMPDIR (no credsStore — keychain bypassed)"
+          # macOS keychain is inaccessible in non-interactive runner sessions.
+          # Remove credsStore so Docker uses anonymous access for public images.
+          # DOCKER_CONFIG stays as ~/.docker/ so 'docker compose' plugin works.
+          [ -f ~/.docker/config.json ] && python3 -c "import json,os; p=os.path.expanduser('~/.docker/config.json'); c=json.load(open(p)); [c.pop(k,None) for k in ('credsStore','credStore')]; json.dump(c,open(p,'w'),indent=2); print('credsStore removed')" || true
 
       - name: "🐳 Build changed services (native ARM64 — no QEMU)"
         run: |
