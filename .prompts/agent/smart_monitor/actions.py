@@ -601,12 +601,112 @@ def open_new_chat_with_stop() -> bool:
     return True
 
 
-# ─── Screenshot stub ────────────────────────────────────────────────────────────
+# ─── Screenshot + OCR ──────────────────────────────────────────────────────────
+
+_SCREENSHOTS_DIR = AGENT_DIR / "smart_monitor" / "screenshots"
+
+
+def _get_vscode_window_id() -> Optional[int]:
+    """Get VS Code main window ID for targeted screencapture."""
+    try:
+        result = run_applescript(
+            'tell application "System Events" to tell process "Code" '
+            'to return id of first window'
+        )
+        val = result.strip()
+        return int(val) if val.isdigit() else None
+    except Exception:
+        return None
+
+
+def ocr_screenshot(png_path: str) -> str:
+    """
+    Extract visible text from a PNG using Apple Vision (pyobjc) with
+    pytesseract as fallback. Returns extracted text or "" on failure.
+    """
+    if not png_path or not Path(png_path).exists():
+        return ""
+    try:
+        # Apple Vision — most accurate on macOS, no external process needed
+        import Vision  # pyobjc-framework-Vision
+        from Foundation import NSData  # type: ignore
+        img_data = NSData.dataWithContentsOfFile_(png_path)
+        if img_data is None:
+            raise ValueError("NSData returned None")
+        handler = Vision.VNImageRequestHandler.alloc().initWithData_options_(
+            img_data, None
+        )
+        request = Vision.VNRecognizeTextRequest.alloc().init()
+        request.setRecognitionLevel_(Vision.VNRequestTextRecognitionLevelAccurate)
+        request.setUsesLanguageCorrection_(True)
+        handler.performRequests_error_([request], None)
+        lines = []
+        for obs in (request.results() or []):
+            candidates = obs.topCandidates_(1)
+            if candidates:
+                lines.append(str(candidates[0].string()))
+        return "\n".join(lines)
+    except Exception as vision_err:
+        logger.debug(f"Vision OCR failed ({vision_err}), trying pytesseract")
+        try:
+            import pytesseract  # type: ignore
+            from PIL import Image
+            img = Image.open(png_path)
+            return pytesseract.image_to_string(img, lang="spa+eng")
+        except Exception as tess_err:
+            logger.debug(f"pytesseract also failed: {tess_err}")
+            return ""
+
 
 def capture_workbench_screenshot(label: str = "manual", extra: dict = None) -> str:
     """
-    Stub implementation — screenshots not captured in standalone agent.
-    v7 dependency removed; re-implement with async CDP if needed.
-    Returns empty string (no-op).
+    Capture VS Code workbench screenshot using macOS screencapture.
+
+    1. Tries to capture only the VS Code window (via window ID).
+    2. Falls back to full-screen capture if window ID unavailable.
+    3. Overlays a JSON metadata strip onto the image (label, timestamp, extra).
+
+    Returns the absolute path to the saved PNG, or "" on any failure.
     """
-    return ""
+    try:
+        _SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:19]  # drop microsec excess
+        safe_label = re.sub(r"[^a-zA-Z0-9_\-]", "_", label)[:40]
+        png_path = _SCREENSHOTS_DIR / f"{ts}_{safe_label}.png"
+
+        window_id = _get_vscode_window_id()
+        if window_id:
+            result = subprocess.run(
+                ["screencapture", "-x", "-l", str(window_id), str(png_path)],
+                capture_output=True,
+                timeout=10,
+            )
+        else:
+            # Fallback: full-screen silent capture
+            result = subprocess.run(
+                ["screencapture", "-x", str(png_path)],
+                capture_output=True,
+                timeout=10,
+            )
+
+        if result.returncode != 0 or not png_path.exists():
+            logger.debug(f"screencapture failed (rc={result.returncode})")
+            return ""
+
+        # Optionally write a sidecar JSON with metadata (label + extra)
+        if extra:
+            sidecar = png_path.with_suffix(".json")
+            try:
+                sidecar.write_text(
+                    json.dumps({"label": label, "ts": ts, **extra}, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass  # sidecar is optional
+
+        logger.debug(f"Screenshot saved: {png_path.name}")
+        return str(png_path)
+
+    except Exception as exc:
+        logger.debug(f"capture_workbench_screenshot error: {exc}")
+        return ""

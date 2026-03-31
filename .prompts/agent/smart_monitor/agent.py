@@ -51,6 +51,7 @@ from smart_monitor.actions import (
     classify_chat_text,
     _text_hash,
     capture_workbench_screenshot,
+    ocr_screenshot,
     notify,
     vscode_focus,
     is_vscode_focused,
@@ -230,8 +231,17 @@ def _write_audit_record(
     before_png: str,
     after_png: str,
     cycle: int,
+    before_ocr: str = "",
+    after_ocr: str = "",
 ) -> None:
-    """Append one JSON-line audit record for every real action executed."""
+    """Append one JSON-line audit record for every real action executed.
+
+    Fields:
+      before_png / after_png  — paths to screenshots (empty if screencapture unavailable)
+      before_ocr / after_ocr  — text extracted from those screenshots via Apple Vision
+      reasoning               — why the brain decided this action
+      source                  — gemma3 | override | gemma3_offline
+    """
     record = {
         "ts":         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "cycle":      cycle,
@@ -241,7 +251,9 @@ def _write_audit_record(
         "confidence": round(decision.confidence, 2),
         "ok":         ok,
         "before_png": before_png,
+        "before_ocr": before_ocr[:2000] if before_ocr else "",   # cap at 2 KB
         "after_png":  after_png,
+        "after_ocr":  after_ocr[:2000] if after_ocr else "",
     }
     try:
         with AUDIT_LOG_FILE.open("a", encoding="utf-8") as fh:
@@ -313,6 +325,9 @@ class ActionExecutor:
             "cycle":      self._state.get("cycle_count", 0),
         }
         before_png = capture_workbench_screenshot(f"{action}_before", before_extra)
+        before_ocr = ocr_screenshot(before_png)
+        if before_ocr:
+            logger.debug(f"[OCR BEFORE] {before_ocr[:300]}")
 
         logger.info(
             f"EXECUTING: {action} (confidence={decision.confidence:.0%}, "
@@ -348,6 +363,9 @@ class ActionExecutor:
             "cycle":     self._state.get("cycle_count", 0),
         }
         after_png = capture_workbench_screenshot(f"{action}_after", after_extra)
+        after_ocr = ocr_screenshot(after_png)
+        if after_ocr:
+            logger.debug(f"[OCR AFTER] {after_ocr[:300]}")
         _write_audit_record(
             action=action,
             decision=decision,
@@ -355,6 +373,8 @@ class ActionExecutor:
             before_png=before_png,
             after_png=after_png,
             cycle=self._state.get("cycle_count", 0),
+            before_ocr=before_ocr,
+            after_ocr=after_ocr,
         )
 
         # Fix 1: Always stamp the per-action cooldown timestamp, even on failure.
@@ -376,6 +396,9 @@ class ActionExecutor:
                 self._state["last_new_chat_ts"] = now
                 self._state["new_chat_count"] = self._state.get("new_chat_count", 0) + 1
                 self._state["error_continue_count"] = 0
+                # FIX: Reset continue_count — sin esto session_too_long permanece True
+                # para siempre → bucle infinito de stop_and_new_chat cada 90s.
+                self._state["continue_count"] = 0
                 # Fix 3: Reset context proxy counters on new chat (fresh session)
                 self._state["context_proxy_bytes"] = 0
                 self._state["context_proxy_last_hash"] = ""
@@ -578,6 +601,21 @@ def run_cycle(
     now = time.time()
     state["cycle_count"] = state.get("cycle_count", 0) + 1
     previous_log_path = state.get("log_path", "")
+
+    # ── Startup self-heal: if continue_count is maxed but we recently opened a
+    # new chat, the previous agent run had the reset-bug → fix in-place so
+    # session_too_long stops being true immediately on the next observe.
+    last_new_chat_ts = state.get("last_new_chat_ts", 0.0)
+    if (
+        state.get("continue_count", 0) >= 20
+        and last_new_chat_ts > 0
+        and (now - last_new_chat_ts) < 600   # new chat was opened <10 min ago
+    ):
+        logger.info(
+            "SELF-HEAL: continue_count was %d after recent new_chat — resetting to 0",
+            state["continue_count"],
+        )
+        state["continue_count"] = 0
 
     # ═══ OBSERVE ═══
     refresh_live_chat_state(state)
