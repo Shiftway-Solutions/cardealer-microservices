@@ -2,13 +2,12 @@
 # DEVELOPMENT DEPLOY — Auto-deploy al stack Docker local en el runner Mac
 # =============================================================================
 #
-# ⚠️  PUSH AUTOMÁTICO DESACTIVADO — Usar workflow_dispatch (GitHub UI Actions tab)
-#     o deploy-local.sh para deploys directos a Docker Desktop.
+# Flujo: push a `development` → lint/tests rápidos → docker compose build
+#        solo servicios que cambiaron → docker compose up -d --no-deps
 #
-# Motivo: Docker Desktop credential store (macOS keychain) se bloquea en sesiones
-#         no interactivas. Solución permanente en la Mac:
-#           security set-keychain-settings ~/Library/Keychains/login.keychain-db
-#         (deshabilita auto-lock del keychain)
+# Prerequisito (una vez, en la Mac del runner):
+#   security set-keychain-settings ~/Library/Keychains/login.keychain-db
+#   (deshabilita auto-lock del keychain — necesario para sesiones no interactivas)
 #
 # Diferencias vs smart-cicd.yml (main):
 #   ✅ Build nativo ARM64 — SIN QEMU, SIN linux/amd64 → 3-5× más rápido
@@ -24,11 +23,8 @@
 name: "🔧 Development — Local Deploy"
 
 on:
-  # ⚠️  Push automático DESACTIVADO — docker-credential-desktop falla con keychain
-  #      bloqueado en sesiones no interactivas. Ejecutar manualmente desde la pestaña
-  #      Actions o reactivar solo cuando el Mac esté desbloqueado continuamente.
-  # push:
-  #   branches: [development]
+  push:
+    branches: [development]
   workflow_dispatch:
     inputs:
       force_services:
@@ -342,16 +338,13 @@ jobs:
             echo "✅ Infra base ya está corriendo"
           fi
 
-      - name: "🔓 Configure Docker for CI (disable keychain credsStore)"
+      - name: "🔓 Unlock macOS keychain (docker-credential-desktop)"
         run: |
-          # Docker Desktop re-adds credsStore to ~/.docker/config.json in the background.
-          # Fix: use a temp DOCKER_CONFIG dir WITHOUT credsStore + symlink plugins so
-          # 'docker compose' and other CLI plugins are still found by Docker CLI.
-          TMPDIR=$(mktemp -d)
-          python3 -c "import json,os; c=json.load(open(os.path.expanduser('~/.docker/config.json'))); [c.pop(k,None) for k in ('credsStore','credStore')]; json.dump(c,open('$TMPDIR/config.json','w'),indent=2)"
-          ln -s ~/.docker/cli-plugins "$TMPDIR/cli-plugins" 2>/dev/null || true
-          echo "DOCKER_CONFIG=$TMPDIR" >> $GITHUB_ENV
-          echo "✅ DOCKER_CONFIG=$TMPDIR (no credsStore, plugins symlinked)"
+          # docker-credential-desktop requiere que el login keychain esté desbloqueado.
+          # auto-lock debe estar desactivado en la Mac del runner:
+          #   security set-keychain-settings ~/Library/Keychains/login.keychain-db
+          security unlock-keychain ~/Library/Keychains/login.keychain-db 2>/dev/null || true
+          echo "✅ Keychain unlocked"
 
       - name: "🐳 Build changed services (native ARM64 — no QEMU)"
         run: |
@@ -371,19 +364,11 @@ jobs:
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
             # COMPOSE_PROFILES: ensures cross-profile depends_on references resolve
-            # Note: keychain error is non-fatal — warn and skip if Docker Desktop locked
-            BUILD_OUT=$(DOCKER_BUILDKIT=0 COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1)
-            BUILD_RC=$?
-            echo "$BUILD_OUT"
-            if [ $BUILD_RC -ne 0 ]; then
-              if echo "$BUILD_OUT" | grep -q "keychain cannot be accessed"; then
-                echo "::warning::⚠️ $SVC build skipped — macOS keychain locked. Unlock keychain and retrigger: security set-keychain-settings ~/Library/Keychains/login.keychain-db"
-              else
-                echo "  ❌ $SVC build FALLÓ"
-                FAILED="$FAILED $SVC"
-              fi
-            else
+            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
               echo "  ✅ $SVC build OK"
+            else
+              echo "  ❌ $SVC build FALLÓ"
+              FAILED="$FAILED $SVC"
             fi
           done
 
