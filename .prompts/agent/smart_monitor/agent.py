@@ -59,6 +59,7 @@ from smart_monitor.actions import (
     notify,
     vscode_focus,
     is_vscode_focused,
+    ensure_chat_focused,
     vscode_send_continue,
     vscode_open_new_chat,
     send_loop_prompt,
@@ -73,6 +74,10 @@ PID_FILE          = AGENT_DIR / "smart_monitor" / ".agent_pid"
 LOG_FILE          = REPO_ROOT / ".github" / "smart-monitor.log"
 AUDIT_LOG_FILE        = AGENT_DIR / "smart_monitor" / "audit_log.jsonl"
 TRAINING_DATA_FILE    = AGENT_DIR / "smart_monitor" / "training_data.jsonl"
+
+# After this many consecutive new-chat actions without a model rotation,
+# auto-rotate to the next model in the pool (prevents re-saturating the same model).
+MODEL_ROTATION_ON_SATURATION = 2
 
 # Minimum seconds between sending the same action type (anti-spam)
 ACTION_COOLDOWNS = {
@@ -154,6 +159,11 @@ def default_state() -> dict:
         # Fix 3: Context proxy — accumulated diff bytes
         "context_proxy_bytes":    0,
         "context_proxy_last_hash": "",
+        # Context saturation auto-rotation counter
+        # Tracks consecutive new-chat actions without a model rotation.
+        # When it reaches MODEL_ROTATION_ON_SATURATION, the executor automatically
+        # cycles the model so the same model doesn’t keep filling its context window.
+        "context_saturations_count": 0,
     }
 
 
@@ -552,9 +562,22 @@ class ActionExecutor:
                 self._state["context_proxy_bytes"] = 0
                 self._state["context_proxy_last_hash"] = ""
                 self._state["cdp_consecutive_timeouts"] = 0
+                # Auto-rotate model after MODEL_ROTATION_ON_SATURATION consecutive new-chats.
+                # This prevents the same model from immediately re-saturating its context
+                # on the very next sprint loop without stopping the Python agent.
+                sat_count = self._state.get("context_saturations_count", 0) + 1
+                self._state["context_saturations_count"] = sat_count
+                if sat_count >= MODEL_ROTATION_ON_SATURATION:
+                    logger.info(
+                        f"context_saturations_count={sat_count} ≥ {MODEL_ROTATION_ON_SATURATION} "
+                        f"— auto-rotating model to avoid re-saturation"
+                    )
+                    self._cycle_model()
+                    self._state["context_saturations_count"] = 0
             elif action == "cycle_model":
                 self._state["last_rate_limit_ts"] = now
                 self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
+                self._state["context_saturations_count"] = 0   # explicit rotation resets counter
 
             # Set post-action verification
             self._state["post_action_ts"] = now
@@ -586,15 +609,18 @@ class ActionExecutor:
             logger.warning("_cycle_model: could not determine new model (empty pool?)")
             return False
         logger.info(f"Model cycled → {new}")
-        # Wait for VS Code to apply the settings change, then send continue
+        # Open a fresh chat so the new model is immediately active (not inherited from old context).
+        # Wait briefly for VS Code to apply the settings.json change first.
         time.sleep(2.0)
-        vscode_send_continue()
+        vscode_open_new_chat()
+        time.sleep(1.0)
+        send_loop_prompt()
         self._state["last_continue_ts"] = time.time()
         self._state["continue_count"] = self._state.get("continue_count", 0) + 1
         return True
 
     def _focus_vscode(self) -> bool:
-        vscode_focus()
+        ensure_chat_focused()
         return is_vscode_focused()
 
 
