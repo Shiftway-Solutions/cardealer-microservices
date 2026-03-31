@@ -86,6 +86,116 @@ def is_vscode_focused() -> bool:
         return True  # assume focused on error
 
 
+# ─── VS Code command execution (URL protocol + CLI) ────────────────────────────
+#
+# KEY TECHNIQUES FOR COPILOT CHAT CONTROL:
+#   1. vscode://command/<id>  — executes any VS Code command, no focus required
+#   2. code chat "msg" --reuse-window  — sends prompt to existing window's chat
+#   3. AppleScript key code  — keyboard shortcuts (requires focus first)
+#
+# VS Code Chat keyboard shortcuts (macOS, mapped to key codes):
+#   Ctrl+Cmd+I   → open/focus Chat panel     (key 34 = i,  ctrl+cmd)
+#   Cmd+Shift+I  → open Chat in Agent mode   (key 34 = i,  shift+cmd)
+#   Cmd+ESC      → stop generation           (key 53 = ESC, cmd)
+#   Cmd+N        → new chat editor in context (key 45 = n,  cmd)
+#   Enter        → submit message            (key 36)
+
+# Known VS Code Copilot Chat command IDs
+VSCODE_CMD_CHAT_OPEN        = "workbench.action.chat.open"
+VSCODE_CMD_CHAT_NEW         = "workbench.action.chat.newChat"
+VSCODE_CMD_CHAT_STOP        = "workbench.action.chat.stop"
+VSCODE_CMD_CHAT_FOCUS_INPUT = "workbench.action.chat.focusInput"
+
+# AppleScript key codes for macOS
+_KEY_ESC   = 53
+_KEY_I     = 34
+_KEY_N     = 45
+_KEY_ENTER = 36
+
+
+def vscode_exec_command(command_id: str) -> bool:
+    """
+    Execute a VS Code command via the vscode:// URL protocol.
+    No window focus required — works even if VS Code is in the background.
+    Returns True if the URL was dispatched (command may still be async).
+    """
+    try:
+        r = subprocess.run(
+            ["open", f"vscode://command/{command_id}"],
+            capture_output=True, text=True, timeout=5,
+        )
+        time.sleep(0.3)
+        return r.returncode == 0
+    except Exception as e:
+        logger.debug(f"vscode_exec_command({command_id}) error: {e}")
+        return False
+
+
+def vscode_cli_chat(message: str, mode: str = "agent") -> bool:
+    """
+    Send a message to VS Code Copilot Chat via the 'code chat' CLI subcommand.
+    Uses --reuse-window to target the existing VS Code instance.
+    No window focus required.
+    Returns True if the CLI exited successfully.
+    """
+    try:
+        r = subprocess.run(
+            ["code", "chat", "--mode", mode, "--reuse-window", message],
+            capture_output=True, text=True, cwd=str(REPO_ROOT), timeout=20,
+        )
+        if r.returncode != 0:
+            logger.debug(f"vscode_cli_chat failed (rc={r.returncode}): {r.stderr[:200]}")
+        return r.returncode == 0
+    except Exception as e:
+        logger.debug(f"vscode_cli_chat error: {e}")
+        return False
+
+
+def _vscode_keystroke(key_code: int, modifiers: list) -> None:
+    """
+    Send a key code + modifiers to VS Code via AppleScript System Events.
+    REQUIRES VS Code to already be the frontmost application.
+    modifiers: list of strings — "command", "control", "option", "shift"
+    """
+    if modifiers:
+        mod_str = "{" + ", ".join(f"{m} down" for m in modifiers) + "}"
+        script = (
+            f'tell application "System Events" to tell process "Code"\n'
+            f'    key code {key_code} using {mod_str}\n'
+            f'end tell'
+        )
+    else:
+        script = (
+            f'tell application "System Events" to tell process "Code"\n'
+            f'    key code {key_code}\n'
+            f'end tell'
+        )
+    run_applescript(script)
+
+
+def ensure_vscode_focused() -> bool:
+    """Activate VS Code and wait for it to become frontmost. Returns True when focused."""
+    run_applescript('tell application "Visual Studio Code" to activate')
+    time.sleep(0.45)
+    return is_vscode_focused()
+
+
+def ensure_chat_focused() -> bool:
+    """
+    Full focus recovery chain:
+      1. Activate VS Code (bring to front)
+      2. Open/focus the Chat panel via vscode:// URL (equivalent to Ctrl+Cmd+I)
+      3. Focus the chat input box
+    Returns True if VS Code is now in the foreground (best-effort chat focus).
+    """
+    ensure_vscode_focused()
+    vscode_exec_command(VSCODE_CMD_CHAT_OPEN)        # open / bring-to-front chat panel
+    time.sleep(0.5)
+    vscode_exec_command(VSCODE_CMD_CHAT_FOCUS_INPUT) # focus the text input
+    time.sleep(0.3)
+    return is_vscode_focused()
+
+
 # ─── CDP utilities ─────────────────────────────────────────────────────────────
 
 def is_cdp_available() -> bool:
@@ -314,27 +424,34 @@ async def _cdp_close(playwright, browser) -> None:
 
 # ─── Send message to chat ───────────────────────────────────────────────────────
 
+_CHAT_TEXTAREA_SELECTORS = (
+    'div[class*="interactive-input-box"] textarea, '
+    'div[class*="chat-input"] textarea, '
+    'div[class*="interactive-input-part"] textarea, '
+    '.chat-widget textarea'
+)
+
+
 def _vscode_send_to_chat(message: str) -> bool:
     """
-    Send a message to the active Copilot Chat input.
+    Send a message to the active VS Code Copilot Chat.
 
-    1. Abort guard: skip if snapshot is fresh (agent still actively generating)
-    2. Focus VS Code
-    3. Try CDP (Playwright): click chat textarea → clear → insert_text → Enter
-    4. Fallback: pbcopy + AppleScript keystroke
+    Tier 1 — code chat CLI (--reuse-window): no focus required, most reliable.
+    Tier 2 — CDP Playwright: click textarea → clear → insert_text → Enter.
+    Tier 3 — AppleScript keyboard: focus chat input → pbcopy → paste → Enter.
 
-    Returns True if the message was sent (best effort).
+    Returns True if the message was dispatched.
     """
-    # Safety guard: don't send while agent is generating
     if _snapshot_is_fresh(3.0):
-        logger.warning(
-            "_vscode_send_to_chat: chat snapshot updated <3s ago — agent active, aborting"
-        )
+        logger.warning("_vscode_send_to_chat: snapshot fresh — agent active, aborting")
         return False
 
-    vscode_focus()
+    # ── Tier 1: code chat CLI ─────────────────────────────────────────────────
+    if vscode_cli_chat(message):
+        logger.info(f"_vscode_send_to_chat: sent via code chat CLI ({len(message)} chars)")
+        return True
 
-    # ── Try CDP ────────────────────────────────────────────────────────────────
+    # ── Tier 2: CDP Playwright ────────────────────────────────────────────────
     if is_cdp_available():
         try:
             import asyncio as _asyncio
@@ -344,19 +461,10 @@ def _vscode_send_to_chat(message: str) -> bool:
                 try:
                     if not page:
                         return False
-
-                    # Chat textarea selectors (in priority order)
-                    input_sel = (
-                        'div[class*="interactive-input-box"] textarea, '
-                        'div[class*="chat-input"] textarea, '
-                        'div[class*="interactive-input-part"] textarea, '
-                        '.chat-widget textarea'
-                    )
                     try:
-                        el = await page.wait_for_selector(input_sel, timeout=2000)
+                        el = await page.wait_for_selector(_CHAT_TEXTAREA_SELECTORS, timeout=2000)
                     except Exception:
                         el = None
-
                     if el:
                         await el.click()
                         await page.keyboard.press("Meta+A")
@@ -364,48 +472,38 @@ def _vscode_send_to_chat(message: str) -> bool:
                         await page.keyboard.insert_text(message)
                         await page.keyboard.press("Enter")
                         return True
-
                     return False
                 finally:
                     await _cdp_close(playwright, browser)
 
             if _asyncio.run(_do_send()):
-                logger.info(f"Message sent via CDP ({len(message)} chars)")
+                logger.info(f"_vscode_send_to_chat: sent via CDP ({len(message)} chars)")
                 return True
         except Exception as e:
             logger.debug(f"CDP send error: {e}")
 
-    # ── Fallback: pbcopy + AppleScript ─────────────────────────────────────────
+    # ── Tier 3: AppleScript focus + pbcopy + paste + Enter ────────────────────
     try:
-        # Try to focus the chat input first via keyboard shortcut
-        run_applescript("""
-            tell application "System Events"
-                tell process "Code"
-                    keystroke "l" using {command down}
-                    delay 0.5
-                end tell
-            end tell
-        """)
+        ensure_chat_focused()
+        time.sleep(0.3)
         subprocess.run(["pbcopy"], input=message.encode("utf-8"), check=True)
         time.sleep(0.2)
-        run_applescript("""
-            tell application "System Events"
-                tell process "Code"
-                    keystroke "v" using {command down}
-                    delay 0.5
-                    key code 36
-                end tell
-            end tell
-        """)
-        logger.info(f"Message sent via AppleScript ({len(message)} chars)")
+        run_applescript(
+            'tell application "System Events" to tell process "Code"\n'
+            '    keystroke "v" using {command down}\n'
+            '    delay 0.3\n'
+            f'    key code {_KEY_ENTER}\n'
+            'end tell'
+        )
+        logger.info(f"_vscode_send_to_chat: sent via AppleScript ({len(message)} chars)")
         return True
     except Exception as e:
-        logger.error(f"AppleScript send error: {e}")
+        logger.error(f"_vscode_send_to_chat AppleScript error: {e}")
         return False
 
 
 def vscode_send_continue() -> bool:
-    """Send 'continuar' to the active chat (for resuming after errors/stall)."""
+    """Send 'continuar' to the active chat (resume after stall or error)."""
     return _vscode_send_to_chat("continuar")
 
 
@@ -418,183 +516,95 @@ def send_loop_prompt() -> bool:
     return _vscode_send_to_chat(prompt_text)
 
 
+# ─── Stop generation ────────────────────────────────────────────────────────────
+
+def stop_current_response() -> bool:
+    """
+    Stop the current Copilot Chat generation.
+
+    Primary:  vscode://command/workbench.action.chat.stop  (no focus required)
+    Fallback: Cmd+ESC keyboard shortcut  (requires chat focus — key code 53)
+
+    Returns True if the stop command was dispatched.
+    """
+    # Primary: URL protocol command — most reliable, no focus dependency
+    if vscode_exec_command(VSCODE_CMD_CHAT_STOP):
+        logger.info("stop_current_response: dispatched via vscode:// URL protocol")
+        time.sleep(0.6)
+        return True
+
+    # Fallback: Cmd+ESC keyboard (user-confirmed shortcut)
+    logger.debug("stop_current_response: URL command failed — falling back to Cmd+ESC")
+    ensure_chat_focused()
+    time.sleep(0.3)
+    _vscode_keystroke(_KEY_ESC, ["command"])   # Cmd+ESC = stop generation
+    time.sleep(0.5)
+    return True
+
+
 # ─── Open new chat ──────────────────────────────────────────────────────────────
 
 def vscode_open_new_chat() -> bool:
     """
-    Open a new Copilot Chat window.
+    Open a new Copilot Chat session.
 
-    1. Abort guard: skip if snapshot is fresh
-    2. Focus VS Code
-    3. Try CDP: click '+ New Chat' button via DOM selector
-    4. Fallback: Command Palette → 'Chat: New Chat'
+    Primary:  vscode://command/workbench.action.chat.newChat  (no focus required)
+    Fallback: Cmd+N keyboard shortcut while chat panel is focused (key code 45)
+
+    Returns True if the new-chat command was dispatched.
     """
-    vscode_focus()
-    time.sleep(0.3)
-
     if _snapshot_is_fresh(3.0):
         logger.warning("vscode_open_new_chat: snapshot fresh — agent active, aborting")
         return False
 
-    # ── Try CDP ────────────────────────────────────────────────────────────────
-    if is_cdp_available():
-        try:
-            import asyncio as _asyncio
+    # Primary: URL protocol
+    if vscode_exec_command(VSCODE_CMD_CHAT_NEW):
+        logger.info("vscode_open_new_chat: opened via vscode:// URL protocol")
+        time.sleep(1.0)
+        return True
 
-            async def _do_open():
-                playwright, browser, page = await _cdp_connect_page()
-                try:
-                    if not page:
-                        return False
-
-                    # Click '+' (New Chat) button — must NOT have aria-haspopup
-                    btn = await page.evaluate(r"""() => {
-                        const sels = [
-                            '.part.auxiliarybar a[aria-label="New Chat (\u2318N)"]',
-                            '.auxiliarybar a[aria-label="New Chat (\u2318N)"]',
-                            'a[aria-label^="New Chat"]',
-                        ];
-                        for (const sel of sels) {
-                            for (const el of document.querySelectorAll(sel)) {
-                                const r = el.getBoundingClientRect();
-                                if (r.width > 0 && !el.getAttribute('aria-haspopup')) {
-                                    return {
-                                        x: Math.round(r.x + r.width / 2),
-                                        y: Math.round(r.y + r.height / 2),
-                                    };
-                                }
-                            }
-                        }
-                        return null;
-                    }""")
-
-                    if btn:
-                        import asyncio
-                        await page.mouse.click(btn["x"], btn["y"])
-                        await asyncio.sleep(1.0)
-                        return True
-
-                    return False
-                finally:
-                    await _cdp_close(playwright, browser)
-
-            if _asyncio.run(_do_open()):
-                logger.info("New chat opened via CDP")
-                time.sleep(0.5)
-                return True
-        except Exception as e:
-            logger.debug(f"CDP open_new_chat error: {e}")
-
-    # ── Fallback: Command Palette ───────────────────────────────────────────────
-    run_applescript("""
-        tell application "System Events"
-            tell process "Code"
-                keystroke "p" using {command down, shift down}
-                delay 0.8
-                keystroke "Chat: New Chat"
-                delay 0.5
-                key code 36
-                delay 2.0
-            end tell
-        end tell
-    """)
-    logger.info("New chat opened via Command Palette")
+    # Fallback: Focus chat panel then Cmd+N (new chat editor shortcut)
+    ensure_chat_focused()
+    time.sleep(0.3)
+    _vscode_keystroke(_KEY_N, ["command"])   # Cmd+N = new chat editor
+    time.sleep(1.0)
+    logger.info("vscode_open_new_chat: opened via Cmd+N keyboard fallback")
     return True
 
 
-# ─── Stop current response ──────────────────────────────────────────────────────
-
-def stop_current_response() -> bool:
-    """
-    Click the Stop button in the chat.
-
-    1. Try CDP: look for known Stop button selectors
-    2. Fallback: Escape key via AppleScript
-    """
-    if is_cdp_available():
-        try:
-            import asyncio as _asyncio
-
-            async def _do_stop():
-                playwright, browser, page = await _cdp_connect_page()
-                try:
-                    if not page:
-                        return False
-
-                    stop_selectors = [
-                        'button[aria-label="Stop Response"]',
-                        'button[aria-label="Stop"]',
-                        '.interactive-stop-button',
-                        'button[title*="Stop" i]',
-                        'a[aria-label*="Stop" i]',
-                    ]
-                    for sel in stop_selectors:
-                        try:
-                            btn = await page.query_selector(sel)
-                            if btn:
-                                box = await btn.bounding_box()
-                                if box:
-                                    await page.mouse.click(
-                                        box["x"] + box["width"] / 2,
-                                        box["y"] + box["height"] / 2,
-                                    )
-                                    return True
-                        except Exception:
-                            continue
-                    return False
-                finally:
-                    await _cdp_close(playwright, browser)
-
-            ok = _asyncio.run(_do_stop())
-            if ok:
-                time.sleep(1.0)
-                return True
-        except Exception as e:
-            logger.debug(f"CDP stop_current_response error: {e}")
-
-    # Fallback: Escape
-    vscode_focus()
-    run_applescript("""
-        tell application "System Events"
-            tell process "Code"
-                key code 53
-                delay 0.5
-            end tell
-        end tell
-    """)
-    return False
-
+# ─── Full recovery: stop + new chat + re-prompt ─────────────────────────────────
 
 def open_new_chat_with_stop() -> bool:
     """
-    Full context-full recovery:
-      1. Stop current response
-      2. Open new chat
-      3. Send AGENT_LOOP_PROMPT if chat is no longer freshly active
+    Full context-recovery sequence:
+      1. Abort if chat snapshot is still fresh (agent generating — don't interrupt)
+      2. Stop current response (vscode:// command → Cmd+ESC fallback)
+      3. Open new chat session (vscode:// command → Cmd+N fallback)
+      4. Send AGENT_LOOP_PROMPT to resume the sprint loop
+
+    Returns True if the new chat was opened successfully.
     """
     if _snapshot_is_fresh(3.0):
-        logger.warning("open_new_chat_with_stop: snapshot fresh — agent active, aborting")
+        logger.warning("open_new_chat_with_stop: snapshot fresh — aborting")
         return False
 
     notify("OKLA Smart Monitor", "Contexto lleno → deteniendo y abriendo nuevo chat")
 
     stopped = stop_current_response()
     logger.info(
-        f"stop_current_response: {'stopped' if stopped else 'no effect (may have already finished)'}"
+        f"open_new_chat_with_stop: stop = {'ok' if stopped else 'no-op (already idle)'}"
     )
     time.sleep(1.5)
 
     if _snapshot_is_fresh(3.0):
-        logger.warning("open_new_chat_with_stop: snapshot changed after stop — aborting")
+        logger.warning("open_new_chat_with_stop: agent became active after stop — aborting")
         return False
 
-    ok = vscode_open_new_chat()
-    if not ok:
+    if not vscode_open_new_chat():
         return False
 
-    # Only send loop prompt if no recent agent activity
     if _snapshot_is_fresh(3.0):
-        logger.info("open_new_chat_with_stop: snapshot fresh after open — skipping loop prompt")
+        logger.info("open_new_chat_with_stop: snapshot fresh after new-chat — skipping loop prompt")
         return True
 
     send_loop_prompt()
