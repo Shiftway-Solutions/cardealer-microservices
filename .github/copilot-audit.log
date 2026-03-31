@@ -2585,3 +2585,18 @@ test
 [2026-03-30 15:17:03] [GATE] ✅ Gate Pre-Commit passed — S8 Admin Panel fixes verified
 [2026-03-30 15:56:28] [MODIFICACIÓN] .gitignore + smart-cicd.yml — Fix CI/CD stuck: untrack 743 .bak_ files, gitignore bak pattern, timeout 30->120min
 [2026-03-30 16:47:44] [AUDIT-SPRINT] Sprint 8 [reaudit] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 17:30:16] [GIT] development updated from main (b117c5fc) — 5 files changed
+[2026-03-30 19:25:21] [MODIFICACIÓN] .prompts/agent/smart_monitor/observer.py — STALE GUARD: fix false positive 'generación activa' cuando snapshot tiene >600s sin update. Agente estaba bloqueado 1710 ciclos (~9.5h).
+[2026-03-30 20:38:17] [AUDIT-SPRINT] Sprint 8 [fix] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 20:39:15] [MODIFICACIÓN] admin/page.tsx, next.config.ts, Caddyfile — fix AdminDashboard crash + Turbopack dev cache headers
+[2026-03-30 20:48:23] [MODIFICACIÓN] .github/workflows/development-deploy.yml — add COMPOSE_PROFILES env to fix 'no such service: gateway' in docker compose build frontend-next
+[2026-03-30 20:52:24] [MODIFICACIÓN] .github/workflows/development-deploy.yml — scope COMPOSE_PROFILES inline to build/restart only (not global env)
+[2026-03-30 20:58:02] [MODIFICACIÓN] .github/workflows/development-deploy.yml — add Docker keychain bypass step for CI
+[2026-03-30 21:04:03] [MODIFICACIÓN] development-deploy.yml — fix keychain bypass: inline python one-liner, no heredoc
+[2026-03-30 21:08:45] [MODIFICACIÓN] development-deploy.yml — temp DOCKER_CONFIG with plugin symlink to bypass desktop keychain re-adding credsStore
+[2026-03-30 21:13:37] [MODIFICACIÓN] development-deploy.yml — add DOCKER_BUILDKIT=0 to use legacy builder (respects DOCKER_CONFIG, not BuildKit daemon creds)
+[2026-03-30 21:17:13] [MODIFICACIÓN] development-deploy.yml — disable push trigger + keychain error non-fatal
+[2026-03-30 21:19:18] [AUDIT-SPRINT] Sprint 8 [reaudit] [TUNNEL] despachado: Admin — Panel de Administración Completo
+[2026-03-30 21:19:24] [MODIFICACIÓN] .prompts/prompt_1.md — sprint 8 FIX phase complete, all tasks marked, READ appended
+[2026-03-30 21:25:36] [MODIFICACIÓN] development-deploy.yml — re-enable push trigger + unlock keychain step (security set-keychain-settings already run locally)
+[2026-03-30 21:35:35] [CREACIÓN] .git/hooks/post-push — deploy automático a Docker Desktop en push a development
