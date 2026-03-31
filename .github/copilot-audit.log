@@ -2645,3 +2645,5 @@ test
 [2026-03-31 06:51:44] [GATE] Iniciando...
 [2026-03-31 07:00:49] [MODIFICACIÓN] .vscode/argv.json, actions.py, agent.py, vscode_chat_reader.py — Fix CDP: add remote-debugging-port 9222; fix CSS selectors; write diagnostic snapshot when CDP unavailable
 [2026-03-31 07:05:09] [MODIFICACIÓN] SupportAgent/LocalFaqMatcher.cs — FIX 3/3 BUG-S12-01/02 local FAQ bank para respuestas sin Claude API
+[2026-03-31 07:07:47] [GATE] ✅ Completo — FIX 3/3 Sprint 12 SupportAgent
+[2026-03-31 07:08:04] [AUDIT-SPRINT] Sprint 12 [reaudit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario

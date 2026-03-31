@@ -14,7 +14,7 @@ public static class LocalFaqMatcher
         // FAQ 1: Cómo publicar un vehículo
         (
             new Regex(
-                @"c[oó]mo\s+(publico|publicar|vender|poner|anunciar|subir|crear).*(veh[íi]culo|carro|auto|moto)|publicar.*(veh[íi]culo|carro|auto)|anuncio.*(veh[íi]culo|carro)",
+                @"c[oó]mo\s+(publico|publicar|vender|poner|anunciar|subir|crear).*(veh[íi]culo|carro|auto|moto)|publicar.*(veh[íi]culo|carro|auto)|anuncio.*(veh[íi]culo|carro)|(quiero|quisiera|necesito)\s+(poner|vender|publicar|anunciar)\s+(mi\s+)?(veh[íi]culo|carro|auto|moto)|vendo\s+(mi\s+)?(veh[íi]culo|carro|auto)",
                 RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "📋 **Para publicar tu vehículo en OKLA:**\n\n1. Ve a okla.com.do/publicar\n2. Necesitas ser Seller (si eres Buyer, convierte tu cuenta en okla.com.do/cuenta/convert-to-seller)\n3. Completa el formulario: marca, modelo, año, precio y fotos (mín. 8 fotos)\n4. Paga RD$1,699 — incluye 45 días de publicación activa\n5. Tu anuncio queda visible en minutos\n\n¿Necesitas más detalle de algún paso? 😊"
         ),
