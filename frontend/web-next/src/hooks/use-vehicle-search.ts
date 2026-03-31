@@ -18,7 +18,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { searchVehicles } from '@/services/vehicles';
 import { useSearchStore, type SearchFilters } from '@/stores/search-store';
-import type { VehicleSearchParams } from '@/types';
+import type { VehicleSearchParams, VehicleCardData } from '@/types';
 
 // =============================================================================
 // TYPES
@@ -44,6 +44,16 @@ export interface VehicleSearchResult {
   dealRating?: 'great' | 'good' | 'fair' | 'high';
   isVerified?: boolean;
   isFeatured?: boolean;
+  dealerName?: string;
+  dealerRating?: number;
+  currency?: 'DOP' | 'USD';
+  trim?: string;
+  photoCount?: number;
+  isNew?: boolean;
+  isCertified?: boolean;
+  monthlyPayment?: number;
+  status?: VehicleCardData['status'];
+  createdAt?: string;
 }
 
 export interface VehicleSearchResponse {

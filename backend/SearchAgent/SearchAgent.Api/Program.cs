@@ -215,9 +215,19 @@ try
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Database migration error for {ServiceName}. Will use EnsureCreated fallback.", ServiceName);
+            Log.Fatal(ex, "DATABASE MIGRATION FAILED for {ServiceName}. " +
+                "Ensure the database exists and the connection string is correct. " +
+                "Connection: {Connection}",
+                ServiceName,
+                context.Database.GetConnectionString()?.Replace(
+                    System.Text.RegularExpressions.Regex.Match(
+                        context.Database.GetConnectionString() ?? "", "Password=[^;]+").Value,
+                    "Password=***"));
             try { context.Database.EnsureCreated(); }
-            catch { /* Ignore — may already exist */ }
+            catch (Exception ensureEx)
+            {
+                Log.Fatal(ensureEx, "EnsureCreated also failed for {ServiceName}. Service will start but database is NOT ready.", ServiceName);
+            }
         }
     }
 
