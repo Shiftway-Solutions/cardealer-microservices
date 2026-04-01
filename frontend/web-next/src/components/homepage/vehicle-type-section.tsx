@@ -20,7 +20,6 @@ import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
-import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { formatPrice } from '@/lib/format';
 import { normalizeLocationName } from '@/lib/utils';
 import { useResponsiveMaxItems } from '@/hooks/use-responsive-max-items';
@@ -223,8 +222,7 @@ function VehicleCard({
       .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url ||
     '';
 
-  // Use fallback Unsplash image when S3 image is invalid or fails to load
-  const fallbackImage = getVehicleFallbackImage(vehicle.id, vehicle.make, vehicle.bodyStyle);
+  const fallbackImage = '/images/car-placeholder.svg';
   const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
   const location =
@@ -264,8 +262,7 @@ function VehicleCard({
             {formatPrice(vehicle.price, vehicle.currency)}
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
-            {vehicle.mileage?.toLocaleString() ?? '—'}{' '}
-            {vehicle.mileageUnit === 'Miles' ? 'mi' : 'km'} · {location}
+            {vehicle.mileage?.toLocaleString() ?? '—'}{' '}km · {location}
           </p>
         </CardContent>
       </Card>

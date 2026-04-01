@@ -65,14 +65,15 @@ export function formatNumber(
 }
 
 /**
- * Format mileage (kilometers)
+ * Format mileage — RD market always uses km.
+ * Legacy seed data may have stored 'Miles' as unit even though values are km;
+ * normalise to 'km' for all display purposes.
  */
-export function formatMileage(km: number, unit?: string): string {
-  const displayUnit = unit === 'Miles' || unit === 'mi' ? 'mi' : 'km';
+export function formatMileage(km: number, _unit?: string): string {
   if (km >= 1000) {
-    return `${formatNumber(km)} ${displayUnit}`;
+    return `${formatNumber(km)} km`;
   }
-  return `${km} ${displayUnit}`;
+  return `${km} km`;
 }
 
 /**

@@ -190,9 +190,7 @@ export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
                   <span className="flex items-center gap-1">
                     <Gauge className="h-4 w-4" />
                     {formatMileage(selectedVehicle.mileage)}{' '}
-                    {selectedVehicle.mileageUnit === 'Miles' || selectedVehicle.mileageUnit === 'mi'
-                      ? 'mi'
-                      : 'km'}
+                    {'km'}
                   </span>
                 )}
                 {selectedVehicle.location && (

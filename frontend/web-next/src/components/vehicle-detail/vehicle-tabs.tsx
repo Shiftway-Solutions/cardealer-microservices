@@ -163,7 +163,7 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
     {
       icon: Gauge,
       label: 'Kilometraje',
-      value: `${formatNumber(vehicle.mileage)} ${vehicle.mileageUnit === 'Miles' || vehicle.mileageUnit === 'mi' ? 'mi' : 'km'}`,
+      value: `${formatNumber(vehicle.mileage)} km`,
     },
     {
       icon: Settings,

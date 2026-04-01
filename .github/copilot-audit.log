@@ -2775,3 +2775,11 @@ test
 [2026-04-01 11:56:39] [AUDIT-SPRINT] Sprint 13 [reaudit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
 [2026-04-01 11:58:10] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
 [2026-04-01 12:11:25] [MODIFICACIÓN] auth/layout.tsx, nosotros/page.tsx, vender/page.tsx, prensa/page.tsx — S13 FIX: add projected stats disclaimer
+[2026-04-01 12:13:41] [AUDIT-SPRINT] Sprint 13 [reaudit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 12:16:07] [GATE] Iniciando S13-T01 Intento 3...
+[2026-04-01 12:16:12] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 18:59:14] [MODIFICACIÓN] .github/workflows/development-deploy.yml — Fix OOM: trap cleanup + always-cleanup step + timeout 30→20 min
+[2026-04-01 19:05:55] [AUDIT-SPRINT] Sprint 13 [audit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 19:08:54] [MODIFICACIÓN] frontend/web-next/src/lib/utils.ts — FIX UF-085: formatMileage always returns km (RD market)
+[2026-04-01 19:08:54] [MODIFICACIÓN] vehicle-type-section.tsx,vehicle-of-the-day.tsx,vehicle-tabs.tsx,vehicle-header.tsx,share-dialog.tsx — FIX UF-085: inline mileage unit checks normalized to km
+[2026-04-01 19:08:54] [CREACIÓN] 20260401160000_NormalizeMileageUnitToKilometers.cs — DB migration to fix Miles→Kilometers in vehicles table
