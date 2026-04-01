@@ -2720,3 +2720,53 @@ test
 [2026-03-31 23:08:26] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
 [2026-03-31 23:26:23] [GATE] Iniciando...
 [2026-03-31 23:51:49] [GATE] ✅ Completo — Unit: 0 failures. Fix: AdminService+BillingService date-boundary tests, S13 DB data quality SQL
+[2026-03-31 23:52:30] [AUDIT-SPRINT] Sprint 13 [reaudit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 00:25:02] [EJECUCIÓN] copilot-agent-monitor — Extensión desinstalada: movida a /tmp. Bug: enviaba ~10 requests 'continue' continuo al chat (/bin/zsh.04/req)
+[2026-04-01 00:31:25] [MODIFICACIÓN] copilot-agent-monitor/src/Monitor.ts + StateMachine.ts — Fix 4 bugs: (1) _scheduleNextCycle timer accumulation, (2) _runCycle concurrency guard, (3) LOOP_STOPPED no resetteaba _lastActivityMs, (4) StateMachine sin handler para COMPLETED
+[2026-04-01 00:42:19] [MODIFICACIÓN] copilot-agent-monitor — Bug#5: COMPLETED usaba SEND_CONTINUE en vez de OPEN_NEW_CHAT. Bug#6: agregado CostGuard circuit breaker (5 acciones/5min). Nuevos archivos: CostGuard.ts. Comando nuevo: copilotMonitor.resetCostGuard
+[2026-04-01 01:03:32] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 01:31:34] [BACKUP] .prompts/copilot-agent-monitor/src/ActionExecutor.ts, Monitor.ts, CDPClient.ts — pre-fix backup before model sync/logging patch
+[2026-04-01 01:34:02] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts, Monitor.ts, CDPClient.ts — sync real model, verify model switch, add persistent runtime logging and stronger CLI/CDP diagnostics
+[2026-04-01 01:38:07] [BACKUP] /Users/gregorymoreno/.vscode/extensions/okla-dev.copilot-agent-monitor-1.0.0 — synced installed extension files before runtime validation
+[2026-04-01 01:38:07] [MODIFICACIÓN] /Users/gregorymoreno/.vscode/extensions/okla-dev.copilot-agent-monitor-1.0.0 — updated installed copilot-agent-monitor runtime with verified model-switch/logging fix
+[2026-04-01 01:55:09] [BACKUP] frontend/web-next homepage/listings image+stats files — pre-fix backup for Sprint 13 data-quality corrections
+[2026-04-01 01:56:37] [MODIFICACIÓN] frontend/web-next homepage/listings image+stats files — reemplazadas cifras infladas por conteos públicos y fallback de imágenes externas por placeholder local
+[2026-04-01 02:04:39] [EJECUCIÓN] Gate backend — dotnet restore
+[2026-04-01 02:04:48] [EJECUCIÓN] Gate backend — dotnet build /p:TreatWarningsAsErrors=true
+[2026-04-01 02:06:00] [EJECUCIÓN] Gate backend — dotnet test --no-build --blame-hang --blame-hang-timeout 2min
+[2026-04-01 02:17:39] [MODIFICACIÓN] .prompts/prompt_1.md — documentado Sprint 13 fix completado y gate backend bloqueado por fallas preexistentes
+[2026-04-01 02:18:25] [BACKUP] use-public-marketplace-stats.ts + homepage-client.tsx — ajustar fallback de conteos cuando API pública falla
+[2026-04-01 02:18:50] [MODIFICACIÓN] frontend/web-next public stats fallback — distinguir API caída de cero real con estado N/D
+[2026-04-01 02:31:46] [EJECUCIÓN] frontend/web-next — Gate frontend Sprint 13
+[2026-04-01 02:33:56] [EJECUCIÓN] backend — dotnet restore y build del gate Sprint 13 (retry)
+[2026-04-01 02:35:26] [EJECUCIÓN] backend — dotnet test del gate Sprint 13
+[2026-04-01 02:41:15] [MODIFICACIÓN] .prompts/prompt_1.md — actualizado estado real del gate Sprint 13 y agregado READ
+[2026-04-01 02:41:34] [EJECUCIÓN] Smart Monitor — inicio daemon para seguimiento continuo de prompt_1
+[2026-04-01 02:50:18] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo antes de corregir IndentationError en vscode_send_to_chat
+[2026-04-01 02:50:18] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — corregir indentación rota en vscode_send_to_chat
+[2026-04-01 03:00:46] [BACKUP] .vscode/settings.json — respaldo previo a habilitar entrega directa del loop prompt al chat
+[2026-04-01 03:00:46] [MODIFICACIÓN] .vscode/settings.json — cambiar promptDeliveryMode a chat para habilitar loop autónomo
+[2026-04-01 03:07:59] [CREACIÓN] .prompts/prompt_loop_daemon.py — daemon para monitorear prompt_1 con STOP/READ
+[2026-04-01 03:10:07] [EJECUCIÓN] .prompts/prompt_loop_daemon.py — daemon lanzado en background para monitorear prompt_1
+[2026-04-01 03:12:49] [MODIFICACIÓN] .prompts/prompt_loop_daemon.py — ignorar líneas en blanco finales al evaluar STOP/READ
+[2026-04-01 04:35:00] [AUDIT-SPRINT] Sprint 13 [reaudit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 04:44:40] [MODIFICACIÓN] .vscode/settings.json — habilitar workbench.browser.enableChatTools para re-auditoría MCP
+[2026-04-01 04:50:53] [MODIFICACIÓN] frontend/web-next/src/app/(main)/dealers/page.tsx — reemplazar claims hardcodeados de dealers por datos públicos dinámicos
+[2026-04-01 05:02:45] [EJECUCIÓN] Sprint 13 REAUDIT — validación visual y de red en /vehiculos, / y /dealers
+[2026-04-01 05:04:42] [MODIFICACIÓN] .prompts/prompt_1.md — documentación de REAUDIT Sprint 13 y cierre con READ
+[2026-04-01 05:38:37] [CREACIÓN] .prompts/copilot-agent-monitor/.vscodeignore — exclude src/backups/node_modules from VSIX
+[2026-04-01 05:38:37] [EJECUCIÓN] copilot-agent-monitor v1.0.0 — recompilado, reempaquetado e instalado en VS Code
+[2026-04-01 05:45:34] [MODIFICACIÓN] Monitor.ts — BugFix A/B/C/D: _latestLogEvent/activityMs reset, REQUEST_ERROR handling, IDLE activity tracking
+[2026-04-01 05:50:48] [AUDIT-SPRINT] Sprint 13 [audit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 06:22:49] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 06:52:06] [GATE] Iniciando...
+[2026-04-01 07:01:53] [GATE] ✅ Completo
+[2026-04-01 07:02:29] [GIT] fix: S13-T01 BUG-004/005/003 — pushed to development (6f61ebe7)
+[2026-04-01 07:02:50] [AUDIT-SPRINT] Sprint 13 [reaudit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 07:44:21] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 07:44:22] [MODIFICACIÓN] .prompts/prompt_1.md — REAUDIT S13-T01 completado, hallazgos documentados, READ escrito
+[2026-04-01 07:44:22] [MODIFICACIÓN] vehicle-card.tsx + types/index.ts + utils.ts + vehicles.ts — BUG-004-CARD fix: mileageUnit en listing cards
+[2026-04-01 07:55:22] [GATE] Iniciando Gate Pre-Commit S13-FIX Intento 2/3...
+[2026-04-01 10:56:31] [GATE] Iniciando...
+[2026-04-01 11:01:02] [GATE] ✅ Completo — 576 frontend tests, 220 VehiclesSaleService tests, integracion pre-existente
+[2026-04-01 11:01:02] [DB] vehiclessaleservice — UPDATE MileageUnit Miles->Kilometers (5 filas), S13-T01
