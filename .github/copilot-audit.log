@@ -2784,3 +2784,6 @@ test
 [2026-04-01 19:08:54] [MODIFICACIÓN] vehicle-type-section.tsx,vehicle-of-the-day.tsx,vehicle-tabs.tsx,vehicle-header.tsx,share-dialog.tsx — FIX UF-085: inline mileage unit checks normalized to km
 [2026-04-01 19:08:54] [CREACIÓN] 20260401160000_NormalizeMileageUnitToKilometers.cs — DB migration to fix Miles→Kilometers in vehicles table
 [2026-04-01 19:29:04] [MODIFICACIÓN] .github/workflows/{smart-cicd,local-qa,pr-checks}.yml — Agregado job cleanup post-CI/CD en los 3 workflows activos
+[2026-04-01 19:39:31] [AUDIT-SPRINT] Sprint 13 [audit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 19:53:56] [EJECUCIÓN] AUDIT S13-T01 completado — 0 bugs, 5 UF validados (UF-085..089 PASS)
+[2026-04-01 19:54:01] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
