@@ -2770,3 +2770,6 @@ test
 [2026-04-01 10:56:31] [GATE] Iniciando...
 [2026-04-01 11:01:02] [GATE] ✅ Completo — 576 frontend tests, 220 VehiclesSaleService tests, integracion pre-existente
 [2026-04-01 11:01:02] [DB] vehiclessaleservice — UPDATE MileageUnit Miles->Kilometers (5 filas), S13-T01
+[2026-04-01 11:40:38] [AUDIT-SPRINT] Sprint 13 [audit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 11:56:09] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 11:56:39] [AUDIT-SPRINT] Sprint 13 [reaudit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
