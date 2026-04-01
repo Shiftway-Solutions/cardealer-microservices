@@ -246,15 +246,26 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      // In development Turbopack reuses stable chunk filenames while content changes,
+      // so "immutable" caching would serve stale JS to the browser. Use no-cache in dev.
+      // In production, chunk filenames include content hashes → safe to cache forever.
+      ...(isDev
+        ? [
+            {
+              source: '/_next/static/chunks/:path*',
+              headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }],
+            },
+            {
+              source: '/_next/static/:path*',
+              headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
+            },
+          ]
+        : [
+            {
+              source: '/_next/static/:path*',
+              headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+            },
+          ]),
       // API routes - no cache
       {
         source: '/api/:path*',

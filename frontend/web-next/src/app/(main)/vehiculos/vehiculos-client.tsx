@@ -830,7 +830,9 @@ export default function VehiculosClient() {
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
               <Star className="h-3 w-3 text-amber-500" />
-              <span>{PLATFORM_STATS.vehiclesPublished} vehículos activos</span>
+              <span title="Cifra proyectada. Plataforma en crecimiento activo.">
+                {PLATFORM_STATS.vehiclesPublished}* vehículos
+              </span>
             </div>
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">

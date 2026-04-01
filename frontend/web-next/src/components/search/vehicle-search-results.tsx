@@ -95,6 +95,7 @@ export function VehicleSearchResults({
     model: vehicle.model,
     year: vehicle.year,
     price: vehicle.price,
+    currency: vehicle.currency,
     mileage: vehicle.mileage,
     transmission: vehicle.transmission,
     fuelType: vehicle.fuelType,
@@ -103,6 +104,14 @@ export function VehicleSearchResults({
     dealRating: vehicle.dealRating,
     isFeatured: vehicle.isFeatured,
     isVerified: vehicle.isVerified,
+    dealerName: vehicle.dealerName,
+    dealerRating: vehicle.dealerRating,
+    trim: vehicle.trim,
+    photoCount: vehicle.photoCount,
+    isNew: vehicle.isNew,
+    isCertified: vehicle.isCertified,
+    monthlyPayment: vehicle.monthlyPayment,
+    createdAt: vehicle.createdAt,
   });
 
   return (

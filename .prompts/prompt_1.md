@@ -1,12 +1,12 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 1/3) — Sprint 8: Admin — Panel de Administración Completo
-**Fecha:** 2026-03-30 16:47:43
+# RE-AUDITORÍA (Verificación de fixes, intento 1/3) — Sprint 13: Calidad de Datos — Lo que el Usuario Ve Mal
+**Fecha:** 2026-04-01 11:56:39
 **Fase:** REAUDIT
-**Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://numerous-neck-favorite-equity.trycloudflare.com)
-**Usuario:** Admin (admin@okla.local / Admin123!@#)
-**URL Base:** https://numerous-neck-favorite-equity.trycloudflare.com
+**Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://apparently-bride-achieved-pdt.trycloudflare.com)
+**Usuario:** Guest
+**URL Base:** https://apparently-bride-achieved-pdt.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
-> Auditoría corriendo contra **https://numerous-neck-favorite-equity.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
+> Auditoría corriendo contra **https://apparently-bride-achieved-pdt.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
 > Asegúrate de que la infra esté levantada: `docker compose up -d`
 > Frontend: `cd frontend/web-next && pnpm dev`
 > Tunnel: `docker compose --profile tunnel up -d cloudflared`
@@ -14,13 +14,13 @@
 
 | Servicio | URL |
 |----------|-----|
-| Frontend (tunnel) | https://numerous-neck-favorite-equity.trycloudflare.com |
-| API (tunnel) | https://numerous-neck-favorite-equity.trycloudflare.com/api/* |
+| Frontend (tunnel) | https://apparently-bride-achieved-pdt.trycloudflare.com |
+| API (tunnel) | https://apparently-bride-achieved-pdt.trycloudflare.com/api/* |
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
 ## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 8 (intento 1/3).
+Esta es la re-verificación del Sprint 13 (intento 1/3).
 Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
 
 - Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
@@ -179,56 +179,31 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S8-T01: Dashboard admin y gestión de usuarios
+### S13-T01: Buscar anomalías visibles en los listados
 
 **Pasos:**
-- [ ] Paso 1: TROUBLESHOOTING: Verifica que adminservice esté corriendo: docker compose --profile core ps adminservice
-- [ ] Paso 2: Login como admin (admin@okla.local / Admin123!@#)
-- [ ] Paso 3: Navega a {BASE_URL}/admin
-- [ ] Paso 4: Toma screenshot — ¿veo métricas generales del negocio?
-- [ ] Paso 5: ¿Cuántos usuarios hay? ¿Nuevos hoy/semana?
-- [ ] Paso 6: ¿Cuántos vehículos activos? ¿Publicados hoy?
-- [ ] Paso 7: ¿Cuántos dealers registrados?
-- [ ] Paso 8: Navega a gestión de usuarios
-- [ ] Paso 9: Toma screenshot — ¿lista de usuarios con filtros?
-- [ ] Paso 10: ¿Puedo buscar un usuario? ¿Ver detalle?
-- [ ] Paso 11: Navega a gestión de dealers
-- [ ] Paso 12: Toma screenshot — ¿lista de dealers con estado KYC?
-- [ ] Paso 13: ¿Puedo aprobar/rechazar un dealer?
-- [ ] Paso 14: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Navega a {BASE_URL}/vehiculos sin filtros
+- [ ] Paso 2: Scroll por TODAS las páginas disponibles (mín 5 páginas)
+- [ ] Paso 3: BUSCAR: palabras en inglés — 'gasoline', 'diesel', 'electric', 'automatic', 'manual'
+- [ ] Paso 4: BUSCAR: ubicaciones mal formateadas — 'Santo DomingoNorte', 'Santiago De Los Caballeros' sin tilde
+- [ ] Paso 5: BUSCAR: vehículos de prueba — 'E2E', 'test', 'mm8mioxc' en título
+- [ ] Paso 6: BUSCAR: precios sospechosos — RD$0, RD$1, precios negativos
+- [ ] Paso 7: BUSCAR: vehículos sin foto
+- [ ] Paso 8: BUSCAR: vehículos duplicados (mismo carro 2 veces)
+- [ ] Paso 9: Toma screenshot de CADA anomalía encontrada
+- [ ] Paso 10: Regresa a la homepage
+- [ ] Paso 11: Verifica estadísticas: '10,000+ Vehículos' — ¿cuántos hay realmente en /vehiculos?
+- [ ] Paso 12: Verifica: '500+ Dealers' — ¿cuántos hay en /dealers?
+- [ ] Paso 13: Verifica: '50,000+ Usuarios' — ¿parece real o inflado?
+- [ ] Paso 14: ¿Los testimonios del homepage son de personas reales?
+- [ ] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [ ] UF-057: ¿El dashboard admin tiene métricas del negocio?
-- [ ] UF-058: ¿Gestión de usuarios funcional con búsqueda?
-- [ ] UF-059: ¿Gestión de dealers con KYC visible?
-- [ ] UF-060: ¿El admin puede aprobar/rechazar dealers?
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
-
-### S8-T02: Admin: contenido, facturación, sistema
-
-**Pasos:**
-- [ ] Paso 1: Navega a gestión de vehículos en admin
-- [ ] Paso 2: Toma screenshot — ¿puedo ver/moderar vehículos reportados?
-- [ ] Paso 3: Navega a gestión de contenido (banners, secciones homepage)
-- [ ] Paso 4: Navega a facturación/billing
-- [ ] Paso 5: Toma screenshot — ¿veo ingresos, transacciones, planes?
-- [ ] Paso 6: Navega a configuración del sistema
-- [ ] Paso 7: ¿Hay logs de auditoría?
-- [ ] Paso 8: ¿Hay configuración global (mantenimiento, etc.)?
-- [ ] Paso 9: Navega a la sección de SearchAgent/IA (si existe en admin)
-- [ ] Paso 10: ¿Puedo ver costos de LLM?
-- [ ] Paso 11: Cierra sesión
-- [ ] Paso 12: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
-
-**A validar:**
-- [ ] UF-061: ¿Moderación de vehículos funcional?
-- [ ] UF-062: ¿Facturación muestra ingresos reales?
-- [ ] UF-063: ¿Configuración del sistema accesible?
-- [ ] UF-064: ¿Costos de IA/LLM visibles?
+- [ ] UF-085: ¿No hay texto en inglés mezclado en los listados?
+- [ ] UF-086: ¿Las ubicaciones están bien formateadas en español?
+- [ ] UF-087: ¿No hay vehículos E2E/test visibles al público?
+- [ ] UF-088: ¿Las estadísticas del homepage reflejan datos reales?
+- [ ] UF-089: ¿No hay precios sospechosos (RD$0, negativos)?
 
 **Hallazgos:**
 _(documentar aquí lo encontrado)_
@@ -241,7 +216,7 @@ _(documentar aquí lo encontrado)_
 - [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md` como último paso?
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
 _(documentar aquí lo encontrado)_
@@ -249,10 +224,10 @@ _(documentar aquí lo encontrado)_
 ---
 
 ## Resultado
-- Sprint: 8 — Admin — Panel de Administración Completo
+- Sprint: 13 — Calidad de Datos — Lo que el Usuario Ve Mal
 - Fase: REAUDIT
-- Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://numerous-neck-favorite-equity.trycloudflare.com)
-- URL: https://numerous-neck-favorite-equity.trycloudflare.com
+- Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://apparently-bride-achieved-pdt.trycloudflare.com)
+- URL: https://apparently-bride-achieved-pdt.trycloudflare.com
 - Estado: EN PROGRESO
 - Bugs encontrados: _(completar)_
 

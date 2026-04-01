@@ -1,5 +1,6 @@
 /**
  * Admin Dashboard Page
+ * @version 2
  *
  * Main dashboard for administrators showing platform overview,
  * financial metrics, churn, API costs, and dealer analytics.
@@ -137,19 +138,39 @@ export default function AdminDashboardPage() {
   } = usePendingActions();
 
   // Financial data
-  const { data: dealerStats } = useDealerStatsAdmin();
-  const { data: planRevenue = [] } = useRevenueByPlan();
-  const { data: cancelledDealers = [] } = useCancelledDealers();
-  const { data: topChatAgentDealers = [] } = useTopChatAgentDealers(10);
-  const { data: llmCost } = useLlmCostBreakdown();
+  const { data: dealerStats, error: dealerStatsError } = useDealerStatsAdmin();
+  const { data: rawPlanRevenue = [], error: planRevenueError } = useRevenueByPlan();
+  const { data: rawCancelledDealers = [], error: cancelledError } = useCancelledDealers();
+  const { data: rawTopChatAgentDealers = [], error: topDealersError } = useTopChatAgentDealers(10);
+  // Ensure arrays even if API returns unexpected shapes
+  const planRevenue = Array.isArray(rawPlanRevenue) ? rawPlanRevenue : [];
+  const cancelledDealers = Array.isArray(rawCancelledDealers) ? rawCancelledDealers : [];
+  const topChatAgentDealers = Array.isArray(rawTopChatAgentDealers) ? rawTopChatAgentDealers : [];
+  const { data: llmCost, error: llmCostError } = useLlmCostBreakdown();
   const exportExcel = useExportDashboardExcel();
 
   const isLoading = statsLoading || activityLoading || pendingLoading;
-  const hasAuthError = [statsError, activityError, pendingError].some(
-    err =>
-      (err as { code?: string })?.code === 'HTTP_401' ||
-      (err as { message?: string })?.message?.includes('401')
-  );
+  const allErrors = [
+    statsError,
+    activityError,
+    pendingError,
+    dealerStatsError,
+    planRevenueError,
+    cancelledError,
+    topDealersError,
+    llmCostError,
+  ];
+  const hasAuthError = allErrors.some(err => {
+    if (!err) return false;
+    const e = err as unknown as Record<string, unknown>;
+    if (e.code === 'HTTP_401' || e.code === 'HTTP_403') return true;
+    if (typeof e.message === 'string' && (e.message.includes('401') || e.message.includes('403')))
+      return true;
+    // Raw AxiosError from failed refresh
+    const resp = e.response as Record<string, unknown> | undefined;
+    if (resp?.status === 401 || resp?.status === 403) return true;
+    return false;
+  });
 
   // Pie chart data for dealers by plan
   const dealersByPlanData = useMemo(() => {
@@ -229,7 +250,7 @@ export default function AdminDashboardPage() {
   const platformStats = [
     {
       title: 'Usuarios Totales',
-      value: (stats?.totalUsers ?? 0).toLocaleString() || '0',
+      value: Number(stats?.totalUsers ?? 0).toLocaleString() || '0',
       change: stats?.usersChange
         ? `${stats.usersChange > 0 ? '+' : ''}${stats.usersChange}%`
         : '~0%',
@@ -240,7 +261,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: 'Vehículos Activos',
-      value: (stats?.activeVehicles ?? 0).toLocaleString() || '0',
+      value: Number(stats?.activeVehicles ?? 0).toLocaleString() || '0',
       change: stats?.vehiclesChange
         ? `${stats.vehiclesChange > 0 ? '+' : ''}${stats.vehiclesChange}%`
         : '~0%',
@@ -255,7 +276,7 @@ export default function AdminDashboardPage() {
     },
     {
       title: 'Dealers Activos',
-      value: (stats?.activeDealers ?? 0).toLocaleString() || '0',
+      value: Number(stats?.activeDealers ?? 0).toLocaleString() || '0',
       change: stats?.dealersChange
         ? `${stats.dealersChange > 0 ? '+' : ''}${stats.dealersChange}`
         : '~0',
@@ -354,13 +375,13 @@ export default function AdminDashboardPage() {
                       />
                       <span className="capitalize">{plan.plan ?? 'N/A'}</span>
                       <Badge variant="secondary" className="text-xs">
-                        {plan.count} dealers
+                        {plan.count ?? 0} dealers
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <span className="font-semibold">{formatPrice(plan.revenue)}</span>
+                      <span className="font-semibold">{formatPrice(plan.revenue ?? 0)}</span>
                       <span className="text-muted-foreground ml-2 text-xs">
-                        ({plan.percentage}%)
+                        ({plan.percentage ?? 0}%)
                       </span>
                     </div>
                   </div>
@@ -621,9 +642,11 @@ export default function AdminDashboardPage() {
                         </Badge>
                       </td>
                       <td className="py-2 pr-4 text-right font-semibold">
-                        {(dealer.conversationCount ?? 0).toLocaleString('es-DO')}
+                        {Number(dealer.conversationCount ?? 0).toLocaleString('es-DO')}
                       </td>
-                      <td className="py-2 text-right">{(dealer.avgPerDay ?? 0).toFixed(1)}</td>
+                      <td className="py-2 text-right">
+                        {Number(dealer.avgPerDay ?? 0).toFixed(1)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

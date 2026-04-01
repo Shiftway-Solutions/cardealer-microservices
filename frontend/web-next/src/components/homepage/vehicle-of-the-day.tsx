@@ -16,6 +16,7 @@ interface Vehicle {
   price: number;
   year?: number;
   mileage?: number;
+  mileageUnit?: string;
   location?: string;
   imageUrl?: string;
   thumbnailUrl?: string;
@@ -188,7 +189,8 @@ export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
                 {selectedVehicle.mileage !== undefined && (
                   <span className="flex items-center gap-1">
                     <Gauge className="h-4 w-4" />
-                    {formatMileage(selectedVehicle.mileage)} km
+                    {formatMileage(selectedVehicle.mileage)}{' '}
+                    {'km'}
                   </span>
                 )}
                 {selectedVehicle.location && (

@@ -110,6 +110,9 @@ export interface StartSessionResponse {
   initialQuickReplies?: QuickReply[];
   maxInteractionsPerSession: number;
   remainingInteractions: number;
+  disclosureMessage?: string;
+  privacyPolicyUrl?: string;
+  requiresConsent?: boolean;
 }
 
 export interface ChatbotResponse {
@@ -197,6 +200,17 @@ export interface ChatMessage {
 // =============================================================================
 // API Functions
 // =============================================================================
+
+/**
+ * Accept bot disclosure and privacy policy.
+ * Must be called after startChatSession and before sending messages.
+ */
+export async function acceptDisclosure(sessionToken: string): Promise<{ success: boolean }> {
+  const response = await apiClient.post<{ success: boolean }>('/api/chat/accept-disclosure', {
+    sessionToken,
+  });
+  return response.data;
+}
 
 /**
  * Start a new chat session with the OKLA bot

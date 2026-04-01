@@ -33,6 +33,7 @@ https://okla.local {
 	}
 
 	# Todo lo demás → Frontend (Next.js)
+	# Cache-Control headers are managed by next.config.ts (no-cache in dev, immutable in prod)
 	handle {
 		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
 	}
@@ -49,6 +50,7 @@ https://okla.local {
 		respond "OK" 200
 	}
 
+	# Cache-Control headers are managed by next.config.ts (no-cache in dev, immutable in prod)
 	handle {
 		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
 	}

@@ -15,6 +15,7 @@ import {
   sendChatMessage,
   endChatSession,
   transferToAgent,
+  acceptDisclosure,
   botResponseToMessage,
   createUserMessage,
   createLoadingMessage,
@@ -183,6 +184,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       if (savedToken) {
         setSessionToken(savedToken);
         setIsConnected(true);
+        // Ensure disclosure consent is accepted for restored sessions (idempotent call)
+        acceptDisclosure(savedToken).catch(() => {/* non-blocking */});
       }
 
       if (savedBotName) {
@@ -264,6 +267,21 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         /* silently fail */
       }
 
+      // Build initial messages array
+      const initialMessages: ChatMessage[] = [];
+
+      // Show disclosure message first if backend requires consent
+      if (result.disclosureMessage) {
+        const disclosureMsg: ChatMessage = {
+          id: `disclosure-${Date.now()}`,
+          content: result.disclosureMessage,
+          isFromBot: true,
+          timestamp: new Date(),
+          type: 'BotText',
+        };
+        initialMessages.push(disclosureMsg);
+      }
+
       // Add welcome message
       const welcomeMsg: ChatMessage = {
         id: `welcome-${Date.now()}`,
@@ -275,9 +293,19 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         type: 'BotText',
         quickReplies: result.initialQuickReplies,
       };
+      initialMessages.push(welcomeMsg);
 
-      setMessages([welcomeMsg]);
-      saveMessages([welcomeMsg]);
+      setMessages(initialMessages);
+      saveMessages(initialMessages);
+
+      // Auto-accept disclosure (implicit consent: "al continuar esta conversación, aceptas")
+      if (result.requiresConsent) {
+        try {
+          await acceptDisclosure(result.sessionToken);
+        } catch {
+          // Non-blocking — if accept fails, user will see the error on first message
+        }
+      }
 
       if (result.initialQuickReplies?.length) {
         setQuickReplies(result.initialQuickReplies);

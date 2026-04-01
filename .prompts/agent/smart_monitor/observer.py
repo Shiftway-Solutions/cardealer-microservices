@@ -52,6 +52,36 @@ CHAT_ERROR_PATTERNS = [
     (re.compile(r"rate.limit|429|Too Many Requests|quota.*exhaust|exhausted.*quota|RateLimitError", re.I), "rate_limited"),
     (re.compile(r"overloaded|503|502|500|Internal Server Error|capacity|overloaded_error", re.I), "hard_error"),
     (re.compile(r"cancelled|canceled", re.I), "cancelled"),
+    # VS Code Copilot suggests switching agent/model (rate limit on model, model unavailable)
+    (re.compile(
+        r"switch.*(?:model|agent)"
+        r"|change.*model"
+        r"|not.*available.*model"
+        r"|model.*not.*available"
+        r"|your.*agent.*limit"
+        r"|request.*limit.*reached"
+        r"|try.*(?:a )?different.*model"
+        r"|this model.*(?:isn.t|is not).*available"
+        r"|unable.*to.*use.*model"
+        r"|model.*unavailable"
+        r"|please.*switch.*model"
+        r"|agent.*request.*limit",
+        re.I,
+    ), "agent_switch"),
+    # Context window / token limit saturation messages from Copilot Chat UI
+    (re.compile(
+        r"context.*(?:full|limit|too.long|length|exceeded|window)"
+        r"|conversation.*too.long"
+        r"|maximum.*context"
+        r"|token.*limit"
+        r"|context_length_exceeded"
+        r"|too many tokens"
+        r"|This conversation is too long"
+        r"|context window.*full"
+        r"|The model.*maximum context"
+        r"|exceeds.*token",
+        re.I,
+    ), "context_full"),
 ]
 
 # Errores en el log de Copilot
@@ -67,6 +97,7 @@ LOG_PATTERNS = [
     (re.compile(r"Stop hook result.*shouldContinue=false|ToolCallingLoop.*[Ss]top|agent.*loop.*stop", re.I), "loop_stopped"),
     (re.compile(r"ccreq:.*\|\s*success\s*\|", re.I), "success"),
     (re.compile(r"ccreq:.*\|\s*error\s*\|", re.I), "request_error"),
+    (re.compile(r"context_length_exceeded|context.*too.long|maximum.*context|token.*limit|exceeds.*token", re.I), "context_full"),
 ]
 
 NOISE_PATTERN = re.compile(r"failed validation.*schema must be|Tool mcp_aisquare.*failed validation", re.I)
@@ -121,6 +152,14 @@ class Observation:
     log_new_lines_count: int = 0
     log_events: dict = field(default_factory=dict)  # {"success": 3, "cancelled": 1, ...}
     log_dominant_event: str = "idle"
+
+    # Context saturation (any source)
+    context_saturated: bool = False          # True when ANY context-full signal fires
+    context_saturations_count: int = 0       # consecutive saturations on current model
+    # Chat UI model switch trigger
+    # True when rate_limited / hard_error / agent_switch detected in chat or log
+    # → agent should call cycle_chat_ui_model() to switch immediately in current session
+    chat_ui_switch_needed: bool = False
 
     # CDP
     cdp_available: bool = False
@@ -184,7 +223,10 @@ class Observation:
             f" | chat_chars: {self.cdp_chat_text_length}"
             f" | timeouts_consecutivos: {self.cdp_consecutive_timeouts}"
             f" | proxy_bytes: {self.cdp_context_proxy_bytes:,}"
-            f" | proxy_lleno: {'SÍ' if self.cdp_context_proxy_full else 'NO'}",
+            f" | proxy_lleno: {'SÍ' if self.cdp_context_proxy_full else 'NO'}"
+            f" | SATURADO: {'⚠️ SÍ' if self.context_saturated else 'NO'}"
+            f" (saturaciones_consecutivas={self.context_saturations_count})"
+            f" | SWITCH_UI: {'⚠️ SÍ' if self.chat_ui_switch_needed else 'NO'}",
             "",
             f"VS CODE: {'corriendo' if self.vscode_running else 'DETENIDO'}"
             f" | foco: {'SÍ' if self.vscode_focused else 'NO'}",
@@ -300,6 +342,21 @@ class Observer:
             )
             obs.snapshot_has_model_footer = bool(MODEL_COMPLETION_PATTERN.search(tail_800))
 
+            # ── GUARD: Snapshot estale ───────────────────────────────────────
+            # Si el snapshot lleva >10 min sin actualizarse, los patrones de
+            # "generación activa" son residuales de una sesión anterior.
+            # Una generación real actualiza el snapshot cada ~20s via CDP.
+            # Sin este guard el agente queda paralizado indefinidamente cuando
+            # CDP falla y el snapshot queda congelado con "Compacting…"/"Preparing…".
+            SNAPSHOT_STALE_SECS = 600  # 10 minutos sin update = estale
+            if obs.snapshot_has_active_generation and obs.snapshot_age_secs > SNAPSHOT_STALE_SECS:
+                import logging as _logging
+                _logging.getLogger("smart_monitor").warning(
+                    f"[STALE GUARD] Snapshot tiene {obs.snapshot_age_secs:.0f}s sin actualizar "
+                    f"con patrones de generación activa — ignorando false positive."
+                )
+                obs.snapshot_has_active_generation = False
+
         except Exception:
             obs.snapshot_exists = False
 
@@ -398,6 +455,22 @@ class Observer:
         obs.cdp_context_proxy_bytes = self._state.get("context_proxy_bytes", 0)
         obs.cdp_context_proxy_full = obs.cdp_context_proxy_bytes >= CONTEXT_PROXY_THRESHOLD
 
+        # Aggregate context_saturated: any source that indicates context window is full
+        obs.context_saturated = (
+            obs.cdp_context_full
+            or obs.cdp_context_proxy_full
+            or "context_full" in obs.snapshot_errors
+        )
+        obs.context_saturations_count = self._state.get("context_saturations_count", 0)
+
+        # Chat UI switch trigger: rate limit / hard error / agent_switch in any source
+        obs.chat_ui_switch_needed = (
+            obs.log_dominant_event in ("rate_limited", "hard_error")
+            or "rate_limited" in obs.snapshot_errors
+            or "hard_error" in obs.snapshot_errors
+            or "agent_switch" in obs.snapshot_errors
+        )
+
     def _observe_vscode(self, obs: Observation) -> None:
         """Verifica si VS Code está corriendo y tiene foco."""
         obs.vscode_running = self._is_vscode_running(obs.cdp_available)
@@ -479,12 +552,10 @@ class Observer:
             parts.append(f"⚠️ El chat cambió pero hay errores: {', '.join(obs.snapshot_errors)}.")
         elif not obs.snapshot_body_changed and obs.snapshot_has_model_footer and not obs.snapshot_has_active_generation:
             parts.append("🏁 TURNO COMPLETADO — footer del modelo visible, sin generación activa. Abrir nuevo chat si stall >5 min.")
-        elif obs.secs_since_last_activity > 1200:
-            parts.append(f"🔴 STALL CRÍTICO — {obs.secs_since_last_activity/60:.0f} min sin actividad → open_new_chat.")
-        elif obs.secs_since_last_activity > 900:
-            parts.append(f"⚠️ STALL — {obs.secs_since_last_activity/60:.0f} min sin actividad → send_continue.")
-        elif obs.secs_since_last_activity > 300:
-            parts.append(f"El chat lleva {obs.secs_since_last_activity/60:.1f} min sin cambios (vigilar).")
+        elif obs.secs_since_last_activity >= 480:
+            parts.append(f"🔴 STALL CRÍTICO — {obs.secs_since_last_activity/60:.1f} min sin actividad → open_new_chat.")
+        elif obs.secs_since_last_activity >= 300:
+            parts.append(f"⚠️ STALL — {obs.secs_since_last_activity/60:.1f} min sin actividad → send_continue.")
         else:
             parts.append("Sin cambios recientes en el chat.")
 

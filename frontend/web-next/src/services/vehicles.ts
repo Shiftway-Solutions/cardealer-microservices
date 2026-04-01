@@ -375,9 +375,12 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
     dealRating: calculateDealRating(raw.price as number, raw.marketPrice as number | undefined),
     isNegotiable: raw.isNegotiable as boolean | undefined,
     mileage: raw.mileage as number,
+    mileageUnit: (raw.mileageUnit as string | undefined) || 'km',
     transmission: mapTransmission(raw.transmission as string | number) as Vehicle['transmission'],
     fuelType: mapFuelType(raw.fuelType as string | number) as Vehicle['fuelType'],
-    drivetrain: undefined,
+    drivetrain: raw.driveType
+      ? ((raw.driveType as string).toLowerCase() as Vehicle['drivetrain'])
+      : undefined,
     engineSize: raw.engineSize as string | undefined,
     horsepower: raw.horsepower as number | undefined,
     exteriorColor: raw.exteriorColor as string | undefined,
@@ -483,6 +486,7 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
     price: raw.price as number,
     currency: ((raw.currency as string) || 'DOP') as 'DOP' | 'USD',
     mileage: raw.mileage as number,
+    mileageUnit: ((raw.mileageUnit as string | undefined) || 'km') as VehicleCardData['mileageUnit'],
     transmission: mapTransmission(raw.transmission as string | number),
     fuelType: mapFuelType(raw.fuelType as string | number),
     imageUrl,
@@ -493,8 +497,15 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
     isNew,
     isCertified,
     monthlyPayment: calculateMonthlyPayment(raw.price as number),
-    dealerName: seller?.name as string | undefined,
-    dealerRating: seller?.rating as number | undefined,
+    dealerName:
+      (seller?.name as string | undefined) ||
+      (mapSellerType(raw.sellerType as string | number) === 'dealer'
+        ? (raw.sellerName as string) || 'Dealer'
+        : undefined),
+    dealerRating:
+      (seller?.rating as number | undefined) || (raw.sellerRating as number | undefined),
+    isVerified:
+      (seller?.isVerified as boolean | undefined) ?? (raw.sellerVerified as boolean | undefined),
     status: mapStatus(raw.status as string | number) as VehicleCardData['status'],
     viewCount: raw.viewCount as number | undefined,
     createdAt: raw.createdAt as string,
@@ -565,12 +576,19 @@ export async function searchVehicles(
     usado: 'Used',
   };
   const fuelTypeMap: Record<string, string> = {
+    // Spanish display values → C# enum names (primary path from filter UI)
     gasolina: 'Gasoline',
     diesel: 'Diesel',
     hibrido: 'Hybrid',
     electrico: 'Electric',
     glp: 'NaturalGas',
     pluginhybrid: 'PlugInHybrid',
+    // English catalog values → C# enum names (from getStaticFuelTypes() or API catalog)
+    gasoline: 'Gasoline',
+    hybrid: 'Hybrid',
+    electric: 'Electric',
+    naturalgas: 'NaturalGas',
+    flexfuel: 'FlexFuel',
   };
   const transmissionMap: Record<string, string> = {
     automatica: 'Automatic',

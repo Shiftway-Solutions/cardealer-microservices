@@ -32,6 +32,7 @@ export interface ShareVehicle {
   make: string;
   model: string;
   mileage?: number;
+  mileageUnit?: string;
   transmission?: string;
   fuelType?: string;
   location?: string;
@@ -71,7 +72,9 @@ function buildShareText(vehicle: ShareVehicle, url: string): string {
   const parts = [
     `🚗 *${vehicle.title}*`,
     `💰 ${formatCurrency(vehicle.price)}`,
-    vehicle.mileage != null ? `📍 ${formatNumber(vehicle.mileage)} km` : null,
+    vehicle.mileage != null
+      ? `📍 ${formatNumber(vehicle.mileage)} km`
+      : null,
     transLabel ? `⚙️ ${transLabel}` : null,
     fuelLabel ? `⛽ ${fuelLabel}` : null,
     `\n🔗 ${url}`,
@@ -295,7 +298,7 @@ export function ShareDialog({ open, onClose, vehicle }: ShareDialogProps) {
                 {vehicle.mileage != null && (
                   <span className="flex items-center gap-1">
                     <Gauge className="h-3 w-3" />
-                    {formatNumber(vehicle.mileage)} km
+                    {formatNumber(vehicle.mileage)}{' '}km
                   </span>
                 )}
                 {transLabel && (

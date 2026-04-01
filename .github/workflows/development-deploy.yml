@@ -5,6 +5,10 @@
 # Flujo: push a `development` → lint/tests rápidos → docker compose build
 #        solo servicios que cambiaron → docker compose up -d --no-deps
 #
+# Prerequisito (una vez, en la Mac del runner):
+#   security set-keychain-settings ~/Library/Keychains/login.keychain-db
+#   (deshabilita auto-lock del keychain — necesario para sesiones no interactivas)
+#
 # Diferencias vs smart-cicd.yml (main):
 #   ✅ Build nativo ARM64 — SIN QEMU, SIN linux/amd64 → 3-5× más rápido
 #   ✅ SIN push a GHCR — solo imagen local para Docker Desktop
@@ -334,6 +338,14 @@ jobs:
             echo "✅ Infra base ya está corriendo"
           fi
 
+      - name: "🔓 Unlock macOS keychain (docker-credential-desktop)"
+        run: |
+          # docker-credential-desktop requiere que el login keychain esté desbloqueado.
+          # auto-lock debe estar desactivado en la Mac del runner:
+          #   security set-keychain-settings ~/Library/Keychains/login.keychain-db
+          security unlock-keychain ~/Library/Keychains/login.keychain-db 2>/dev/null || true
+          echo "✅ Keychain unlocked"
+
       - name: "🐳 Build changed services (native ARM64 — no QEMU)"
         run: |
           SERVICES="${{ steps.services.outputs.list }}"
@@ -351,8 +363,8 @@ jobs:
             echo "── 🔨 Building $SVC..."
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
-            # --parallel false para no saturar la RAM del Mac
-            if docker compose build --no-cache "$SVC" 2>&1; then
+            # COMPOSE_PROFILES: ensures cross-profile depends_on references resolve
+            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
               echo "  ✅ $SVC build OK"
             else
               echo "  ❌ $SVC build FALLÓ"
@@ -380,7 +392,7 @@ jobs:
             echo "── 🔄 Restarting $SVC..."
             # --no-deps para no derribar dependencias (postgres, redis, etc.)
             # Si el container no existía, up lo crea; si existe, lo recrea con la nueva imagen
-            if docker compose up -d --no-deps --force-recreate "$SVC" 2>&1; then
+            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose up -d --no-deps --force-recreate "$SVC" 2>&1; then
               echo "  ✅ $SVC → running"
             else
               echo "  ❌ $SVC no pudo reiniciar"
@@ -403,7 +415,7 @@ jobs:
             local url="$2"
             local expected="${3:-200}"
             local code
-            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || code="000"
             if [ "$code" = "$expected" ]; then
               echo "  ✅ $name — HTTP $code"
             else

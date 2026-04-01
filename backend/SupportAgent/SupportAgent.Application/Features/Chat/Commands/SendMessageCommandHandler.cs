@@ -167,6 +167,26 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
                 sessionId, detectedModule, sw.ElapsedMilliseconds);
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // LOCAL FAQ BANK: Deterministic answers for common questions
+        // Resolved in <1 ms without requiring the Claude API.
+        // ══════════════════════════════════════════════════════════════
+        if (cachedFaqResponse == null && isFaqCandidate)
+        {
+            var localFaq = LocalFaqMatcher.TryMatch(processedMessage);
+            if (localFaq != null)
+            {
+                cachedFaqResponse = localFaq;
+                // Seed the runtime cache so follow-up repetitions are instant
+                if (!piiResult.DetectionInfo.WasSanitized)
+                    _faqCache.Set(processedMessage, localFaq);
+
+                _logger.LogInformation(
+                    "LocalFAQ match. Session={SessionId}, Module={Module}, Latency={Latency}ms",
+                    sessionId, detectedModule, sw.ElapsedMilliseconds);
+            }
+        }
+
         string responseText;
         int inputTokens = 0, outputTokens = 0;
 
@@ -176,23 +196,38 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sup
         }
         else
         {
-            // Call Claude API with the sanitized message and enhanced prompt
-            var claudeResponse = await _claudeService.SendMessageAsync(
-                processedMessage,
-                conversationHistory,
-                SupportAgentPrompts.SystemPromptV2,
-                config.Temperature,
-                config.MaxTokens,
-                ct);
-
-            responseText = claudeResponse.Response;
-            inputTokens = claudeResponse.InputTokens;
-            outputTokens = claudeResponse.OutputTokens;
-
-            // Store in FAQ cache for future hits (only first-turn, non-PII messages)
-            if (isFaqCandidate && !piiResult.DetectionInfo.WasSanitized)
+            try
             {
-                _faqCache.Set(processedMessage, responseText);
+                // Call Claude API with the sanitized message and enhanced prompt
+                var claudeResponse = await _claudeService.SendMessageAsync(
+                    processedMessage,
+                    conversationHistory,
+                    SupportAgentPrompts.SystemPromptV2,
+                    config.Temperature,
+                    config.MaxTokens,
+                    ct);
+
+                responseText = claudeResponse.Response;
+                inputTokens = claudeResponse.InputTokens;
+                outputTokens = claudeResponse.OutputTokens;
+
+                // Store in FAQ cache for future hits (only first-turn, non-PII messages)
+                if (isFaqCandidate && !piiResult.DetectionInfo.WasSanitized)
+                {
+                    _faqCache.Set(processedMessage, responseText);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Claude API unavailable for support chat. Session={SessionId}, Module={Module}",
+                    sessionId, detectedModule);
+
+                responseText =
+                    "🛠️ El asistente de soporte no está disponible en este momento. " +
+                    "Por favor, intenta de nuevo más tarde o contáctanos directamente:\n\n" +
+                    "📧 **soporte@okla.com.do**\n\n" +
+                    "Disculpa los inconvenientes.";
             }
         }
 

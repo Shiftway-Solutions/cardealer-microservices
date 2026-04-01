@@ -42,6 +42,10 @@ from smart_monitor.observer import Observer, Observation
 from smart_monitor.brain import Brain, Decision
 from smart_monitor.memory import Memory, seed_initial_lessons
 from smart_monitor.feedback import FeedbackLoop
+try:
+    from smart_monitor.brain_gpt import BrainGPT
+except ImportError:
+    BrainGPT = None  # type: ignore
 
 # ─── Action executors (standalone — no v7 dependency) ─────────────────────────
 from smart_monitor.actions import (
@@ -51,14 +55,18 @@ from smart_monitor.actions import (
     classify_chat_text,
     _text_hash,
     capture_workbench_screenshot,
+    ocr_screenshot,
     notify,
     vscode_focus,
     is_vscode_focused,
+    ensure_chat_focused,
+    ensure_vscode_focused,
     vscode_send_continue,
     vscode_open_new_chat,
     send_loop_prompt,
     open_new_chat_with_stop,
     cycle_model_next,
+    cycle_chat_ui_model,
 )
 
 # ─── Constants ────────────────────────────────────────────────────────────────
@@ -66,15 +74,21 @@ DEFAULT_INTERVAL  = 20   # poll every 20s
 STATE_FILE        = AGENT_DIR / "smart_monitor" / ".agent_state.json"
 PID_FILE          = AGENT_DIR / "smart_monitor" / ".agent_pid"
 LOG_FILE          = REPO_ROOT / ".github" / "smart-monitor.log"
-AUDIT_LOG_FILE    = AGENT_DIR / "smart_monitor" / "audit_log.jsonl"
+AUDIT_LOG_FILE        = AGENT_DIR / "smart_monitor" / "audit_log.jsonl"
+TRAINING_DATA_FILE    = AGENT_DIR / "smart_monitor" / "training_data.jsonl"
+
+# After this many consecutive new-chat actions without a model rotation,
+# auto-rotate to the next model in the pool (prevents re-saturating the same model).
+MODEL_ROTATION_ON_SATURATION = 2
 
 # Minimum seconds between sending the same action type (anti-spam)
 ACTION_COOLDOWNS = {
     "send_continue":     60,
     "open_new_chat":     90,
     "stop_and_new_chat": 90,
-    "cycle_model":      120,
-    "focus_vscode":      30,
+    "cycle_model":           120,
+    "cycle_chat_ui_model":    90,   # Chat UI model switch (rate-limit/hard-error/agent-switch)
+    "focus_vscode":           30,
 }
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -148,18 +162,49 @@ def default_state() -> dict:
         # Fix 3: Context proxy — accumulated diff bytes
         "context_proxy_bytes":    0,
         "context_proxy_last_hash": "",
+        # Context saturation auto-rotation counter
+        # Tracks consecutive new-chat actions without a model rotation.
+        # When it reaches MODEL_ROTATION_ON_SATURATION, the executor automatically
+        # cycles the model so the same model doesn’t keep filling its context window.
+        "context_saturations_count": 0,
     }
 
 
 def refresh_live_chat_state(state: dict) -> None:
     """Refresh chat_len and chat_snapshot.txt directly from the live CDP session.
-    
+
     Fix 1: Track consecutive CDP timeouts — signals VS Code under stress.
     Fix 3: Accumulate snapshot diff bytes as a proxy for total context size.
     Fix 5: Log chat_len and proxy_bytes in every cycle for diagnostics.
+    RC5-FIX: When CDP is unavailable, write the diagnostic snapshot ONCE only.
+      Previously, writing the snapshot on EVERY cycle updated its mtime to ~now,
+      causing _snapshot_is_fresh(3.0) to ALWAYS return True → all send_continue,
+      vscode_open_new_chat, and open_new_chat_with_stop calls were silently
+      blocked forever (ok=False) — the root cause of the 08:44–08:48 stall.
     """
     if not is_cdp_available():
         state["chat_len"] = 0
+        # RC5-FIX: Only write the diagnostic once — not on every cycle.
+        # Writing every cycle thrashes chat_snapshot.txt's mtime → always fresh
+        # → _snapshot_is_fresh(3.0) blocks all action-sends indefinitely.
+        try:
+            existing = (
+                CHAT_SNAPSHOT_FILE.read_text(encoding="utf-8")
+                if CHAT_SNAPSHOT_FILE.exists() else ""
+            )
+            if "CDP no disponible" not in existing:
+                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                diag = (
+                    f"# Chat Snapshot — {ts}\n\n"
+                    f"[CDP no disponible — puerto 9222 no está abierto]\n\n"
+                    f"Para habilitar la lectura del chat:\n"
+                    f"  1. Se agregó 'remote-debugging-port': 9222 a ~/.vscode/argv.json\n"
+                    f"  2. Reinicia VS Code para que tome efecto\n\n"
+                    f"Mientras tanto, el agente monitorea via log de Copilot Chat.\n"
+                )
+                CHAT_SNAPSHOT_FILE.write_text(diag, encoding="utf-8")
+        except Exception:
+            pass
         # CDP endpoint unavailable (not a playwright timeout)
         return
 
@@ -230,8 +275,17 @@ def _write_audit_record(
     before_png: str,
     after_png: str,
     cycle: int,
+    before_ocr: str = "",
+    after_ocr: str = "",
 ) -> None:
-    """Append one JSON-line audit record for every real action executed."""
+    """Append one JSON-line audit record for every real action executed.
+
+    Fields:
+      before_png / after_png  — paths to screenshots (empty if screencapture unavailable)
+      before_ocr / after_ocr  — text extracted from those screenshots via Apple Vision
+      reasoning               — why the brain decided this action
+      source                  — gemma3 | override | gemma3_offline
+    """
     record = {
         "ts":         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "cycle":      cycle,
@@ -241,13 +295,160 @@ def _write_audit_record(
         "confidence": round(decision.confidence, 2),
         "ok":         ok,
         "before_png": before_png,
+        "before_ocr": before_ocr[:2000] if before_ocr else "",   # cap at 2 KB
         "after_png":  after_png,
+        "after_ocr":  after_ocr[:2000] if after_ocr else "",
     }
     try:
         with AUDIT_LOG_FILE.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as exc:
         logger.warning(f"Audit log write failed: {exc}")
+
+
+# ─── Manual Approval Gate (modo --learn) ─────────────────────────────────────
+
+class ManualApprovalGate:
+    """
+    En modo --learn, intercepta cada decisión del LLM y pide aprobación manual
+    antes de ejecutar. Timeout de 120s → auto-rechazo por seguridad.
+    """
+    TIMEOUT_SECS = 120
+
+    def ask(self, decision: Decision, obs: Observation) -> tuple[bool, str]:
+        """
+        Muestra decisión propuesta. Espera Y/n del usuario.
+        Returns: (approved, user_comment)
+        """
+        if decision.action == "wait":
+            return True, ""  # wait no necesita aprobación
+
+        print(f"\n{'▓' * 70}")
+        print(f"  🎯  ACCIÓN PROPUESTA — REQUIERE APROBACIÓN MANUAL")
+        print(f"{'▓' * 70}")
+
+        model_label = {
+            "gpt":      "Copilot / GPT-5.4",
+            "qwen":     "qwen2.5-coder:7b  (local)",
+            "gemma3":   "gemma3:4b          (local)",
+            "override": "OVERRIDE          (sin LLM)",
+        }.get(decision.source, decision.source)
+
+        action_label = {
+            "send_continue":     "▶️   ENVIAR CONTINUE",
+            "open_new_chat":     "🆕  ABRIR NUEVO CHAT",
+            "stop_and_new_chat": "⏹️🆕 PARAR Y NUEVO CHAT",
+            "cycle_model":           "🔄  CAMBIAR MODELO (CLI)",
+            "cycle_chat_ui_model":   "🔄🖥️ CAMBIAR MODELO (Chat UI)",
+            "focus_vscode":          "🖥️  ENFOCAR VS Code",
+        }.get(decision.action, f"❓ {decision.action.upper()}")
+
+        print(f"  Modelo   : {model_label}")
+        print(f"  Acción   : {action_label}")
+        print(f"  Confianza: {decision.confidence:.0%}")
+        print(f"  Razón    : {decision.reasoning}")
+        print()
+        print(f"  Contexto rápido:")
+        print(f"    Última actividad : hace {obs.secs_since_last_activity:.0f}s")
+        print(f"    Continues/sesión : {obs.continue_count} | {obs.session_age_mins:.0f} min")
+        print(f"    Errores detectados: {', '.join(obs.snapshot_errors) or 'ninguno'}")
+        print()
+        print(f"  Tienes {self.TIMEOUT_SECS}s para responder.")
+        print(f"  [Enter / y]  APROBAR   |   [n]  RECHAZAR   |   [n motivo]  RECHAZAR con nota")
+        print(f"{'▓' * 70}")
+
+        try:
+            import select
+            print("  > ", end="", flush=True)
+            ready = select.select([sys.stdin], [], [], self.TIMEOUT_SECS)[0]
+            if not ready:
+                print("\n  ⏰ Timeout — acción RECHAZADA automáticamente (seguridad)")
+                return False, "timeout"
+            line = sys.stdin.readline().strip()
+        except Exception:
+            print("  ⚠️  Terminal no interactiva — acción RECHAZADA")
+            return False, "non_interactive"
+
+        if not line or line.lower() in ("y", "yes", "s", "si", "sí"):
+            comment = line if line.lower() not in ("y", "yes", "s", "si", "sí", "") else ""
+            print(f"  ✅ APROBADO{f': {comment}' if comment else ''}")
+            return True, comment
+        else:
+            comment = line[1:].strip() if line.lower().startswith("n") else line
+            print(f"  ❌ RECHAZADO{f': {comment}' if comment else ''}")
+            return False, comment
+
+
+# ─── Training Data Logger (modo --learn) ─────────────────────────────────────
+
+class TrainingDataLogger:
+    """
+    Registra cada ciclo como un ejemplo de entrenamiento en training_data.jsonl.
+    Formato diseñado para fine-tuning de Gemma 3 o similares.
+
+    Flujo:
+      1. log_proposal()  — cuando el LLM propone y el usuario aprueba/rechaza
+      2. log_outcome()   — cuando se conoce el resultado de la acción (async)
+    """
+
+    def __init__(self) -> None:
+        TRAINING_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+        self._pending: dict[str, dict] = {}
+
+    def log_proposal(
+        self,
+        episode_id: str,
+        obs: Observation,
+        decision: Decision,
+        approved: bool,
+        user_comment: str,
+        cycle: int,
+    ) -> None:
+        record = {
+            "ts":      datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cycle":   cycle,
+            "model":   decision.source,
+            "latency_ms": decision.latency_ms,
+            "observation": {
+                "secs_since_last_activity": obs.secs_since_last_activity,
+                "session_age_mins":         round(obs.session_age_mins, 1),
+                "continue_count":           obs.continue_count,
+                "snapshot_has_active_generation": obs.snapshot_has_active_generation,
+                "snapshot_body_changed":    obs.snapshot_body_changed,
+                "log_dominant_event":       obs.log_dominant_event,
+                "log_new_lines_count":      obs.log_new_lines_count,
+                "snapshot_errors":          obs.snapshot_errors,
+                "cdp_context_full":         obs.cdp_context_full,
+                "session_too_long":         getattr(obs, "session_too_long", False),
+                "situation_summary":        obs.situation_summary,
+            },
+            "proposed_action": decision.action,
+            "confidence":      round(decision.confidence, 3),
+            "reasoning":       decision.reasoning,
+            "raw_response":    (decision.raw_response or "")[:300],
+            "human_approved":  approved,
+            "human_comment":   user_comment,
+            "outcome":         None,
+            "outcome_ts":      None,
+        }
+        self._pending[episode_id] = record
+
+    def log_outcome(self, episode_id: str, outcome: str) -> None:
+        if episode_id not in self._pending:
+            return
+        record = self._pending.pop(episode_id)
+        record["outcome"]    = outcome
+        record["outcome_ts"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            with TRAINING_DATA_FILE.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception as exc:
+            logger.warning(f"TrainingDataLogger write failed: {exc}")
+
+    def flush_pending(self, outcome: str = "session_end") -> None:
+        """Vacía pending al terminar la sesión."""
+        for episode_id in list(self._pending.keys()):
+            self.log_outcome(episode_id, outcome)
 
 
 # ─── Action Executor ──────────────────────────────────────────────────────────
@@ -313,6 +514,9 @@ class ActionExecutor:
             "cycle":      self._state.get("cycle_count", 0),
         }
         before_png = capture_workbench_screenshot(f"{action}_before", before_extra)
+        before_ocr = ocr_screenshot(before_png)
+        if before_ocr:
+            logger.debug(f"[OCR BEFORE] {before_ocr[:300]}")
 
         logger.info(
             f"EXECUTING: {action} (confidence={decision.confidence:.0%}, "
@@ -329,6 +533,8 @@ class ActionExecutor:
                 ok = self._stop_and_new_chat()
             elif action == "cycle_model":
                 ok = self._cycle_model()
+            elif action == "cycle_chat_ui_model":
+                ok = self._cycle_chat_ui_model_ui()
             elif action == "focus_vscode":
                 ok = self._focus_vscode()
             else:
@@ -348,6 +554,9 @@ class ActionExecutor:
             "cycle":     self._state.get("cycle_count", 0),
         }
         after_png = capture_workbench_screenshot(f"{action}_after", after_extra)
+        after_ocr = ocr_screenshot(after_png)
+        if after_ocr:
+            logger.debug(f"[OCR AFTER] {after_ocr[:300]}")
         _write_audit_record(
             action=action,
             decision=decision,
@@ -355,6 +564,8 @@ class ActionExecutor:
             before_png=before_png,
             after_png=after_png,
             cycle=self._state.get("cycle_count", 0),
+            before_ocr=before_ocr,
+            after_ocr=after_ocr,
         )
 
         # Fix 1: Always stamp the per-action cooldown timestamp, even on failure.
@@ -376,11 +587,39 @@ class ActionExecutor:
                 self._state["last_new_chat_ts"] = now
                 self._state["new_chat_count"] = self._state.get("new_chat_count", 0) + 1
                 self._state["error_continue_count"] = 0
+                # FIX: Reset continue_count — sin esto session_too_long permanece True
+                # para siempre → bucle infinito de stop_and_new_chat cada 90s.
+                self._state["continue_count"] = 0
                 # Fix 3: Reset context proxy counters on new chat (fresh session)
                 self._state["context_proxy_bytes"] = 0
                 self._state["context_proxy_last_hash"] = ""
                 self._state["cdp_consecutive_timeouts"] = 0
+                # RC1-FIX (CRITICO): Resetear last_activity_ts tras nuevo chat exitoso.
+                # Sin esto, secs_since_last_activity = now - last_activity_ts sigue
+                # calculando desde la actividad ANTERIOR del modelo (puede ser 30+ min)
+                # → el override de open_new_chat/send_continue vuelve a disparar al
+                # siguiente ciclo (90s después) → bucle infinito de 8+ open_new_chat.
+                # Con este fix: last_activity_ts=now → secs_since_last_activity=0
+                # → el threshold de 1800s (CDP ciego) protege por 30 min más.
+                self._state["last_activity_ts"] = now
+                # Auto-rotate model after MODEL_ROTATION_ON_SATURATION consecutive new-chats.
+                # This prevents the same model from immediately re-saturating its context
+                # on the very next sprint loop without stopping the Python agent.
+                sat_count = self._state.get("context_saturations_count", 0) + 1
+                self._state["context_saturations_count"] = sat_count
+                if sat_count >= MODEL_ROTATION_ON_SATURATION:
+                    logger.info(
+                        f"context_saturations_count={sat_count} ≥ {MODEL_ROTATION_ON_SATURATION} "
+                        f"— auto-rotating model to avoid re-saturation"
+                    )
+                    self._cycle_model()
+                    self._state["context_saturations_count"] = 0
             elif action == "cycle_model":
+                self._state["last_rate_limit_ts"] = now
+                self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
+                self._state["context_saturations_count"] = 0   # explicit rotation resets counter
+            elif action == "cycle_chat_ui_model":
+                self._state["chat_ui_switches"] = self._state.get("chat_ui_switches", 0) + 1
                 self._state["last_rate_limit_ts"] = now
                 self._state["rate_limit_count"] = self._state.get("rate_limit_count", 0) + 1
 
@@ -399,14 +638,29 @@ class ActionExecutor:
         return vscode_send_continue()
 
     def _open_new_chat(self) -> bool:
+        # RC4-FIX: Forzar foco VS Code antes de abrir nuevo chat y enviar el
+        # loop prompt.  Sin esto, si otra app está en front, el URL command puede
+        # ser procesado pero el prompt enviado via AppleScript/CLI falla
+        # silenciosamente → nuevo chat abre pero el modelo no recibe instrucciones.
+        ensure_vscode_focused()
+        time.sleep(0.3)
         ok = vscode_open_new_chat()
         if ok:
-            time.sleep(1.0)
+            time.sleep(1.5)  # darle tiempo al chat de estar listo antes del prompt
             send_loop_prompt()
         return ok
 
     def _stop_and_new_chat(self) -> bool:
         return open_new_chat_with_stop()
+
+    def _cycle_chat_ui_model_ui(self) -> bool:
+        """Switch model in the CURRENT chat session via UI interaction (no new chat needed)."""
+        new = cycle_chat_ui_model(self._state)
+        if not new:
+            logger.warning("_cycle_chat_ui_model_ui: all tiers failed")
+            return False
+        logger.info(f"Chat UI model switched to {new} (in current session)")
+        return True
 
     def _cycle_model(self) -> bool:
         new = cycle_model_next(self._state)
@@ -414,15 +668,18 @@ class ActionExecutor:
             logger.warning("_cycle_model: could not determine new model (empty pool?)")
             return False
         logger.info(f"Model cycled → {new}")
-        # Wait for VS Code to apply the settings change, then send continue
+        # Open a fresh chat so the new model is immediately active (not inherited from old context).
+        # Wait briefly for VS Code to apply the settings.json change first.
         time.sleep(2.0)
-        vscode_send_continue()
+        vscode_open_new_chat()
+        time.sleep(1.0)
+        send_loop_prompt()
         self._state["last_continue_ts"] = time.time()
         self._state["continue_count"] = self._state.get("continue_count", 0) + 1
         return True
 
     def _focus_vscode(self) -> bool:
-        vscode_focus()
+        ensure_chat_focused()
         return is_vscode_focused()
 
 
@@ -498,6 +755,8 @@ def _print_cycle_summary(state: dict, obs, decision) -> None:
     print(f"\n{'━' * 70}")
     brain_label = {
         "gemma3":         "🤖 GEMMA 3",
+        "gpt":            "🧠 COPILOT/GPT-5.4",
+        "qwen":           "🚀 QWEN 2.5-CODER",
         "override":       "⚡ OVERRIDE",
         "gemma3_offline": "💀 OFFLINE",
     }.get(decision.source, decision.source.upper())
@@ -539,6 +798,7 @@ def _print_cycle_summary(state: dict, obs, decision) -> None:
         "open_new_chat": "🆕",
         "stop_and_new_chat": "⏹️🆕",
         "cycle_model": "🔄",
+        "cycle_chat_ui_model": "🔄🖥️",
         "focus_vscode": "🖥️",
     }.get(decision.action, "❓")
 
@@ -578,6 +838,21 @@ def run_cycle(
     now = time.time()
     state["cycle_count"] = state.get("cycle_count", 0) + 1
     previous_log_path = state.get("log_path", "")
+
+    # ── Startup self-heal: if continue_count is maxed but we recently opened a
+    # new chat, the previous agent run had the reset-bug → fix in-place so
+    # session_too_long stops being true immediately on the next observe.
+    last_new_chat_ts = state.get("last_new_chat_ts", 0.0)
+    if (
+        state.get("continue_count", 0) >= 20
+        and last_new_chat_ts > 0
+        and (now - last_new_chat_ts) < 600   # new chat was opened <10 min ago
+    ):
+        logger.info(
+            "SELF-HEAL: continue_count was %d after recent new_chat — resetting to 0",
+            state["continue_count"],
+        )
+        state["continue_count"] = 0
 
     # ═══ OBSERVE ═══
     refresh_live_chat_state(state)
@@ -625,6 +900,26 @@ def run_cycle(
     # ═══ VERBOSE OUTPUT — Mostrar análisis de Gemma 3 en terminal ═══
     _print_cycle_summary(state, obs, decision)
 
+    # ─── Chat UI override: rate-limit / hard-error / agent-switch detected ────
+    # When the chat UI signals a model-level error (rate limit, model unavailable,
+    # "switch agent" suggestion), override whatever Gemma decided and switch the
+    # model IN THE CURRENT CHAT SESSION immediately — no new chat needed.
+    # This is independent from context saturation (which opens a new chat).
+    if obs.chat_ui_switch_needed and decision.action not in ("wait", "cycle_chat_ui_model"):
+        logger.info(
+            f"OVERRIDE → cycle_chat_ui_model "
+            f"(chat_ui_switch_needed=True, original_decision={decision.action})"
+        )
+        decision = Decision(
+            action="cycle_chat_ui_model",
+            confidence=0.95,
+            reasoning=(
+                f"Chat UI señala error de modelo ({obs.log_dominant_event}) — "
+                f"cambiando modelo en la sesión actual sin abrir nuevo chat"
+            ),
+            source="override",
+        )
+
     # Si Gemma3 está offline, NO ejecutar ninguna acción
     if decision.source == "gemma3_offline":
         logger.warning(
@@ -654,6 +949,130 @@ def run_cycle(
     else:
         # wait → immediately resolved
         memory.update_outcome(episode_id, "resolved", 0, "wait — no action needed")
+
+    return state
+
+
+# ─── Ciclo de Aprendizaje con Aprobación Manual ───────────────────────────────
+
+def run_cycle_learn(
+    state: dict,
+    memory: Memory,
+    brain,                      # BrainGPT instance
+    feedback: FeedbackLoop,
+    executor: ActionExecutor,
+    approval_gate: "ManualApprovalGate",
+    td_logger: "TrainingDataLogger",
+    dry_run: bool = False,
+) -> dict:
+    """
+    Variante de run_cycle() para modo --learn:
+    - Usa BrainGPT (qwen2.5-coder / Copilot) como cerebro
+    - TODA acción ≠ wait requiere aprobación manual del usuario
+    - Registra cada episodio en training_data.jsonl
+    - Sin auto-acciones: si el usuario rechaza, se loguea como "human_rejected"
+    """
+    now = time.time()
+    state["cycle_count"] = state.get("cycle_count", 0) + 1
+    previous_log_path = state.get("log_path", "")
+
+    # Startup self-heal (igual que run_cycle)
+    last_new_chat_ts = state.get("last_new_chat_ts", 0.0)
+    if (
+        state.get("continue_count", 0) >= 20
+        and last_new_chat_ts > 0
+        and (now - last_new_chat_ts) < 600
+    ):
+        logger.info(
+            "SELF-HEAL: continue_count was %d after recent new_chat — resetting to 0",
+            state["continue_count"],
+        )
+        state["continue_count"] = 0
+
+    # ═══ OBSERVE ═══
+    refresh_live_chat_state(state)
+    observer = Observer(state)
+    obs = observer.observe()
+    offsets = observer.get_updated_offsets()
+    state.update(offsets)
+
+    if obs.snapshot_body_changed:
+        state["last_activity_ts"] = now
+        state["last_snapshot_body_hash"] = obs.snapshot_body_hash
+        state["error_continue_count"] = 0
+    elif obs.log_events.get("success", 0) > 0:
+        state["last_activity_ts"] = now
+    elif offsets.get("log_path") and offsets.get("log_path") != previous_log_path:
+        state["last_activity_ts"] = now
+    if obs.snapshot_mtime > state.get("last_snapshot_mtime", 0.0):
+        state["last_snapshot_mtime"] = obs.snapshot_mtime
+
+    if handle_post_action(state, obs, feedback):
+        return state
+
+    # ═══ THINK ═══
+    recent = memory.get_recent_decisions(limit=5)
+    decision = brain.decide(obs, recent)
+
+    # Track stats
+    src = decision.source
+    if src in ("gpt", "qwen"):
+        state["gemma_decisions"] = state.get("gemma_decisions", 0) + 1
+    elif src == "gemma3_offline":
+        state["fallback_decisions"] = state.get("fallback_decisions", 0) + 1
+    elif src == "override":
+        state["override_decisions"] = state.get("override_decisions", 0) + 1
+
+    _print_cycle_summary(state, obs, decision)
+
+    # ═══ RECORD ═══
+    episode_id = memory.record_episode(obs.to_dict(), asdict(decision))
+
+    # ═══ MANUAL APPROVAL ═══
+    if decision.action == "wait":
+        approved, user_comment = True, ""
+    else:
+        approved, user_comment = approval_gate.ask(decision, obs)
+
+    # Log to training data (outcome filled later by log_outcome)
+    td_logger.log_proposal(
+        episode_id=episode_id,
+        obs=obs,
+        decision=decision,
+        approved=approved,
+        user_comment=user_comment,
+        cycle=state.get("cycle_count", 0),
+    )
+
+    # ═══ ACT (solo si aprobado) ═══
+    if decision.action == "wait":
+        memory.update_outcome(episode_id, "resolved", 0, "wait — no action needed")
+        td_logger.log_outcome(episode_id, "wait")
+    elif approved:
+        if not dry_run:
+            executed = executor.execute(decision)
+            if executed:
+                feedback.start_tracking(episode_id, decision.action)
+            else:
+                memory.update_outcome(episode_id, "no_effect", 0, "Blocked by cooldown")
+                td_logger.log_outcome(episode_id, "cooldown_blocked")
+        else:
+            logger.info(f"[DRY-RUN LEARN] Acción aprobada pero no ejecutada: {decision.action}")
+            td_logger.log_outcome(episode_id, "dry_run")
+    else:
+        # Usuario rechazó — loguear como dato de entrenamiento negativo
+        logger.info(
+            f"LEARN: Acción '{decision.action}' RECHAZADA por el usuario. "
+            f"Comentario: '{user_comment}'"
+        )
+        memory.update_outcome(episode_id, "human_rejected", 0,
+                              f"User rejected: {user_comment}")
+        td_logger.log_outcome(episode_id, "human_rejected")
+
+    # Mostrar ruta del archivo de datos de entrenamiento (primera vez)
+    td_count = sum(1 for _ in TRAINING_DATA_FILE.open("r") if True) if TRAINING_DATA_FILE.exists() else 0
+    if td_count % 10 == 0 and td_count > 0:
+        print(f"\n  📊 Training data: {td_count} ejemplos en {TRAINING_DATA_FILE}")
 
     return state
 
@@ -785,7 +1204,7 @@ def _ensure_ollama_running() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="OKLA Smart Monitor — Gemma 3 Agent",
+        description="OKLA Smart Monitor — Gemma 3 / GPT Agent",
     )
     parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL,
                         help=f"Seconds between cycles (default: {DEFAULT_INTERVAL})")
@@ -797,6 +1216,11 @@ def main() -> None:
                         help="Verbose output")
     parser.add_argument("--dry-run", action="store_true",
                         help="Don't execute actions — only show decisions")
+    parser.add_argument("--learn", action="store_true",
+                        help="Modo aprendizaje: usa BrainGPT (qwen/Copilot), "
+                             "aprobación manual de cada acción, genera training_data.jsonl")
+    parser.add_argument("--model", choices=["gemma3", "qwen", "auto"], default="auto",
+                        help="Modelo a usar (auto: Copilot→qwen→gemma3, default: auto)")
     args = parser.parse_args()
 
     setup_logging(debug=args.debug)
@@ -839,32 +1263,61 @@ def main() -> None:
     feedback = FeedbackLoop(memory)
     executor = ActionExecutor(state, dry_run=args.dry_run)
 
+    # Componentes exclusivos del modo --learn
+    approval_gate: "ManualApprovalGate | None" = None
+    td_logger: "TrainingDataLogger | None" = None
+    if args.learn:
+        if BrainGPT is None:
+            logger.error("BrainGPT no disponible — verifica brain_gpt.py")
+            sys.exit(1)
+        brain = BrainGPT(memory=memory)                   # type: ignore[assignment]
+        approval_gate = ManualApprovalGate()
+        td_logger = TrainingDataLogger()
+        logger.info(
+            "🎓 MODO APRENDIZAJE ACTIVADO — "
+            "Cada acción requiere aprobación manual. "
+            f"Training data → {TRAINING_DATA_FILE}"
+        )
+        print(f"\n{'═' * 70}")
+        print(f"  🎓  SMART MONITOR — MODO APRENDIZAJE")
+        print(f"      Cerebro: qwen2.5-coder:7b (fallback: gemma3:4b)")
+        print(f"      Acciones: SIEMPRE requieren tu aprobación (Y/n)")
+        print(f"      Training data: {TRAINING_DATA_FILE}")
+        print(f"      Ctrl+C para terminar y guardar datos.")
+        print(f"{'═' * 70}\n")
+
     # ═══ AUTO-START OLLAMA si no está corriendo ════════════════════════════════
     _ensure_ollama_running()
 
-    # ═══ VERIFICAR GEMMA 3 ═════════════════════════════════════════════════════
+    # ═══ VERIFICAR MODELOS ═════════════════════════════════════════════════════
     # --once: single fast check (no retries — used for debugging/testing)
     # loop mode: retry up to 3 times with 20s wait (gives Ollama time to start)
-    logger.info("Verificando conexión con Ollama/Gemma 3...")
-    gemma_ok = False
+    logger.info("Verificando conexión con Ollama...")
+    model_ok = False
     max_attempts = 1 if args.once else 3
+
+    # In learn mode we accept qwen2.5-coder or gemma3 indistinctly
+    required_model_hint = "qwen" if args.learn else "gemma"
+
     for attempt in range(max_attempts):
         try:
             import urllib.request as _ur
             with _ur.urlopen("http://localhost:11434/api/tags", timeout=5) as resp:
                 data = json.loads(resp.read())
                 models = [m["name"] for m in data.get("models", [])]
-                gemma = [m for m in models if "gemma" in m.lower()]
-                if gemma:
-                    logger.info(f"✅ Gemma 3 disponible: {', '.join(gemma)}")
-                    gemma_ok = True
+                matching = [m for m in models if required_model_hint in m.lower()]
+                if not matching:
+                    # Fallback: accept any model if preferred not found
+                    matching = [m for m in models if "gemma" in m.lower() or "qwen" in m.lower()]
+                if matching:
+                    logger.info(f"✅ Modelo disponible: {', '.join(matching)}")
+                    model_ok = True
                     break
                 else:
                     logger.warning(
-                        f"⚠️ Ollama corriendo pero Gemma NO encontrado. "
+                        f"⚠️ Ollama corriendo pero sin gemma/qwen. "
                         f"Modelos: {', '.join(models)}"
                     )
-                    logger.warning("   Ejecuta: ollama pull gemma3:4b")
         except Exception as e:
             logger.warning(f"⏳ Ollama no disponible (intento {attempt + 1}/{max_attempts}): {e}")
 
@@ -872,13 +1325,15 @@ def main() -> None:
             logger.info("   Reintentando en 20s...")
             time.sleep(20)
 
-    if not gemma_ok:
+    if not model_ok:
         logger.error("")
         logger.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        logger.error(f"  ⛔ GEMMA 3 NO DISPONIBLE TRAS {max_attempts} INTENTO(S)")
+        logger.error(f"  ⛔ NINGÚN MODELO LLM DISPONIBLE TRAS {max_attempts} INTENTO(S)")
         logger.error("  Ejecuta: ollama serve  (terminal separada)")
-        logger.error("  Luego:   ollama pull gemma3:4b")
-        logger.error("  El agente no puede tomar decisiones sin Gemma.")
+        if args.learn:
+            logger.error("  Luego:   ollama pull qwen2.5-coder:7b")
+        else:
+            logger.error("  Luego:   ollama pull gemma3:4b")
         logger.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         memory.close()
         try:
@@ -922,17 +1377,29 @@ def main() -> None:
 
     def one_cycle():
         nonlocal state
-        state = run_cycle(state, memory, brain, feedback, executor, dry_run=args.dry_run)
+        if args.learn:
+            state = run_cycle_learn(
+                state, memory, brain, feedback, executor,
+                approval_gate, td_logger,  # type: ignore[arg-type]
+                dry_run=args.dry_run,
+            )
+        else:
+            state = run_cycle(state, memory, brain, feedback, executor, dry_run=args.dry_run)
         save_state(state)
 
     if args.once:
         one_cycle()
+        if args.learn and td_logger:
+            td_logger.flush_pending("session_end_once")
         memory.close()
         return
 
     # Graceful shutdown
     def _shutdown(signum, frame):
         logger.info("Shutting down (signal received)")
+        if args.learn and td_logger:
+            td_logger.flush_pending("session_end")
+            logger.info(f"Training data guardado en {TRAINING_DATA_FILE}")
         memory.close()
         try:
             PID_FILE.unlink()
@@ -953,6 +1420,10 @@ def main() -> None:
         except Exception as e:
             logger.error(f"Unexpected error in cycle: {e}", exc_info=True)
         time.sleep(args.interval)
+
+    if args.learn and td_logger:
+        td_logger.flush_pending("session_end")
+        logger.info(f"Training data guardado en {TRAINING_DATA_FILE}")
 
     memory.close()
     try:

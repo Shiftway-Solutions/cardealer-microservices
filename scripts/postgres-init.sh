@@ -55,6 +55,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
     SELECT 'CREATE DATABASE recommendationservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'recommendationservice')\gexec
     SELECT 'CREATE DATABASE vehicleintelligenceservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'vehicleintelligenceservice')\gexec
     SELECT 'CREATE DATABASE userbehaviorservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'userbehaviorservice')\gexec
+    SELECT 'CREATE DATABASE searchagent' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'searchagent')\gexec
+    SELECT 'CREATE DATABASE recoagent' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'recoagent')\gexec
+    SELECT 'CREATE DATABASE supportagent' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'supportagent')\gexec
     
     -- Payment Services
     SELECT 'CREATE DATABASE azulpaymentservice' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'azulpaymentservice')\gexec

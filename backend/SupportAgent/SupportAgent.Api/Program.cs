@@ -186,6 +186,20 @@ try
     {
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SupportAgentDbContext>();
+
+        // EnsureCreated FIRST — SupportAgent uses code-first without migration files.
+        // Migrate() creates __EFMigrationsHistory which blocks EnsureCreated(), so run EnsureCreated first.
+        try
+        {
+            var created = context.Database.EnsureCreated();
+            Log.Information("Database schema ensured for {ServiceName} (created={Created})", ServiceName, created);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "EnsureCreated failed for {ServiceName}", ServiceName);
+        }
+
+        // Then run Migrate() for future migration files (if added later).
         try
         {
             context.Database.Migrate();
@@ -193,19 +207,7 @@ try
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Database migration error for {ServiceName} (may have no migration files). Falling through to EnsureCreated.", ServiceName);
-        }
-
-        // Always run EnsureCreated — SupportAgent uses code-first without migration files,
-        // so Migrate() is a no-op; EnsureCreated() guarantees schema exists on fresh DB.
-        try
-        {
-            context.Database.EnsureCreated();
-            Log.Information("Database schema ensured for {ServiceName}", ServiceName);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "EnsureCreated failed for {ServiceName}", ServiceName);
+            Log.Warning(ex, "Database migration skipped for {ServiceName} (no migration files yet)", ServiceName);
         }
     }
 

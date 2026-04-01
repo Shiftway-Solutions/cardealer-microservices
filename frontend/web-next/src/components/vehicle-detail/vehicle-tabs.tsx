@@ -183,7 +183,18 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
     {
       icon: Cog,
       label: 'Tracción',
-      value: vehicle.drivetrain === '4wd' ? '4x4' : vehicle.drivetrain === 'awd' ? 'AWD' : '2WD',
+      value:
+        vehicle.drivetrain === '4wd'
+          ? '4x4'
+          : vehicle.drivetrain === 'awd'
+            ? 'AWD'
+            : vehicle.drivetrain === 'fwd'
+              ? 'FWD'
+              : vehicle.drivetrain === 'rwd'
+                ? 'RWD'
+                : vehicle.drivetrain
+                  ? vehicle.drivetrain.toUpperCase()
+                  : 'No especificado',
     },
     {
       icon: Car,
