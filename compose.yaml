@@ -1243,6 +1243,7 @@ services:
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       Redis__Host: "redis"
+      NUGET_PACKAGES: "${HOME}/.nuget/packages"
     ports:
       - "5059:80"
     depends_on:
@@ -1256,6 +1257,7 @@ services:
       - ./backend/ReviewService:/app/ReviewService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
       - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ${HOME}/.nuget/packages:${HOME}/.nuget/packages
     healthcheck:
       test:
         [

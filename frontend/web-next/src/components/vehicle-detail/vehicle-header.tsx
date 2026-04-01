@@ -123,7 +123,10 @@ export function VehicleHeader({ vehicle, className, onPurchaseReportClick }: Veh
           {vehicle.mileage !== undefined && (
             <div className="flex items-center gap-1.5">
               <Gauge className="text-muted-foreground h-4 w-4" />
-              <span>{formatNumber(vehicle.mileage)} km</span>
+              <span>
+                {formatNumber(vehicle.mileage)}{' '}
+                {vehicle.mileageUnit === 'Miles' || vehicle.mileageUnit === 'mi' ? 'mi' : 'km'}
+              </span>
             </div>
           )}
           <div className="flex items-center gap-1.5">

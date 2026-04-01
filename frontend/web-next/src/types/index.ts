@@ -29,9 +29,10 @@ export interface Vehicle {
 
   // Technical Specs
   mileage: number;
+  mileageUnit?: 'km' | 'mi' | 'Miles' | 'Kilometers';
   transmission: 'automatic' | 'manual' | 'cvt';
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
-  drivetrain?: '2wd' | '4wd' | 'awd';
+  drivetrain?: 'fwd' | 'rwd' | '2wd' | '4wd' | 'awd';
   engineSize?: string;
   horsepower?: number;
 

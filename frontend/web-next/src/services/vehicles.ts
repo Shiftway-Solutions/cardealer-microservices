@@ -375,9 +375,12 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
     dealRating: calculateDealRating(raw.price as number, raw.marketPrice as number | undefined),
     isNegotiable: raw.isNegotiable as boolean | undefined,
     mileage: raw.mileage as number,
+    mileageUnit: (raw.mileageUnit as string | undefined) || 'km',
     transmission: mapTransmission(raw.transmission as string | number) as Vehicle['transmission'],
     fuelType: mapFuelType(raw.fuelType as string | number) as Vehicle['fuelType'],
-    drivetrain: undefined,
+    drivetrain: raw.driveType
+      ? ((raw.driveType as string).toLowerCase() as Vehicle['drivetrain'])
+      : undefined,
     engineSize: raw.engineSize as string | undefined,
     horsepower: raw.horsepower as number | undefined,
     exteriorColor: raw.exteriorColor as string | undefined,
