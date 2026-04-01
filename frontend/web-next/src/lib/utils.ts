@@ -67,11 +67,12 @@ export function formatNumber(
 /**
  * Format mileage (kilometers)
  */
-export function formatMileage(km: number): string {
+export function formatMileage(km: number, unit?: string): string {
+  const displayUnit = unit === 'Miles' || unit === 'mi' ? 'mi' : 'km';
   if (km >= 1000) {
-    return `${formatNumber(km)} km`;
+    return `${formatNumber(km)} ${displayUnit}`;
   }
-  return `${km} km`;
+  return `${km} ${displayUnit}`;
 }
 
 /**

@@ -151,6 +151,7 @@ export interface VehicleCardData {
   dealerName?: string;
   dealerRating?: number;
   oklaScore?: number;
+  mileageUnit?: 'km' | 'mi' | 'Miles' | 'Kilometers';
   // Status and metadata (for dealer inventory)
   status?: VehicleStatus;
   viewCount?: number;

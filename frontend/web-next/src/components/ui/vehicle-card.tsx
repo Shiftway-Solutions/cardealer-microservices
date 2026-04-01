@@ -23,7 +23,7 @@ import { DealRatingBadge, type DealRating } from './deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { Skeleton } from './skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getVehicleFallbackImage, isValidImageUrl } from '@/lib/vehicle-image-fallbacks';
+import { isValidImageUrl } from '@/lib/vehicle-image-fallbacks';
 import { vehicleService } from '@/services/vehicles';
 import { vehicleKeys } from '@/hooks/use-vehicles';
 import { useLocalComparison } from '@/hooks/use-comparisons';
@@ -68,19 +68,17 @@ export function VehicleCard({
     });
   }, [vehicle.slug, queryClient]);
 
-  // Compute fallback image based on vehicle properties
-  const fallbackImage = React.useMemo(
-    () => getVehicleFallbackImage(vehicle.id, vehicle.make),
-    [vehicle.id, vehicle.make]
-  );
+  const fallbackImage = '/images/car-placeholder.svg';
   // Use fallback when the original image fails or is not provided.
-  // isValidImageUrl rejects '/placeholder-car.jpg' so make-specific Unsplash
-  // fallbacks are used when the vehicle has no real photos in the DB.
+  // isValidImageUrl rejects '/placeholder-car.jpg' so a stable local asset
+  // is used when the vehicle has no real photos in the DB.
   const effectiveImageUrl = imageError
     ? fallbackError
       ? '/images/car-placeholder.svg'
       : fallbackImage
-    : isValidImageUrl(vehicle.imageUrl) ? vehicle.imageUrl : fallbackImage;
+    : isValidImageUrl(vehicle.imageUrl)
+      ? vehicle.imageUrl
+      : fallbackImage;
 
   const handleImageError = React.useCallback(() => {
     if (!imageError) {
@@ -193,7 +191,7 @@ export function VehicleCard({
           <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
             <span className="flex items-center gap-1">
               <Gauge className="h-3.5 w-3.5" />
-              {formatMileage(vehicle.mileage)}
+              {formatMileage(vehicle.mileage, vehicle.mileageUnit)}
             </span>
             <span className="flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
@@ -418,7 +416,7 @@ export function VehicleCard({
         <div className="text-muted-foreground mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs">
           <span className="flex items-center gap-1">
             <Gauge className="h-3.5 w-3.5" />
-            {formatMileage(vehicle.mileage)}
+            {formatMileage(vehicle.mileage, vehicle.mileageUnit)}
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />

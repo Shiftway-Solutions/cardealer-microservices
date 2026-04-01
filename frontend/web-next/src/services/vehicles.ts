@@ -486,6 +486,7 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
     price: raw.price as number,
     currency: ((raw.currency as string) || 'DOP') as 'DOP' | 'USD',
     mileage: raw.mileage as number,
+    mileageUnit: ((raw.mileageUnit as string | undefined) || 'km') as VehicleCardData['mileageUnit'],
     transmission: mapTransmission(raw.transmission as string | number),
     fuelType: mapFuelType(raw.fuelType as string | number),
     imageUrl,
