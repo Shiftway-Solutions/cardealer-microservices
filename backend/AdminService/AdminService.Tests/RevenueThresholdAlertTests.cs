@@ -230,7 +230,16 @@ public class RevenueThresholdAlertTests
 
         var result = await _service.EvaluateCurrentMonthAsync();
 
-        Assert.Contains("No action needed", result.SuggestedAction);
+        var dayOfMonth = DateTime.UtcNow.Day;
+        if (dayOfMonth >= PlanFeatureLimits.RevenueAlertMinDayOfMonth)
+        {
+            Assert.Contains("No action needed", result.SuggestedAction);
+        }
+        else
+        {
+            // Before min day, service returns projection-not-available message
+            Assert.Contains("Projection available after day", result.SuggestedAction);
+        }
     }
 
     [Fact]

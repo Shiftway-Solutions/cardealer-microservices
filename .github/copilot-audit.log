@@ -2647,3 +2647,76 @@ test
 [2026-03-31 07:05:09] [MODIFICACIÓN] SupportAgent/LocalFaqMatcher.cs — FIX 3/3 BUG-S12-01/02 local FAQ bank para respuestas sin Claude API
 [2026-03-31 07:07:47] [GATE] ✅ Completo — FIX 3/3 Sprint 12 SupportAgent
 [2026-03-31 07:08:04] [AUDIT-SPRINT] Sprint 12 [reaudit] [TUNNEL] despachado: SupportAgent — Soporte al Usuario
+[2026-03-31 07:26:35] [AUDIT-SPRINT] Sprint 12 completado (ciclo completo)
+[2026-03-31 07:26:38] [AUDIT-SPRINT] Sprint 13 [audit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-03-31 07:28:10] [MODIFICACIÓN] smart_monitor/brain.py — Fix stall false-positive: add stall_evidence guard + CDP-blind thresholds (20/30 min vs 5/8 min)
+[2026-03-31 07:48:39] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-03-31 08:04:31] [MODIFICACIÓN] actions.py + brain.py + model_catalog.json — Pool de modelos Copilot CLI actualizado: 0.33x primero (claude-haiku-4.5, gemini-3-flash-preview, gpt-5.1-codex-mini, gpt-5.4-mini), fallback 0x (gpt-4.1, gpt-5-mini, oswe-vscode-prime/Raptor mini)
+[2026-03-31 08:21:42] [MODIFICACIÓN] vehiculos-client.tsx — BUG-S13-03 badge disclaimer
+[2026-03-31 08:21:42] [DB] vehiclessaleservice vehicle_images — BUG-S13-01 INSERT 12 rows photos
+[2026-03-31 09:52:07] [MODIFICACIÓN] .prompts/agent/smart_monitor/actions.py — Fix RC2: forzar ensure_vscode_focused() antes de vscode://command/stop en stop_current_response(); Fix RC3: forzar ensure_vscode_focused() al inicio de open_new_chat_with_stop()
+[2026-03-31 09:52:07] [MODIFICACIÓN] .prompts/agent/smart_monitor/agent.py — Fix RC1 (CRITICO): resetear last_activity_ts=now tras open_new_chat/stop_and_new_chat exitoso — elimina bucle infinito de open_new_chat con CDP ciego; Fix RC4: ensure_vscode_focused() en _open_new_chat() antes de send_loop_prompt(); importar ensure_vscode_focused en agent.py
+[2026-03-31 09:52:15] [MODIFICACION] agent.py + actions.py: 4 root causes corregidos
+[2026-03-31 09:52:48] [MODIFICACION] actions.py — Fix RC2: ensure_vscode_focused() antes de vscode:// stop; Fix RC3: forzar foco en open_new_chat_with_stop()
+[2026-03-31 09:52:48] [MODIFICACION] agent.py — Fix RC1 (CRITICO): last_activity_ts=now tras new_chat exitoso; Fix RC4: ensure_vscode_focused() en _open_new_chat()
+[2026-03-31 09:52:55] [MODIFICACION] actions.py + agent.py — Fix RC1 (last_activity_ts reset), RC2 (foco antes de stop URL), RC3 (foco en open_new_chat_with_stop), RC4 (foco en _open_new_chat)
+[2026-03-31 10:10:25] [CREACIÓN] .prompts/prompt_6.md — Punto de control dinámico para tareas CPSO
+[2026-03-31 10:13:01] [GIT] RC1-RC5 commit 4c36d9b5 — fix infinite loop + snapshot mtime thrash + action audit test (12/12 PASS)
+[2026-03-31 10:45:54] [MODIFICACIÓN] github.copilot-chat-0.42.0/dist/extension.js — Patch fgt(): guard mgt.clearMarks() with typeof check to fix TypeError: mgt.clearMarks is not a function
+[2026-03-31 10:52:31] [MODIFICACIÓN] github.copilot-chat-0.42.0/dist/extension.js — guard mgt.clearMarks + Developer:Restart Extension Host para activar patch
+[2026-03-31 10:54:27] [EJECUCIÓN] test_actions_audit.py — 12/12 PASS, RC1-RC5 validados
+[2026-03-31 12:32:22] [MODIFICACIÓN] plugin-vscode/extension.js + agent/ — AgentLoop integrado v4.0: Monitor+Brain+Actions en JS nativo, sin Python externo
+[2026-03-31 12:57:04] [MODIFICACIÓN] plugin-vscode/agent/actions.js — complementado con Python smart_monitor: isChatSnapshotFresh, codeCliChat, CDP bridge, state.vscdb model mgmt, classifyChatText, URL commands, selectChatModel DB write
+[2026-03-31 12:57:04] [MODIFICACIÓN] plugin-vscode/extension.js — fix send_continue (ya no llama handleRateLimit), cycle_model usa cycleModelNextViaDB + modelIndex
+[2026-03-31 12:57:04] [CREACIÓN] plugin-vscode/copilot-model-cycler-4.1.0.vsix — instalado con exito
+[2026-03-31 13:17:35] [MODIFICACIÓN] plugin-vscode/extension.js — fix submit único con isPartialQuery:true; evita doble envío de comandos
+[2026-03-31 13:17:35] [MODIFICACIÓN] plugin-vscode/agent/actions.js — mismo fix de submit único para AgentLoop
+[2026-03-31 13:17:35] [MODIFICACIÓN] plugin-vscode/agent/brain.js — uso correcto de vscode.lm con LanguageModelChatMessage constructor y selección imageInput
+[2026-03-31 13:17:35] [MODIFICACIÓN] plugin-vscode/package.json — trackAndSend movido de Enter a Cmd/Ctrl+Enter
+[2026-03-31 13:17:35] [MODIFICACIÓN] plugin-vscode/INSTALL.md — documentación alineada con nuevo binding y fix de doble envío
+[2026-03-31 13:18:29] [MODIFICACIÓN] plugin-vscode/README.md — documentación actualizada: submit rastreado usa Cmd/Ctrl+Enter y evita doble envío
+[2026-03-31 13:18:29] [MODIFICACIÓN] plugin-vscode/package.json — versión 4.2.1 y descripción alineada con sesión Copilot de VS Code
+[2026-03-31 13:18:55] [CREACIÓN] plugin-vscode/.vscodeignore — excluye backups y artefactos del VSIX
+[2026-03-31 13:19:18] [MODIFICACIÓN] plugin-vscode/.vscodeignore — patrón ajustado para excluir backups en subdirectorios
+[2026-03-31 13:20:03] [MODIFICACIÓN] plugin-vscode/package.json — files whitelist añadida para empaquetado limpio del VSIX
+[2026-03-31 13:20:35] [MODIFICACIÓN] plugin-vscode/.vscodeignore — simplificado a patrones explícitos compatibles con vsce
+[2026-03-31 13:20:57] [MODIFICACIÓN] plugin-vscode/package.json — removida files whitelist; empaquetado queda gobernado solo por .vscodeignore
+[2026-03-31 13:23:37] [EJECUCIÓN] plugin-vscode/copilot-model-cycler-4.2.1.vsix — empaquetado final limpio validado
+[2026-03-31 13:40:26] [EJECUCIÓN] plugin-vscode/copilot-model-cycler — DESINSTALADO (v4.0.0 y v4.1.0 movidas fuera de ~/.vscode/extensions/)
+[2026-03-31 13:58:37] [MODIFICACIÓN] plugin-vscode v4.3.0 — Fixes: (1) brain.js LanguageModelChatMessage.User() static factory, (2) brain.js detailed image logging, (3) actions.js Quartz CGWindowID replacing broken AppleScript, (4) actions.js isCodeCliAvailable() with cache, (5) extension.js handleRateLimit/handleChatError AgentLoop state sync
+[2026-03-31 14:14:29] [MODIFICACIÓN] plugin-vscode/agent/brain.js + monitor.js — Fix R7/R8 stall-detection: gate con hasEverSeenCopilotActivity + lastCompletedEvent para evitar envío de 'continuar' en sesiones idle (costo innecesario)
+[2026-03-31 14:17:44] [MODIFICACIÓN] plugin-vscode/agent/monitor.js v4.5.0 — Fix Bug1: logOffset=fileSize en discovery (no leer log histórico). Fix Bug2: seed _prompt6Hash en primer ciclo (no disparar execute_prompt6 al instalar)
+[2026-03-31 14:33:23] [BACKUP] .github/copilot-instructions.md — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:33:25] [BACKUP] generador_continuo_1.py — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:33:27] [BACKUP] mensajes_100.json — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:33:28] [BACKUP] generador_continuo_qa_testing.py — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:33:28] [BACKUP] generador_continuo.py — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:33:51] [MODIFICACIÓN] generador_continuo.py, generador_continuo_1.py, generador_continuo_qa_testing.py, mensajes_100.json — sustituir prompt_6 por prompt_1 en referencias activas
+[2026-03-31 14:33:51] [MODIFICACIÓN] .github/copilot-instructions.md — sustituir prompt_6 por prompt_1 en regla de monitoreo global
+[2026-03-31 14:35:27] [BACKUP] generador_continuo_chatbot.py — respaldo previo a sustituir prompt_6 por prompt_1
+[2026-03-31 14:35:31] [MODIFICACIÓN] generador_continuo_chatbot.py — sustituir prompt_6 por prompt_1 en referencias activas
+[2026-03-31 14:47:40] [BACKUP] plugin-vscode/package.json — respaldo previo a modo agent_console
+[2026-03-31 14:47:40] [BACKUP] plugin-vscode/extension.js — respaldo previo a modo agent_console
+[2026-03-31 14:47:40] [BACKUP] plugin-vscode/agent/actions.js — respaldo previo a modo agent_console
+[2026-03-31 14:47:41] [BACKUP] .prompts/agent/vscode_copilot_monitor.py — respaldo previo a modo agent_console
+[2026-03-31 14:47:41] [BACKUP] .prompts/agent/smart_monitor/actions.py — respaldo previo a modo agent_console
+[2026-03-31 14:53:49] [BACKUP] .vscode/settings.json — respaldo previo a fijar promptDeliveryMode=agentConsole
+[2026-03-31 14:54:49] [MODIFICACIÓN] plugin-vscode/package.json, plugin-vscode/extension.js, plugin-vscode/agent/actions.js — modo agentConsole por defecto; prompts automáticos redirigidos a .prompts/agent_console.md
+[2026-03-31 14:54:49] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py, .prompts/agent/smart_monitor/actions.py — prompts automáticos redirigidos a .prompts/agent_console.md respetando modelCycler.agent.promptDeliveryMode
+[2026-03-31 14:54:49] [MODIFICACIÓN] .vscode/settings.json — fijar modelCycler.agent.promptDeliveryMode=agentConsole y modelCycler.agent.promptConsolePath=.prompts/agent_console.md
+[2026-03-31 15:04:47] [BACKUP] plugin-vscode UI agente — respaldo de extension.js, package.json, README.md e INSTALL.md
+[2026-03-31 15:09:44] [MODIFICACIÓN] plugin-vscode UI agente — menú de acciones manuales para agentConsole + corrección de tracking de modelos
+[2026-03-31 15:10:05] [EJECUCIÓN] plugin-vscode package — VSIX regenerado con menú de acciones del agente
+[2026-03-31 15:10:28] [EJECUCIÓN] plugin-vscode install — VSIX instalado con --force para probar menú del agente
+[2026-03-31 15:18:08] [BACKUP] plugin-vscode agentConsole semantics — respaldo antes de ejecutar acciones reales y redirigir solo prompts
+[2026-03-31 15:20:48] [MODIFICACIÓN] plugin-vscode agentConsole — acciones reales ejecutan todo; solo prompts se redirigen a .prompts/agent_console.md
+[2026-03-31 15:20:48] [EJECUCIÓN] plugin-vscode package/install — VSIX reinstalado con semántica corregida de agentConsole
+[2026-03-31 15:31:53] [MODIFICACIÓN] plugin-vscode/package.json — Eliminar modelos 0.33x (claude-haiku-4.5, gemini-3-flash-preview, gpt-5.1-codex-mini, gpt-5.4-mini), dejar solo 0x (gpt-4.1, gpt-5-mini, oswe-vscode-prime)
+[2026-03-31 15:55:52] [MODIFICACIÓN] smart_monitor/brain_gpt.py — Cascada de modelos: reemplazar gpt-4o+ollama por 3 modelos 0x de Copilot (gpt-4.1, gpt-5-mini, oswe-vscode-prime)
+[2026-03-31 17:19:38] [AUDIT-SPRINT] Sprint 13 [audit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-03-31 17:21:21] [AUDIT-SPRINT] Sprint 13 [audit] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-03-31 17:42:04] [GATE] Iniciando Sprint 13 FIX 2/3...
+[2026-03-31 23:08:13] [EJECUCIÓN] prompt_1.md — Sprint 13 AUDIT completado: 3 bugs documentados (fuelType inglés, fotos placeholder, estadísticas infladas). READ escrito al final del archivo.
+[2026-03-31 23:08:26] [AUDIT-SPRINT] Sprint 13 [fix] [TUNNEL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-03-31 23:26:23] [GATE] Iniciando...
+[2026-03-31 23:51:49] [GATE] ✅ Completo — Unit: 0 failures. Fix: AdminService+BillingService date-boundary tests, S13 DB data quality SQL

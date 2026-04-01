@@ -570,7 +570,8 @@ public class PaymentReconciliationTests
     }
 
     private static Payment CreatePayment(
-        Guid? subscriptionId, Guid dealerId, decimal amount, PaymentStatus status)
+        Guid? subscriptionId, Guid dealerId, decimal amount, PaymentStatus status,
+        DateTime? createdAt = null)
     {
         var payment = new Payment(dealerId, amount, PaymentMethod.CreditCard,
             subscriptionId: subscriptionId);
@@ -579,6 +580,12 @@ public class PaymentReconciliationTests
 
         if (status == PaymentStatus.Succeeded)
             payment.MarkSucceeded();
+
+        // Force CreatedAt to a fixed March 2026 date so the payment always falls
+        // within the "2026-03" reconciliation period, avoiding UTC midnight rollover failures.
+        var effectiveDate = createdAt ?? new DateTime(2026, 3, 15, 12, 0, 0, DateTimeKind.Utc);
+        typeof(Payment).GetProperty(nameof(Payment.CreatedAt))!
+            .SetValue(payment, effectiveDate);
 
         return payment;
     }
