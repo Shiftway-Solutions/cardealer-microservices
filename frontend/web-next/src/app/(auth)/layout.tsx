@@ -62,6 +62,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <div className="text-sm text-white/80">Usuarios</div>
               </div>
             </div>
+            <p className="text-xs text-white/50">*Cifras proyectadas basadas en el mercado automotriz dominicano.</p>
           </div>
 
           {/* Footer */}

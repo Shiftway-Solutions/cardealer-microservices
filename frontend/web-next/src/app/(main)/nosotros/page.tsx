@@ -65,6 +65,9 @@ export default function NosotrosPage() {
               </div>
             ))}
           </div>
+          <p className="text-muted-foreground mt-6 text-center text-xs">
+            *Cifras proyectadas basadas en el mercado automotriz dominicano.
+          </p>
         </div>
       </section>
 

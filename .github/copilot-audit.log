@@ -2773,3 +2773,5 @@ test
 [2026-04-01 11:40:38] [AUDIT-SPRINT] Sprint 13 [audit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
 [2026-04-01 11:56:09] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
 [2026-04-01 11:56:39] [AUDIT-SPRINT] Sprint 13 [reaudit] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 11:58:10] [AUDIT-SPRINT] Sprint 13 [fix] [LOCAL] despachado: Calidad de Datos — Lo que el Usuario Ve Mal
+[2026-04-01 12:11:25] [MODIFICACIÓN] auth/layout.tsx, nosotros/page.tsx, vender/page.tsx, prensa/page.tsx — S13 FIX: add projected stats disclaimer
