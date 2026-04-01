@@ -82,7 +82,10 @@ jobs:
       any_backend: ${{ steps.any.outputs.backend }}
 
     steps:
-      - name: "📥 Checkout"
+      - name: "� Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
+      - name: "�📥 Checkout"
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
@@ -182,7 +185,10 @@ jobs:
     timeout-minutes: 8
 
     steps:
-      - name: "📥 Checkout"
+      - name: "� Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
+      - name: "�📥 Checkout"
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
@@ -288,10 +294,13 @@ jobs:
     needs: [detect-changes, quick-checks]
     if: needs.quick-checks.result == 'success'
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 30
+    timeout-minutes: 20 # Reducido de 30: si tarda más, algo salió mal
 
     steps:
-      - name: "📥 Checkout"
+      - name: "� Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
+      - name: "�📥 Checkout"
         uses: actions/checkout@v6
 
       - name: "🔍 Compute services to rebuild"
@@ -358,13 +367,35 @@ jobs:
           echo "Servicios: $SERVICES"
           FAILED=""
 
+          # Guardar PIDs de builds para poder matarlos si el job es cancelado
+          BUILDX_PIDS_FILE="/tmp/dev-deploy-buildx-pids-$$"
+          touch "$BUILDX_PIDS_FILE"
+
+          # Cleanup: matar cualquier docker buildx/compose build al salir (cancelación o error)
+          cleanup() {
+            echo "🧹 Cleanup: matando procesos docker build colgados..."
+            if [ -f "$BUILDX_PIDS_FILE" ]; then
+              while IFS= read -r pid; do
+                kill "$pid" 2>/dev/null && echo "  Killed PID $pid" || true
+              done < "$BUILDX_PIDS_FILE"
+              rm -f "$BUILDX_PIDS_FILE"
+            fi
+            # Fallback: matar buildx bake processes de este workspace
+            pkill -f "docker-buildx bake.*$GITHUB_WORKSPACE" 2>/dev/null || true
+            pkill -f "docker compose build.*$GITHUB_WORKSPACE" 2>/dev/null || true
+          }
+          trap cleanup EXIT INT TERM
+
           for SVC in $SERVICES; do
             echo ""
             echo "── 🔨 Building $SVC..."
             # docker compose build usa Dockerfile.dev (hot-reload + SDK completo)
             # --no-cache asegura que el código nuevo quede reflejado
             # COMPOSE_PROFILES: ensures cross-profile depends_on references resolve
-            if COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1; then
+            COMPOSE_PROFILES=core,frontend,vehicles,ai,business docker compose build --no-cache "$SVC" 2>&1 &
+            BUILD_PID=$!
+            echo "$BUILD_PID" >> "$BUILDX_PIDS_FILE"
+            if wait $BUILD_PID; then
               echo "  ✅ $SVC build OK"
             else
               echo "  ❌ $SVC build FALLÓ"
@@ -450,3 +481,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: "🧹 Cleanup — matar builds Docker colgados"
+        if: always()
+        run: |
+          # Este paso siempre corre, incluyendo cuando el job es cancelado.
+          # Evita que docker buildx bake quede como proceso zombie por horas.
+          echo "Buscando procesos docker build del workspace..."
+          pkill -f "docker-buildx bake" 2>/dev/null && echo "✅ buildx bake terminado" || echo "ℹ️  Ningún buildx colgado"
+          pkill -f "com.docker.cli.*compose build" 2>/dev/null && echo "✅ compose build terminado" || echo "ℹ️  Ningún compose build colgado"
+          echo "RAM disponible tras cleanup:"
+          vm_stat 2>/dev/null | awk '/Pages free/ {printf "  Libre: %.1f GB\n", $3*16384/1073741824}' || true

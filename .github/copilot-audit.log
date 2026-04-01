@@ -2783,3 +2783,4 @@ test
 [2026-04-01 19:08:54] [MODIFICACIÓN] frontend/web-next/src/lib/utils.ts — FIX UF-085: formatMileage always returns km (RD market)
 [2026-04-01 19:08:54] [MODIFICACIÓN] vehicle-type-section.tsx,vehicle-of-the-day.tsx,vehicle-tabs.tsx,vehicle-header.tsx,share-dialog.tsx — FIX UF-085: inline mileage unit checks normalized to km
 [2026-04-01 19:08:54] [CREACIÓN] 20260401160000_NormalizeMileageUnitToKilometers.cs — DB migration to fix Miles→Kilometers in vehicles table
+[2026-04-01 19:29:04] [MODIFICACIÓN] .github/workflows/{smart-cicd,local-qa,pr-checks}.yml — Agregado job cleanup post-CI/CD en los 3 workflows activos
