@@ -20,6 +20,7 @@ cp -r copilot-model-cycler \
 ## Los 3 escenarios y qué hace el plugin
 
 ### 1. Rate Limit: `⌘⇧L`
+
 ```
 Error: "You've hit the rate limit for this model..."
          │
@@ -32,6 +33,7 @@ Error: "You've hit the rate limit for this model..."
 ```
 
 ### 2. Error en chat: `⌘⇧E`
+
 ```
 Cualquier error que corta el agente
          │
@@ -43,9 +45,10 @@ Cualquier error que corta el agente
          └─→ Lee .prompts/prompt_1.md y lo envía completo al nuevo chat
 ```
 
-### 3. Límite de mensajes (automático)
+### 3. Límite de mensajes (contador rastreado)
+
 ```
-Cada Enter en el chat → contador ++
+Cada Cmd+Enter / Ctrl+Enter en el chat → contador ++
 Al llegar a maxMessages (default: 25)
          │
          ├─→ Vuelve a Opus 4.6
@@ -88,14 +91,15 @@ Al llegar a maxMessages (default: 25)
 
 ## Atajos de teclado
 
-| Acción | Mac | Windows |
-|---|---|---|
-| **Rate limit** → ciclar modelo + "Continuar" | `⌘⇧L` | `Ctrl+Shift+L` |
+| Acción                                          | Mac   | Windows        |
+| ----------------------------------------------- | ----- | -------------- |
+| **Rate limit** → ciclar modelo + "Continuar"    | `⌘⇧L` | `Ctrl+Shift+L` |
 | **Error chat** → nuevo chat + AGENT_LOOP_PROMPT | `⌘⇧E` | `Ctrl+Shift+E` |
-| Nuevo chat manual + AGENT_LOOP_PROMPT | `⌘⇧R` | `Ctrl+Shift+R` |
-| Siguiente modelo | `⌘⇧.` | `Ctrl+Shift+.` |
-| Modelo anterior | `⌘⇧,` | `Ctrl+Shift+,` |
-| Elegir modelo | `⌘⇧M` | `Ctrl+Shift+M` |
+| Nuevo chat manual + AGENT_LOOP_PROMPT           | `⌘⇧R` | `Ctrl+Shift+R` |
+| Enviar rastreado + contar mensaje               | `⌘↩`  | `Ctrl+Enter`   |
+| Siguiente modelo                                | `⌘⇧.` | `Ctrl+Shift+.` |
+| Modelo anterior                                 | `⌘⇧,` | `Ctrl+Shift+,` |
+| Elegir modelo                                   | `⌘⇧M` | `Ctrl+Shift+M` |
 
 ---
 
@@ -107,7 +111,25 @@ Al llegar a maxMessages (default: 25)
 - Amarillo → >75% del límite
 - Rojo → límite alcanzado
 
-Click → estado completo (incluyendo si el archivo de prompt existe ✅ o no ❌)
+Click → menú del agente. Desde ahí puedes ver el estado, abrir archivos del agente y ejecutar acciones manuales.
+
+## Menú del agente
+
+El plugin ahora tiene un menú rápido accesible de dos formas:
+
+1. Click en la barra de estado del plugin
+2. `Cmd+Shift+P` → `Copilot Cycler: 🧭 Abrir menú del agente`
+
+Cuando `modelCycler.agent.promptDeliveryMode = agentConsole`, el menú sigue ejecutando las acciones reales del agente:
+
+- `send_continue`
+- `open_new_chat`
+- `stop_and_new_chat`
+- `cycle_model`
+- `focus_vscode`
+- `execute_prompt6`
+
+En `agentConsole`, solo el contenido de tipo prompt se escribe en `.prompts/agent_console.md`. Las demás acciones, como abrir chat, detener respuesta, ciclar modelo o enviar `Continuar`, se ejecutan de verdad sobre el panel de Copilot Chat.
 
 ---
 
@@ -115,9 +137,11 @@ Click → estado completo (incluyendo si el archivo de prompt existe ✅ o no �
 
 El plugin intenta 3 métodos en orden:
 
-1. `workbench.action.chat.open` con `{ query: contenido }` (nativo VS Code)
+1. `workbench.action.chat.open` con `{ query: contenido, isPartialQuery: true }` + un solo submit explícito
 2. Clipboard → focus → paste → acceptInput (fallback robusto)
 3. Botón "Copiar al clipboard" para pegado manual (último recurso)
+
+El plugin ya no usa `Enter` como atajo de envío propio para no interferir con el comportamiento nativo del chat ni provocar dobles envíos.
 
 ---
 

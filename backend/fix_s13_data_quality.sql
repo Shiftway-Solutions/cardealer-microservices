@@ -1,5 +1,5 @@
 -- S13: Calidad de Datos - Fix anomalias visibles en listados
--- Fecha: 2026-03-31 (Intento 1) + 2026-04-01 (Intento 2)
+-- Fecha: 2026-03-31 (Intento 1) + 2026-04-01 (Intento 2) + 2026-04-01 (Intento 3 AUDIT)
 -- Bugs:
 --   1. Imagen de perro (beagle) en Kia Sportage LX (photo-1543466835-00a7907e9de1)
 --   2. BodyStyle=Sedan incorrecto en Kia Sportage (debe ser SUV)
@@ -7,6 +7,9 @@
 --   4. Imagen de paisaje de montana en Hyundai Tucson primary (photo-1519641471654-76ce0107ad1b)
 --   5. Imagen primaria rota 404 en Nissan Sentra (photo-1552519507-da3b142a6e3d)
 --   6. MileageUnit=Miles incorrecto para todos los vehiculos (RD usa km, no millas)
+--   7. Description typos: "al dia" -> "al dia" (acentos), "dueno" -> "dueno" (tilde n)
+--   8. FeaturesJson: "Camara de reversa" -> "Camara de reversa" (acento faltante)
+--   9. Transmission=Manual para todos los vehiculos (4 de 5 deben ser Automatic)
 
 BEGIN;
 
@@ -59,8 +62,30 @@ WHERE "MileageUnit" = 'Miles' AND "IsDeleted" = false;
 
 COMMIT;
 
+-- Bug 7 (Intento 3, 2026-04-01): Descriptions con tildes faltantes
+-- "al dia" -> "al día", "dueno" / "Dueno" -> "dueño" / "Dueño"
+-- Visible en pagina de detalle de vehiculo (descripcion)
+UPDATE vehicles
+SET "Description" = REPLACE(REPLACE("Description", 'al dia', 'al día'), 'dueno', 'dueño')
+WHERE "IsDeleted" = false;
+
+-- Bug 8 (Intento 3, 2026-04-01): FeaturesJson "Camara de reversa" missing tilde
+-- Visible en tab Caracteristicas de la pagina de detalle
+UPDATE vehicles
+SET "FeaturesJson" = REPLACE("FeaturesJson"::text, 'Camara de reversa', 'Cámara de reversa')::jsonb
+WHERE "FeaturesJson"::text LIKE '%Camara de reversa%' AND "IsDeleted" = false;
+
+-- Bug 9 (Intento 3, 2026-04-01): Todos los vehiculos tenian Transmission=Manual
+-- Mercado RD es mayormente automaticos. Dejar Nissan Sentra como Manual; el resto Automatic
+UPDATE vehicles
+SET "Transmission" = 'Automatic'
+WHERE "Title" IN ('2023 Kia Sportage LX', '2021 Hyundai Tucson Sport', '2023 Toyota Corolla LE - Impecable', '2022 Honda Civic EX')
+  AND "IsDeleted" = false;
+
 -- Verificacion
-SELECT v."Title", vi."Url", vi."IsPrimary", v."BodyStyle"
+SELECT v."Title", vi."Url", vi."IsPrimary", v."BodyStyle", v."MileageUnit", v."Transmission",
+       LEFT(v."Description", 60) AS "DescPreview",
+       LEFT(v."FeaturesJson"::text, 80) AS "FeaturesPreview"
 FROM vehicle_images vi
 JOIN vehicles v ON vi."VehicleId" = v."Id"
 WHERE v."IsDeleted" = false AND vi."IsPrimary" = true

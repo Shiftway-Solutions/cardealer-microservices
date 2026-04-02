@@ -1,8 +1,8 @@
 {
   "name": "copilot-model-cycler",
   "displayName": "Copilot Model Cycler",
-  "description": "Rota modelos Claude/Copilot, detecta rate limits, abre nuevo chat con el AGENT_LOOP_PROMPT automáticamente",
-  "version": "3.0.0",
+  "description": "Agente autónomo integrado: monitorea Copilot, detecta errores/rate-limits, decide con la sesión de GitHub Copilot de VS Code, ejecuta prompt_1.md (CPSO) y evita doble-submit en el chat",
+  "version": "4.5.0",
   "publisher": "gregory-local",
   "engines": {
     "vscode": "^1.90.0"
@@ -49,16 +49,36 @@
         "title": "Copilot Cycler: ↺ Reiniciar contador de mensajes"
       },
       {
+        "command": "modelCycler.showAgentMenu",
+        "title": "Copilot Cycler: 🧭 Abrir menú del agente"
+      },
+      {
         "command": "modelCycler.showStatus",
         "title": "Copilot Cycler: ℹ Ver estado de sesión"
+      },
+      {
+        "command": "modelCycler.openAgentConsole",
+        "title": "Copilot Cycler: 📝 Abrir agent_console.md"
+      },
+      {
+        "command": "modelCycler.openAgentPrompt",
+        "title": "Copilot Cycler: 📋 Abrir prompt_1.md monitoreado"
+      },
+      {
+        "command": "modelCycler.toggleAgent",
+        "title": "Copilot Cycler: 🤖 Toggle AgentLoop (ON/OFF)"
+      },
+      {
+        "command": "modelCycler.executePrompt6",
+        "title": "Copilot Cycler: 📋 Ejecutar prompt_1.md ahora"
       }
     ],
     "keybindings": [
       {
         "command": "modelCycler.trackAndSend",
-        "key": "enter",
-        "mac": "enter",
-        "when": "chatInputHasFocus && !suggestWidgetVisible && !inlineChatFocused && !compositeInputBox.inFirst"
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "chatInputHasFocus && !suggestWidgetVisible && !inlineChatFocused"
       },
       {
         "command": "modelCycler.cycleNext",
@@ -99,23 +119,20 @@
       "properties": {
         "modelCycler.models": {
           "type": "array",
-          "description": "Lista de modelos de más poderoso a menos poderoso",
+          "description": "Lista de modelos 0x (sin costo de premium requests)",
           "default": [
-            "claude-opus-4-6",
-            "claude-opus-4-5",
-            "claude-sonnet-4-6",
-            "claude-sonnet-4-5",
-            "claude-sonnet-4"
+            "copilot/gpt-4.1",
+            "copilot/gpt-5-mini",
+            "copilot/oswe-vscode-prime"
           ]
         },
         "modelCycler.modelLabels": {
           "type": "object",
+          "description": "Etiquetas legibles para los model IDs",
           "default": {
-            "claude-opus-4-6": "Opus 4.6 ⚡⚡⚡",
-            "claude-opus-4-5": "Opus 4.5 ⚡⚡⚡",
-            "claude-sonnet-4-6": "Sonnet 4.6 ⚡⚡",
-            "claude-sonnet-4-5": "Sonnet 4.5 ⚡⚡",
-            "claude-sonnet-4": "Sonnet 4 ⚡"
+            "copilot/gpt-4.1": "GPT-4.1 (0x)",
+            "copilot/gpt-5-mini": "GPT-5 mini (0x)",
+            "copilot/oswe-vscode-prime": "Raptor mini (0x)"
           }
         },
         "modelCycler.session.maxMessages": {
@@ -189,6 +206,35 @@
         "modelCycler.notifyOnSwitch": {
           "type": "boolean",
           "default": true
+        },
+        "modelCycler.agent.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activar el AgentLoop integrado (Monitor+Brain+Actions). Si false, solo usa el Log Monitor legacy."
+        },
+        "modelCycler.agent.ollamaModel": {
+          "type": "string",
+          "default": "gemma3:4b",
+          "description": "Modelo de Ollama para las decisiones del agente (requiere ollama serve corriendo)"
+        },
+        "modelCycler.agent.promptDeliveryMode": {
+          "type": "string",
+          "enum": [
+            "agentConsole",
+            "chat"
+          ],
+          "default": "agentConsole",
+          "description": "Dónde entregar los prompts automáticos del agente: agentConsole escribe solo los prompts en .prompts/agent_console.md, chat los envía a Copilot Chat"
+        },
+        "modelCycler.agent.promptConsolePath": {
+          "type": "string",
+          "default": ".prompts/agent_console.md",
+          "description": "Ruta relativa al workspace donde el agente escribe prompts automáticos cuando promptDeliveryMode=agentConsole"
+        },
+        "modelCycler.agent.prompt6Path": {
+          "type": "string",
+          "default": ".prompts/prompt_1.md",
+          "description": "Ruta relativa al workspace del archivo de instrucciones CPSO monitoreado"
         }
       }
     }

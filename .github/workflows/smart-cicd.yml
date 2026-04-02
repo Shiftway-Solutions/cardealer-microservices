@@ -51,20 +51,24 @@ jobs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
 
     steps:
-      # --- Pre-checkout: fix EACCES caused by Docker volumes locking workspace files ---
+      # --- Pre-checkout: fix EACCES caused by Docker Desktop holding file handles ---
       - name: "🔧 Fix workspace permissions (EACCES Docker)"
         run: |
-          # Docker containers started by the push hook may hold file handles
-          # on the workspace, causing `EACCES: permission denied` during clean checkout.
-          # Reset ownership and permissions so the runner can delete/replace files cleanly.
-          sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
-          chmod -R u+rwX "${{ github.workspace }}" || true
+          # Docker Desktop on macOS monitors the home directory via VirtioFS, holding
+          # open read FDs on tracked directories. This prevents `rmdir` in the checkout
+          # action's workspace recreation fallback.
+          # Solution: use git directly to reset+clean without Node.js full-tree-delete.
+          if [ -d "${{ github.workspace }}/.git" ]; then
+            git -C "${{ github.workspace }}" reset --hard HEAD 2>/dev/null || true
+            git -C "${{ github.workspace }}" clean -ffdx 2>/dev/null || true
+          fi
 
       # --- Checkout -----------------------------------------------
       - name: "📥 Checkout"
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
+          clean: false
 
       # --- NuGet cache (fuera del workspace, persiste entre pushes) ----
       - name: "📦 Cache NuGet packages"

@@ -400,30 +400,30 @@ TIPOS_AUDITORIA_SECUENCIAL = [
 
 # ------------------------------------------------
 MONITOREOS = [
-    "Y sigue monitoriando el archivo .prompts/prompt_6.md.",
-    "Continúa monitoreando el archivo .prompts/prompt_6.md.",
-    "No olvides monitorear .prompts/prompt_6.md.",
-    "Sigue vigilando el archivo .prompts/prompt_6.md.",
-    "Mantén el monitoreo de .prompts/prompt_6.md.",
-    "Y continúa con la monitorización de .prompts/prompt_6.md.",
-    "Además, sigue monitoreando .prompts/prompt_6.md.",
-    "Y no dejes de monitorear .prompts/prompt_6.md.",
-    "Sigue con el monitoreo de .prompts/prompt_6.md.",
-    "Y permanece atento a .prompts/prompt_6.md.",
-    "No detengas la monitorización de .prompts/prompt_6.md.",
-    "Y prosigue con la vigilancia de .prompts/prompt_6.md.",
-    "Y continúa observando .prompts/prompt_6.md.",
-    "Sigue revisando .prompts/prompt_6.md.",
-    "Mantén la vigilancia sobre .prompts/prompt_6.md.",
-    "No pares de monitorear .prompts/prompt_6.md.",
-    "Y sigue pendiente de .prompts/prompt_6.md.",
-    "Continúa atento a .prompts/prompt_6.md.",
-    "Y no descuides el monitoreo de .prompts/prompt_6.md.",
-    "Sigue supervisando .prompts/prompt_6.md.",
-    "Mantén el control sobre .prompts/prompt_6.md.",
-    "Y sigue chequeando .prompts/prompt_6.md.",
-    "Continúa con la supervisión de .prompts/prompt_6.md.",
-    "No interrumpas la monitorización de .prompts/prompt_6.md.",
+    "Y sigue monitoriando el archivo .prompts/prompt_1.md.",
+    "Continúa monitoreando el archivo .prompts/prompt_1.md.",
+    "No olvides monitorear .prompts/prompt_1.md.",
+    "Sigue vigilando el archivo .prompts/prompt_1.md.",
+    "Mantén el monitoreo de .prompts/prompt_1.md.",
+    "Y continúa con la monitorización de .prompts/prompt_1.md.",
+    "Además, sigue monitoreando .prompts/prompt_1.md.",
+    "Y no dejes de monitorear .prompts/prompt_1.md.",
+    "Sigue con el monitoreo de .prompts/prompt_1.md.",
+    "Y permanece atento a .prompts/prompt_1.md.",
+    "No detengas la monitorización de .prompts/prompt_1.md.",
+    "Y prosigue con la vigilancia de .prompts/prompt_1.md.",
+    "Y continúa observando .prompts/prompt_1.md.",
+    "Sigue revisando .prompts/prompt_1.md.",
+    "Mantén la vigilancia sobre .prompts/prompt_1.md.",
+    "No pares de monitorear .prompts/prompt_1.md.",
+    "Y sigue pendiente de .prompts/prompt_1.md.",
+    "Continúa atento a .prompts/prompt_1.md.",
+    "Y no descuides el monitoreo de .prompts/prompt_1.md.",
+    "Sigue supervisando .prompts/prompt_1.md.",
+    "Mantén el control sobre .prompts/prompt_1.md.",
+    "Y sigue chequeando .prompts/prompt_1.md.",
+    "Continúa con la supervisión de .prompts/prompt_1.md.",
+    "No interrumpas la monitorización de .prompts/prompt_1.md.",
 ]
 MONITOREOS = list(set(MONITOREOS))[:50]
 
@@ -502,7 +502,7 @@ def leer_archivo(archivo):
 def main():
     import argparse
     parser = argparse.ArgumentParser(
-        description="Actualiza .prompts/prompt_6.md solo cuando detecta la palabra READ en el archivo."
+        description="Actualiza .prompts/prompt_1.md solo cuando detecta la palabra READ en el archivo."
     )
     parser.add_argument("--json", type=str, default="mensajes_100.json",
                         help="Archivo JSON donde guardar 100 mensajes de ejemplo")
@@ -512,7 +512,7 @@ def main():
                         help="Solo genera el JSON con 100 mensajes y termina")
     args = parser.parse_args()
 
-    archivo_destino = ".prompts/prompt_6.md"
+    archivo_destino = ".prompts/prompt_1.md"
 
     if args.generar_json:
         print("Generando 100 mensajes de ejemplo...")

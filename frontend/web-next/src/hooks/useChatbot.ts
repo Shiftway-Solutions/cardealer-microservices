@@ -96,9 +96,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   // Authenticated: localStorage (persist across sessions for /mensajes sidebar).
   // Unauthenticated: sessionStorage (ephemeral — cleared when tab closes).
   const { isAuthenticated } = useAuth();
-  const storage = typeof window !== 'undefined'
-    ? (isAuthenticated ? localStorage : sessionStorage)
-    : null;
+  const storage =
+    typeof window !== 'undefined' ? (isAuthenticated ? localStorage : sessionStorage) : null;
   const SESSION_KEY = dealerId ? `okla_chat_session_${dealerId}` : 'okla_chat_session_default';
   const MESSAGES_KEY = dealerId ? `okla_chat_messages_${dealerId}` : 'okla_chat_messages_default';
   const BOT_NAME_KEY = dealerId ? `okla_chat_botname_${dealerId}` : 'okla_chat_botname_default';
@@ -171,7 +170,6 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   // Restore session on mount
   // ─────────────────────────────────────────────────────────────────────────
 
-   
   useEffect(() => {
     // Restore dealer-scoped session on mount.
     // SESSION_KEY / MESSAGES_KEY / BOT_NAME_KEY are stable for the lifetime of
@@ -185,7 +183,9 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         setSessionToken(savedToken);
         setIsConnected(true);
         // Ensure disclosure consent is accepted for restored sessions (idempotent call)
-        acceptDisclosure(savedToken).catch(() => {/* non-blocking */});
+        acceptDisclosure(savedToken).catch(() => {
+          /* non-blocking */
+        });
       }
 
       if (savedBotName) {
@@ -541,7 +541,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     if (autoStart && !sessionToken && !sessionStartedRef.current) {
       handleStartSession();
     }
-  }, [autoStart, sessionToken, handleStartSession]);  
+  }, [autoStart, sessionToken, handleStartSession]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Return

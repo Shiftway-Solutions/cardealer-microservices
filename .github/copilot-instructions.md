@@ -29,11 +29,11 @@ Especializa los chatbots para identificar compradores listos para cerrar vs. cur
 
 ---
 
-## ⚠️ REGLA CRÍTICA — Monitoreo de `.prompts/prompt_6.md`
+## ⚠️ REGLA CRÍTICA — Monitoreo de `.prompts/prompt_1.md`
 
-- Revisa `.prompts/prompt_6.md` **cada 1 minuto**. Si detectas cambios o tareas nuevas, ejecútalas inmediatamente y escribe `READ` al final del archivo.
+- Revisa `.prompts/prompt_1.md` **cada 1 minuto**. Si detectas cambios o tareas nuevas, ejecútalas inmediatamente y escribe `READ` al final del archivo.
 - Si no hay cambios, solo escribe `READ`. Tras 3 revisiones sin cambios, terminas el ciclo. Si encuentras un cambio, resetea el conteo a 0.
-- **NUNCA** elimines ni hagas backup de `.prompts/prompt_6.md`. Puedes vaciarlo y recrearlo.
+- **NUNCA** elimines ni hagas backup de `.prompts/prompt_1.md`. Puedes vaciarlo y recrearlo.
 
 ---
 
@@ -270,19 +270,21 @@ docker compose --profile core --profile vehicles --profile business up -d
 
 Existen exactamente 3 workflows activos. Cada uno tiene un propósito distinto:
 
-| Workflow | Trigger | Target | Propósito |
-|---|---|---|---|
-| `local-qa.yml` | `push` a `feature/**`, `hotfix/**`, `fix/**` | Runner local | Validación rápida <5min antes de abrir PR |
-| `pr-checks.yml` | `pull_request` a `main`, `staging`, `sprint/**` | Runner local | Gate de PR: lint + typecheck + unit tests |
-| `smart-cicd.yml` | `push`/`PR` a `main` | Runner local (self-hosted macOS ARM64) | Build Docker → push ghcr.io → deploy DOKS |
+| Workflow         | Trigger                                         | Target                                 | Propósito                                 |
+| ---------------- | ----------------------------------------------- | -------------------------------------- | ----------------------------------------- |
+| `local-qa.yml`   | `push` a `feature/**`, `hotfix/**`, `fix/**`    | Runner local                           | Validación rápida <5min antes de abrir PR |
+| `pr-checks.yml`  | `pull_request` a `main`, `staging`, `sprint/**` | Runner local                           | Gate de PR: lint + typecheck + unit tests |
+| `smart-cicd.yml` | `push`/`PR` a `main`                            | Runner local (self-hosted macOS ARM64) | Build Docker → push ghcr.io → deploy DOKS |
 
 **Al agregar un nuevo servicio Docker, siempre añadir `cache-from`/`cache-to` en `smart-cicd.yml`:**
+
 ```yaml
 cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/okla-NOMBRE:cache
-cache-to:   type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/okla-NOMBRE:cache,mode=max
+cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/okla-NOMBRE:cache,mode=max
 ```
 
 **NuGet cache en CI — ruta obligatoria (fuera del workspace para persistir entre runs):**
+
 ```yaml
 env:
   NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
@@ -311,15 +313,16 @@ env:
 
 **NUNCA** poner `NEXT_PUBLIC_API_URL=http://localhost:18443` en desarrollo.
 
-| Contexto | Valor correcto | Por qué |
-|---|---|---|
-| Dev local (`pnpm dev`) | `NEXT_PUBLIC_API_URL=` (vacío) | BFF mode: browser usa `/api/*` relativo → Caddy proxea → sin CORS |
-| Con tunnel cloudflared | `NEXT_PUBLIC_API_URL=` (vacío) | Ídem — el túnel ya pasa por Caddy |
-| Docker frontend container | `NEXT_PUBLIC_API_URL=` (vacío) | `.env.production` también vacío — paridad |
+| Contexto                  | Valor correcto                 | Por qué                                                           |
+| ------------------------- | ------------------------------ | ----------------------------------------------------------------- |
+| Dev local (`pnpm dev`)    | `NEXT_PUBLIC_API_URL=` (vacío) | BFF mode: browser usa `/api/*` relativo → Caddy proxea → sin CORS |
+| Con tunnel cloudflared    | `NEXT_PUBLIC_API_URL=` (vacío) | Ídem — el túnel ya pasa por Caddy                                 |
+| Docker frontend container | `NEXT_PUBLIC_API_URL=` (vacío) | `.env.production` también vacío — paridad                         |
 
 Si `NEXT_PUBLIC_API_URL` tiene valor, el browser llama directamente a `localhost:18443` → falla desde móvil/túnel/CORS.
 
 Arrancar frontend con modo BFF:
+
 ```bash
 NEXT_PUBLIC_API_URL= pnpm dev   # o simplemente pnpm dev si .env.local no lo sobreescribe
 ```
@@ -328,12 +331,13 @@ NEXT_PUBLIC_API_URL= pnpm dev   # o simplemente pnpm dev si .env.local no lo sob
 
 ## 🤖 Servicios que NO corren en Docker local
 
-| Servicio | Cómo corre | Puerto |
-|---|---|---|
-| **ChatbotService** | En el HOST (no Docker) con `dotnet watch run` | 5060 |
-| **ConfigurationService** | En el HOST | 15124 |
+| Servicio                 | Cómo corre                                    | Puerto |
+| ------------------------ | --------------------------------------------- | ------ |
+| **ChatbotService**       | En el HOST (no Docker) con `dotnet watch run` | 5060   |
+| **ConfigurationService** | En el HOST                                    | 15124  |
 
 ChatbotService requiere `OKLA_PII_ENCRYPTION_KEY` exportada en el mismo terminal:
+
 ```bash
 export OKLA_PII_ENCRYPTION_KEY="CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
 cd backend/ChatbotService && dotnet watch run --project ChatbotService.Api/ChatbotService.Api.csproj
@@ -343,10 +347,10 @@ cd backend/ChatbotService && dotnet watch run --project ChatbotService.Api/Chatb
 
 ## 🐛 Bugs Conocidos / Deuda Técnica
 
-| Bug | Causa | Fix requerido |
-|---|---|---|
-| **SearchAgent NLP desactivado** | IAM user `okla-backend` carece de `bedrock:InvokeModel` + `bedrock:ListFoundationModels` | AWS Console → IAM → user `okla-backend` → attach `AmazonBedrockFullAccess` (o policy scoped) |
-| `vehiclessaleservice` tarda >2min en arrancar | `dotnet watch run` en Docker compila todo en frío | `start_period: 120s` en compose — no es un bug, es el comportamiento esperado |
+| Bug                                           | Causa                                                                                    | Fix requerido                                                                                |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **SearchAgent NLP desactivado**               | IAM user `okla-backend` carece de `bedrock:InvokeModel` + `bedrock:ListFoundationModels` | AWS Console → IAM → user `okla-backend` → attach `AmazonBedrockFullAccess` (o policy scoped) |
+| `vehiclessaleservice` tarda >2min en arrancar | `dotnet watch run` en Docker compila todo en frío                                        | `start_period: 120s` en compose — no es un bug, es el comportamiento esperado                |
 
 ---
 
@@ -390,7 +394,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MODIFICACIÓN] <archivo> — <motivo>" >> 
 ```
 
 - Nunca eliminar archivos reales — crear `.bak_` y vaciar si es necesario.
-- **Excepción:** `.prompts/prompt_6.md` no requiere backup, se puede eliminar y recrear.
+- **Excepción:** `.prompts/prompt_1.md` no requiere backup, se puede eliminar y recrear.
 - ❌ Prohibido: `rm`, `git clean -fd`, `git rm`, `docker rm/rmi/prune`
 
 ---

@@ -15,10 +15,11 @@ import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
 import { VehicleOfTheDay } from '@/components/homepage/vehicle-of-the-day';
 import { useBrands } from '@/hooks/use-advertising';
+import { usePublicMarketplaceStats } from '@/hooks/use-public-marketplace-stats';
 import { useQuery } from '@tanstack/react-query';
 import type { BrandConfig } from '@/types/advertising';
 import { Bus, Car, Gauge, Leaf, Truck, Wind, Zap } from 'lucide-react';
-import { HOMEPAGE_STATS } from '@/lib/platform-stats';
+import { PLATFORM_STATS } from '@/lib/platform-stats';
 
 // =============================================
 // CWV FIX: LazySection — defers mounting of below-fold sections until they
@@ -60,6 +61,29 @@ function LazySection({ children, minHeight = 300 }: { children: ReactNode; minHe
 export default function HomepageClient() {
   // Dynamic brands from AdvertisingService
   const { data: apiBrands } = useBrands();
+  const { data: publicStats } = usePublicMarketplaceStats();
+
+  const homepageStats = useMemo(
+    () => [
+      {
+        label: 'Vehículos publicados',
+        value: publicStats?.formattedVehicleCount ?? 'N/D',
+      },
+      {
+        label: 'Dealers registrados',
+        value: publicStats?.formattedDealerCount ?? 'N/D',
+      },
+      {
+        label: 'Fundada en',
+        value: PLATFORM_STATS.foundingYear,
+      },
+      {
+        label: 'Tiempo de soporte',
+        value: PLATFORM_STATS.supportResponseTime,
+      },
+    ],
+    [publicStats]
+  );
 
   // Sponsored dealers for brand slider
   const dealerSponsors = useMemo(() => {
@@ -107,19 +131,16 @@ export default function HomepageClient() {
       <section className="border-border bg-card border-b py-10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {HOMEPAGE_STATS.map((stat, index) => (
+            {homepageStats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-primary text-3xl font-bold md:text-4xl">
-                  {stat.value}
-                  <span className="text-muted-foreground align-super text-xs font-normal">*</span>
-                </div>
+                <div className="text-primary text-3xl font-bold md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
           </div>
           <p className="text-muted-foreground mt-6 text-center text-xs">
-            * Cifras proyectadas basadas en el mercado automotriz dominicano. La plataforma está en
-            crecimiento activo.
+            Vehículos y dealers consultados en tiempo real desde el marketplace público. Si un
+            servicio no responde, se muestra `N/D` en lugar de una cifra proyectada.
           </p>
         </div>
       </section>

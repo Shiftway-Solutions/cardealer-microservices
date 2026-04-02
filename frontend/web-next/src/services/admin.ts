@@ -544,11 +544,18 @@ export async function getCancelledDealers(month?: string): Promise<CancelledDeal
 }
 
 export async function getTopChatAgentDealers(limit: number = 10): Promise<TopChatAgentDealer[]> {
-  const response = await apiClient.get<TopChatAgentDealer[]>(
-    '/api/admin/dashboard/top-chatagent-dealers',
-    { params: { limit } }
-  );
-  return response.data;
+  const response = await apiClient.get('/api/admin/dashboard/top-chatagent-dealers', {
+    params: { limit },
+  });
+  const raw = Array.isArray(response.data) ? response.data : [];
+  // Map backend field names to frontend interface
+  return raw.map((d: Record<string, unknown>) => ({
+    dealerId: (d.dealerId ?? '') as string,
+    dealerName: (d.dealerName ?? d.businessName ?? 'Sin nombre') as string,
+    plan: (d.plan ?? 'N/A') as string,
+    conversationCount: (d.conversationCount ?? d.totalConversations ?? 0) as number,
+    avgPerDay: (d.avgPerDay ?? d.avgResponseTimeSec ?? 0) as number,
+  }));
 }
 
 export async function exportDashboardExcel(): Promise<Blob> {
