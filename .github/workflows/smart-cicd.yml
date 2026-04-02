@@ -54,10 +54,13 @@ jobs:
       # --- Pre-checkout: fix EACCES caused by Docker Desktop holding file handles ---
       - name: "🔧 Fix workspace permissions (EACCES Docker)"
         run: |
-          # Docker Desktop on macOS monitors the home directory via VirtioFS, holding
-          # open read FDs on tracked directories. This prevents `rmdir` in the checkout
-          # action's workspace recreation fallback.
-          # Solution: use git directly to reset+clean without Node.js full-tree-delete.
+          # Docker Desktop on macOS may set a 'deny delete' ACL on workspace directories
+          # via VirtioFS file tracking. This blocks rmdir during checkout workspace cleanup.
+          # Strip all ACLs recursively and reset permissions so the checkout action can clean.
+          if [ -d "${{ github.workspace }}" ]; then
+            chmod -RN "${{ github.workspace }}" 2>/dev/null || true
+            chmod -R u+rwX "${{ github.workspace }}" 2>/dev/null || true
+          fi
           if [ -d "${{ github.workspace }}/.git" ]; then
             git -C "${{ github.workspace }}" reset --hard HEAD 2>/dev/null || true
             git -C "${{ github.workspace }}" clean -ffdx 2>/dev/null || true
