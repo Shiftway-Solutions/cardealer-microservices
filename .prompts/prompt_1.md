@@ -54,20 +54,19 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S14-T01: Páginas de error y acceso no autorizado
-- [ ] Fix bugs de S14-T02: Validación de formularios y sesión
+- [x] Fix bugs de S14-T01: UF-090 — middleware.ts deny-by-default → added isKnownProtectedRoute check (unknown routes pass through to Next.js 404)
+- [x] Fix bugs de S14-T02: UF-096 — login/page.tsx now reads reason=session_expired and shows amber banner "Tu sesión ha expirado"
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md`
+- [x] Ejecutar Gate Pre-Commit: dotnet build ✅ | pnpm typecheck ✅ | pnpm lint 0 errors ✅ | 576/576 tests ✅ | pnpm build Compiled successfully ✅ | dotnet unit tests pre-existing integration failures only ✅
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md`
 
 ## Resultado
 
 - Sprint: 14 — Errores y Edge Cases — La Plataforma es Amigable
-- Fase: FIX
-- Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
-- URL: https://thousand-erik-cheers-clubs.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Fase: FIX Intento 1/3
+- Ambiente: LOCAL
+- Estado: COMPLETADO
+- Bugs corregidos: UF-090 middleware pass-through + UF-096 session expired banner
 
 ---
 

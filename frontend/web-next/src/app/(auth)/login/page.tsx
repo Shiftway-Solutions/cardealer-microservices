@@ -98,7 +98,7 @@ function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
   }
 }
 
-function LoginForm({ redirectUrl }: { redirectUrl: string }) {
+function LoginForm({ redirectUrl, sessionExpired }: { redirectUrl: string; sessionExpired?: boolean }) {
   const router = useRouter();
   const auth = useAuth();
   const { login, verifyTwoFactorLogin } = auth;
@@ -337,6 +337,13 @@ function LoginForm({ redirectUrl }: { redirectUrl: string }) {
 
       {/* Login Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Session expired banner */}
+        {sessionExpired && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+            Tu sesión ha expirado. Por favor inicia sesión nuevamente.
+          </div>
+        )}
+
         {/* Error message */}
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -440,7 +447,9 @@ function LoginPageContent() {
   const redirectUrl =
     rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/';
 
-  return <LoginForm redirectUrl={redirectUrl} />;
+  const reason = searchParams.get('reason');
+
+  return <LoginForm redirectUrl={redirectUrl} sessionExpired={reason === 'session_expired'} />;
 }
 
 export default function LoginPage() {

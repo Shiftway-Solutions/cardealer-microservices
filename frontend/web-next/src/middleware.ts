@@ -524,7 +524,19 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // All other routes require authentication
+  // Unknown routes (not in any known route list) — pass through to Next.js 404 handler.
+  // This prevents the "deny-by-default" behavior that would redirect users who type
+  // a non-existent URL to the login page instead of showing a 404 page.
+  const isKnownProtectedRoute =
+    isAuthenticatedRoute(pathname) || getRequiredRoles(pathname) !== null;
+
+  if (!isKnownProtectedRoute) {
+    const response = NextResponse.next();
+    addSecurityHeaders(response);
+    return response;
+  }
+
+  // All known protected routes require authentication
   if (!isAuthenticated) {
     const loginUrl = new URL(LOGIN_PATH, request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
