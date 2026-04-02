@@ -17,6 +17,8 @@ const ReactQueryDevtools =
       )
     : () => null;
 
+const DEVTOOLS_HOSTS = new Set(['localhost', '127.0.0.1', 'okla.local']);
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -64,6 +66,14 @@ export function Providers({ children }: ProvidersProps) {
   //       suspend because React will throw away the client on the initial
   //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
+  const [showDevtools, setShowDevtools] = React.useState(false);
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    const hostname = window.location.hostname;
+    setShowDevtools(DEVTOOLS_HOSTS.has(hostname));
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -74,9 +84,11 @@ export function Providers({ children }: ProvidersProps) {
           </TrackingProvider>
         </SiteConfigProvider>
       </AuthProvider>
-      <React.Suspense fallback={null}>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </React.Suspense>
+      {showDevtools ? (
+        <React.Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </React.Suspense>
+      ) : null}
     </QueryClientProvider>
   );
 }
