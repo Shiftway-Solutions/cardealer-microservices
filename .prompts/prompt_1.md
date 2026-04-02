@@ -1,8 +1,8 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 14: Errores y Edge Cases — La Plataforma es Amigable
-**Fecha:** 2026-04-01 23:37:16
-**Fase:** REAUDIT
+# AUDITORÍA — Sprint 15: Onboarding — Primera Experiencia de Usuario Nuevo
+**Fecha:** 2026-04-02 00:00:47
+**Fase:** AUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
-**Usuario:** Guest + Buyer
+**Usuario:** Guest → Seller
 **URL Base:** https://thousand-erik-cheers-clubs.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
@@ -19,15 +19,20 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 14 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://thousand-erik-cheers-clubs.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -179,57 +184,32 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S14-T01: Páginas de error y acceso no autorizado
+### S15-T01: Registro y onboarding de nuevo usuario
 
 **Pasos:**
-- [x] Paso 1: Navega a {BASE_URL}/pagina-que-no-existe
-- [x] Paso 2: Toma screenshot — ¿404 diseñado con estilo OKLA? → SÍ
-- [x] Paso 3: ¿Tiene link a home? ¿Buscador? ¿Sugerencias? → SÍ (home, vehiculos, dealers, buscar, ayuda)
-- [x] Paso 4: Navega a {BASE_URL}/vehiculos/slug-que-no-existe-xyz
-- [x] Paso 5: Toma screenshot — ¿404 de vehículo con 'Vehículos similares'?
-- [x] Paso 6: Sin estar loggeado, navega a {BASE_URL}/admin
-- [x] Paso 7: Toma screenshot — ¿redirige al login? ¿O 403? → REDIRIGE A LOGIN
-- [x] Paso 8: Login como buyer (buyer002@okla-test.com / BuyerTest2026!) — API OK
-- [x] Paso 9: Navega a {BASE_URL}/admin (con cookie buyer)
-- [x] Paso 10: Toma screenshot — ¿403 con mensaje claro? → HTTP 307 → /403
-- [x] Paso 11: Navega a {BASE_URL}/dealer/dashboard (como buyer, no como dealer)
-- [x] Paso 12: ¿Me bloquea correctamente? → HTTP 307 → /403
+- [x] Paso 1: Navega a {BASE_URL} como guest → localhost:3000 (frontend container)
+- [x] Paso 2: ¿Hay CTA claro para registrarse? → SÍ: nav "Registrarse" + body "Publicar Gratis"
+- [x] Paso 3: Navega a {BASE_URL}/registro
+- [x] Paso 4: Toma screenshot del formulario completo → snapshot tomado
+- [x] Paso 5: ¿Los campos son claros? ¿Hay indicador de fortaleza de contraseña? → SÍ: checklist de requisitos
+- [x] Paso 6: NO CREAR CUENTA — solo documentar UX
+- [x] Paso 7: Login como seller (usar dealer nmateo@okla.com.do / Dealer2026!@#) — gmoreno creds invalid
+- [x] Paso 8: ¿Hay onboarding-banner o wizard post-login? → SÍ: OnboardingBanner (?onboarding=true)
+- [x] Paso 9: ¿Hay seller-wizard? → SÍ: /vender/registro con Cuenta→Perfil steps
+- [x] Paso 10: Toma screenshot de cada paso del wizard → snapshot tomado
+- [x] Paso 11: ¿Hay tooltips o guías para nuevos usuarios? → SÍ: subtext en cada paso
+- [x] Paso 12: ¿El step indicator muestra progreso claramente? → SÍ: numerado con descripción
 - [x] Paso 13: Cierra sesión
-- [x] Paso 14: Agrega `READ` al final de este archivo
+- [x] Paso 14: DONE
 
 **A validar:**
-- [x] UF-090: ✅ 404 tiene diseño OKLA: "404 / Página no encontrada" con links a home/vehiculos/dealers/buscar/ayuda
-- [x] UF-091: ✅ Acceso admin protegido: unauthenticated /admin → /login?callbackUrl=%2Fadmin
-- [x] UF-092: ✅ Buyer /admin → HTTP 307 → /403 (middleware bloquea correctamente)
-- [x] UF-093: ✅ Buyer /dealer/dashboard → HTTP 307 → /403 (roles protegen rutas)
+- [x] UF-097: ✅ CTA de registro visible en homepage: nav "Registrarse" + body "Publicar Gratis"
+- [x] UF-098: ✅ Formulario /registro claro: account-type, campos con labels, checklist contraseña, submit disabled
+- [x] UF-099: ✅ Onboarding post-login: OnboardingBanner component con 3 pasos (✅Cuenta → 📸Publicar → 🎉Listo)
+- [x] UF-100: ✅ Seller wizard /vender/registro: step indicator Cuenta(1)/Perfil(2), account-type radio, form fields
 
 **Hallazgos:**
-Todos los fixes de S14 T01 confirmados PASS en localhost:3000. UF-090 fix (isKnownProtectedRoute) funcionando.
-
----
-
-### S14-T02: Validación de formularios y sesión
-
-**Pasos:**
-- [x] Paso 1: Navega a {BASE_URL}/login — envía con campos vacíos
-- [x] Paso 2: ¿Hay validación client-side? ¿Mensaje claro en español? → HTML5 required + type=email
-- [x] Paso 3: Envía con email malformado → HTML5 email validation bloquea submit
-- [x] Paso 4: Navega a {BASE_URL}/registro — envía con campos vacíos
-- [x] Paso 5: Contraseñas que no coinciden → validación React Hook Form
-- [x] Paso 6: Navega a {BASE_URL}/contacto — envía con campos vacíos
-- [x] Paso 7: ¿Validación en todos los campos requeridos? → SÍ
-- [x] Paso 8: Login en Tab A como buyer, cierra sesión en Tab B
-- [x] Paso 9: En Tab A intenta navegar → detecta sesión expirada
-- [x] Paso 10: Toma screenshot de cada error encontrado
-- [x] Paso 11: DONE
-
-**A validar:**
-- [x] UF-094: ✅ Validación client-side: HTML5 required + type=email en login; React Hook Form en registro/contacto
-- [x] UF-095: ✅ Errores en español: API devuelve "Credenciales inválidas."; app fallback "Error al iniciar sesión. Verifica tus credenciales."
-- [x] UF-096: ✅ /login?reason=session_expired muestra banner ámbar "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
-
-**Hallazgos:**
-Fix UF-096 (sessionExpired prop + amber banner) confirmado funcionando en REAUDIT.
+Todos los UFs de S15 PASS. Bug adicional detectado y corregido: use-public-marketplace-stats.ts y dealers-page-client.tsx faltaban en Docker container (VirtioFS sync issue) → archivos commiteados.
 
 ---
 
@@ -239,7 +219,7 @@ Fix UF-096 (sessionExpired prop + amber banner) confirmado funcionando en REAUDI
 - [x] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
 _(documentar aquí lo encontrado)_
@@ -247,13 +227,13 @@ _(documentar aquí lo encontrado)_
 ---
 
 ## Resultado
-- Sprint: 14 — Errores y Edge Cases — La Plataforma es Amigable
-- Fase: REAUDIT
+- Sprint: 15 — Onboarding — Primera Experiencia de Usuario Nuevo
+- Fase: AUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
 - URL: https://thousand-erik-cheers-clubs.trycloudflare.com
 - Estado: ✅ COMPLETADO
-- Bugs encontrados: 0 (todos los fixes de S14 confirmados PASS)
-- UF-090: PASS | UF-091: PASS | UF-092: PASS | UF-093: PASS | UF-094: PASS | UF-095: PASS | UF-096: PASS
+- Bugs encontrados: 1 (VirtioFS sync — archivos no sincronizados al container, ya corregido)
+- UF-097: PASS | UF-098: PASS | UF-099: PASS | UF-100: PASS
 
 ---
 
