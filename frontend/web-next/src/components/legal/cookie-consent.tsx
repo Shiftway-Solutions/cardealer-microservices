@@ -91,7 +91,7 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
+      className="fixed inset-x-0 bottom-0 z-[9998] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >
@@ -336,7 +336,7 @@ function ReopenedBanner({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
+      className="fixed inset-x-0 bottom-0 z-[9998] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >

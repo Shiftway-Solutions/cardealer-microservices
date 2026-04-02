@@ -2841,3 +2841,26 @@ test
 [2026-04-02 02:29:54] [EJECUCIÓN] S16 FIX 3/3 — 0 bugs, gate pass
 [2026-04-02 02:29:55] [AUDIT-SPRINT] Sprint 16 [reaudit] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
 [2026-04-02 02:42:24] [EJECUCIÓN] S16 REAUDIT 3/3 — UF-101/102/103/104 PASS via browser okla.local, Sprint 16 CERRADO
+[2026-04-02 02:42:26] [AUDIT-SPRINT] Sprint 16 completado (ciclo completo)
+[2026-04-02 02:42:26] [AUDIT-SPRINT] Sprint 17 [audit] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 06:46:45] [EJECUCIÓN] S17 AUDIT — 7 hallazgos: homepage mobile degradada por cookies/overlays, hamburger sin drawer visible, /vehiculos blank, detalle blank, login inerte, /cuenta blank, /admin blank
+[2026-04-02 06:47:59] [AUDIT-SPRINT] Sprint 17 [fix] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 06:51:50] [MODIFICACIÓN] change_model.py — Flujo OCR-click directo en dropdown inline WebView (no Quick Pick filtrable). Cambia modelos Copilot Chat via: OCR picker → pyautogui click → screencapture 2x dropdown → OCR → pyautogui click modelo. Probado: GPT-5.4→GPT-4o EXITOSO.
+[2026-04-02 07:17:56] [BACKUP] Sprint 17 FIX — frontend/web-next/package.json, frontend/web-next/next.config.ts, frontend/web-next/src/app/providers.tsx, frontend/web-next/src/components/legal/cookie-consent.tsx, compose.yaml
+[2026-04-02 07:19:05] [MODIFICACIÓN] Sprint 17 FIX — estabilizar Next dev para tunnel móvil, ocultar devtools públicos y aligerar healthcheck frontend
+[2026-04-02 07:30:18] [BACKUP] frontend/web-next/src/app/(main)/cuenta/convert-to-seller/page.tsx — Backup before fixing react-hook-form watch typing for Sprint 17
+[2026-04-02 07:30:46] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/convert-to-seller/page.tsx — Reemplacé watch() suscrito por useWatch para corregir TypeScript y compatibilidad con React Compiler
+[2026-04-02 07:33:20] [EJECUCIÓN] GATE — Iniciando validación backend Sprint 17
+[2026-04-02 08:09:19] [MODIFICACIÓN] plugin-vscode/extension.js + package.json — applyModel reescrito con workbench.action.chat.changeModel + vscode.lm.selectChatModels; nuevo comando pickFromLive; versión 4.6.0
+[2026-04-02 09:12:14] [MODIFICACIÓN] copilot-agent-monitor v1.2.0 — upgrade model filtering + VALIDATE_ZERO_X health check flow installed
+[2026-04-02 10:14:59] [GATE] Iniciando validación Sprint 17 FIX...
+[2026-04-02 10:31:58] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts — Bug fix: 1x model switch es gate duro; ok:false si applyBestOneX falla
+[2026-04-02 10:39:18] [EJECUCIÓN] Reinstalada extensión okla-dev.copilot-agent-monitor v1.2.3 con bug fix de 1x model gate
+[2026-04-02 11:02:17] [MODIFICACIÓN] .prompts/copilot-agent-monitor — v1.2.4: 5 bugs fixed (GENERATING stall interrupt, ModelManager startup race, lazy refresh, Getting chat ready vision prompt, verify timeout)
+[2026-04-02 11:36:35] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts — v1.2.7: Bug fix: validateZeroX ahora verifica que el switch a 0x y 1x realmente se aplicó (changeModel puede silenciosamente no cambiar el modelo)
+[2026-04-02 12:26:03] [MODIFICACIÓN] .prompts/copilot-agent-monitor — Auditoría seguridad: fix premium gate OCR-fail bypass, CostGuard double-token VALIDATE_ZERO_X, silent clipboard warning, dynamic model commands audit trail. v1.2.8
+[2026-04-02 12:34:19] [MODIFICACIÓN] .prompts/copilot-agent-monitor v1.2.9 — Política 0x-only: brain nunca usa modelos 1x. Eliminado applyBestOneX de validateZeroX. Premium guard bloquea _sendToChat si hay 1x activo. Sentinel NO_ZERO_X_MODEL_AVAILABLE para de monitor con modal de error.
+[2026-04-02 13:19:55] [MODIFICACIÓN] ModelManager.ts + package.json + ScreenAnalyzer.ts — Reordenado ZERO_X_VISION_FAMILIES: gpt-4.1 primary, gpt-5-mini secondary, gpt-4o legacy. Empírico: gpt-4o no está en /models API. v1.3.1 instalada.
+[2026-04-02 13:23:24] [MODIFICACIÓN] ModelManager.ts — Eliminado gpt-4o de ZERO_X_VISION_FAMILIES. Brain solo usa gpt-4.1 y gpt-5-mini. v1.3.2 instalada.
+[2026-04-02 14:10:46] [GATE] Iniciando pre-commit Gate S17-FIX-1 — cookie banner z-index fix
+[2026-04-02 14:17:22] [GATE] ✅ Completo — S17-FIX-1 cookie banner z-index fix
