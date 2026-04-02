@@ -51,6 +51,14 @@ jobs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
 
     steps:
+      # --- Pre-checkout: fix EACCES caused by Docker volumes locking workspace files ---
+      - name: "🔧 Fix workspace permissions (EACCES Docker)"
+        run: |
+          # Docker containers started by the push hook may hold file handles
+          # on the workspace, causing `EACCES: permission denied` during clean checkout.
+          # Reset ownership so the runner can delete/replace files cleanly.
+          sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
       # --- Checkout -----------------------------------------------
       - name: "📥 Checkout"
         uses: actions/checkout@v6
@@ -746,3 +754,59 @@ jobs:
           kubectl rollout status deployment/authservice -n okla --timeout=300s
           kubectl rollout status deployment/chatbotservice -n okla --timeout=300s || true
           kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
+
+  # ============================================================
+  # JOB 3: Cleanup — Liberar disco y memoria del runner local
+  # ============================================================
+  cleanup:
+    name: "🧹 Cleanup Runner"
+    needs: [ci, deploy]
+    if: always()
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 10
+
+    steps:
+      - name: "🐳 Docker — eliminar contenedores detenidos"
+        run: docker container prune -f 2>/dev/null || true
+
+      - name: "🐳 Docker — eliminar imágenes dangling (sin tag)"
+        run: docker image prune -f 2>/dev/null || true
+
+      - name: "🐳 Docker — eliminar imágenes no usadas (>72h)"
+        run: docker image prune -a --filter "until=72h" -f 2>/dev/null || true
+
+      - name: "🐳 Docker — build cache (mantener últimos 5GB)"
+        run: docker builder prune --keep-storage 5gb -f 2>/dev/null || true
+
+      - name: "🐳 Docker — eliminar networks huérfanas"
+        run: docker network prune -f 2>/dev/null || true
+
+      - name: "🗑️ Limpiar archivos temporales del runner"
+        run: |
+          # Eliminar secrets temporales de CI (nunca deben persistir)
+          rm -f secrets/db_password.txt secrets/jwt_secret_key.txt \
+            secrets/rabbitmq_password.txt secrets/redis_password.txt \
+            secrets/sendgrid_api_key.txt secrets/twilio_account_sid.txt \
+            secrets/twilio_auth_token.txt secrets/firebase_service_account.json \
+            secrets/google_client_id.txt secrets/google_client_secret.txt \
+            secrets/microsoft_client_id.txt secrets/microsoft_client_secret.txt \
+            secrets/aws_access_key.txt secrets/aws_secret_key.txt 2>/dev/null || true
+          # Eliminar credenciales Docker temporales del CI
+          rm -rf /tmp/.docker.ci /tmp/.docker.helpers 2>/dev/null || true
+          # Eliminar logs temporales
+          rm -f /tmp/vuln-*.txt /tmp/ollama.log 2>/dev/null || true
+
+      - name: "💾 Reporte de espacio libre post-cleanup"
+        run: |
+          echo "## 🧹 Cleanup Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          DISK_FREE=$(df -h /System/Volumes/Data 2>/dev/null | awk 'NR==2{print $4}')
+          DISK_PCT=$(df -h /System/Volumes/Data 2>/dev/null | awk 'NR==2{print $5}')
+          echo "| Métrica | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Disco libre | \`$DISK_FREE\` (\`$DISK_PCT\` usado) |" >> $GITHUB_STEP_SUMMARY
+          docker system df 2>/dev/null | tail -n +2 | while IFS= read -r line; do
+            echo "| Docker | \`$line\` |" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Cleanup completado — runner listo para el próximo run" >> $GITHUB_STEP_SUMMARY

@@ -49,6 +49,9 @@ jobs:
       docs-only: ${{ steps.filter.outputs.docs-only }}
 
     steps:
+      - name: "🔧 Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
       - uses: actions/checkout@v6
 
       - uses: dorny/paths-filter@v4
@@ -76,6 +79,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: "🔧 Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
       - name: 📥 Checkout
         uses: actions/checkout@v6
 
@@ -146,6 +152,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: "🔧 Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
       - name: 📥 Checkout
         uses: actions/checkout@v6
 
@@ -241,6 +250,9 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
+      - name: "🔧 Fix workspace permissions (EACCES Docker)"
+        run: sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
@@ -289,3 +301,41 @@ jobs:
           echo "| PR Quality | ${{ needs.pr-quality.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Quick checks completed!" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # CLEANUP — Liberar disco y memoria tras cada PR Check
+  # ============================================
+  cleanup:
+    name: "🧹 Cleanup Runner"
+    needs: [frontend-checks, backend-checks, pr-quality, pr-summary]
+    if: always()
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 8
+
+    steps:
+      - name: "🐳 Docker — contenedores detenidos"
+        run: docker container prune -f 2>/dev/null || true
+
+      - name: "🐳 Docker — imágenes dangling"
+        run: docker image prune -f 2>/dev/null || true
+
+      - name: "🐳 Docker — imágenes no usadas (>72h)"
+        run: docker image prune -a --filter "until=72h" -f 2>/dev/null || true
+
+      - name: "🐳 Docker — build cache (mantener 5GB)"
+        run: docker builder prune --keep-storage 5gb -f 2>/dev/null || true
+
+      - name: "🐳 Docker — networks huérfanas"
+        run: docker network prune -f 2>/dev/null || true
+
+      - name: "🗑️ Archivos temporales del runner"
+        run: |
+          rm -rf /tmp/.docker.ci /tmp/.docker.helpers 2>/dev/null || true
+          rm -f /tmp/vuln-*.txt 2>/dev/null || true
+
+      - name: "💾 Disco libre post-cleanup"
+        run: |
+          DISK_FREE=$(df -h /System/Volumes/Data 2>/dev/null | awk 'NR==2{print $4}')
+          DISK_PCT=$(df -h /System/Volumes/Data 2>/dev/null | awk 'NR==2{print $5}')
+          echo "Runner post-cleanup — Disco libre: $DISK_FREE ($DISK_PCT usado)"
+          docker system df 2>/dev/null || true
