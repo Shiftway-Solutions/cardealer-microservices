@@ -1,9 +1,9 @@
-# CORRECCIÓN (Intento 3/3) — Sprint 13: Calidad de Datos — Lo que el Usuario Ve Mal
+# CORRECCIÓN (Intento 1/3) — Sprint 14: Errores y Edge Cases — La Plataforma es Amigable
 
-**Fecha:** 2026-04-01 21:27:04
+**Fecha:** 2026-04-01 22:28:06
 **Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
-**Usuario:** Guest
+**Usuario:** Guest + Buyer
 **URL Base:** https://thousand-erik-cheers-clubs.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
@@ -54,20 +54,21 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [x] Fix bugs de S13-T01: Buscar anomalías visibles en los listados — 0 bugs (AUDIT+REAUDIT S13-T01 confirmaron 0 bugs)
+- [ ] Fix bugs de S14-T01: Páginas de error y acceso no autorizado
+- [ ] Fix bugs de S14-T02: Validación de formularios y sesión
 
-- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test) — PASS: 0w/0e, 576 FE tests, pnpm build OK
-- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md`
 
 ## Resultado
 
-- Sprint: 13 — Calidad de Datos — Lo que el Usuario Ve Mal
-- Fase: FIX Intento 3/3
-- Ambiente: LOCAL
-- Estado: COMPLETADO ✅
-- Bugs encontrados: 0
-- Gate Pre-Commit: PASS
+- Sprint: 14 — Errores y Edge Cases — La Plataforma es Amigable
+- Fase: FIX
+- Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
+- URL: https://thousand-erik-cheers-clubs.trycloudflare.com
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
-READ
+_Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
