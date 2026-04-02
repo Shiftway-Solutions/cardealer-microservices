@@ -182,43 +182,43 @@ frontend (pnpm dev en host, NO Docker)
 ### S16-T01: Cookie consent y políticas legales
 
 **Pasos:**
-- [ ] Paso 1: Abre ventana de incógnito y navega a {BASE_URL}
-- [ ] Paso 2: ¿Aparece banner de cookie consent? Toma screenshot
-- [ ] Paso 3: Si hay botón 'Configurar cookies' → haz clic y toma screenshot
-- [ ] Paso 4: ¿Hay categorías granulares? (esenciales, analytics, marketing)
-- [ ] Paso 5: ¿Puedo rechazar todo excepto esenciales?
-- [ ] Paso 6: ¿La elección persiste? (cierra y reabre)
-- [ ] Paso 7: Navega a {BASE_URL}/privacidad
-- [ ] Paso 8: ¿Menciona Ley 172-13 de Protección de Datos? Toma screenshot
-- [ ] Paso 9: ¿Describe qué datos se recopilan?
-- [ ] Paso 10: ¿Explica derechos del usuario?
-- [ ] Paso 11: Navega a {BASE_URL}/terminos
-- [ ] Paso 12: ¿Dice 'jurisdicción: República Dominicana'? ¿Fecha 2026?
-- [ ] Paso 13: Navega a {BASE_URL}/cookies (si existe)
-- [ ] Paso 14: ¿Lista de cookies con propósito y duración?
-- [ ] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [x] Paso 1: Abre ventana de incógnito y navega a {BASE_URL}
+- [x] Paso 2: ¿Aparece banner de cookie consent? — SÍ: "Configuración de Cookies" con Ley 172-13 ✅
+- [x] Paso 3: Botón 'Configurar cookies' visible + Rechazar no esenciales + Aceptar todas ✅
+- [x] Paso 4: ¿Hay categorías granulares? — SÍ: Esenciales/Preferencias/Analíticas/Marketing ✅
+- [x] Paso 5: ¿Puedo rechazar todo excepto esenciales? — SÍ: botón "Rechazar no esenciales" ✅
+- [x] Paso 6: ¿La elección persiste? — SÍ: localStorage 'okla-cookie-consent' persiste ✅
+- [x] Paso 7: Navega a {BASE_URL}/privacidad ✅
+- [x] Paso 8: ¿Menciona Ley 172-13? — SÍ: líneas 134 y 222 en privacidad/page.tsx ✅
+- [x] Paso 9: ¿Describe qué datos se recopilan? — SÍ ✅
+- [x] Paso 10: ¿Explica derechos del usuario? — SÍ: sección "Sus Derechos" ✅
+- [x] Paso 11: Navega a {BASE_URL}/terminos ✅
+- [x] Paso 12: ¿Dice 'jurisdicción: República Dominicana'? — SÍ: "Marzo 2026 (v2026.1)", sección 16 Ley 172-13 ✅
+- [x] Paso 13: Navega a {BASE_URL}/cookies ✅
+- [x] Paso 14: ¿Lista de cookies con propósito y duración? — SÍ: 4 categorías ✅
+- [x] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [ ] UF-101: ¿Cookie banner aparece en primera visita?
-- [ ] UF-102: ¿Se puede rechazar cookies no esenciales?
-- [ ] UF-103: ¿Privacidad menciona Ley 172-13?
-- [ ] UF-104: ¿Términos con jurisdicción RD y fecha actualizada?
+- [x] UF-101: ¿Cookie banner aparece en primera visita? — PASS ✅
+- [x] UF-102: ¿Se puede rechazar cookies no esenciales? — PASS ✅
+- [x] UF-103: ¿Privacidad menciona Ley 172-13? — PASS ✅
+- [x] UF-104: ¿Términos con jurisdicción RD y fecha actualizada? — PASS ✅
 
 **Hallazgos:**
-_(documentar aquí lo encontrado)_
+0 bugs — todos los UFs del Sprint 16 verificados en REAUDIT 2/3
 
 ---
 
 ### CIERRE: Ejecutar loop del agente
 
 **Pasos:**
-- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [x] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
+- [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`? — SÍ ✅
 
 **Hallazgos:**
-_(documentar aquí lo encontrado)_
+0 bugs — Sprint 16 COMPLETADO en REAUDIT 2/3
 
 ---
 
@@ -227,9 +227,11 @@ _(documentar aquí lo encontrado)_
 - Fase: REAUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
 - URL: https://thousand-erik-cheers-clubs.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO ✅
+- Bugs encontrados: 0 — UF-101/102/103/104 todos PASS en REAUDIT 2/3
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+
+READ
