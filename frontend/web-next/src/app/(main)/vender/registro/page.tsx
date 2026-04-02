@@ -32,6 +32,11 @@ import { useKYCProfile } from '@/hooks/use-kyc';
 import { StepIndicator } from '@/components/seller-wizard/step-indicator';
 import { AccountStep } from '@/components/seller-wizard/account-step';
 import { ProfileStep } from '@/components/seller-wizard/profile-step';
+import { VehicleStep } from '@/components/seller-wizard/vehicle-step';
+import type { UploadedImage } from '@/components/seller-wizard/photo-uploader';
+
+import { useCreateVehicle } from '@/hooks/use-vehicles';
+import type { VehicleFormData } from '@/lib/validations/seller-onboarding';
 
 import type { RegisterRequest } from '@/services/auth';
 import * as userService from '@/services/users';
@@ -45,7 +50,32 @@ const DRAFT_STORAGE_KEY = 'okla-seller-wizard-draft';
 const STEPS = [
   { id: 'account', label: 'Cuenta', description: 'Crea tu cuenta' },
   { id: 'profile', label: 'Perfil', description: 'Tu perfil de vendedor' },
+  { id: 'vehicle', label: 'Vehículo', description: 'Tu primer vehículo' },
 ] as const;
+
+const initialVehicle: VehicleFormData = {
+  make: '',
+  model: '',
+  year: new Date().getFullYear(),
+  trim: '',
+  mileage: 0,
+  vin: '',
+  transmission: '',
+  fuelType: '',
+  bodyType: '',
+  exteriorColor: '',
+  interiorColor: '',
+  condition: 'used',
+  price: 0,
+  currency: 'DOP',
+  description: '',
+  features: [],
+  city: '',
+  province: '',
+  isNegotiable: false,
+  sellerPhone: '',
+  sellerEmail: '',
+};
 
 // =============================================================================
 // TYPES
@@ -166,6 +196,7 @@ export default function SellerRegistrationPage() {
   // ── Mutations ──
   const convertToSeller = useConvertToSeller();
   const createSellerProfile = useCreateSellerProfile();
+  const createVehicleMutation = useCreateVehicle();
 
   // ── Existing seller profile guard: redirect if user already has a profile ──
   const existingSellerQuery = useSellerByUserId(isLoggedIn ? user?.id : undefined);
@@ -182,6 +213,8 @@ export default function SellerRegistrationPage() {
   const [currentStep, setCurrentStep] = React.useState(0);
   const [accountData, setAccountData] = React.useState<AccountData>(initialAccount);
   const [profileData, setProfileData] = React.useState<ProfileData>(initialProfile);
+  const [vehicleData, setVehicleData] = React.useState<VehicleFormData>(initialVehicle);
+  const [vehicleImages, setVehicleImages] = React.useState<UploadedImage[]>([]);
   const [globalError, setGlobalError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [, setSellerProfileId] = React.useState<string | null>(null);
@@ -421,13 +454,12 @@ export default function SellerRegistrationPage() {
         }
       }
 
-      // Redirect to portal — user must verify identity before publishing
+      // Advance to Step 3 (vehicle listing)
       if (!submissionFailed) {
-        clearDraft();
         toast.success('¡Perfil de vendedor creado!', {
-          description: 'Verifica tu identidad para comenzar a publicar vehículos.',
+          description: 'Ahora publica tu primer vehículo.',
         });
-        router.push('/cuenta?registro=completado');
+        setCurrentStep(2);
       }
     } catch (err) {
       const error = err as { message?: string; status?: number };
@@ -450,6 +482,44 @@ export default function SellerRegistrationPage() {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  /**
+   * Step 3: Create first vehicle listing (saved as Draft)
+   */
+  const handleVehicleSubmit = async () => {
+    setGlobalError(null);
+    setIsSubmitting(true);
+    try {
+      const doneImages = vehicleImages.filter(i => i.status === 'done');
+      if (doneImages.length < 3) {
+        setGlobalError('Agrega al menos 3 fotos de tu vehículo para continuar.');
+        return;
+      }
+      await createVehicleMutation.mutateAsync({
+        ...vehicleData,
+        images: doneImages.map((img, idx) => ({
+          url: img.url,
+          order: idx,
+          isPrimary: idx === 0,
+        })),
+        sellerId: user?.id,
+        sellerPhone: vehicleData.sellerPhone || profileData.phone || user?.phone || undefined,
+        sellerEmail: vehicleData.sellerEmail || accountData.email || user?.email || undefined,
+      });
+      clearDraft();
+      toast.success('¡Vehículo enviado a revisión!', {
+        description: 'Tu listado será revisado y publicado pronto.',
+      });
+      router.push('/cuenta?registro=completado&vehiculo=creado');
+    } catch (err) {
+      const error = err as { message?: string };
+      setGlobalError(error.message || 'Error al publicar el vehículo. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -544,6 +614,20 @@ export default function SellerRegistrationPage() {
               isDealer={accountData.accountType === 'dealer' || user?.accountType === 'dealer'}
               onSubmit={handleProfileSubmit}
               onBack={!isLoggedIn ? handleBack : () => {}}
+              isLoading={isSubmitting}
+              error={globalError}
+            />
+          )}
+
+          {/* Step 3: First Vehicle Listing */}
+          {currentStep === 2 && (
+            <VehicleStep
+              data={vehicleData}
+              onChange={partial => setVehicleData(prev => ({ ...prev, ...partial }))}
+              images={vehicleImages}
+              onImagesChange={setVehicleImages}
+              onSubmit={handleVehicleSubmit}
+              onBack={handleBack}
               isLoading={isSubmitting}
               error={globalError}
             />
