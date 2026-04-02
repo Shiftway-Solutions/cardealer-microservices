@@ -2864,3 +2864,4 @@ test
 [2026-04-02 13:23:24] [MODIFICACIÓN] ModelManager.ts — Eliminado gpt-4o de ZERO_X_VISION_FAMILIES. Brain solo usa gpt-4.1 y gpt-5-mini. v1.3.2 instalada.
 [2026-04-02 14:10:46] [GATE] Iniciando pre-commit Gate S17-FIX-1 — cookie banner z-index fix
 [2026-04-02 14:17:22] [GATE] ✅ Completo — S17-FIX-1 cookie banner z-index fix
+[2026-04-02 14:22:12] [MODIFICACIÓN] frontend/web-next/Dockerfile — NODE_OPTIONS max-old-space-size=2048 para evitar OOM en Docker build CI

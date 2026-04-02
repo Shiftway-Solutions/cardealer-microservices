@@ -36,6 +36,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Limit Node heap to 2GB — prevents OOM when other containers are running
+ENV NODE_OPTIONS=--max-old-space-size=2048
+
 # BFF pattern: browser uses relative URLs, Next.js rewrites to gateway
 ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_SITE_URL=https://okla.com.do
