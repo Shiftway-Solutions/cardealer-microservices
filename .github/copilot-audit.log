@@ -2808,3 +2808,5 @@ test
 [2026-04-01 23:28:33] [EJECUCIÓN] smart-cicd.yml run 23882211986 — conclusion=success (ACL deny delete fix resolved EACCES)
 [2026-04-01 23:28:46] [AUDIT-SPRINT] Sprint 14 [fix] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
 [2026-04-01 23:33:14] [EJECUCIÓN] prompt_1.md — S14 FIX Intento 3/3 COMPLETADO: 0 nuevos bugs, fixes UF-090+UF-096 ya en main
+[2026-04-01 23:37:16] [AUDIT-SPRINT] Sprint 14 [reaudit] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
+[2026-04-02 00:00:29] [EJECUCION] REAUDIT S14 — UF-090..096 todos PASS confirmados via browser+curl
