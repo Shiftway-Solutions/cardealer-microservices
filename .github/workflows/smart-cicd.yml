@@ -56,8 +56,9 @@ jobs:
         run: |
           # Docker containers started by the push hook may hold file handles
           # on the workspace, causing `EACCES: permission denied` during clean checkout.
-          # Reset ownership so the runner can delete/replace files cleanly.
+          # Reset ownership and permissions so the runner can delete/replace files cleanly.
           sudo chown -R "$(whoami)" "${{ github.workspace }}" || true
+          chmod -R u+rwX "${{ github.workspace }}" || true
 
       # --- Checkout -----------------------------------------------
       - name: "📥 Checkout"
