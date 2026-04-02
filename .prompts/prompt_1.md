@@ -1,5 +1,5 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 1/3) — Sprint 16: Legal y Privacidad — Confianza del Usuario
-**Fecha:** 2026-04-02 02:03:53
+# RE-AUDITORÍA (Verificación de fixes, intento 2/3) — Sprint 16: Legal y Privacidad — Confianza del Usuario
+**Fecha:** 2026-04-02 02:18:24
 **Fase:** REAUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
 **Usuario:** Guest (incógnito)
@@ -20,7 +20,7 @@
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
 ## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 16 (intento 1/3).
+Esta es la re-verificación del Sprint 16 (intento 2/3).
 Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
 
 - Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
@@ -182,43 +182,43 @@ frontend (pnpm dev en host, NO Docker)
 ### S16-T01: Cookie consent y políticas legales
 
 **Pasos:**
-- [x] Paso 1: Abre ventana de incógnito y navega a {BASE_URL}
-- [x] Paso 2: ¿Aparece banner de cookie consent? Toma screenshot — SÍ ✅
-- [x] Paso 3: Botón 'Configurar cookies' visible → 3 botones: Configurar/Rechazar no esenciales/Aceptar todas ✅
-- [x] Paso 4: ¿Hay categorías granulares? — SÍ: Esenciales/Preferencias/Analíticas/Marketing ✅
-- [x] Paso 5: ¿Puedo rechazar todo excepto esenciales? — SÍ: botón "Rechazar no esenciales" ✅
-- [x] Paso 6: ¿La elección persiste? — Verificado via source: localStorage 'okla-cookie-consent' ✅
-- [x] Paso 7: Navega a {BASE_URL}/privacidad ✅
-- [x] Paso 8: ¿Menciona Ley 172-13? — SÍ: línea 134 y 222 en privacidad/page.tsx ✅
-- [x] Paso 9: ¿Describe qué datos se recopilan? — SÍ ✅
-- [x] Paso 10: ¿Explica derechos del usuario? — SÍ: sección "Sus Derechos" ✅
-- [x] Paso 11: Navega a {BASE_URL}/terminos ✅
-- [x] Paso 12: ¿Dice 'jurisdicción: República Dominicana'? — SÍ: "Marzo 2026 (v2026.1)", sección 16 Ley 172-13 ✅
-- [x] Paso 13: Navega a {BASE_URL}/cookies ✅
-- [x] Paso 14: ¿Lista de cookies con propósito y duración? — SÍ: 4 categorías ✅
-- [x] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Abre ventana de incógnito y navega a {BASE_URL}
+- [ ] Paso 2: ¿Aparece banner de cookie consent? Toma screenshot
+- [ ] Paso 3: Si hay botón 'Configurar cookies' → haz clic y toma screenshot
+- [ ] Paso 4: ¿Hay categorías granulares? (esenciales, analytics, marketing)
+- [ ] Paso 5: ¿Puedo rechazar todo excepto esenciales?
+- [ ] Paso 6: ¿La elección persiste? (cierra y reabre)
+- [ ] Paso 7: Navega a {BASE_URL}/privacidad
+- [ ] Paso 8: ¿Menciona Ley 172-13 de Protección de Datos? Toma screenshot
+- [ ] Paso 9: ¿Describe qué datos se recopilan?
+- [ ] Paso 10: ¿Explica derechos del usuario?
+- [ ] Paso 11: Navega a {BASE_URL}/terminos
+- [ ] Paso 12: ¿Dice 'jurisdicción: República Dominicana'? ¿Fecha 2026?
+- [ ] Paso 13: Navega a {BASE_URL}/cookies (si existe)
+- [ ] Paso 14: ¿Lista de cookies con propósito y duración?
+- [ ] Paso 15: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] UF-101: ¿Cookie banner aparece en primera visita? — PASS ✅
-- [x] UF-102: ¿Se puede rechazar cookies no esenciales? — PASS ✅
-- [x] UF-103: ¿Privacidad menciona Ley 172-13? — PASS ✅ (lines 134, 222)
-- [x] UF-104: ¿Términos con jurisdicción RD y fecha actualizada? — PASS ✅ (Marzo 2026 v2026.1)
+- [ ] UF-101: ¿Cookie banner aparece en primera visita?
+- [ ] UF-102: ¿Se puede rechazar cookies no esenciales?
+- [ ] UF-103: ¿Privacidad menciona Ley 172-13?
+- [ ] UF-104: ¿Términos con jurisdicción RD y fecha actualizada?
 
 **Hallazgos:**
-0 bugs — todos los UFs del Sprint 16 verificados. No se requieren fixes adicionales.
+_(documentar aquí lo encontrado)_
 
 ---
 
 ### CIERRE: Ejecutar loop del agente
 
 **Pasos:**
-- [x] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`? — SÍ ✅
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
-0 bugs — Sprint 16 COMPLETADO
+_(documentar aquí lo encontrado)_
 
 ---
 
@@ -227,11 +227,9 @@ frontend (pnpm dev en host, NO Docker)
 - Fase: REAUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://thousand-erik-cheers-clubs.trycloudflare.com)
 - URL: https://thousand-erik-cheers-clubs.trycloudflare.com
-- Estado: COMPLETADO ✅
-- Bugs encontrados: 0 — UF-101/102/103/104 todos PASS en S16 REAUDIT 1/3
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
-
-READ
