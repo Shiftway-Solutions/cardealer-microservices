@@ -10,7 +10,7 @@
 // =============================================================================
 
 /** PRO plan monthly conversation limit before overage kicks in */
-export const PRO_SOFT_LIMIT = 300;
+export const PRO_SOFT_LIMIT = 500;
 
 /** PRO plan overage cost per conversation above limit (USD) */
 export const PRO_OVERAGE_COST_USD = 0.08;

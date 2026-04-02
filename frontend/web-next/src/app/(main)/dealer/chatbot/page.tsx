@@ -46,8 +46,9 @@ import { useCurrentDealer } from '@/hooks/use-dealers';
 import { usePlanAccess } from '@/hooks/use-plan-access';
 import {
   getChatbotConfigByDealer,
-  getActiveSessionsCount,
+  getMonthlyConversationUsage,
   type ChatbotConfigurationDto,
+  type MonthlyConversationUsage,
 } from '@/services/chatbot';
 import { DEALER_PLAN_LIMITS, type DealerPlan } from '@/lib/plan-config';
 import { PlanGate } from '@/components/plan/plan-gate';
@@ -67,10 +68,10 @@ function useChatbotConfig(dealerId: string | undefined) {
   });
 }
 
-function useChatbotSessionCount() {
-  return useQuery<number>({
-    queryKey: ['chatbot-sessions-count'],
-    queryFn: () => getActiveSessionsCount(),
+function useMonthlyConversationUsage() {
+  return useQuery<MonthlyConversationUsage>({
+    queryKey: ['chatbot-monthly-usage'],
+    queryFn: () => getMonthlyConversationUsage(),
     staleTime: 2 * 60 * 1000,
     retry: 1,
   });
@@ -81,8 +82,9 @@ function useChatbotSessionCount() {
 // =============================================================================
 
 /**
- * ELITE plan: chatAgentWeb = -1 (no hard cap) but billing threshold is 2,000/month.
+ * ELITE plan soft limit: 2,000 conversations/month (chatAgentWeb = 2000).
  * Beyond 2,000 conversations, each additional conversation incurs an overage fee.
+ * ENTERPRISE plan: chatAgentWeb = -1 (truly unlimited, no overage).
  */
 const ELITE_SOFT_LIMIT = 2000;
 const OVERAGE_COST_RD = 5; // RD$ per conversation above the soft limit
@@ -407,20 +409,33 @@ function ChatAgentPageContent() {
     isLoading: isConfigLoading,
     error: configError,
   } = useChatbotConfig(dealer?.id);
-  const { data: sessionCount = 0 } = useChatbotSessionCount();
+  const { data: monthlyUsage } = useMonthlyConversationUsage();
 
   const planLimits = DEALER_PLAN_LIMITS[currentPlan as DealerPlan];
   const rawChatAgentLimit = planLimits?.chatAgentWeb ?? 0;
-  // ELITE: chatAgentWeb = -1 means no hard cap, but soft limit is 2,000 with overage
-  const isEliteUnlimited = rawChatAgentLimit === -1;
-  const effectiveLimit = isEliteUnlimited ? ELITE_SOFT_LIMIT : rawChatAgentLimit;
-  const chatAgentLabel = isEliteUnlimited
+  // Enterprise/unlimited plan: chatAgentWeb = -1
+  const isUnlimitedPlan = rawChatAgentLimit === -1;
+
+  // Prefer backend-reported values (from ConversationUsageTracker) when available;
+  // fall back to plan-config for the limit and 0 for count.
+  const sessionCount = monthlyUsage?.currentCount ?? 0;
+  // Use backend maxAllowed when available. When the backend returns -1 (unlimited),
+  // apply the Elite soft limit for display purposes. Fall back to plan-config otherwise.
+  const backendMaxAllowed = monthlyUsage?.maxAllowed;
+  const effectiveLimit =
+    backendMaxAllowed !== undefined && backendMaxAllowed !== -1
+      ? backendMaxAllowed
+      : isUnlimitedPlan
+        ? ELITE_SOFT_LIMIT
+        : rawChatAgentLimit;
+  const chatAgentLabel = isUnlimitedPlan
     ? `${ELITE_SOFT_LIMIT}/mes (excedente: RD$${OVERAGE_COST_RD}/conv.)`
     : `${effectiveLimit}/mes`;
 
   const usagePercentage = effectiveLimit > 0 ? (sessionCount / effectiveLimit) * 100 : 0;
   const isOverLimit = sessionCount > effectiveLimit && effectiveLimit > 0;
-  const overageCount = isOverLimit ? sessionCount - effectiveLimit : 0;
+  // Use backend-calculated overageCount when available to avoid duplication of logic.
+  const overageCount = monthlyUsage?.overageCount ?? 0;
   const overageCost = overageCount * OVERAGE_COST_RD;
   const isNearLimitYellow = !isOverLimit && usagePercentage >= ALERT_THRESHOLD_YELLOW * 100;
   const isNearLimitRed = !isOverLimit && usagePercentage >= ALERT_THRESHOLD_RED * 100;
@@ -502,7 +517,7 @@ function ChatAgentPageContent() {
                 />
                 <p className="text-muted-foreground text-right text-xs">
                   {usagePercentage.toFixed(0)}% utilizado
-                  {isEliteUnlimited && ' del límite incluido'}
+                  {isUnlimitedPlan && ' del límite incluido'}
                 </p>
               </div>
             )}

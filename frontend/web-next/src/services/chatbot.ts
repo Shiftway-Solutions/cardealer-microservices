@@ -280,11 +280,40 @@ export async function getSessionMessages(sessionToken: string): Promise<ChatMess
 }
 
 /**
- * Get active sessions count (admin)
+ * Get active sessions count (admin only)
  */
 export async function getActiveSessionsCount(): Promise<number> {
   const response = await apiClient.get<{ count: number }>('/api/chat/sessions/active/count');
   return response.data.count;
+}
+
+/**
+ * Monthly conversation usage response from the ContactService.
+ */
+export interface MonthlyConversationUsage {
+  /** Total conversations initiated this calendar month. */
+  currentCount: number;
+  /** Plan limit for conversations per month. -1 = unlimited. */
+  maxAllowed: number;
+  /** Conversations remaining before the plan limit. -1 = unlimited. */
+  remaining: number;
+  /** Usage as a percentage of the plan limit (0–100+). 0 for unlimited plans. */
+  usagePercent: number;
+  /** Conversations beyond the plan limit (overage). */
+  overageCount: number;
+  /** Current billing period in YYYY-MM format. */
+  billingPeriod: string;
+}
+
+/**
+ * Get the current dealer's monthly conversation usage from ContactService.
+ * Returns the actual count tracked via Redis/DB — not the active-sessions count.
+ */
+export async function getMonthlyConversationUsage(): Promise<MonthlyConversationUsage> {
+  const response = await apiClient.get<MonthlyConversationUsage>(
+    '/api/contactrequests/usage/monthly-count'
+  );
+  return response.data;
 }
 
 /**

@@ -448,7 +448,7 @@ public class DealerBillingController : BillingBaseController
         SubscriptionPlan.Free => "Libre — Publicaciones ilimitadas, hasta 10 fotos, posición estándar, 1 valoración IA gratis, perfil básico, soporte FAQ.",
         SubscriptionPlan.Basic => "Visible $29/mes — Publicaciones ilimitadas, hasta 20 fotos, prioridad media, 3 destacados/mes, $15 créditos, badge Verificado, analytics básico, 5 valoraciones IA/mes, perfil mejorado, soporte email 48h.",
         SubscriptionPlan.Professional => "Pro $89/mes — Publicaciones ilimitadas, hasta 30 fotos, alta prioridad, 10 destacados/mes, $45 créditos, ChatAgent Web+WhatsApp 500 conv/mes, agendamiento automático, human handoff email, valoración IA ilimitada, perfil premium, soporte chat 12h.",
-        SubscriptionPlan.Enterprise => "Elite $199/mes — Publicaciones ilimitadas, hasta 40 fotos + video tour, top prioridad, 25 destacados/mes, $120 créditos, badge Premium dorado, ChatAgent ilimitado + WhatsApp, recordatorios WA, live chat + CRM handoff, valoración IA ilimitada + informe PDF, perfil premium + showcase homepage, soporte dedicado 4h.",
+        SubscriptionPlan.Enterprise => "Elite $199/mes — Publicaciones ilimitadas, hasta 40 fotos + video tour, top prioridad, 25 destacados/mes, $120 créditos, badge Premium dorado, ChatAgent 2,000 conv/mes + WhatsApp, recordatorios WA, live chat + CRM handoff, valoración IA ilimitada + informe PDF, perfil premium + showcase homepage, soporte dedicado 4h.",
         _ => "Plan personalizado"
     };
 
@@ -491,7 +491,7 @@ public class DealerBillingController : BillingBaseController
             DedicatedManager: true, BulkUpload: true, Marketplace: true, RealEstate: true,
             Crm: true, Reporting: true,
             MaxPhotosPerListing: 40, FeaturedListingsPerMonth: 25, OklaCoinsMonthly: 120,
-            ChatAgentConversations: -1, VideoTourEnabled: true, VerifiedBadge: true, WhatsAppIntegration: true,
+            ChatAgentConversations: 2000, VideoTourEnabled: true, VerifiedBadge: true, WhatsAppIntegration: true,
             SearchPriority: "top", PricingAgentValuations: -1, DealerProfileType: "premium_showcase",
             SupportLevel: "dedicated_4h", AutoScheduling: true, HumanHandoff: "live_chat_crm"),
         _ => new FeaturesDto(
