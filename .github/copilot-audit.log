@@ -2813,3 +2813,7 @@ test
 [2026-04-02 00:00:47] [AUDIT-SPRINT] Sprint 14 completado (ciclo completo)
 [2026-04-02 00:00:47] [AUDIT-SPRINT] Sprint 15 [audit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
 [2026-04-02 00:22:19] [EJECUCION] AUDIT S15 — UF-097..100 todos PASS, VirtioFS bug encontrado y corregido
+[2026-04-02 00:22:48] [AUDIT-SPRINT] Sprint 15 [fix] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 00:44:27] [MODIFICACIÓN] vender/registro/page.tsx — S15 FIX: wire up VehicleStep (step 3)
+[2026-04-02 00:45:19] [AUDIT-SPRINT] Sprint 15 [reaudit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 00:58:25] [EJECUCIÓN] S15 REAUDIT — UF-097..100 todos PASS, VehicleStep fix verificado
