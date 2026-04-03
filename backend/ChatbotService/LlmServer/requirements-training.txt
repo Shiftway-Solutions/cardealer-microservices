@@ -39,4 +39,4 @@ protobuf==4.25.0
 
 # Monitoring
 wandb==0.16.0
-tensorboard==2.16.0
+tensorboard==2.20.0
