@@ -35,6 +35,8 @@ namespace ContactService.Domain.Entities
         public string Phone { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
         public string Status { get; set; } = "Open";
+        public string? SellerName { get; set; }
+        public string? VehicleTitle { get; set; }
         public Guid? ProductId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? RespondedAt { get; set; }

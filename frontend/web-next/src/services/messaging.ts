@@ -81,7 +81,7 @@ export async function getConversations(): Promise<Conversation[]> {
         type: 'inquiry',
         otherUser: {
           id: '', // Seller ID not available in summary
-          name: 'Vendedor', // Will be populated when detail is loaded
+          name: inquiry.sellerName || 'Vendedor',
           avatarUrl: null,
         },
         vehicle: {
@@ -177,7 +177,7 @@ export async function getConversationDetail(
     type,
     otherUser: {
       id: '', // Not directly available
-      name: type === 'received' ? detail.buyerName : 'Vendedor',
+      name: type === 'received' ? detail.buyerName : detail.sellerName || 'Vendedor',
       avatarUrl: null,
     },
     vehicle: {

@@ -23,6 +23,8 @@ public record CreateContactRequestCommand : IRequest<ContactRequestSummaryDto>
     public string BuyerName { get; init; } = string.Empty;
     public string BuyerEmail { get; init; } = string.Empty;
     public string? BuyerPhone { get; init; }
+    public string? SellerName { get; init; }
+    public string? VehicleTitle { get; init; }
     public string Message { get; init; } = string.Empty;
 
     // UTM Attribution — SEM FIX
@@ -79,6 +81,10 @@ public class CreateContactRequestCommandHandler
             request.Message
         );
         contactRequest.BuyerPhone = request.BuyerPhone;
+
+        // S22 FIX: Store seller name and vehicle title for buyer inbox display
+        contactRequest.SellerName = request.SellerName;
+        contactRequest.VehicleTitle = request.VehicleTitle;
 
         // SEM FIX: Map UTM attribution fields
         contactRequest.UtmSource = request.UtmSource;

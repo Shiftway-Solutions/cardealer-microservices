@@ -12,6 +12,8 @@ public record ContactRequestSummaryDto
     public string BuyerName { get; init; } = string.Empty;
     public string BuyerEmail { get; init; } = string.Empty;
     public string? BuyerPhone { get; init; }
+    public string? SellerName { get; init; }
+    public string? VehicleTitle { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? RespondedAt { get; init; }
     public int MessageCount { get; init; }
@@ -30,6 +32,8 @@ public record ContactRequestDetailDto
     public string BuyerName { get; init; } = string.Empty;
     public string BuyerEmail { get; init; } = string.Empty;
     public string? BuyerPhone { get; init; }
+    public string? SellerName { get; init; }
+    public string? VehicleTitle { get; init; }
     public string Status { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
     public DateTime? RespondedAt { get; init; }

@@ -30,6 +30,8 @@ export interface ContactRequestSummary {
   respondedAt?: string;
   messageCount: number;
   lastMessage?: string;
+  sellerName?: string;
+  vehicleTitle?: string;
 }
 
 export interface ReceivedInquiry extends ContactRequestSummary {
@@ -47,6 +49,8 @@ export interface ContactRequestDetail {
   buyerName: string;
   buyerEmail: string;
   buyerPhone?: string;
+  sellerName?: string;
+  vehicleTitle?: string;
   status: ContactRequestStatus;
   createdAt: string;
   messages: ContactMessage[];
@@ -59,6 +63,8 @@ export interface CreateContactRequestDto {
   buyerName: string;
   buyerEmail: string;
   buyerPhone?: string;
+  sellerName?: string;
+  vehicleTitle?: string;
   message: string;
 }
 
