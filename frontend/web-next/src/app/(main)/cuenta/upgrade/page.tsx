@@ -864,55 +864,57 @@ function UpgradeCheckoutInner() {
         </Card>
       )}
 
-      {/* Billing Period Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Período de facturación</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={cn(
-                'rounded-xl border-2 p-4 text-left transition-all',
-                billingPeriod === 'monthly'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-gray-300'
-              )}
-            >
-              <p className="font-bold">Mensual</p>
-              <p className="text-2xl font-bold">
-                {formatPrice(targetPlan.monthlyPrice, priceCurrency)}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {targetPlan.key === 'estandar' ? 'por listing' : 'por mes'}
-              </p>
-            </button>
-            <button
-              onClick={() => setBillingPeriod('annual')}
-              className={cn(
-                'relative rounded-xl border-2 p-4 text-left transition-all',
-                billingPeriod === 'annual'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-gray-300'
-              )}
-            >
-              {savings > 0 && (
-                <Badge className="absolute -top-2.5 right-3 bg-emerald-500">
-                  Ahorra {formatPrice(savings)}
-                </Badge>
-              )}
-              <p className="font-bold">Anual</p>
-              <p className="text-2xl font-bold">
-                {formatPrice(targetPlan.annualPrice, priceCurrency)}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {formatPrice(Math.round(targetPlan.annualPrice / 12), priceCurrency)}/mes
-              </p>
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Billing Period Selection — only show for subscription plans (not per-listing) */}
+      {targetPlan.monthlyPrice !== targetPlan.annualPrice && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Período de facturación</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={cn(
+                  'rounded-xl border-2 p-4 text-left transition-all',
+                  billingPeriod === 'monthly'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
+                )}
+              >
+                <p className="font-bold">Mensual</p>
+                <p className="text-2xl font-bold">
+                  {formatPrice(targetPlan.monthlyPrice, priceCurrency)}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {targetPlan.key === 'estandar' ? 'por listing' : 'por mes'}
+                </p>
+              </button>
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                className={cn(
+                  'relative rounded-xl border-2 p-4 text-left transition-all',
+                  billingPeriod === 'annual'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
+                )}
+              >
+                {savings > 0 && (
+                  <Badge className="absolute -top-2.5 right-3 bg-emerald-500">
+                    Ahorra {formatPrice(savings)}
+                  </Badge>
+                )}
+                <p className="font-bold">Anual</p>
+                <p className="text-2xl font-bold">
+                  {formatPrice(targetPlan.annualPrice, priceCurrency)}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {formatPrice(Math.round(targetPlan.annualPrice / 12), priceCurrency)}/mes
+                </p>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payment Method Selection */}
       <Card>
@@ -1004,8 +1006,9 @@ function UpgradeCheckoutInner() {
                 política de privacidad
               </Link>
               . Entiendo que se me cobrará <strong>{formatPrice(price, priceCurrency)}</strong>{' '}
-              {billingPeriod === 'annual' ? 'anualmente' : 'mensualmente'} hasta que cancele mi
-              suscripción.
+              {targetPlan.key === 'estandar'
+                ? 'por cada publicación.'
+                : `${billingPeriod === 'annual' ? 'anualmente' : 'mensualmente'} hasta que cancele mi suscripción.`}
             </span>
           </label>
 
@@ -1025,6 +1028,7 @@ function UpgradeCheckoutInner() {
                         : 'mes'}
                   </span>
                 </p>
+                <p className="text-muted-foreground text-xs">ITBIS incluido</p>
                 {priceCurrency === 'DOP' && (
                   <p className="text-muted-foreground text-xs">
                     ≈ ${paypalAmount} USD (tasa de cambio aproximada)

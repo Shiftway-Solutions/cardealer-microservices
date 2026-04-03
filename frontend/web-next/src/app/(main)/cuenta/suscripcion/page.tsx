@@ -170,7 +170,7 @@ export default function SellerSubscriptionPage() {
           description="Para vendedores ocasionales"
           features={plans.libre_seller}
           icon={Zap}
-          isCurrent={currentPlan === 'libre_seller'}
+          isCurrent={currentPlan === 'libre_seller' || currentPlan === 'none'}
           isChanging={changingPlan === 'libre_seller'}
           onSelect={() => handleChangePlan('libre_seller')}
           currentPlan={currentPlan}
