@@ -93,7 +93,7 @@ public class CreateContactRequestCommandHandler
         var created = await _contactRequestRepository.CreateAsync(contactRequest, cancellationToken);
 
         // Create initial message
-        var initialMessage = new ContactMessage(created.Id, request.BuyerId, request.Message, true);
+        var initialMessage = new ContactMessage(created.Id, request.BuyerId, request.Message, true, request.BuyerName);
         await _contactMessageRepository.CreateAsync(initialMessage, cancellationToken);
 
         _logger.LogInformation(
@@ -270,7 +270,8 @@ public class ReplyToContactRequestCommandHandler
         }
 
         var isFromBuyer = contactRequest.BuyerId == request.CurrentUserId;
-        var message = new ContactMessage(request.ContactRequestId, request.CurrentUserId, request.Message, isFromBuyer);
+        var senderName = isFromBuyer ? contactRequest.BuyerName : string.Empty;
+        var message = new ContactMessage(request.ContactRequestId, request.CurrentUserId, request.Message, isFromBuyer, senderName);
         await _contactMessageRepository.CreateAsync(message, cancellationToken);
 
         // Update contact request status when seller responds
@@ -312,10 +313,14 @@ public class UpdateContactRequestStatusCommandHandler
     : IRequestHandler<UpdateContactRequestStatusCommand, Unit>
 {
     private readonly IContactRequestRepository _contactRequestRepository;
+    private readonly IContactMessageRepository _contactMessageRepository;
 
-    public UpdateContactRequestStatusCommandHandler(IContactRequestRepository contactRequestRepository)
+    public UpdateContactRequestStatusCommandHandler(
+        IContactRequestRepository contactRequestRepository,
+        IContactMessageRepository contactMessageRepository)
     {
         _contactRequestRepository = contactRequestRepository;
+        _contactMessageRepository = contactMessageRepository;
     }
 
     public async Task<Unit> Handle(
@@ -333,6 +338,14 @@ public class UpdateContactRequestStatusCommandHandler
 
         contactRequest.Status = request.NewStatus;
         await _contactRequestRepository.UpdateAsync(contactRequest, cancellationToken);
+
+        // BUG-S22-2 FIX: when opening a conversation, also mark individual messages as read
+        if (request.NewStatus == "Read")
+        {
+            var readerIsBuyer = contactRequest.BuyerId == request.CurrentUserId;
+            await _contactMessageRepository.MarkConversationMessagesAsReadAsync(
+                request.ContactRequestId, request.CurrentUserId, readerIsBuyer, cancellationToken);
+        }
 
         return Unit.Value;
     }

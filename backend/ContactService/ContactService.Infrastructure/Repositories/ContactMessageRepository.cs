@@ -49,6 +49,26 @@ public class ContactMessageRepository : IContactMessageRepository
         }
     }
 
+    public async Task MarkConversationMessagesAsReadAsync(Guid contactRequestId, Guid readerId, bool readerIsBuyer, CancellationToken cancellationToken = default)
+    {
+        // IgnoreQueryFilters: bypass multi-tenant filter so messages with DealerId=Guid.Empty
+        // (created pre-tenancy or from cross-tenant buyer) are still found and updated.
+        var unreadMessages = await _context.ContactMessages
+            .IgnoreQueryFilters()
+            .Where(m => m.ContactRequestId == contactRequestId
+                     && m.IsFromBuyer != readerIsBuyer  // messages from the other party
+                     && !m.IsRead)
+            .ToListAsync(cancellationToken);
+
+        if (unreadMessages.Count > 0)
+        {
+            foreach (var msg in unreadMessages)
+                msg.IsRead = true;
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     public async Task<int> GetUnreadCountForUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         // Performance: Removed Include — EF generates proper JOIN for count without materializing entities

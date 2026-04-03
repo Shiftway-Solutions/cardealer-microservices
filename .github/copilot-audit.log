@@ -2991,3 +2991,8 @@ test
 [2026-04-03 10:27:11] [CREACIÓN] Bypass Approvals Mode implementado — Auto-approve + Auto-retry activos
 [2026-04-03 10:44:04] [MODIFICACIÓN] mensajes/page.tsx — BUG-S22-2: markConversationAsRead not called when conversation opened
 [2026-04-03 10:52:54] [GATE] ✅ Completo — Frontend: 0 errors, 576 tests passed, build OK. Backend: 0 unit failures (integration failures pre-existing)
+[2026-04-03 11:38:02] [AUDIT-SPRINT] Sprint 22 [audit] [LOCAL] despachado: Mensajería — Negociar por Chat
+[2026-04-03 11:53:19] [BACKUP] ContactMessage.cs — BUG-S22-3 fix: SenderName NOT NULL
+[2026-04-03 11:58:03] [AUDIT-SPRINT] Sprint 22 [fix] [LOCAL] despachado: Mensajería — Negociar por Chat
+[2026-04-03 12:33:04] [GATE] Iniciando Gate Pre-Commit S22...
+[2026-04-03 12:37:56] [GATE] ✅ Completo - unit 236 ContactService pass, integration pre-existing failures expected

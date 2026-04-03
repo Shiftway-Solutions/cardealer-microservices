@@ -26,6 +26,14 @@ public class ContactMessageConfiguration : IEntityTypeConfiguration<ContactMessa
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(cm => cm.SenderName)
+            .IsRequired()
+            .HasMaxLength(100)
+            .HasDefaultValue(string.Empty);
+
+        builder.Property(cm => cm.CreatedAt)
+            .IsRequired();
+
         builder.Property(cm => cm.SentAt)
             .IsRequired();
 

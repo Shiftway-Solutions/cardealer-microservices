@@ -38,6 +38,14 @@ public interface IContactMessageRepository
     Task<List<ContactMessage>> GetByContactRequestIdAsync(Guid contactRequestId, CancellationToken cancellationToken = default);
     Task<ContactMessage> CreateAsync(ContactMessage message, CancellationToken cancellationToken = default);
     Task MarkAsReadAsync(Guid messageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bulk-marks all messages in a conversation as read for the given reader.
+    /// Marks messages sent by the OTHER party (not the reader) as IsRead = true.
+    /// Used when a user opens a conversation to clear the unread badge.
+    /// </summary>
+    Task MarkConversationMessagesAsReadAsync(Guid contactRequestId, Guid readerId, bool readerIsBuyer, CancellationToken cancellationToken = default);
+
     Task<int> GetUnreadCountForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>

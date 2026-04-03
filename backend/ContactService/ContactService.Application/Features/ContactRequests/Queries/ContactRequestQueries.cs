@@ -41,6 +41,7 @@ public class GetContactRequestsByBuyerQueryHandler
             CreatedAt = i.CreatedAt,
             RespondedAt = i.RespondedAt,
             MessageCount = i.Messages?.Count ?? 0,
+            UnreadCount = i.Messages?.Count(m => !m.IsFromBuyer && !m.IsRead) ?? 0,  // BUG-S22-4: count unread seller messages for buyer
             LastMessage = i.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault()?.Message
         }).ToList();
     }

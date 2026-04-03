@@ -323,11 +323,12 @@ public class ReplyToContactRequestCommandHandlerTests
 public class UpdateContactRequestStatusCommandHandlerTests
 {
     private readonly Mock<IContactRequestRepository> _contactRequestRepo = new();
+    private readonly Mock<IContactMessageRepository> _contactMessageRepo = new();
     private readonly UpdateContactRequestStatusCommandHandler _sut;
 
     public UpdateContactRequestStatusCommandHandlerTests()
     {
-        _sut = new UpdateContactRequestStatusCommandHandler(_contactRequestRepo.Object);
+        _sut = new UpdateContactRequestStatusCommandHandler(_contactRequestRepo.Object, _contactMessageRepo.Object);
     }
 
     [Fact]

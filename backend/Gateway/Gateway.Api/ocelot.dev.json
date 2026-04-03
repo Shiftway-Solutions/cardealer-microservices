@@ -4631,6 +4631,36 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/contactrequests/{id}/read",
+      "UpstreamHttpMethod": ["PATCH"],
+      "DownstreamPathTemplate": "/api/contactrequests/{id}/read",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "contactservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/contactrequests/{id}/archive",
+      "UpstreamHttpMethod": ["PATCH"],
+      "DownstreamPathTemplate": "/api/contactrequests/{id}/archive",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "contactservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/contactrequests/{everything}",
       "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/contactrequests/{everything}",

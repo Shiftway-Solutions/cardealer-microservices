@@ -21,7 +21,9 @@ namespace ContactService.Domain.Entities
 
         public bool IsFromBuyer { get; set; }
         public bool IsRead { get; set; } = false;
+        public string SenderName { get; set; } = string.Empty;
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
         // Navigation property
@@ -32,12 +34,13 @@ namespace ContactService.Domain.Entities
             Id = Guid.NewGuid();
         }
 
-        public ContactMessage(Guid contactRequestId, Guid senderId, string message, bool isFromBuyer) : this()
+        public ContactMessage(Guid contactRequestId, Guid senderId, string message, bool isFromBuyer, string senderName = "") : this()
         {
             ContactRequestId = contactRequestId;
             SenderId = senderId;
             Message = message;
             IsFromBuyer = isFromBuyer;
+            SenderName = senderName;
         }
     }
 }

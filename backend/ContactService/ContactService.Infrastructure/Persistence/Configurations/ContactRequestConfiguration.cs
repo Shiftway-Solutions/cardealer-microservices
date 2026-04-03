@@ -28,16 +28,16 @@ public class ContactRequestConfiguration : IEntityTypeConfiguration<ContactReque
             .HasMaxLength(254);
 
         builder.Property(cr => cr.BuyerPhone)
-            .HasMaxLength(20);
+            .HasMaxLength(200);  // encrypted PII: AES ciphertext >> 20 chars
 
         builder.Property(cr => cr.Name)
-            .HasMaxLength(100);
+            .HasMaxLength(200);
 
         builder.Property(cr => cr.Email)
-            .HasMaxLength(254);
+            .HasMaxLength(500);
 
         builder.Property(cr => cr.Phone)
-            .HasMaxLength(20);
+            .HasMaxLength(200);  // encrypted PII: AES ciphertext >> 20 chars
 
         builder.Property(cr => cr.Message)
             .IsRequired()
