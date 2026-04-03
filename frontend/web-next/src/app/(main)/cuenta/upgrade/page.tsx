@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { formatPrice } from '@/lib/format';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
+import { DOP_USD_EXCHANGE_RATE } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,7 @@ import { toast } from 'sonner';
 
 type UserType = 'dealer' | 'seller';
 type BillingPeriod = 'monthly' | 'annual';
+type DisplayCurrency = 'DOP' | 'USD';
 
 interface PlanInfo {
   key: string;
@@ -580,6 +582,7 @@ function UpgradeCheckoutInner() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paypal');
+  const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>('DOP');
 
   const comparison = useMemo(() => {
     if (userType === 'dealer') {
@@ -588,15 +591,26 @@ function UpgradeCheckoutInner() {
     return buildSellerComparison(currentPlanKey, targetPlan.key);
   }, [userType, currentPlanKey, targetPlan.key]);
 
-  const priceCurrency = 'DOP';
-  const price = billingPeriod === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
-  const monthlyCost =
+  const basePriceDop =
+    billingPeriod === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
+  const baseMonthlyCostDop =
     billingPeriod === 'annual' ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice;
-  const savings =
+  const baseSavingsDop =
     billingPeriod === 'annual' ? targetPlan.monthlyPrice * 12 - targetPlan.annualPrice : 0;
 
+  const toDisplayAmount = (amountDop: number) => {
+    if (displayCurrency === 'USD') {
+      return Math.round((amountDop / DOP_USD_EXCHANGE_RATE) * 100) / 100;
+    }
+
+    return amountDop;
+  };
+
+  const formatDisplayPrice = (amountDop: number) =>
+    formatPrice(toDisplayAmount(amountDop), displayCurrency);
+
   // For PayPal: convert DOP to USD equivalent for payment processing
-  const paypalAmount = priceCurrency === 'DOP' ? (price / 58).toFixed(2) : price.toFixed(2);
+  const paypalAmount = (basePriceDop / DOP_USD_EXCHANGE_RATE).toFixed(2);
   const paypalCurrency = 'USD';
 
   const handleFygaroPayment = () => {
@@ -654,6 +668,45 @@ function UpgradeCheckoutInner() {
         </p>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Moneda de visualización</CardTitle>
+          <CardDescription>
+            Revisa el checkout en pesos dominicanos o en dólares antes de confirmar tu pago.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(['DOP', 'USD'] as const).map(currency => (
+              <button
+                key={currency}
+                type="button"
+                onClick={() => setDisplayCurrency(currency)}
+                className={cn(
+                  'rounded-xl border-2 p-4 text-left transition-all',
+                  displayCurrency === currency
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
+                )}
+              >
+                <p className="font-bold">
+                  {currency === 'DOP' ? 'RD$ Peso Dominicano' : 'USD Dólar US'}
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {currency === 'DOP'
+                    ? 'Fygaro y AZUL cobran en DOP.'
+                    : 'PayPal procesa el cargo en USD.'}
+                </p>
+              </button>
+            ))}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Tasa de referencia: 1 USD = {DOP_USD_EXCHANGE_RATE.toFixed(2)} DOP. PayPal cobra en USD;
+            Fygaro y AZUL mantienen el cargo en DOP.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Plan Comparison */}
       {userType === 'seller' ? (
         /* Seller: all 3 plans as selectable cards */
@@ -689,7 +742,7 @@ function UpgradeCheckoutInner() {
                   <CardDescription className="text-base font-semibold">
                     {plan.monthlyPrice === 0
                       ? 'Gratis'
-                      : `${formatPrice(plan.monthlyPrice, 'DOP')}${plan.key === 'estandar' ? '/listing' : '/mes'}`}
+                      : `${formatDisplayPrice(plan.monthlyPrice)}${plan.key === 'estandar' ? '/listing' : '/mes'}`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -726,7 +779,7 @@ function UpgradeCheckoutInner() {
               <CardDescription>
                 {currentPlan.monthlyPrice === 0
                   ? 'Gratis'
-                  : `${formatPrice(currentPlan.monthlyPrice, priceCurrency)}/mes`}
+                  : `${formatDisplayPrice(currentPlan.monthlyPrice)}/mes`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -750,8 +803,8 @@ function UpgradeCheckoutInner() {
               <Badge className="bg-primary mx-auto mb-2 w-fit text-white">Nuevo Plan</Badge>
               <CardTitle className="text-xl">{targetPlan.name}</CardTitle>
               <CardDescription>
-                {formatPrice(monthlyCost, priceCurrency)}/mes
-                {billingPeriod === 'annual' && savings > 0 && (
+                {formatDisplayPrice(baseMonthlyCostDop)}/mes
+                {billingPeriod === 'annual' && baseSavingsDop > 0 && (
                   <span className="ml-1 text-emerald-600">(facturación anual)</span>
                 )}
               </CardDescription>
@@ -882,9 +935,7 @@ function UpgradeCheckoutInner() {
                 )}
               >
                 <p className="font-bold">Mensual</p>
-                <p className="text-2xl font-bold">
-                  {formatPrice(targetPlan.monthlyPrice, priceCurrency)}
-                </p>
+                <p className="text-2xl font-bold">{formatDisplayPrice(targetPlan.monthlyPrice)}</p>
                 <p className="text-muted-foreground text-sm">
                   {targetPlan.key === 'estandar' ? 'por listing' : 'por mes'}
                 </p>
@@ -898,17 +949,15 @@ function UpgradeCheckoutInner() {
                     : 'border-gray-200 hover:border-gray-300'
                 )}
               >
-                {savings > 0 && (
+                {baseSavingsDop > 0 && (
                   <Badge className="absolute -top-2.5 right-3 bg-emerald-500">
-                    Ahorra {formatPrice(savings)}
+                    Ahorra {formatDisplayPrice(baseSavingsDop)}
                   </Badge>
                 )}
                 <p className="font-bold">Anual</p>
-                <p className="text-2xl font-bold">
-                  {formatPrice(targetPlan.annualPrice, priceCurrency)}
-                </p>
+                <p className="text-2xl font-bold">{formatDisplayPrice(targetPlan.annualPrice)}</p>
                 <p className="text-muted-foreground text-sm">
-                  {formatPrice(Math.round(targetPlan.annualPrice / 12), priceCurrency)}/mes
+                  {formatDisplayPrice(Math.round(targetPlan.annualPrice / 12))}/mes
                 </p>
               </button>
             </div>
@@ -1005,7 +1054,7 @@ function UpgradeCheckoutInner() {
               <Link href="/privacidad" className="text-primary underline">
                 política de privacidad
               </Link>
-              . Entiendo que se me cobrará <strong>{formatPrice(price, priceCurrency)}</strong>{' '}
+              . Entiendo que se me cobrará <strong>{formatDisplayPrice(basePriceDop)}</strong>{' '}
               {targetPlan.key === 'estandar'
                 ? 'por cada publicación.'
                 : `${billingPeriod === 'annual' ? 'anualmente' : 'mensualmente'} hasta que cancele mi suscripción.`}
@@ -1018,7 +1067,7 @@ function UpgradeCheckoutInner() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-lg font-bold">
-                  Total: {formatPrice(price, priceCurrency)}
+                  Total: {formatDisplayPrice(basePriceDop)}
                   <span className="text-muted-foreground text-sm font-normal">
                     /
                     {targetPlan.key === 'estandar'
@@ -1028,10 +1077,19 @@ function UpgradeCheckoutInner() {
                         : 'mes'}
                   </span>
                 </p>
-                <p className="text-muted-foreground text-xs">ITBIS incluido</p>
-                {priceCurrency === 'DOP' && (
+                <p className="text-muted-foreground text-xs">
+                  ITBIS {pricing.itbisPercentage}% incluido · base:{' '}
+                  {formatDisplayPrice(Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100)))} +
+                  impuesto:{' '}
+                  {formatDisplayPrice(basePriceDop - Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100)))}
+                </p>
+                {displayCurrency === 'DOP' ? (
                   <p className="text-muted-foreground text-xs">
-                    ≈ ${paypalAmount} USD (tasa de cambio aproximada)
+                    ≈ US${paypalAmount} para el flujo de PayPal
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    Referencia local: {formatPrice(basePriceDop, 'DOP')} para Fygaro/AZUL
                   </p>
                 )}
               </div>
@@ -1098,7 +1156,7 @@ function UpgradeCheckoutInner() {
                 ) : (
                   <>
                     <Shield className="h-4 w-4" />
-                    Pagar con Fygaro — {formatPrice(price, priceCurrency)}
+                    Pagar con Fygaro — {formatPrice(basePriceDop, 'DOP')}
                   </>
                 )}
               </Button>
@@ -1120,7 +1178,7 @@ function UpgradeCheckoutInner() {
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
-                    Pagar con AZUL — {formatPrice(price, priceCurrency)}
+                    Pagar con AZUL — {formatPrice(basePriceDop, 'DOP')}
                   </>
                 )}
               </Button>

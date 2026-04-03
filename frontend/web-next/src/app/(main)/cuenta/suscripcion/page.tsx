@@ -124,7 +124,7 @@ export default function SellerSubscriptionPage() {
             Gestiona tu plan de vendedor y desbloquea más funciones
           </p>
         </div>
-        <PlanBadge size="lg" />
+        <PlanBadge size="lg" plan={!isLoading && currentPlan === 'none' ? 'libre_seller' : undefined} />
       </div>
 
       {/* ── Current Plan Summary ─────────────────────────────── */}
