@@ -28,7 +28,7 @@ evaluate==0.4.1
 
 # Data processing
 pandas==3.0.1
-numpy==1.26.0
+numpy==2.4.4
 
 # Utilities
 tqdm==4.66.0
