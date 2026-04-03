@@ -2966,3 +2966,5 @@ test
 [2026-04-03 03:26:55] [AUDIT-SPRINT] Sprint 21 [audit] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
 [2026-04-03 03:57:42] [EJECUCIÓN] S21 AUDIT — Favoritos/Alertas/Busquedas/Notificaciones auditados. Sin bugs código. Infra dependencias: vehiclessaleservice(502), notificationservice(502)
 [2026-04-03 03:57:56] [AUDIT-SPRINT] Sprint 21 [fix] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:01:15] [GATE] S21 FIX - Iniciando...
+[2026-04-03 04:04:09] [GATE] S21 FIX - Gate completo: 0 errores, 576 tests passed, build OK
