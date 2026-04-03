@@ -297,63 +297,169 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Completo" >> .github/copilot-aud
 
 ---
 
-## 🌿 GESTIÓN DE RAMAS
+## 🌿 GESTIÓN DE RAMAS — Estrategia Branch-Based Deployment
 
-> **No existe servidor staging.** La rama `staging` es el checkpoint de código QA-listo.  
-> El QA real se corre localmente con Docker Compose (`--profile business`) antes de hacer PR a `main`.
+> **Etapa Actual (2026-04-03+):** Desarrollo activo en `staging`  
+> **Cuando lista para producción:** Merge `staging` → `main`  
+> **Regla de Oro:** `main` es **sagrado** — solo código verificado y listo para usuarios
 
-| Rama        | Propósito                                        | Deploy          |
-| ----------- | ------------------------------------------------ | --------------- |
-| `main`      | Producción — **sagrado**                         | ✅ Auto → DOKS  |
-| `staging`   | Código QA-aprobado — **sin servidor, solo rama** | ❌ No despliega |
-| `feature/*` | Desarrollo activo                                | ❌ No despliega |
+### 📊 Tabla de Flujo CI/CD por Rama
 
-**Flujo completo:**
+| Rama        | Build | Test | Docker Push | Deploy DOKS | Cuándo usar                                         |
+| ----------- | ----- | ---- | ----------- | ----------- | --------------------------------------------------- |
+| `feature/*` | ✅    | ✅   | ❌          | ❌          | Desarrollo individual, iteración local              |
+| `staging`   | ✅    | ✅   | ✅          | ❌          | **ETAPA ACTUAL**: QA local, testing, docker-compose |
+| `main`      | ✅    | ✅   | ✅          | ✅          | Producción en vivo (DigitalOcean DOKS)              |
+
+### 🎯 Instrucciones para Agentes de IA — CRUCIAL
+
+**REGLA 1: ¿Qué rama debo usar?**
+
+```
+✓ USAR staging    → La mayoría del desarrollo (testing, QA, Docker images)
+✓ USAR feature/*  → Desarrollo experimental o refactors complejos
+✗ NUNCA main      → Excepto merge desde staging cuando está listo para producción
+```
+
+**REGLA 2: Flujo típico del agente**
 
 ```bash
-# 1. Crear feature desde staging
+# Opción A: Trabajo en staging (MÁS COMÚN — para desarrollo actual)
 git checkout staging && git pull origin staging
-git checkout -b feature/nombre-del-feature
+# ... hacer cambios en backend/frontend ...
+git add .
+git commit -m "feat: descripción de cambios"
+git push origin staging
+# → automation: build + test + docker push a GHCR
+# → NO despliega a Kubernetes (seguro para QA)
 
-# 2. Desarrollar con hot-reload (seconds)
-# Terminal 1: docker compose up -d
-# Terminal 2: dotnet watch run ...
+# Opción B: Trabajo en feature (features grandes/experimentales)
+git checkout -b feature/nombre
+# ... iteración local con hot-reload ...
+git push origin feature/nombre
+# → automation: build + test (sin docker push)
+# → Luego merge a staging para docker push
+```
 
-# 3. Gate pre-commit → Push → PR: feature/* → staging
-git push origin feature/nombre-del-feature
-# Abrir PR hacia staging (NUNCA hacia main)
+**REGLA 3: Transición staging → main (PRODUCCIÓN) — SOLO CUANDO VERIFICADO**
 
-# 4. QA local con stack completo ANTES de mergear a main
-docker compose --profile core --profile vehicles --profile business up -d
-# Correr smoke tests / Playwright E2E
+```bash
+# SOLO hacer esto cuando QA es COMPLETAMENTE verde
+git checkout main && git pull origin main
+git merge origin/staging
+git push origin main
+# → automation: build + test + docker push + DEPLOY DOKS
+# 🚀 Cambios EN VIVO a okla.com.do en 5-15 minutos
+```
 
-# 5. Si QA OK → PR: staging → main → auto-deploy producción
+### 🔄 Flujo Completo de Desarrollo (Referencia)
+
+```
+feature/auth-refactor (experimentación)
+    │ (local hot-reload)
+    ├─ dotnet watch run / pnpm dev
+    ├─ Testing local
+    │
+    ▼
+staging (rama de trabajo principal — ETAPA ACTUAL)
+    ├─ git push origin staging
+    ├─ CI automation: build + test + docker push
+    ├─ docker compose --profile business up -d (QA local)
+    ├─ Verificar en https://okla.local
+    │
+    ▼ (cuando COMPLETAMENTE listo)
+main (PRODUCCIÓN)
+    ├─ git merge origin/staging && git push origin main
+    ├─ CI automation: build + test + docker push + DEPLOY DOKS
+    ├─ 🌐 VIVO en https://okla.com.do
+    │
+    ▼
+DigitalOcean DOKS (Kubernetes cluster)
+    └─ Pods restarted, usuarios ven cambios en 5-15 min
 ```
 
 ---
 
-## 🗺️ Mapa de Workflows CI/CD
+## 🗺️ Mapa de Workflows CI/CD — Automación Automática por Rama
 
-Existen exactamente 3 workflows activos. Cada uno tiene un propósito distinto:
+Existen 3 workflows que **se ejecutan automáticamente** según la rama que uses:
 
-| Workflow         | Trigger                                         | Target                                 | Propósito                                 |
-| ---------------- | ----------------------------------------------- | -------------------------------------- | ----------------------------------------- |
-| `local-qa.yml`   | `push` a `feature/**`, `hotfix/**`, `fix/**`    | Runner local                           | Validación rápida <5min antes de abrir PR |
-| `pr-checks.yml`  | `pull_request` a `main`, `staging`, `sprint/**` | Runner local                           | Gate de PR: lint + typecheck + unit tests |
-| `smart-cicd.yml` | `push`/`PR` a `main`                            | Runner local (self-hosted macOS ARM64) | Build Docker → push ghcr.io → deploy DOKS |
+| Workflow             | Rama(s)                | Qué hace                                     | Duración   | Deploy             |
+| -------------------- | ---------------------- | -------------------------------------------- | ---------- | ------------------ |
+| `local-qa.yml`       | `feature/**`           | Build + lint + unit test                     | ~3-5 min   | ❌ No              |
+| `pr-checks.yml`      | `staging`, `main` (PR) | Lint + typecheck + tests antes merge         | ~5-10 min  | ❌ No              |
+| **`smart-cicd.yml`** | **`staging`**          | Build + Test + **Docker push GHCR**          | ~10-15 min | ❌ No (seguro QA)  |
+| **`smart-cicd.yml`** | **`main`**             | Build + Test + Docker push + **DEPLOY DOKS** | ~15-20 min | ✅ Sí (PRODUCCIÓN) |
 
-**Al agregar un nuevo servicio Docker, siempre añadir `cache-from`/`cache-to` en `smart-cicd.yml`:**
+### ⚙️ Lo que sucede automáticamente al hacer push
+
+**Al hacer `git push origin staging`:**
+
+```
+✅ Build backend (.NET)
+✅ Test frontend (Next.js)
+✅ Unit tests
+✅ Docker build & push: ghcr.io/shiftway-solutions/*:latest
+❌ NO deploy a Kubernetes
+→ Resultado: Docker images listas para docker-compose local QA
+```
+
+**Al hacer `git push origin main`:**
+
+```
+✅ Build backend
+✅ Test frontend
+✅ Unit tests
+✅ Docker build & push a GHCR
+✅ DEPLOY a DigitalOcean DOKS Kubernetes
+✅ kubectl rollout restart deployment/*
+→ Resultado: 🌐 CAMBIOS VIVOS en okla.com.do (~5-15 min)
+```
+
+### 🤖 Para Agentes: Decisión de Rama
+
+**Pregúntate estos 3 puntos:**
+
+1. **¿Es experimental o refactor grande?** → Branch `feature/nombre`
+   - Build + Test (sin docker push)
+   - Luego merge a `staging` cuando esté OK
+
+2. **¿Es un fix, feature o mejora que necesita QA?** → Push a `staging`
+   - Build + Test + Docker push (seguro, no va a producción)
+   - Verifica con docker-compose local
+
+3. **¿Está COMPLETAMENTE verificado y listo para usuarios?** → Merge a `main`
+   - Build + Test + Docker push + DEPLOY DOKS
+   - 🚀 EN VIVO inmediatamente
+
+### ✅ Verificar status del workflow
+
+**Ver el últumo workflow ejecutado:**
+
+```bash
+gh run list --workflow=smart-cicd.yml --limit=1 --json status,createdAt,headBranch
+```
+
+**Ver detalles completos:**
+
+```bash
+gh run view <RUN_ID> --log
+```
+
+**Forzar re-ejecución:**
+
+```bash
+git commit --allow-empty -m "ci: trigger workflow"
+git push origin staging  # o main
+```
+
+### 🆕 Agregar nuevo servicio Docker
+
+**Siempre incluir cache en `smart-cicd.yml`:**
 
 ```yaml
 cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/okla-NOMBRE:cache
 cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/okla-NOMBRE:cache,mode=max
-```
-
-**NuGet cache en CI — ruta obligatoria (fuera del workspace para persistir entre runs):**
-
-```yaml
-env:
-  NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
 ```
 
 ---
