@@ -27,6 +27,10 @@ export const enum AgentState {
   RECOVERING = "RECOVERING",
   // Monitor is off
   STOPPED = "STOPPED",
+  // Chat session has >50 messages — proactive reset before freeze
+  CHAT_HEAVY = "CHAT_HEAVY",
+  // RAM or disk critically low — must free resources before continuing
+  RESOURCE_PRESSURE = "RESOURCE_PRESSURE",
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -41,6 +45,12 @@ export const enum AgentAction {
   SELECT_SPECIFIC_MODEL = "SELECT_SPECIFIC_MODEL", // switch to a named model directly
   VALIDATE_ZERO_X = "VALIDATE_ZERO_X", // switch to 0x model → yes/no health check → screenshot → if OK stay on 0x + new chat
   FOCUS_VSCODE = "FOCUS_VSCODE",
+  /** Free system RAM: notify user + show Docker containers consuming memory */
+  RELEASE_MEMORY = "RELEASE_MEMORY",
+  /** docker system prune (dangling images, stopped containers, build cache — no volumes) */
+  PRUNE_DOCKER_CACHE = "PRUNE_DOCKER_CACHE",
+  /** Chat session is too long (>50 msgs) — open fresh chat before freeze */
+  RESET_HEAVY_CHAT = "RESET_HEAVY_CHAT",
 }
 
 // ─── Log Event Types (from Copilot Chat log file) ─────────────────────────────

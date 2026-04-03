@@ -218,15 +218,16 @@ export async function sendMessage(conversationId: string, content: string): Prom
  * Mark conversation as read
  */
 export async function markConversationAsRead(conversationId: string): Promise<void> {
-  // The backend will mark all messages as read when we fetch the detail
-  await apiClient.post(`/api/contactrequests/${conversationId}/mark-read`);
+  // Backend: PATCH /api/contactrequests/{id}/read
+  await apiClient.patch(`/api/contactrequests/${conversationId}/read`);
 }
 
 /**
  * Archive a conversation
  */
 export async function archiveConversation(conversationId: string): Promise<void> {
-  await apiClient.post(`/api/contactrequests/${conversationId}/archive`);
+  // Backend: PATCH /api/contactrequests/{id}/archive
+  await apiClient.patch(`/api/contactrequests/${conversationId}/archive`);
 }
 
 /**

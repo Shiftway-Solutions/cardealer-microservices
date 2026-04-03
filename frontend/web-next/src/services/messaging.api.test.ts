@@ -21,6 +21,7 @@ vi.mock('@/lib/api-client', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -264,11 +265,11 @@ describe('Messaging Service', () => {
 
   describe('markConversationAsRead', () => {
     it('should call API to mark conversation as read', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} });
+      vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: {} });
 
       await markConversationAsRead('conversation-1');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/contactrequests/conversation-1/mark-read');
+      expect(apiClient.patch).toHaveBeenCalledWith('/api/contactrequests/conversation-1/read');
     });
   });
 
@@ -278,11 +279,11 @@ describe('Messaging Service', () => {
 
   describe('archiveConversation', () => {
     it('should call API to archive conversation', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} });
+      vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: {} });
 
       await archiveConversation('conversation-1');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/api/contactrequests/conversation-1/archive');
+      expect(apiClient.patch).toHaveBeenCalledWith('/api/contactrequests/conversation-1/archive');
     });
   });
 

@@ -62,11 +62,15 @@ const ActionExecutor_1 = require("./ActionExecutor");
 const StatusBar_1 = require("./StatusBar");
 const CostGuard_1 = require("./CostGuard");
 const AuditLog_1 = require("./AuditLog");
+const ResourceMonitor_1 = require("./ResourceMonitor");
+const ChatHealthMonitor_1 = require("./ChatHealthMonitor");
 class Monitor {
     _context;
     _config;
     _logWatcher;
     _chatDOMWatcher; // optional: needs CDP (--remote-debugging-port=9222)
+    _resourceMonitor;
+    _chatHealthMonitor;
     _screenAnalyzer;
     _stateMachine = new StateMachine_1.StateMachine();
     _executor;
@@ -102,6 +106,16 @@ class Monitor {
      * Cleared when isCompleted fires.
      */
     _lastDOMLabel = "";
+    /**
+     * Counts consecutive cycles where _preActionGate had NO usable signal
+     * (screenshot quota exhausted + DOM unavailable/unknown). After
+     * MAX_BLIND_ACT_STRIKES the gate allows the action as a safety valve.
+     */
+    _consecutiveBlindActAttempts = 0;
+    /** Current resource pressure level from ResourceMonitor */
+    _resourcePressure = "none";
+    /** Whether ChatHealthMonitor has flagged the session as critically heavy */
+    _chatIsCritical = false;
     /** Vision analysis from the last screenshot taken — stored for the audit entry. */
     _lastVisionAnalysis = null;
     _cooldowns = {
@@ -134,6 +148,8 @@ class Monitor {
         this._loadConfig();
         this._initComponents();
         this._logWatcher.start();
+        // ResourceMonitor — polls every 60s, fires pressure events
+        this._resourceMonitor.start();
         // Start DOM watcher in background — non-blocking, gracefully disabled when CDP unavailable
         void this._startChatDOMWatcher();
         // First cycle in 5s, then every 30s (log watcher handles intra-cycle events)
@@ -152,6 +168,8 @@ class Monitor {
         }
         this._logWatcher?.stop();
         this._chatDOMWatcher?.stop();
+        this._resourceMonitor?.stop();
+        this._chatHealthMonitor?.stop();
         this._statusBar?.setState("STOPPED" /* AgentState.STOPPED */, "Monitor stopped");
         this._log("info", "⛔ Copilot Agent Monitor stopped");
     }
@@ -245,12 +263,13 @@ class Monitor {
             this._currentState = state;
             this._statusBar.setState(state, "Analyzing...");
             // ─── DECIDE ──────────────────────────────────────────────────────────
-            // Read last chat message when stall may be approaching (cheap DOM read, no API).
-            // We read at 50% of stallWarnMs so we have the info ready before the timer fires.
+            // Always read the last chat message via DOM before every decision — free,
+            // real-time, no API cost. Previously gated at 50% stallWarnMs which meant
+            // the StateMachine often decided with no content signal (UNKNOWN) and fell
+            // back to blind timer-based sends. Reading every cycle ensures the content-
+            // aware paths in StateMachine are always active.
             let lastMessage;
-            const msSinceActivity = Date.now() - this._lastActivityMs;
-            const stallApproaching = msSinceActivity >= this._config.stallWarnSecs * 1000 * 0.5;
-            if (stallApproaching && this._chatDOMWatcher?.active) {
+            if (this._chatDOMWatcher?.active) {
                 lastMessage = await this._chatDOMWatcher.readLastMessage();
                 if (lastMessage.category !== "UNKNOWN" /* LastMessageCategory.UNKNOWN */) {
                     this._log("debug", `📖 Last msg: ${lastMessage.category} (${(lastMessage.confidence * 100).toFixed(0)}%) — "${lastMessage.text.slice(0, 80)}…"`);
@@ -269,6 +288,9 @@ class Monitor {
                 stallWarnMs: this._config.stallWarnSecs * 1000,
                 stallHardMs: this._config.stallHardSecs * 1000,
                 lastMessage,
+                domWatcherActive: this._chatDOMWatcher?.active ?? false,
+                resourcePressure: this._resourcePressure,
+                chatIsCritical: this._chatIsCritical,
             };
             const { action, reasoning } = this._stateMachine.decide(input);
             this._log(action === "WAIT" /* AgentAction.WAIT */ ? "debug" : "info", `[${state}] → ${action} — ${reasoning}`);
@@ -567,7 +589,7 @@ class Monitor {
         const port = vscode.workspace
             .getConfiguration("copilotMonitor")
             .get("cdpPort", 9222);
-        this._chatDOMWatcher = new ChatDOMWatcher_1.ChatDOMWatcher(port, (delta) => this._onDOMDelta(delta), 400);
+        this._chatDOMWatcher = new ChatDOMWatcher_1.ChatDOMWatcher(port, (delta) => this._onDOMDelta(delta), 50);
         const ok = await this._chatDOMWatcher.start();
         if (ok) {
             this._log("info", "🔭 ChatDOMWatcher started — real-time DOM activity detection active");
@@ -576,10 +598,52 @@ class Monitor {
             this._executor.setReadLastMessageCallback(() => 
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             this._chatDOMWatcher.readLastMessage());
+            // ChatHealthMonitor — shares same CDP port, polls every 30s
+            this._chatHealthMonitor = new ChatHealthMonitor_1.ChatHealthMonitor(port, (health) => this._onChatHealth(health), 30_000);
+            const healthOk = await this._chatHealthMonitor.start();
+            this._log(healthOk ? "info" : "debug", healthOk
+                ? "💬 ChatHealthMonitor started — detecting heavy sessions (>50 msgs)"
+                : "💬 ChatHealthMonitor: CDP start failed — chat health monitoring disabled");
         }
         else {
             this._log("debug", "ChatDOMWatcher: CDP not available (VS Code needs --remote-debugging-port=9222) — DOM signal disabled");
             this._chatDOMWatcher = undefined;
+        }
+    }
+    // ─── Handle resource pressure events from ResourceMonitor ─────────────────
+    _onResourcePressure(event) {
+        this._resourcePressure = event.pressure;
+        this._log("warn", `💾 Resource pressure: ${event.pressure} — ${event.message}`);
+        // For critical levels, upgrade state and schedule an immediate cycle
+        if (event.pressure === "ram_critical" || event.pressure === "disk_critical") {
+            this._currentState = "RESOURCE_PRESSURE" /* AgentState.RESOURCE_PRESSURE */;
+            this._statusBar.setState("RESOURCE_PRESSURE" /* AgentState.RESOURCE_PRESSURE */, `💾 ${event.message.slice(0, 60)}`);
+            this._scheduleNextCycle(1_000);
+        }
+        else {
+            // Warn levels: update status bar text but don't interrupt the agent
+            const snap = event.snapshot;
+            const detail = ResourceMonitor_1.ResourceMonitor.format(snap);
+            this._log("info", `💾 Resources: ${detail}`);
+        }
+    }
+    // ─── Handle chat health events from ChatHealthMonitor ─────────────────────
+    _onChatHealth(health) {
+        this._chatIsCritical = health.isCritical;
+        if (health.hasSpinnerStuck) {
+            this._log("warn", `💬 Spinner atascado detectado (${Math.round((Date.now() - health.capturedAt) / 1000)}s) — el agente puede estar congelado`);
+        }
+        if (health.isCritical) {
+            this._log("warn", `💬 Chat CRÍTICO: ${health.messageCount} mensajes, ~${health.estimatedTokens} tokens, ${health.domSizeKb}KB DOM — reset preventivo necesario`);
+            // Only mark CHAT_HEAVY if NOT generating — never interrupt the model
+            if (this._currentState !== "GENERATING" /* AgentState.GENERATING */) {
+                this._currentState = "CHAT_HEAVY" /* AgentState.CHAT_HEAVY */;
+                this._statusBar.setState("CHAT_HEAVY" /* AgentState.CHAT_HEAVY */, `💬 Chat pesado (${health.messageCount} msgs) — reset preventivo`);
+                this._scheduleNextCycle(2_000);
+            }
+        }
+        else if (health.isGettingHeavy) {
+            this._log("info", `💬 Chat acercándose al límite: ${health.messageCount} mensajes — considerar nueva sesión pronto`);
         }
     }
     // ─── Handle DOM delta events from ChatDOMWatcher ───────────────────────────
@@ -696,11 +760,43 @@ class Monitor {
                 reason: "action type does not require visual gate",
             };
         }
-        // If screenshot quota is exhausted, check if GENERATING was confirmed recently.
-        // If yes: block the action — we cannot risk interrupting an active model just
-        // because the screenshot rate-limiter fired. Safety window = 1.5× the minimum
-        // screenshot interval (default 3 min × 1.5 = 4.5 min hold after last confirmation).
-        // If no recent confirmation: allow with a warning — never block permanently.
+        // ─── Step 0: DOM read (FREE — no quota, real-time, always first) ─────────
+        // Evaluate the chat content before touching any screenshot quota. This lets
+        // the gate block blindly-timed sends when the agent is clearly still working
+        // or when the task is already complete (semantic mismatch guard).
+        if (this._chatDOMWatcher?.active) {
+            const domReading = await this._chatDOMWatcher.readLastMessage();
+            if (domReading.confidence >= 0.6) {
+                if (domReading.category === "STILL_WORKING" /* LastMessageCategory.STILL_WORKING */) {
+                    // Agent is mid-task — reset stall timer, do not interrupt.
+                    this._lastActivityMs = Date.now();
+                    this._lastConfirmedGeneratingMs = Date.now();
+                    this._consecutiveBlindActAttempts = 0;
+                    return {
+                        proceed: false,
+                        reason: `DOM: STILL_WORKING ("${domReading.text.slice(0, 60)}") — agent is active, ${action} blocked`,
+                    };
+                }
+                if (action === "SEND_CONTINUE" /* AgentAction.SEND_CONTINUE */ &&
+                    domReading.category === "TASK_COMPLETE" /* LastMessageCategory.TASK_COMPLETE */) {
+                    // Task is done — SEND_CONTINUE is semantically wrong.
+                    // Correct the state so the next cycle opens a fresh chat instead.
+                    this._currentState = "COMPLETED" /* AgentState.COMPLETED */;
+                    this._latestLogEvent = "loop_stopped" /* LogEvent.LOOP_STOPPED */;
+                    this._consecutiveBlindActAttempts = 0;
+                    return {
+                        proceed: false,
+                        reason: `DOM: TASK_COMPLETE — SEND_CONTINUE is semantically wrong; next cycle uses OPEN_NEW_CHAT`,
+                    };
+                }
+                // DOM gave a real, confident signal — reset no-signal counter.
+                this._consecutiveBlindActAttempts = 0;
+                this._log("debug", `🛡️ Gate DOM: ${domReading.category} (${(domReading.confidence * 100).toFixed(0)}%) — proceeding to screenshot check`);
+            }
+        }
+        // ─── Step 1: Screenshot quota check ──────────────────────────────────────
+        // If screenshot is unavailable, use the last confirmed GENERATING timestamp
+        // and a consecutive-no-signal counter to decide whether to allow or block.
         if (!this._screenAnalyzer.canCapture()) {
             const timeSinceGenerating = Date.now() - this._lastConfirmedGeneratingMs;
             const safeWindowMs = this._config.screenshotMinIntervalSecs * 1000 * 1.5;
@@ -716,12 +812,30 @@ class Monitor {
                     reason: `GENERATING confirmed ${Math.floor(timeSinceGenerating / 1000)}s ago — safety hold (screenshot quota exhausted)`,
                 };
             }
-            this._log("warn", `🛡️ Gate: screenshot quota reached — allowing ${action} without visual confirmation`);
+            // No screenshot AND no useful DOM signal — block up to MAX_BLIND_ACT_STRIKES
+            // times before allowing as a safety valve. Prevents blind sends when the
+            // monitor has zero knowledge of the current chat state.
+            const MAX_BLIND_ACT_STRIKES = 3;
+            this._consecutiveBlindActAttempts++;
+            if (this._consecutiveBlindActAttempts <= MAX_BLIND_ACT_STRIKES) {
+                this._log("warn", `🛡️ Gate: no signal (screenshot quota exhausted + DOM unavailable/unknown) — ` +
+                    `blocking ${action} (strike ${this._consecutiveBlindActAttempts}/${MAX_BLIND_ACT_STRIKES})`);
+                return {
+                    proceed: false,
+                    reason: `no signal available — waiting for screenshot quota reset (strike ${this._consecutiveBlindActAttempts}/${MAX_BLIND_ACT_STRIKES})`,
+                };
+            }
+            // Safety valve: after MAX_BLIND_ACT_STRIKES we allow once, then reset the
+            // counter so the pattern repeats rather than acting every cycle.
+            this._consecutiveBlindActAttempts = 0;
+            this._log("warn", `🛡️ Gate: ${MAX_BLIND_ACT_STRIKES} consecutive no-signal blocks exhausted — ` +
+                `allowing ${action} as safety valve`);
             return {
                 proceed: true,
-                reason: "screenshot quota reached — proceeding without visual confirmation",
+                reason: `no signal (${MAX_BLIND_ACT_STRIKES} consecutive blocks) — proceeding as safety valve`,
             };
         }
+        // ─── Step 2: Take screenshot ──────────────────────────────────────────────
         this._log("info", `🛡️ Pre-action gate: capturing screen before ${action}...`);
         this._statusBar.setState(this._currentState, `🛡️ Gate: verifying before ${action}...`);
         try {
@@ -729,6 +843,8 @@ class Monitor {
             const analysis = await this._screenAnalyzer.analyze(token);
             const gateDurationMs = Date.now() - gateStart;
             this._log("info", `🛡️ Gate [${action}]: screen=${analysis.state} conf=${(analysis.confidence * 100).toFixed(0)}% — ${analysis.detail}`);
+            // Screenshot succeeded — reset no-signal counter.
+            this._consecutiveBlindActAttempts = 0;
             // Store for audit entry
             this._lastVisionAnalysis = {
                 ...analysis,
@@ -884,6 +1000,8 @@ class Monitor {
                 this._log("info", `Health validation result: ${ok ? "OK ✅" : "FAILED ❌"}`);
             });
         }
+        // ResourceMonitor — 60s poll, reacts to RAM + disk pressure
+        this._resourceMonitor = new ResourceMonitor_1.ResourceMonitor((event) => this._onResourcePressure(event), 60_000);
         const cfg = vscode.workspace.getConfiguration("copilotMonitor");
         this._costGuard = new CostGuard_1.CostGuard(cfg.get("costGuard.maxActionsPerWindow", 8), cfg.get("costGuard.windowMinutes", 5) * 60_000, cfg.get("costGuard.autoResetMinutes", 10) * 60_000);
         // StatusBar duplication fix: only create once. If start() is called

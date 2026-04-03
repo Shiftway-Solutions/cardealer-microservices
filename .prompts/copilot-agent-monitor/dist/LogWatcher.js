@@ -95,7 +95,7 @@ class LogWatcher {
     constructor(callback, _pollIntervalMs = 5_000) {
         // _pollIntervalMs param kept for API compat but ignored — heartbeat is fixed 10s
         this._callback = callback;
-        this._debounceMs = 50; // 50ms debounce — groups rapid successive writes
+        this._debounceMs = 400; // 400ms debounce — log is confirmation of events, batch writes aggressively
     }
     start() {
         this._resolveAndWatch();

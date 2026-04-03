@@ -46,6 +46,14 @@ const STATE_CONFIG: Record<AgentState, { icon: string; color?: string }> = {
   [AgentState.VSCODE_HIDDEN]: { icon: "$(window)", color: undefined },
   [AgentState.RECOVERING]: { icon: "$(sync~spin)", color: undefined },
   [AgentState.STOPPED]: { icon: "$(debug-stop)", color: undefined },
+  [AgentState.CHAT_HEAVY]: {
+    icon: "$(comment-discussion)",
+    color: new vscode.ThemeColor("statusBarItem.warningBackground") as any,
+  },
+  [AgentState.RESOURCE_PRESSURE]: {
+    icon: "$(pulse)",
+    color: new vscode.ThemeColor("statusBarItem.errorBackground") as any,
+  },
 };
 
 export class StatusBar implements vscode.Disposable {

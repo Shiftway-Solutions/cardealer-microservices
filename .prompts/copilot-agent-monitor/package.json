@@ -2,7 +2,7 @@
   "name": "copilot-agent-monitor",
   "displayName": "Copilot Agent Monitor",
   "description": "Keeps GitHub Copilot Agent always coding — autonomous watchdog with screenshot analysis",
-  "version": "1.3.14",
+  "version": "1.3.17",
   "publisher": "okla-dev",
   "repository": {
     "type": "git",

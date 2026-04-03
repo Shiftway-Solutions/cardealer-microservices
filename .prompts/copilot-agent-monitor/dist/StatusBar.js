@@ -79,6 +79,14 @@ const STATE_CONFIG = {
     ["VSCODE_HIDDEN" /* AgentState.VSCODE_HIDDEN */]: { icon: "$(window)", color: undefined },
     ["RECOVERING" /* AgentState.RECOVERING */]: { icon: "$(sync~spin)", color: undefined },
     ["STOPPED" /* AgentState.STOPPED */]: { icon: "$(debug-stop)", color: undefined },
+    ["CHAT_HEAVY" /* AgentState.CHAT_HEAVY */]: {
+        icon: "$(comment-discussion)",
+        color: new vscode.ThemeColor("statusBarItem.warningBackground"),
+    },
+    ["RESOURCE_PRESSURE" /* AgentState.RESOURCE_PRESSURE */]: {
+        icon: "$(pulse)",
+        color: new vscode.ThemeColor("statusBarItem.errorBackground"),
+    },
 };
 class StatusBar {
     _stateItem;

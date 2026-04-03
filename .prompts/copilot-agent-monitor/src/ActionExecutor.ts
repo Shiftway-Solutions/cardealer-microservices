@@ -473,6 +473,15 @@ export class ActionExecutor {
       case AgentAction.FOCUS_VSCODE:
         return this._focusVSCode();
 
+      case AgentAction.RELEASE_MEMORY:
+        return this._releaseMemory();
+
+      case AgentAction.PRUNE_DOCKER_CACHE:
+        return this._pruneDockerCache();
+
+      case AgentAction.RESET_HEAVY_CHAT:
+        return this._resetHeavyChat();
+
       default:
         return { ok: false, action, detail: `Unknown action: ${action}` };
     }
@@ -1294,6 +1303,115 @@ export class ActionExecutor {
   private async _validateZeroX(): Promise<ExecutionResult> {
     const result = await this._problemRecovery("new-chat");
     return { ...result, action: AgentAction.VALIDATE_ZERO_X };
+  }
+
+  // ─── Release memory — show notification with RAM breakdown ──────────────
+
+  private async _releaseMemory(): Promise<ExecutionResult> {
+    const { ResourceMonitor } = await import("./ResourceMonitor.js");
+    const rm = new ResourceMonitor(() => {}, 0);
+    const snap = await rm.capture();
+    const msg = ResourceMonitor.buildRamActionMessage(snap);
+
+    // Show notification with actionable options
+    const choice = await vscode.window.showWarningMessage(
+      `🚨 RAM CRÍTICA — ${Math.round((snap.ramFreeMb / 1024) * 10) / 10} GB libres\n${msg}`,
+      "Ver detalles",
+      "Purgar cache Docker",
+      "Cerrar",
+    );
+
+    if (choice === "Purgar cache Docker") {
+      return this._pruneDockerCache();
+    }
+
+    if (choice === "Ver detalles") {
+      const detail = [
+        `RAM total:   ${Math.round((snap.ramTotalMb / 1024) * 10) / 10} GB`,
+        `RAM libre:   ${Math.round((snap.ramFreeMb / 1024) * 10) / 10} GB  (${Math.round(100 - snap.ramUsedPct)}% disponible)`,
+        `VS Code:     ${Math.round(snap.vscodeProcMb)} MB (proceso actual)`,
+        snap.dockerAvailable
+          ? `Docker:      ${Math.round(snap.dockerTotalMb)} MB total en contenedores`
+          : "Docker:      no disponible",
+        "",
+        "Contenedores Docker (por uso de RAM):",
+        ...snap.dockerContainers
+          .slice(0, 8)
+          .map(
+            (c: import("./ResourceMonitor.js").DockerContainerStats) =>
+              `  ${c.name.padEnd(30)}: ${Math.round(c.memUsageMb)} MB  CPU: ${c.cpuPct.toFixed(1)}%`,
+          ),
+        "",
+        `Disco libre: ${snap.diskFreeGb.toFixed(1)} GB de ${snap.diskTotalGb.toFixed(1)} GB`,
+      ].join("\n");
+
+      const channel = vscode.window.createOutputChannel(
+        "Copilot Monitor — Recursos",
+      );
+      channel.appendLine(detail);
+      channel.show();
+    }
+
+    return {
+      ok: true,
+      action: AgentAction.RELEASE_MEMORY,
+      detail: `RAM crítica notificada. Libre: ${Math.round((snap.ramFreeMb / 1024) * 10) / 10} GB`,
+    };
+  }
+
+  // ─── Prune Docker cache ───────────────────────────────────────────────────
+
+  private async _pruneDockerCache(): Promise<ExecutionResult> {
+    const { ResourceMonitor } = await import("./ResourceMonitor.js");
+
+    const confirm = await vscode.window.showWarningMessage(
+      "🗑️ Purgar cache Docker: eliminará imágenes dangling, contenedores detenidos y build cache.\n" +
+        "Los volúmenes y contenedores activos NO se tocan.",
+      { modal: true },
+      "Purgar ahora",
+      "Cancelar",
+    );
+
+    if (confirm !== "Purgar ahora") {
+      return {
+        ok: false,
+        action: AgentAction.PRUNE_DOCKER_CACHE,
+        detail: "Purgado cancelado por el usuario",
+      };
+    }
+
+    this._log("info", "🗑️ Iniciando docker system prune...");
+    const result = await ResourceMonitor.pruneDockerCache();
+    this._log("info", `🗑️ Docker prune: ${result.detail}`);
+
+    if (result.ok) {
+      vscode.window.showInformationMessage(
+        `✅ Docker cache purgado — ${result.freedMb > 0 ? `${Math.round(result.freedMb)} MB liberados` : "completado"}`,
+      );
+    } else {
+      vscode.window.showErrorMessage(`❌ Docker prune falló: ${result.detail}`);
+    }
+
+    return {
+      ok: result.ok,
+      action: AgentAction.PRUNE_DOCKER_CACHE,
+      detail: result.detail,
+    };
+  }
+
+  // ─── Reset heavy chat (>75 messages) ────────────────────────────────────
+  // Opens a new chat and sends the loop prompt so the agent continues from
+  // a clean context. Same flow as OPEN_NEW_CHAT but triggered proactively by
+  // ChatHealthMonitor before the session freezes.
+
+  private async _resetHeavyChat(): Promise<ExecutionResult> {
+    this._log(
+      "info",
+      "🔄 Chat session demasiado pesada — abriendo nueva sesión preventivamente",
+    );
+    // Reuse existing OPEN_NEW_CHAT flow which does 0x validation → 1x coding
+    const result = await this._problemRecovery("new-chat");
+    return { ...result, action: AgentAction.RESET_HEAVY_CHAT };
   }
 
   // ─── Focus VS Code window ─────────────────────────────────────────────────

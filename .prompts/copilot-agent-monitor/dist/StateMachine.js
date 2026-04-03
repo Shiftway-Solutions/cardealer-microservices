@@ -42,6 +42,44 @@ class StateMachine {
             }
             // Recovery window expired without normalization → fall through to re-evaluate
         }
+        // ── 1b. Resource pressure — highest priority after recovery ──────────────
+        // RESOURCE_PRESSURE state is set by Monitor when ResourceMonitor fires a
+        // critical event. We DON'T wait for RECOVERING to finish first because RAM
+        // exhaustion can crash VS Code entirely regardless of what Copilot is doing.
+        if (state === "RESOURCE_PRESSURE" /* AgentState.RESOURCE_PRESSURE */) {
+            const isCriticalRam = input.resourcePressure === "ram_critical";
+            const isCriticalDisk = input.resourcePressure === "disk_critical";
+            if (isCriticalRam) {
+                if (this._canDo(input.cooldowns.sendContinue, 10 * 60_000)) { // 10-min cooldown
+                    return {
+                        action: "RELEASE_MEMORY" /* AgentAction.RELEASE_MEMORY */,
+                        reasoning: `RAM crítica (${input.resourcePressure}) — mostrando panel de liberación de memoria`,
+                    };
+                }
+                return { action: "WAIT" /* AgentAction.WAIT */, reasoning: "RAM crítica pero acción en cooldown" };
+            }
+            if (isCriticalDisk) {
+                if (this._canDo(input.cooldowns.stopAndNewChat, 15 * 60_000)) { // 15-min cooldown
+                    return {
+                        action: "PRUNE_DOCKER_CACHE" /* AgentAction.PRUNE_DOCKER_CACHE */,
+                        reasoning: "Disco crítico — purgando caché Docker (build cache, imágenes dangling)",
+                    };
+                }
+                return { action: "WAIT" /* AgentAction.WAIT */, reasoning: "Disco crítico pero prune en cooldown" };
+            }
+            // Pressure downgraded (warn level) — fall through to normal decision
+        }
+        // ── 1c. Chat too heavy — proactive reset before freeze ───────────────────
+        // Only act when NOT generating (never interrupt working model)
+        if (state === "CHAT_HEAVY" /* AgentState.CHAT_HEAVY */ && input.chatIsCritical) {
+            if (this._canDo(input.cooldowns.openNewChat, types_1.COOLDOWN_MS.openNewChat)) {
+                return {
+                    action: "RESET_HEAVY_CHAT" /* AgentAction.RESET_HEAVY_CHAT */,
+                    reasoning: "Chat crítico (>75 mensajes) — reset preventivo antes de que se congele",
+                };
+            }
+            return { action: "WAIT" /* AgentAction.WAIT */, reasoning: "Chat pesado pero openNewChat en cooldown" };
+        }
         // ── 2. Model is actively working — never interrupt ───────────────────────
         if (state === "GENERATING" /* AgentState.GENERATING */) {
             return {
@@ -243,12 +281,23 @@ class StateMachine {
             }
         }
         // Timer-based stall fallback (used when lastMessage is UNKNOWN or unavailable)
+        //
+        // GUARD: When the DOM watcher is active but returned UNKNOWN, it means the
+        // chat widget returned no readable content this cycle (possible mid-stream or
+        // blank state). Do NOT send a command based purely on the timer — the _preActionGate
+        // will also run a DOM read + screenshot be fore executing and will block if needed.
+        // When the DOM watcher is OFF (CDP not connected), we still allow timer-based
+        // sends so the monitor can recover in environments without CDP. The _preActionGate's
+        // no-signal blocker (consecutive-strikes counter) acts as the safety net there.
         if (msSinceActivity >= input.stallHardMs) {
             if (this._canDo(input.cooldowns.openNewChat, types_1.COOLDOWN_MS.openNewChat)) {
                 const minSinceActivity = Math.round(msSinceActivity / 60_000);
+                const domNote = input.domWatcherActive
+                    ? " (DOM: active, no content signal — gate will verify)"
+                    : " (DOM: offline — gate will check screenshot)";
                 return {
                     action: "OPEN_NEW_CHAT" /* AgentAction.OPEN_NEW_CHAT */,
-                    reasoning: `Hard stall — ${minSinceActivity} min without activity → fresh chat`,
+                    reasoning: `Hard stall — ${minSinceActivity} min without activity → fresh chat${domNote}`,
                 };
             }
             return {
@@ -259,9 +308,12 @@ class StateMachine {
         if (msSinceActivity >= input.stallWarnMs) {
             if (this._canDo(input.cooldowns.sendContinue, types_1.COOLDOWN_MS.sendContinue)) {
                 const minSinceActivity = Math.round(msSinceActivity / 60_000);
+                const domNote = input.domWatcherActive
+                    ? " (DOM: active, no content signal — gate will verify)"
+                    : " (DOM: offline — gate will check screenshot)";
                 return {
                     action: "SEND_CONTINUE" /* AgentAction.SEND_CONTINUE */,
-                    reasoning: `Soft stall — ${minSinceActivity} min without activity → sending continue`,
+                    reasoning: `Soft stall — ${minSinceActivity} min without activity → sending continue${domNote}`,
                 };
             }
             return {

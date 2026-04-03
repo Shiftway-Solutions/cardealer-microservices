@@ -531,6 +531,17 @@ export default function MessagesPage() {
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversationId(conversation.id);
     setSelectedType(conversation.type);
+    // BUG-S22-2 fix: mark conversation as read when opened
+    if (conversation.unreadCount > 0) {
+      messagingService
+        .markConversationAsRead(conversation.id)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        })
+        .catch(() => {
+          /* silently fail — read status is non-critical */
+        });
+    }
   };
 
   // Get messages

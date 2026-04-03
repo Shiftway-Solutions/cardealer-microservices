@@ -34,6 +34,7 @@ import {
 } from '@/hooks/use-contact';
 import { sanitizeText } from '@/lib/security/sanitize';
 import { formatRelativeTime, getStatusColor, getStatusLabel } from '@/services/contact';
+import { markConversationAsRead } from '@/services/messaging';
 import { toast } from 'sonner';
 import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
@@ -223,7 +224,15 @@ export default function DealerMessagesPage() {
               filteredConversations.map(convo => (
                 <button
                   key={convo.id}
-                  onClick={() => setSelectedConversation(convo.id)}
+                  onClick={() => {
+                    setSelectedConversation(convo.id);
+                    // BUG-S22-2 fix: mark conversation as read when dealer opens it
+                    if (convo.unreadCount > 0) {
+                      markConversationAsRead(convo.id).catch(() => {
+                        /* silently fail */
+                      });
+                    }
+                  }}
                   className={`border-border hover:bg-muted/50 w-full border-b p-4 text-left transition-colors ${
                     selectedConversation === convo.id
                       ? 'border-l-primary bg-primary/10 border-l-2'

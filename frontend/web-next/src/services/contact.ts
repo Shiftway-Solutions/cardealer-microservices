@@ -147,10 +147,9 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
  * Get unread message count
  */
 export async function getUnreadCount(): Promise<number> {
-  const response = await apiClient.get<ContactApiResponse<UnreadCountResponse>>(
-    '/api/contactmessages/unread-count'
-  );
-  return response.data.data?.count ?? 0;
+  // Backend returns { count: N } directly (not wrapped in ApiResponse)
+  const response = await apiClient.get<UnreadCountResponse>('/api/contactmessages/unread-count');
+  return response.data.count ?? 0;
 }
 
 // ============================================================================
