@@ -15,7 +15,7 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<VehicleComparison>(entity =>
         {
-            entity.ToTable("vehicle_comparisons");
+            entity.ToTable("comparisons");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.UserId).IsRequired();
@@ -32,17 +32,13 @@ public class ApplicationDbContext : DbContext
                 )
                 .HasColumnType("jsonb");
 
-            // Indexes for performance
-            entity.HasIndex(e => e.UserId).HasDatabaseName("IX_vehicle_comparisons_user_id");
-            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_vehicle_comparisons_created_at");
+            // Indexes matching the Initial migration
+            entity.HasIndex(e => e.UserId).HasDatabaseName("IX_comparisons_UserId");
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_comparisons_CreatedAt");
             entity.HasIndex(e => e.ShareToken)
-                .HasDatabaseName("IX_vehicle_comparisons_share_token")
+                .HasDatabaseName("IX_comparisons_ShareToken")
                 .IsUnique()
                 .HasFilter("share_token IS NOT NULL");
-
-            // Compound index for user's recent comparisons
-            entity.HasIndex(e => new { e.UserId, e.CreatedAt })
-                .HasDatabaseName("IX_vehicle_comparisons_user_created");
         });
     }
 }

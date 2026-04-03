@@ -12,7 +12,7 @@ import * as React from 'react';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { X, Plus, ArrowLeft, Check, Minus, Car, Share2 } from 'lucide-react';
+import { X, Plus, ArrowLeft, Check, Minus, Car, Share2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -394,7 +394,13 @@ function CompareContent() {
                     RD$ {vehicle.price?.toLocaleString()}
                   </p>
 
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Button asChild variant="default" size="sm" className="w-full gap-1">
+                      <Link href={`/vehiculos/${getSlug(vehicle)}`}>
+                        <MessageCircle className="h-4 w-4" />
+                        Contactar
+                      </Link>
+                    </Button>
                     <Button asChild variant="outline" size="sm" className="w-full">
                       <Link href={`/vehiculos/${getSlug(vehicle)}`}>Ver detalle</Link>
                     </Button>
