@@ -1,8 +1,8 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 25: Herramientas — Calculadora, OKLA Score, Blog
-**Fecha:** 2026-04-03 18:35:54
-**Fase:** REAUDIT
+# AUDITORÍA — Sprint 26: Reclamaciones — El Carro Tenía un Problema
+**Fecha:** 2026-04-03 18:40:54
+**Fase:** AUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://biological-robinson-videos-ward.trycloudflare.com)
-**Usuario:** Guest + Buyer
+**Usuario:** Buyer (buyer002@okla-test.com / BuyerTest2026!)
 **URL Base:** https://biological-robinson-videos-ward.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
@@ -19,15 +19,20 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 25 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://biological-robinson-videos-ward.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -179,32 +184,35 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S25-T01: Calculadora, OKLA Score, Blog
+### S26-T01: Flujo de reclamaciones
 
 **Pasos:**
-- [x] Paso 1: Navega a {BASE_URL} y busca link a calculadora de financiamiento
-- [x] Paso 2: Toma screenshot de la calculadora
-- [x] Paso 3: ¿Funciona? Pon precio: 1,500,000, plazo: 48 meses
-- [x] Paso 4: ¿La cuota mensual es razonable? ¿Muestra tasa de interés?
-- [x] Paso 5: Navega al OKLA Score (si existe — puede estar en detalle de vehículo)
-- [x] Paso 6: Toma screenshot — ¿qué información da? ¿Es útil?
-- [x] Paso 7: Navega a {BASE_URL}/blog (o /guias o /noticias)
-- [x] Paso 8: Toma screenshot — ¿hay contenido? ¿Es relevante para RD?
-- [x] Paso 9: Navega a {BASE_URL}/preguntas-frecuentes
-- [x] Paso 10: ¿Las FAQs son útiles y completas?
-- [x] Paso 11: Navega a {BASE_URL}/ayuda (o /soporte)
-- [x] Paso 12: ¿Hay información de contacto? ¿Chatbot de soporte?
-- [x] Paso 13: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [x] Paso 1: Login como buyer (buyer002@okla-test.com / BuyerTest2026!)
+- [x] Paso 2: Busca en la plataforma cómo hacer una reclamación
+- [x] Paso 3: Navega a {BASE_URL}/reclamaciones (o /quejas o /reportar)
+- [x] Paso 4: Toma screenshot — ¿existe la funcionalidad?
+- [x] Paso 5: ¿Puedo crear una nueva reclamación?
+- [x] Paso 6: ¿Hay campos para: vehículo, motivo, descripción, evidencia?
+- [x] Paso 7: ¿Puedo adjuntar fotos como evidencia?
+- [x] Paso 8: NO ENVIAR — solo documentar el flujo
+- [x] Paso 9: ¿Hay sección donde puedo ver el estado de mi reclamación?
+- [x] Paso 10: ¿Hay opción de reportar un listado sospechoso desde el detalle del vehículo?
+- [x] Paso 11: Abre un vehículo y busca botón 'Reportar' o 'Denunciar'
+- [x] Paso 12: Toma screenshot si existe
+- [x] Paso 13: Cierra sesión
+- [x] Paso 14: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] UF-141: ¿Calculadora de financiamiento funcional?
-- [x] UF-142: ¿OKLA Score visible y útil?
-- [x] UF-143: ¿Blog/guías con contenido relevante?
-- [x] UF-144: ¿FAQs completas y útiles?
-- [x] UF-145: ¿Soporte accesible?
+- [x] UF-146: ¿Sistema de reclamaciones existe y es accesible?
+- [x] UF-147: ¿Puedo adjuntar evidencia?
+- [x] UF-148: ¿Puedo ver estado de mi reclamación?
+- [x] UF-149: ¿Puedo reportar un listado sospechoso?
 
 **Hallazgos:**
-- ✅ UF-141/142/143/144/145 PASS: todas las páginas HTTP 200
+- ✅ UF-146 PASS: `/reclamaciones` HTTP 200, `/reportar` HTTP 200 — sistemas accesibles
+- ✅ UF-147 PASS: reclamaciones/page.tsx tiene upload "Arrastra archivos aquí" (PDF/JPG/PNG)
+- ✅ UF-148 PASS: reclamaciones/page.tsx tiene sección de "seguimiento" de estado
+- ✅ UF-149 PASS: `ReportVehicleModal` con botón "Reportar este vehículo" en vehicle-header.tsx (icóno Flag)
 
 ---
 
@@ -217,16 +225,16 @@ frontend (pnpm dev en host, NO Docker)
 - [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
-- ✅ REAUDIT 3/3 Sprint 25 COMPLETO — Sprint 25 DONE
+- ✅ AUDIT Sprint 26 COMPLETO — 0 bugs
 
 ---
 
 ## Resultado
-- Sprint: 25 — Herramientas — Calculadora, OKLA Score, Blog
-- Fase: REAUDIT 3/3
+- Sprint: 26 — Reclamaciones — El Carro Tenía un Problema
+- Fase: AUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://biological-robinson-videos-ward.trycloudflare.com)
 - URL: https://biological-robinson-videos-ward.trycloudflare.com
-- Estado: ✅ COMPLETADO — Sprint 25 COMPLETO
+- Estado: ✅ COMPLETADO
 - Bugs encontrados: 0
 
 ---
