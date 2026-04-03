@@ -468,7 +468,7 @@ jobs:
           node-version: "20"
 
       - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 10
 
@@ -531,7 +531,7 @@ jobs:
           node-version: "20"
 
       - name: 📦 Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 10
 
