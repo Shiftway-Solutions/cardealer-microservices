@@ -49,19 +49,23 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S20-T01: Leer y escribir reseñas de dealers
+- [x] Fix bugs de S20-T01: Leer y escribir reseñas de dealers
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
+- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
 - Sprint: 20 — Reviews — Reputación de Dealers
 - Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://weighted-somewhere-serum-copied.trycloudflare.com)
 - URL: https://weighted-somewhere-serum-copied.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO ✅
+- Bugs encontrados: 1 corregido
+  - BUG-S20-1: `<Image>` en dealer-profile-client.tsx sin `onError` → banner/logo con alt text roto cuando CDN `cdn.okla.com.do` es inalcanzable localmente y los placeholders `/placeholder-dealer.png` y `/placeholder-dealer-banner.jpg` no existen en `public/`
+  - FIX: Agregado `coverError`/`logoError` estado + `onError` handlers. Cover falla gracefully (hide image, keep gradient); logo falla gracefully (muestra inicial del dealer en div estilizado)
+  - Commit: `89d14c1e` — CI/CD `23936967128` → success ✅
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+READ
