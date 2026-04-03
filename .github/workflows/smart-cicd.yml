@@ -1,9 +1,14 @@
 # =============================================================================
-# CI/CD - OKLA Monorepo (2-Job Pipeline)
+# CI/CD - OKLA Monorepo (3-Branch Pipeline)
 # =============================================================================
+# Branch Workflow:
+#   main     → Build + Test + Push Docker + Deploy to DigitalOcean
+#   staging  → Build + Test + Push Docker (local QA testing, no deploy)
+#   feature/* → Build + Test only (development, no Docker push/deploy)
+#
 # Job 1 (ci):     Detecta cambios, build/test frontend & backend,
-#                 push Docker images, integration tests.
-# Job 2 (deploy): Aplica manifiestos K8s y reinicia solo los pods que cambiaron.
+#                 push Docker images (si main/staging), integration tests.
+# Job 2 (deploy): Aplica manifiestos K8s (solo si main), reinicia pods.
 #
 # Optimizaciones activas:
 #   - Cache NuGet ($NUGET_PACKAGES fuera del workspace — persiste entre runs)
@@ -18,9 +23,9 @@ name: "🚀 CI/CD"
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging, "feature/**"]
   pull_request:
-    branches: [main]
+    branches: [main, staging]
 
 permissions:
   contents: read
@@ -411,7 +416,10 @@ jobs:
       # → Ejecuciones siguientes: solo capas que cambiaron (~1-2 min)
 
       - name: "🐳 Build & Push AuthService"
-        if: steps.filter.outputs.authservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.authservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -423,7 +431,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:cache,mode=max
 
       - name: "🐳 Build & Push ErrorService"
-        if: steps.filter.outputs.errorservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.errorservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -435,7 +446,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:cache,mode=max
 
       - name: "🐳 Build & Push NotificationService"
-        if: steps.filter.outputs.notificationservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.notificationservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -447,7 +461,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:cache,mode=max
 
       - name: "🐳 Build & Push VehiclesSaleService"
-        if: steps.filter.outputs.vehiclessaleservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.vehiclessaleservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -459,7 +476,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:cache,mode=max
 
       - name: "🐳 Build & Push MediaService"
-        if: steps.filter.outputs.mediaservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.mediaservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -471,7 +491,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:cache,mode=max
 
       - name: "🐳 Build & Push AdminService"
-        if: steps.filter.outputs.adminservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.adminservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -483,7 +506,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:cache,mode=max
 
       - name: "🐳 Build & Push ContactService"
-        if: steps.filter.outputs.contactservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.contactservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -495,7 +521,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:cache,mode=max
 
       - name: "🐳 Build & Push BillingService"
-        if: steps.filter.outputs.billingservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.billingservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -507,7 +536,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:cache,mode=max
 
       - name: "🐳 Build & Push ReviewService"
-        if: steps.filter.outputs.reviewservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.reviewservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -519,7 +551,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:cache,mode=max
 
       - name: "🐳 Build & Push Gateway"
-        if: steps.filter.outputs.gateway == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.gateway == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -531,7 +566,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:cache,mode=max
 
       - name: "🐳 Build & Push ChatbotService"
-        if: steps.filter.outputs.chatbotservice == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.chatbotservice == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -543,7 +581,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:cache,mode=max
 
       - name: "🐳 Build & Push LLM Server"
-        if: steps.filter.outputs.llm-server == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.llm-server == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend/ChatbotService/LlmServer
@@ -554,7 +595,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:cache,mode=max
 
       - name: "🐳 Build & Push SearchAgent"
-        if: steps.filter.outputs.searchagent == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.searchagent == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -566,7 +610,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:cache,mode=max
 
       - name: "🐳 Build & Push RecoAgent"
-        if: steps.filter.outputs.recoagent == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.recoagent == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -578,7 +625,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:cache,mode=max
 
       - name: "🐳 Build & Push SupportAgent"
-        if: steps.filter.outputs.supportagent == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.supportagent == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -590,7 +640,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:cache,mode=max
 
       - name: "🐳 Build & Push PricingAgent"
-        if: steps.filter.outputs.pricingagent == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.pricingagent == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -602,7 +655,10 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:cache,mode=max
 
       - name: "🐳 Build & Push Frontend Web"
-        if: steps.filter.outputs.frontend-web == 'true' && github.ref == 'refs/heads/main'
+        if: (
+          steps.filter.outputs.frontend-web == 'true' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+          )
         uses: docker/build-push-action@v6
         with:
           context: frontend/web-next
@@ -617,7 +673,7 @@ jobs:
 
       # --- Integration Tests (only on main) -----------------------
       - name: "🔧 Create CI secrets for Docker Compose"
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
         run: |
           mkdir -p secrets
           echo "ci_test_password_123" > secrets/db_password.txt
@@ -636,7 +692,7 @@ jobs:
           echo "ci_test_aws_secret" > secrets/aws_secret_key.txt
 
       - name: "🐳 Start infrastructure (Docker Compose)"
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
         run: |
           docker-compose -f compose.docker.yaml up -d postgres redis rabbitmq
           echo "Waiting for PostgreSQL..."
@@ -649,7 +705,7 @@ jobs:
           sleep 15
 
       - name: "🔗 Run integration tests"
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
         run: |
           INTEGRATION_FAILURES=""
           for SERVICE in AuthService ErrorService Gateway; do
@@ -675,7 +731,7 @@ jobs:
           echo "All integration tests passed"
 
       - name: "🧹 Cleanup infrastructure"
-        if: always() && github.ref == 'refs/heads/main'
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
         run: docker-compose -f compose.docker.yaml down -v 2>/dev/null || true
 
       # --- Collect changed services for deploy --------------------
