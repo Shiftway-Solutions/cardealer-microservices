@@ -26,7 +26,7 @@
   ],
   "sprint_actual": 24,
   "inicio": "2026-03-28T00:00:00.000000",
-  "phase": "fix",
+  "phase": "reaudit",
   "fix_attempt": 1,
   "use_local": true,
   "force_tunnel": false
