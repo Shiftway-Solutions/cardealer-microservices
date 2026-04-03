@@ -110,11 +110,12 @@ Toda acción se DEBE registrar en `.github/copilot-audit.log`:
 
 ### Flujo obligatorio (NUNCA saltarse pasos)
 
-> ⚠️ **No hay servidor staging.** `staging` es una rama de QA, no un ambiente desplegado.  
+> ⚠️ **Rama de desarrollo por defecto: `development`.** Toda actividad va aquí SIN indicación explícita.  
+> **El usuario debe indicar explícitamente** si quiere trabajar en `main`.  
 > El QA de integración se corre localmente con `--profile business` (13.2 GB, full stack sin frontend).
 
 ```
-feature/mi-feature
+development (rama por defecto)
     │
     ├─ dotnet watch run / pnpm dev          ← iterar aquí (segundos)
     ├─ dotnet test unit only                ← < 30 seg
@@ -123,14 +124,15 @@ feature/mi-feature
 Pull Request → PR Checks (build/lint/unit tests) → Aprobar
     │
     ▼
-Merge a staging (rama QA — sin servidor)
+Merge a development → GitHub Actions dispara CI/CD
     │
     ├─ QA LOCAL: docker compose --profile business up -d   ← 13.2 GB, flujo completo
     ├─ Smoke tests / Playwright E2E local
-    └─ Si todo OK → PR: staging → main
+    └─ Deploy automático a staging interno
     │
     ▼
-Merge staging → main → GitHub Actions → Deploy a DOKS (Producción)
+[SOLO SI USUARIO INDICA EXPLÍCITAMENTE]
+PR: development → main → GitHub Actions → Deploy a DOKS (Producción)
 ```
 
 ### Tiers de arranque local (compose.yaml profiles)
@@ -293,41 +295,52 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Completo" >> .github/copilot-aud
 
 ### Commit bloqueado si
 
-`dotnet restore/build` falla · `pnpm lint/typecheck/build` falla · Tests fallan · Lockfile desincronizado · Workflow `Invalid workflow file` · PR apunta a `main` directamente (debe ir a `staging`) · QA local con `--profile business` no corrió antes del PR `staging → main`
+`dotnet restore/build` falla · `pnpm lint/typecheck/build` falla · Tests fallan · Lockfile desincronizado · Workflow `Invalid workflow file` · PR a `main` sin indicación explícita del usuario · QA local con `--profile business` no corrió antes de mergear a development
 
 ---
 
 ## 🌿 GESTIÓN DE RAMAS
 
-> **No existe servidor staging.** La rama `staging` es el checkpoint de código QA-listo.  
-> El QA real se corre localmente con Docker Compose (`--profile business`) antes de hacer PR a `main`.
+> **Rama de desarrollo por defecto: `development`.** TODO va aquí a menos que se indique explícitamente.  
+> **Rama de producción: `main`.** Solo por solicitud explícita del usuario.  
+> El QA real se corre localmente con Docker Compose (`--profile business`) antes de hacer PR.
 
-| Rama        | Propósito                                        | Deploy          |
-| ----------- | ------------------------------------------------ | --------------- |
-| `main`      | Producción — **sagrado**                         | ✅ Auto → DOKS  |
-| `staging`   | Código QA-aprobado — **sin servidor, solo rama** | ❌ No despliega |
-| `feature/*` | Desarrollo activo                                | ❌ No despliega |
+| Rama          | Propósito                                                           | CI/CD                     | Cuándo usar                               |
+| ------------- | ------------------------------------------------------------------- | ------------------------- | ----------------------------------------- |
+| `development` | Rama de desarrollo activo — **rama principal por defecto**          | ✅ Auto → staging interno | SIEMPRE (a menos que user indique)        |
+| `main`        | Producción — **sagrado, requiere aprobación explícita del usuario** | ✅ Auto → DOKS producción | SOLO cuando user lo indica explícitamente |
 
-**Flujo completo:**
+**Flujo predeterminado (SIN indicación del usuario = DEVELOPMENT):**
 
 ```bash
-# 1. Crear feature desde staging
-git checkout staging && git pull origin staging
+# 1. Actualizar development (rama principal por defecto)
+git checkout development && git pull origin development
+
+# 2. Crear rama de trabajo desde development
 git checkout -b feature/nombre-del-feature
 
-# 2. Desarrollar con hot-reload (seconds)
+# 3. Desarrollar con hot-reload (seconds)
 # Terminal 1: docker compose up -d
 # Terminal 2: dotnet watch run ...
 
-# 3. Gate pre-commit → Push → PR: feature/* → staging
+# 4. Gate pre-commit → Push → PR: feature/* → development
 git push origin feature/nombre-del-feature
-# Abrir PR hacia staging (NUNCA hacia main)
+# Abrir PR hacia development
 
-# 4. QA local con stack completo ANTES de mergear a main
+# 5. QA local con stack completo ANTES de mergear
 docker compose --profile core --profile vehicles --profile business up -d
 # Correr smoke tests / Playwright E2E
 
-# 5. Si QA OK → PR: staging → main → auto-deploy producción
+# 6. Merge a development → Dispara CI/CD automático → Deploy a staging
+```
+
+**Flujo SOLO si el usuario indica explícitamente: "Trabaja en main" o "Prepara para producción"**
+
+```bash
+# 1. ESPERAR INDICACIÓN EXPLÍCITA DEL USUARIO
+git checkout main && git pull origin main
+# 2-6. Mismo flujo que development, pero PR apunta a main
+# 7. Merge a main → Dispara CI/CD automático → Deploy DIRECTO a PRODUCCIÓN DOKS
 ```
 
 ---
@@ -336,11 +349,11 @@ docker compose --profile core --profile vehicles --profile business up -d
 
 Existen exactamente 3 workflows activos. Cada uno tiene un propósito distinto:
 
-| Workflow         | Trigger                                         | Target                                 | Propósito                                 |
-| ---------------- | ----------------------------------------------- | -------------------------------------- | ----------------------------------------- |
-| `local-qa.yml`   | `push` a `feature/**`, `hotfix/**`, `fix/**`    | Runner local                           | Validación rápida <5min antes de abrir PR |
-| `pr-checks.yml`  | `pull_request` a `main`, `staging`, `sprint/**` | Runner local                           | Gate de PR: lint + typecheck + unit tests |
-| `smart-cicd.yml` | `push`/`PR` a `main`                            | Runner local (self-hosted macOS ARM64) | Build Docker → push ghcr.io → deploy DOKS |
+| Workflow         | Trigger                                             | Target                                 | Propósito                                                            |
+| ---------------- | --------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------- |
+| `local-qa.yml`   | `push` a `feature/**`, `hotfix/**`, `fix/**`        | Runner local                           | Validación rápida <5min antes de abrir PR                            |
+| `pr-checks.yml`  | `pull_request` a `development`, `main`, `sprint/**` | Runner local                           | Gate de PR: lint + typecheck + unit tests (aplica ambas ramas)       |
+| `smart-cicd.yml` | `push` a `development` + `push`/`PR` a `main`       | Runner local (self-hosted macOS ARM64) | dev→staging (automático); main→DOKS producción (solo por indicación) |
 
 **Al agregar un nuevo servicio Docker, siempre añadir `cache-from`/`cache-to` en `smart-cicd.yml`:**
 
