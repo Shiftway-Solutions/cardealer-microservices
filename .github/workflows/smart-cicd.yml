@@ -369,7 +369,7 @@ jobs:
       # bypassing the credential helper entirely. DOCKER_CONFIG is then set
       # to that directory so that docker build-push-action picks up the auth.
       - name: "Disable Docker credential helper (macOS keychain fix)"
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
         run: |
           mkdir -p /tmp/.docker.ci /tmp/.docker.helpers
           # Write a no-op credential helper using base64 to avoid YAML/heredoc parse issues.
