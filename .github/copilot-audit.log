@@ -3059,3 +3059,5 @@ test
 [2026-04-03 18:00:48] [AUDIT-SPRINT] Sprint 24 completado (ciclo completo)
 [2026-04-03 18:00:49] [AUDIT-SPRINT] Sprint 25 [audit] [LOCAL] despachado: Herramientas — Calculadora, OKLA Score, Blog
 [2026-04-03 18:07:15] [AUDIT] Sprint 25 AUDIT — COMPLETADO. 0 bugs. UF-141/142/143/144/145 PASS.
+[2026-04-03 18:07:20] [AUDIT-SPRINT] Sprint 25 [fix] [LOCAL] despachado: Herramientas — Calculadora, OKLA Score, Blog
+[2026-04-03 18:14:04] [FIX] Sprint 25 FIX 1/3 — COMPLETADO. 0 bugs. Gate PASS.
