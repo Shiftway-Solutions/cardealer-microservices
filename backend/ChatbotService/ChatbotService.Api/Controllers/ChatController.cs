@@ -390,6 +390,11 @@ public class ChatController : ControllerBase
     {
         var report = _promptCacheStats.GetReport();
 
+        if (report == null)
+        {
+            return NotFound(new { message = "PromptCache metrics not available." });
+        }
+
         return Ok(new
         {
             totalLlmCalls = report.TotalLlmCalls,

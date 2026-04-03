@@ -327,6 +327,19 @@ public class VehicleRepository : IVehicleRepository
         return query;
     }
 
+    public async Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetPagedVehiclesAsync(int page, int pageSize, VehicleSearchParameters parameters)
+    {
+        var query = BuildSearchQuery(parameters);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
     public async Task<IEnumerable<Vehicle>> GetStaleActiveListingsAsync(int daysOld, int skip = 0, int take = 100)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-daysOld);

@@ -95,6 +95,8 @@ function activate(context) {
   reg(context, "modelCycler.cycleNext", () => cycle(+1));
   reg(context, "modelCycler.cyclePrev", () => cycle(-1));
   reg(context, "modelCycler.pickModel", () => pick());
+  reg(context, "modelCycler.pickFromLive", () => pickFromLive()); // ← nueva API lm
+  reg(context, "modelCycler.exportLiveModels", () => exportLiveModels(true)); // ← exporta a /tmp/copilot_live_models.json
   reg(context, "modelCycler.trackAndSend", () => trackAndSend());
   reg(context, "modelCycler.resetSession", () =>
     triggerNewChat({ reason: "manual" }),
@@ -108,6 +110,9 @@ function activate(context) {
   reg(context, "modelCycler.openAgentPrompt", () => openAgentPrompt());
   reg(context, "modelCycler.toggleAgent", () => toggleAgentLoop());
   reg(context, "modelCycler.executePrompt6", () => forceExecutePrompt6());
+
+  // Exportar modelos al arrancar (para que change_model.py los lea sin necesitar UI)
+  exportLiveModels(false).catch(() => {});
 
   // Monitoreo automático — AgentLoop integrado (reemplaza Python monitor)
   startAgentLoop(context);
@@ -972,18 +977,59 @@ async function trackAndSend() {
 // ─── Aplicar modelo ───────────────────────────────────────────
 
 async function applyModel(modelId, silent = false) {
-  // Intentar escribir la preferencia de modelo en la configuración global.
-  // En algunas versiones de VS Code esta setting es de solo lectura — si falla,
-  // solo actualizamos el tracking interno (status bar) sin mostrar error.
+  // ── Método 1: workbench.action.chat.changeModel (API real del chat) ─────────
+  // Este es el comando que usa internamente la extensión Copilot para cambiar
+  // el modelo en el dropdown del chat — funciona independientemente de settings.
+  // Requiere obtener {vendor, id, family} del modelo vía vscode.lm.selectChatModels.
+  let changedViaCommand = false;
   try {
-    await vscode.workspace
-      .getConfiguration("github.copilot.chat")
-      .update("languageModel", modelId, vscode.ConfigurationTarget.Global);
-  } catch {
-    // Setting no escribible — continuar de todos modos (solo tracking local)
-    log(
-      `ℹ️ applyModel: no se pudo escribir languageModel (solo tracking local)`,
+    // Normalizar el modelId para hacer match con la API de lm
+    // (ej: "claude-sonnet-4-6" → match parcial de familia)
+    const available = await vscode.lm.selectChatModels({ vendor: "copilot" });
+    // Buscar match exacto por id, luego por family, luego por nombre parcial
+    const normalizedTarget = modelId.toLowerCase().replace(/\./g, "-");
+    let target = available.find(
+      (m) =>
+        m.id?.toLowerCase() === normalizedTarget ||
+        m.family?.toLowerCase() === normalizedTarget,
     );
+    if (!target) {
+      // Fallback: match parcial — el id del modelo contiene el target
+      target = available.find(
+        (m) =>
+          m.id?.toLowerCase().includes(normalizedTarget) ||
+          normalizedTarget.includes(m.id?.toLowerCase() || "") ||
+          m.family?.toLowerCase().includes(normalizedTarget) ||
+          normalizedTarget.includes(m.family?.toLowerCase() || ""),
+      );
+    }
+    if (target) {
+      await vscode.commands.executeCommand(
+        "workbench.action.chat.changeModel",
+        { vendor: target.vendor, id: target.id, family: target.family },
+      );
+      changedViaCommand = true;
+      log(`✅ applyModel vía changeModel: ${target.id} (${target.name})`);
+    } else {
+      log(
+        `⚠️ applyModel: modelo '${modelId}' no encontrado en lm.selectChatModels (${available.length} disponibles). IDs: ${available.map((m) => m.id).join(", ")}`,
+      );
+    }
+  } catch (err) {
+    log(`⚠️ applyModel changeModel falló: ${err.message}`);
+  }
+
+  // ── Método 2: settings fallback (compatibilidad) ─────────────────────────
+  if (!changedViaCommand) {
+    try {
+      await vscode.workspace
+        .getConfiguration("github.copilot.chat")
+        .update("languageModel", modelId, vscode.ConfigurationTarget.Global);
+    } catch {
+      log(
+        `ℹ️ applyModel: settings fallback también falló — solo tracking local`,
+      );
+    }
   }
 
   refreshStatusBar();
@@ -1037,10 +1083,132 @@ async function pick() {
   }
 }
 
+// ─── Pick desde API live (vscode.lm.selectChatModels) ────────────────────────
+// Lista los modelos realmente disponibles en tu plan de Copilot — siempre actualizado
+async function pickFromLive() {
+  let available;
+  try {
+    available = await vscode.lm.selectChatModels({ vendor: "copilot" });
+  } catch (err) {
+    vscode.window.showErrorMessage(
+      `Copilot Cycler: no se pudo obtener modelos — ${err.message}`,
+    );
+    return;
+  }
+  if (!available || !available.length) {
+    vscode.window.showWarningMessage(
+      "Copilot Cycler: No hay modelos disponibles (¿sesión activa?)",
+    );
+    return;
+  }
+
+  // Detectar modelo activo: buscar en selectChatModels cuál matchea la setting actual
+  let currentId = "";
+  try {
+    currentId =
+      vscode.workspace
+        .getConfiguration("github.copilot.chat")
+        .get("languageModel") || "";
+  } catch {}
+
+  const items = available.map((m) => {
+    const isActive =
+      m.id === currentId ||
+      m.family === currentId ||
+      currentId.includes(m.id || "") ||
+      (m.id || "").includes(currentId);
+    return {
+      label:
+        (isActive ? "$(circle-filled) " : "$(circle-outline) ") +
+        (m.name || m.id),
+      description: m.id,
+      detail: [
+        m.family ? `family: ${m.family}` : null,
+        m.vendor ? `vendor: ${m.vendor}` : null,
+        isActive ? "← activo ahora" : null,
+      ]
+        .filter(Boolean)
+        .join("  ·  "),
+      model: m,
+    };
+  });
+
+  const sel = await vscode.window.showQuickPick(items, {
+    title: "Copilot — Modelos disponibles en tu plan (live)",
+    placeHolder: "Filtra por nombre o ID...",
+    matchOnDescription: true,
+    matchOnDetail: true,
+  });
+
+  if (sel) {
+    const m = sel.model;
+    // Actualizar lista de modelos en settings si no está
+    const existing = getModels();
+    if (!existing.includes(m.id)) {
+      const updated = [...existing, m.id];
+      try {
+        await vscode.workspace
+          .getConfiguration("modelCycler")
+          .update("models", updated, vscode.ConfigurationTarget.Global);
+      } catch {}
+    }
+    // Cambiar modelo vía comando directo
+    try {
+      await vscode.commands.executeCommand(
+        "workbench.action.chat.changeModel",
+        { vendor: m.vendor, id: m.id, family: m.family },
+      );
+      log(`✅ pickFromLive: modelo cambiado a ${m.id} (${m.name})`);
+      vscode.window.showInformationMessage(`🤖 Copilot → ${m.name || m.id}`);
+    } catch (err) {
+      log(`⚠️ pickFromLive changeModel falló: ${err.message}`);
+      await applyModel(m.id, false);
+    }
+  }
+}
+
+// ─── Exportar modelos live a /tmp/copilot_live_models.json ───────────────────
+// Llamado al activar la extensión y vía comando manual.
+// change_model.py lee este archivo para conocer los modelos disponibles en tu plan.
+const LIVE_MODELS_PATH = "/tmp/copilot_live_models.json";
+
+async function exportLiveModels(notify = false) {
+  try {
+    const available = await vscode.lm.selectChatModels({ vendor: "copilot" });
+    if (!available || !available.length) {
+      log("⚠️ exportLiveModels: no hay modelos disponibles aún");
+      return null;
+    }
+    const data = {
+      exported_at: new Date().toISOString(),
+      count: available.length,
+      models: available.map((m) => ({
+        id: m.id || "",
+        name: m.name || m.id || "",
+        family: m.family || "",
+        vendor: m.vendor || "copilot",
+        maxInputTokens: m.maxInputTokens || 0,
+      })),
+    };
+    fs.writeFileSync(LIVE_MODELS_PATH, JSON.stringify(data, null, 2), "utf8");
+    log(
+      `✅ exportLiveModels: ${available.length} modelos → ${LIVE_MODELS_PATH}`,
+    );
+    if (notify) {
+      vscode.window.showInformationMessage(
+        `Copilot Cycler: ${available.length} modelos exportados a ${LIVE_MODELS_PATH}`,
+      );
+    }
+    return LIVE_MODELS_PATH;
+  } catch (err) {
+    log(`⚠️ exportLiveModels error: ${err.message}`);
+    return null;
+  }
+}
+
 async function openWorkspaceTextFile(relativePath, options = {}) {
   const { createIfMissing = false, revealLastLine = false } = options;
   const fullPath = resolveWorkspacePath(relativePath);
-
   try {
     if (!fs.existsSync(fullPath)) {
       if (!createIfMissing) return null;

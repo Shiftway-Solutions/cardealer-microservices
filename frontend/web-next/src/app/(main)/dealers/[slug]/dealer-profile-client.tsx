@@ -286,7 +286,7 @@ export default function DealerProfileClient({ params }: PageProps) {
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary text-2xl font-bold">
+                <div className="bg-primary/10 text-primary flex h-full w-full items-center justify-center text-2xl font-bold">
                   {dealer.name.charAt(0)}
                 </div>
               )}

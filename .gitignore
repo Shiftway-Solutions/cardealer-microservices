@@ -180,3 +180,4 @@ __pycache__/
 
 # DB backups (local only)
 .db-backups/
+.prompts/agent.zip

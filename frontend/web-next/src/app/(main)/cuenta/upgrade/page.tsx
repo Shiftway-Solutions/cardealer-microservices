@@ -1079,9 +1079,13 @@ function UpgradeCheckoutInner() {
                 </p>
                 <p className="text-muted-foreground text-xs">
                   ITBIS {pricing.itbisPercentage}% incluido · base:{' '}
-                  {formatDisplayPrice(Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100)))} +
-                  impuesto:{' '}
-                  {formatDisplayPrice(basePriceDop - Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100)))}
+                  {formatDisplayPrice(
+                    Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100))
+                  )}{' '}
+                  + impuesto:{' '}
+                  {formatDisplayPrice(
+                    basePriceDop - Math.round(basePriceDop / (1 + pricing.itbisPercentage / 100))
+                  )}
                 </p>
                 {displayCurrency === 'DOP' ? (
                   <p className="text-muted-foreground text-xs">
