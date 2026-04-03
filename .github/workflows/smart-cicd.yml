@@ -726,6 +726,11 @@ jobs:
       - name: "🚀 Deploy to Kubernetes"
         run: |
           set -e
+          # macOS compat: 'timeout' is GNU coreutils (not built-in on macOS)
+          if ! command -v timeout &>/dev/null; then
+            timeout() { perl -e 'alarm shift; exec @ARGV' -- "$@"; }
+            export -f timeout
+          fi
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmaps.yaml
 
@@ -761,6 +766,11 @@ jobs:
 
       - name: "✅ Verify deployment"
         run: |
+          # macOS compat: 'timeout' is GNU coreutils (not built-in on macOS)
+          if ! command -v timeout &>/dev/null; then
+            timeout() { perl -e 'alarm shift; exec @ARGV' -- "$@"; }
+            export -f timeout
+          fi
           set +e  # Continue on individual failures
           VERIFY_TIMEOUT=120  # Reduced from 300-600s to prevent hanging
           FAILED=0
