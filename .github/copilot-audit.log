@@ -3004,3 +3004,4 @@ test
 [2026-04-03 13:53:57] [MODIFICACIÓN] .vscode/settings.json — Auto-approve total: global.autoApprove, bypassApprovalsMode, confirmEdit=false, terminal.enableAutoApprove, urls.autoApprove, autopilot.enabled, autoRetry — sin requerir UI Bypass Approvals button
 [2026-04-03 14:47:06] [AUDIT-SPRINT] Sprint 22 [fix] [LOCAL] despachado: Mensajería — Negociar por Chat
 [2026-04-03 14:59:48] [GATE] Iniciando S22 FIX gate...
+[2026-04-03 15:18:12] [MODIFICACIÓN] .github/workflows/smart-cicd.yml — Prevenir estancamientos: timeout CI 65min, deploy 30min, kubectl 120s, cleanup independiente

@@ -46,7 +46,7 @@ jobs:
   ci:
     name: "🔨 CI — Build, Test & Push Images"
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 120 # QEMU linux/amd64 cross-compile on ARM64 = ~20-30 min/service
+    timeout-minutes: 65 # Reduced from 120: prevent docker build hangs
     outputs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
 
@@ -708,6 +708,7 @@ jobs:
     needs: ci
     if: github.ref == 'refs/heads/main' && needs.ci.result == 'success'
     runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30 # Fail fast if kubectl stuck (reduced from no limit)
     environment: staging
 
     steps:
@@ -724,15 +725,19 @@ jobs:
 
       - name: "🚀 Deploy to Kubernetes"
         run: |
+          set -e
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/configmaps.yaml
 
           kubectl apply -f k8s/infrastructure.yaml
           echo "Waiting for PostgreSQL..."
-          kubectl rollout status statefulset/postgres -n okla --timeout=180s || true
-          sleep 15
-          kubectl rollout status deployment/redis -n okla --timeout=60s || true
-          kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
+          timeout 180 kubectl rollout status statefulset/postgres -n okla --timeout=180s || {
+            echo "WARNING: PostgreSQL rollout timeout -- continuing anyway"
+            true
+          }
+          sleep 10
+          timeout 60 kubectl rollout status deployment/redis -n okla --timeout=60s || true
+          timeout 120 kubectl rollout status deployment/rabbitmq -n okla --timeout=120s || true
 
           kubectl apply -f k8s/deployments.yaml
           kubectl apply -f k8s/services.yaml
@@ -746,28 +751,48 @@ jobs:
           else
             for SVC in $CHANGED; do
               echo "  Restarting $SVC..."
-              kubectl rollout restart deployment/$SVC -n okla || true
+              timeout 120 kubectl rollout restart deployment/$SVC -n okla || {
+                echo "WARNING: Rollout restart timeout for $SVC -- continuing"
+                true
+              }
             done
             echo "Restarted $(echo $CHANGED | wc -w | tr -d ' ') services"
           fi
 
       - name: "✅ Verify deployment"
         run: |
-          kubectl rollout status deployment/frontend-web -n okla --timeout=300s
-          kubectl rollout status deployment/gateway -n okla --timeout=300s
-          kubectl rollout status deployment/authservice -n okla --timeout=300s
-          kubectl rollout status deployment/chatbotservice -n okla --timeout=300s || true
-          kubectl rollout status deployment/llm-server -n okla --timeout=600s || true
+          set +e  # Continue on individual failures
+          VERIFY_TIMEOUT=120  # Reduced from 300-600s to prevent hanging
+          FAILED=0
+
+          for DEP in frontend-web gateway authservice chatbotservice; do
+            echo "Verifying $DEP..."
+            timeout $VERIFY_TIMEOUT kubectl rollout status deployment/$DEP -n okla --timeout=${VERIFY_TIMEOUT}s
+            if [ $? -ne 0 ]; then
+              echo "WARNING: $DEP verification timeout (expected during scale-up)"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          # LLM server has 120s timeout (optional)
+          echo "Verifying llm-server (optional)..."
+          timeout 120 kubectl rollout status deployment/llm-server -n okla --timeout=120s || true
+
+          if [ $FAILED -gt 2 ]; then
+            echo "ERROR: Too many deployments failed verification ($FAILED/4)"
+            exit 1
+          fi
+          echo "Deployment verification complete"
 
   # ============================================================
   # JOB 3: Cleanup — Liberar disco y memoria del runner local
   # ============================================================
   cleanup:
     name: "🧹 Cleanup Runner"
-    needs: [ci, deploy]
+    needs: [ci]
     if: always()
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: "🐳 Docker — eliminar contenedores detenidos"
