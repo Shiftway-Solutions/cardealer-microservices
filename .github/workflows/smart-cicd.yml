@@ -383,6 +383,9 @@ jobs:
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
           echo "No-op credential helper installed at /tmp/.docker.helpers/docker-credential-none"
 
+      - name: "Set lowercase registry owner"
+        run: echo "REGISTRY_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
       - name: "Set up Docker Buildx"
         if: github.ref == 'refs/heads/main'
         uses: docker/setup-buildx-action@v3
@@ -415,9 +418,9 @@ jobs:
           file: backend/AuthService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/authservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/authservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/authservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/authservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:cache,mode=max
 
       - name: "🐳 Build & Push ErrorService"
         if: steps.filter.outputs.errorservice == 'true' && github.ref == 'refs/heads/main'
@@ -427,9 +430,9 @@ jobs:
           file: backend/ErrorService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/errorservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/errorservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/errorservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/errorservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:cache,mode=max
 
       - name: "🐳 Build & Push NotificationService"
         if: steps.filter.outputs.notificationservice == 'true' && github.ref == 'refs/heads/main'
@@ -439,9 +442,9 @@ jobs:
           file: backend/NotificationService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/notificationservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/notificationservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/notificationservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/notificationservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:cache,mode=max
 
       - name: "🐳 Build & Push VehiclesSaleService"
         if: steps.filter.outputs.vehiclessaleservice == 'true' && github.ref == 'refs/heads/main'
@@ -451,9 +454,9 @@ jobs:
           file: backend/VehiclesSaleService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:cache,mode=max
 
       - name: "🐳 Build & Push MediaService"
         if: steps.filter.outputs.mediaservice == 'true' && github.ref == 'refs/heads/main'
@@ -463,9 +466,9 @@ jobs:
           file: backend/MediaService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/mediaservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mediaservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mediaservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mediaservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:cache,mode=max
 
       - name: "🐳 Build & Push AdminService"
         if: steps.filter.outputs.adminservice == 'true' && github.ref == 'refs/heads/main'
@@ -475,9 +478,9 @@ jobs:
           file: backend/AdminService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/adminservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/adminservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/adminservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/adminservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:cache,mode=max
 
       - name: "🐳 Build & Push ContactService"
         if: steps.filter.outputs.contactservice == 'true' && github.ref == 'refs/heads/main'
@@ -487,9 +490,9 @@ jobs:
           file: backend/ContactService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/contactservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/contactservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/contactservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/contactservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:cache,mode=max
 
       - name: "🐳 Build & Push BillingService"
         if: steps.filter.outputs.billingservice == 'true' && github.ref == 'refs/heads/main'
@@ -499,9 +502,9 @@ jobs:
           file: backend/BillingService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/billingservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/billingservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/billingservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/billingservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:cache,mode=max
 
       - name: "🐳 Build & Push ReviewService"
         if: steps.filter.outputs.reviewservice == 'true' && github.ref == 'refs/heads/main'
@@ -511,9 +514,9 @@ jobs:
           file: backend/ReviewService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/reviewservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/reviewservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/reviewservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/reviewservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:cache,mode=max
 
       - name: "🐳 Build & Push Gateway"
         if: steps.filter.outputs.gateway == 'true' && github.ref == 'refs/heads/main'
@@ -523,9 +526,9 @@ jobs:
           file: backend/Gateway/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/gateway:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/gateway:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/gateway:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/gateway:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:cache,mode=max
 
       - name: "🐳 Build & Push ChatbotService"
         if: steps.filter.outputs.chatbotservice == 'true' && github.ref == 'refs/heads/main'
@@ -535,9 +538,9 @@ jobs:
           file: backend/ChatbotService/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/chatbotservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/chatbotservice:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/chatbotservice:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/chatbotservice:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:cache,mode=max
 
       - name: "🐳 Build & Push LLM Server"
         if: steps.filter.outputs.llm-server == 'true' && github.ref == 'refs/heads/main'
@@ -546,9 +549,9 @@ jobs:
           context: backend/ChatbotService/LlmServer
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/llm-server:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/llm-server:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:cache,mode=max
 
       - name: "🐳 Build & Push SearchAgent"
         if: steps.filter.outputs.searchagent == 'true' && github.ref == 'refs/heads/main'
@@ -558,9 +561,9 @@ jobs:
           file: backend/SearchAgent/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/searchagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/searchagent:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/searchagent:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/searchagent:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:cache,mode=max
 
       - name: "🐳 Build & Push RecoAgent"
         if: steps.filter.outputs.recoagent == 'true' && github.ref == 'refs/heads/main'
@@ -570,9 +573,9 @@ jobs:
           file: backend/RecoAgent/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/recoagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/recoagent:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recoagent:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recoagent:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:cache,mode=max
 
       - name: "🐳 Build & Push SupportAgent"
         if: steps.filter.outputs.supportagent == 'true' && github.ref == 'refs/heads/main'
@@ -582,9 +585,9 @@ jobs:
           file: backend/SupportAgent/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/supportagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/supportagent:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/supportagent:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/supportagent:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:cache,mode=max
 
       - name: "🐳 Build & Push PricingAgent"
         if: steps.filter.outputs.pricingagent == 'true' && github.ref == 'refs/heads/main'
@@ -594,9 +597,9 @@ jobs:
           file: backend/PricingAgent/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/pricingagent:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/pricingagent:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/pricingagent:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/pricingagent:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:cache,mode=max
 
       - name: "🐳 Build & Push Frontend Web"
         if: steps.filter.outputs.frontend-web == 'true' && github.ref == 'refs/heads/main'
@@ -605,9 +608,9 @@ jobs:
           context: frontend/web-next
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/frontend-web:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/frontend-web:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/frontend-web:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/frontend-web:cache,mode=max
+          tags: ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:latest
+          cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:cache
+          cache-to: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:cache,mode=max
           build-args: |
             NEXT_PUBLIC_API_URL=
             NEXT_TELEMETRY_DISABLED=1

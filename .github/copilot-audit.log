@@ -2996,3 +2996,5 @@ test
 [2026-04-03 11:58:03] [AUDIT-SPRINT] Sprint 22 [fix] [LOCAL] despachado: Mensajería — Negociar por Chat
 [2026-04-03 12:33:04] [GATE] Iniciando Gate Pre-Commit S22...
 [2026-04-03 12:37:56] [GATE] ✅ Completo - unit 236 ContactService pass, integration pre-existing failures expected
+[2026-04-03 12:38:09] [GIT] main — push fix(s22-audit) BUG-S22-3 + BUG-S22-4
+[2026-04-03 12:42:14] [MODIFICACION] .github/workflows/smart-cicd.yml — fix REGISTRY_OWNER lowercase para Docker tags
