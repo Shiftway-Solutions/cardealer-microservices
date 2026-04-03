@@ -1,0 +1,167 @@
+{
+  "name": "copilot-agent-monitor",
+  "displayName": "Copilot Agent Monitor",
+  "description": "Keeps GitHub Copilot Agent always coding — autonomous watchdog with screenshot analysis",
+  "version": "1.3.14",
+  "publisher": "okla-dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gregorymorenoiem/cardealer-microservices"
+  },
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "icon.png",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copilotMonitor.start",
+        "title": "Copilot Monitor: Start",
+        "icon": "$(play)"
+      },
+      {
+        "command": "copilotMonitor.stop",
+        "title": "Copilot Monitor: Stop",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "copilotMonitor.forceAnalyze",
+        "title": "Copilot Monitor: Analyze Now (Screenshot)",
+        "icon": "$(camera)"
+      },
+      {
+        "command": "copilotMonitor.showLog",
+        "title": "Copilot Monitor: Show Activity Log"
+      },
+      {
+        "command": "copilotMonitor.learnSelectors",
+        "title": "Copilot Monitor: Learn Selectors (Wizard)",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "copilotMonitor.showSelectors",
+        "title": "Copilot Monitor: Show Learned Selectors",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "copilotMonitor.resetCostGuard",
+        "title": "Copilot Monitor: Reset Cost Guard",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "copilotMonitor.switchModel",
+        "title": "Copilot Monitor: 🤖 Cambiar modelo (live)",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "copilotMonitor.openAudit",
+        "title": "Copilot Monitor: Open Audit Log",
+        "icon": "$(book)"
+      },
+      {
+        "command": "copilotMonitor.show1xRequests",
+        "title": "Copilot Monitor: Show Premium (1x) Requests",
+        "icon": "$(server-process)"
+      }
+    ],
+    "configuration": {
+      "title": "Copilot Agent Monitor",
+      "properties": {
+        "copilotMonitor.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start monitor automatically when VS Code opens"
+        },
+        "copilotMonitor.stallWarnSecs": {
+          "type": "number",
+          "default": 300,
+          "description": "Seconds of inactivity before sending 'continue' (default: 5 min)"
+        },
+        "copilotMonitor.stallHardSecs": {
+          "type": "number",
+          "default": 480,
+          "description": "Seconds of inactivity before opening a new chat (default: 8 min)"
+        },
+        "copilotMonitor.screenshotMinIntervalSecs": {
+          "type": "number",
+          "default": 180,
+          "description": "Minimum seconds between screenshot analyses — prevents model abuse (default: 3 min)"
+        },
+        "copilotMonitor.maxScreenshotsPerHour": {
+          "type": "number",
+          "default": 15,
+          "description": "Hard cap on vision API calls per hour to protect 0x quota"
+        },
+        "copilotMonitor.loopPromptFile": {
+          "type": "string",
+          "default": ".prompts/AGENT_LOOP_PROMPT.md",
+          "description": "Path to the prompt sent when opening a new chat session"
+        },
+        "copilotMonitor.modelPool": {
+          "type": "array",
+          "default": [
+            "gpt-4o",
+            "gpt-5-mini",
+            "gpt-4.1",
+            "raptor-mini"
+          ],
+          "description": "Ordered list of 0x models to rotate when rate-limited (raptor-mini has no vision — not used for screenshots)"
+        },
+        "copilotMonitor.zeroXModels": {
+          "type": "array",
+          "default": [
+            "gpt-4o",
+            "gpt-5-mini",
+            "gpt-4.1",
+            "raptor-mini"
+          ],
+          "description": "Model IDs classified as 0x (free tier, GitHub Pro). Source: GitHub docs multiplier table. Partial match: 'gpt-4o' matches 'gpt-4o-2024-11-20'. NOTE: raptor-mini is 0x but has no vision — the brain will never use it for screenshots."
+        },
+        "copilotMonitor.visionModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Model used for screenshot analysis. MUST be 0x + vision-capable. Valid choices (GitHub Pro): gpt-4o, gpt-5-mini, gpt-4.1. raptor-mini is NOT valid (no vision). If an invalid model is configured, the brain auto-falls-back to gpt-4o → gpt-5-mini → gpt-4.1."
+        },
+        "copilotMonitor.cdpPort": {
+          "type": "number",
+          "default": 9222,
+          "description": "Chrome DevTools Protocol port used by the Selector Wizard for live DOM capture. Requires VS Code to be started with --remote-debugging-port=<port>"
+        },
+        "copilotMonitor.costGuard.maxActionsPerWindow": {
+          "type": "number",
+          "default": 8,
+          "description": "Cost Guard: max non-WAIT actions allowed in the sliding window before the circuit breaker trips. Increase if you see false positives."
+        },
+        "copilotMonitor.costGuard.windowMinutes": {
+          "type": "number",
+          "default": 5,
+          "description": "Cost Guard: sliding window size in minutes. Actions older than this are not counted."
+        },
+        "copilotMonitor.costGuard.autoResetMinutes": {
+          "type": "number",
+          "default": 10,
+          "description": "Cost Guard: minutes to wait before the circuit breaker auto-resets. Use 'Copilot Monitor: Reset Cost Guard' to clear manually."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.99.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {}
+}

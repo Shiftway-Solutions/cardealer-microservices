@@ -70,6 +70,15 @@ Tras el reload aparecerá en la barra inferior: `🤖 [modelo]  💬0/25  [1/5]`
 2. Buscar **"Copilot Model Cycler"** — debe aparecer en la lista
 3. En la barra inferior derecha de VS Code debe aparecer: `🤖 [modelo]  💬0/25  [1/N]`
 
+### Menú del agente
+
+El acceso principal ahora es el menú del agente:
+
+1. Haz click en la barra de estado del plugin
+2. O abre `Cmd+Shift+P` → `Copilot Cycler: 🧭 Abrir menú del agente`
+
+Si `modelCycler.agent.promptDeliveryMode` está en `agentConsole`, el menú sigue ejecutando las acciones manuales del AgentLoop. Solo los prompts se escriben en `.prompts/agent_console.md`; abrir chat, detener respuesta, ciclar modelo y enviar `Continuar` siguen operando sobre Copilot Chat. Desde el mismo menú puedes abrir tanto `agent_console.md` como el `prompt_1.md` monitoreado.
+
 ---
 
 ## Configuración obligatoria (settings.json)
@@ -196,4 +205,6 @@ Verifica que el archivo `.prompts/prompt_1.md` exista en la raíz de tu workspac
 
 ### El Enter no funciona para enviar
 
-El shortcut de `Enter` tiene `when: "chatInputHasFocus && !suggestWidgetVisible && !inlineChatFocused && !compositeInputBox.inFirst"`. Si hay algún conflict con otro plugin, puedes desactivar el binding manteniendo `trackAndSend` y usando solo `Cmd+Enter` como alternativa desde `keybindings.json`.
+El plugin ya no secuestra `Enter` para evitar envíos dobles o comandos erróneos en Copilot Chat. El envío rastreado del plugin usa `Cmd+Enter` en macOS y `Ctrl+Enter` en Windows/Linux.
+
+Si quieres seguir enviando con `Enter`, deja el comportamiento nativo de VS Code y usa `Cmd+Enter` solo cuando quieras que el plugin cuente el mensaje y aplique su lógica de sesión.

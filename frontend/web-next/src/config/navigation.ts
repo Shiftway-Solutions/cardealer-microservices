@@ -144,6 +144,7 @@ export const SELLER_NAVIGATION: NavSection[] = [
   {
     title: 'Facturación',
     items: [
+      { href: '/cuenta/suscripcion', label: 'Mi Suscripción', icon: Star },
       { href: '/cuenta/pagos', label: 'Pagos', icon: CreditCard },
       { href: '/cuenta/historial', label: 'Historial', icon: FileText },
     ],

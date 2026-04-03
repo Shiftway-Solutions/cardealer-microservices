@@ -6,12 +6,26 @@
     4,
     5,
     6,
-    7
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
   ],
-  "sprint_actual": 8,
+  "sprint_actual": 22,
   "inicio": "2026-03-28T00:00:00.000000",
-  "phase": "reaudit",
+  "phase": "fix",
   "fix_attempt": 1,
   "use_local": true,
-  "force_tunnel": true
+  "force_tunnel": false
 }

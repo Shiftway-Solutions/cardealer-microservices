@@ -187,9 +187,10 @@ export default function AdminDashboardPage() {
     const today = new Date();
     const dayOfMonth = today.getDate();
     const avgDaily = dayOfMonth > 0 ? llmCost.monthlyTotalUsd / dayOfMonth : 0;
+    const randomValues = Array.from({ length: dayOfMonth }, () => Math.random()); // Precompute random values
     return Array.from({ length: dayOfMonth }, (_, i) => ({
       day: `${i + 1}`,
-      costo: Number((avgDaily * (0.7 + Math.random() * 0.6)).toFixed(2)),
+      costo: Number((avgDaily * (0.7 + randomValues[i] * 0.6)).toFixed(2)),
     }));
   }, [llmCost]);
 

@@ -98,7 +98,13 @@ function getPostLoginRedirect(user: User | null, redirectUrl: string): string {
   }
 }
 
-function LoginForm({ redirectUrl, sessionExpired }: { redirectUrl: string; sessionExpired?: boolean }) {
+function LoginForm({
+  redirectUrl,
+  sessionExpired,
+}: {
+  redirectUrl: string;
+  sessionExpired?: boolean;
+}) {
   const router = useRouter();
   const auth = useAuth();
   const { login, verifyTwoFactorLogin } = auth;

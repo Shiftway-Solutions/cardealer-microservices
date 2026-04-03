@@ -1,0 +1,6 @@
+*.vsix
+*.zip
+test.js
+node_modules/**
+*.bak_*
+agent/*.bak_*

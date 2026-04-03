@@ -2802,3 +2802,184 @@ test
 [2026-04-01 22:27:57] [EJECUCIÓN] prompt_1.md — S14 AUDIT completado: 1 bug UF-090 (middleware deny-by-default), 1 gap UF-096 (session expired sin mensaje). UF-091,092,093,094,095 PASS
 [2026-04-01 22:28:08] [AUDIT-SPRINT] Sprint 14 [fix] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
 [2026-04-01 22:57:26] [GIT] FIX S14 Intento 1/3 — UF-090 middleware pass-through, UF-096 session expired banner
+[2026-04-01 22:58:14] [AUDIT-SPRINT] Sprint 14 [reaudit] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
+[2026-04-01 23:04:42] [GIT] merge development->main — commit 90f58863, 20 commits fusionados, 3 conflictos auto-resueltos (audit.log, development-deploy.yml, prompt_1.md)
+[2026-04-01 23:20:45] [AUDIT-SPRINT] Sprint 14 [reaudit] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
+[2026-04-01 23:28:33] [EJECUCIÓN] smart-cicd.yml run 23882211986 — conclusion=success (ACL deny delete fix resolved EACCES)
+[2026-04-01 23:28:46] [AUDIT-SPRINT] Sprint 14 [fix] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
+[2026-04-01 23:33:14] [EJECUCIÓN] prompt_1.md — S14 FIX Intento 3/3 COMPLETADO: 0 nuevos bugs, fixes UF-090+UF-096 ya en main
+[2026-04-01 23:37:16] [AUDIT-SPRINT] Sprint 14 [reaudit] [LOCAL] despachado: Errores y Edge Cases — La Plataforma es Amigable
+[2026-04-02 00:00:29] [EJECUCION] REAUDIT S14 — UF-090..096 todos PASS confirmados via browser+curl
+[2026-04-02 00:00:47] [AUDIT-SPRINT] Sprint 14 completado (ciclo completo)
+[2026-04-02 00:00:47] [AUDIT-SPRINT] Sprint 15 [audit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 00:22:19] [EJECUCION] AUDIT S15 — UF-097..100 todos PASS, VirtioFS bug encontrado y corregido
+[2026-04-02 00:22:48] [AUDIT-SPRINT] Sprint 15 [fix] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 00:44:27] [MODIFICACIÓN] vender/registro/page.tsx — S15 FIX: wire up VehicleStep (step 3)
+[2026-04-02 00:45:19] [AUDIT-SPRINT] Sprint 15 [reaudit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 00:58:25] [EJECUCIÓN] S15 REAUDIT — UF-097..100 todos PASS, VehicleStep fix verificado
+[2026-04-02 00:58:49] [AUDIT-SPRINT] Sprint 15 [fix] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 01:10:10] [DB] authservice.Users — gmoreno@okla.com.do EmailConfirmed=true (was false — login 401 fixed)
+[2026-04-02 01:12:11] [EJECUCIÓN] S15 FIX 2/3 — gmoreno EmailConfirmed fixed + fix-test-users-confirmed.sql created
+[2026-04-02 01:12:20] [AUDIT-SPRINT] Sprint 15 [reaudit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 01:28:30] [EJECUCIÓN] S15 REAUDIT 2/3 COMPLETADO — UF-097/098/099/100 PASS, gmoreno login OK
+[2026-04-02 01:28:51] [AUDIT-SPRINT] Sprint 15 [fix] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 01:35:05] [EJECUCIÓN] S15 FIX 3/3 COMPLETADO — no hay bugs pendientes, gate OK
+[2026-04-02 01:35:21] [AUDIT-SPRINT] Sprint 15 [reaudit] [LOCAL] despachado: Onboarding — Primera Experiencia de Usuario Nuevo
+[2026-04-02 01:46:21] [AUDIT-SPRINT] Sprint 15 completado (ciclo completo)
+[2026-04-02 01:46:22] [AUDIT-SPRINT] Sprint 16 [audit] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 01:46:27] [EJECUCIÓN] S15 REAUDIT 3/3 COMPLETADO — Sprint 15 cerrado ✅
+[2026-04-02 01:55:33] [EJECUCIÓN] S16 AUDIT COMPLETADO — UF-101/102/103/104 PASS, 0 bugs
+[2026-04-02 01:55:52] [AUDIT-SPRINT] Sprint 16 [fix] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:03:29] [EJECUCIÓN] S16 FIX 1/3 — 0 bugs, gate pass: TS 0 errores, lint 0 errores, 576/576 tests
+[2026-04-02 02:03:53] [AUDIT-SPRINT] Sprint 16 [reaudit] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:13:05] [EJECUCIÓN] S16 REAUDIT 1/3 — UF-101/102/103/104 todos PASS, 0 bugs
+[2026-04-02 02:13:24] [AUDIT-SPRINT] Sprint 16 [fix] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:18:24] [AUDIT-SPRINT] Sprint 16 [reaudit] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:18:30] [EJECUCIÓN] S16 FIX 2/3 — 0 bugs, gate pass: TS 0 errores, lint 0, 576/576 tests
+[2026-04-02 02:24:44] [EJECUCIÓN] S16 REAUDIT 2/3 — UF-101/102/103/104 todos PASS, 0 bugs
+[2026-04-02 02:24:55] [AUDIT-SPRINT] Sprint 16 [fix] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:29:54] [EJECUCIÓN] S16 FIX 3/3 — 0 bugs, gate pass
+[2026-04-02 02:29:55] [AUDIT-SPRINT] Sprint 16 [reaudit] [LOCAL] despachado: Legal y Privacidad — Confianza del Usuario
+[2026-04-02 02:42:24] [EJECUCIÓN] S16 REAUDIT 3/3 — UF-101/102/103/104 PASS via browser okla.local, Sprint 16 CERRADO
+[2026-04-02 02:42:26] [AUDIT-SPRINT] Sprint 16 completado (ciclo completo)
+[2026-04-02 02:42:26] [AUDIT-SPRINT] Sprint 17 [audit] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 06:46:45] [EJECUCIÓN] S17 AUDIT — 7 hallazgos: homepage mobile degradada por cookies/overlays, hamburger sin drawer visible, /vehiculos blank, detalle blank, login inerte, /cuenta blank, /admin blank
+[2026-04-02 06:47:59] [AUDIT-SPRINT] Sprint 17 [fix] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 06:51:50] [MODIFICACIÓN] change_model.py — Flujo OCR-click directo en dropdown inline WebView (no Quick Pick filtrable). Cambia modelos Copilot Chat via: OCR picker → pyautogui click → screencapture 2x dropdown → OCR → pyautogui click modelo. Probado: GPT-5.4→GPT-4o EXITOSO.
+[2026-04-02 07:17:56] [BACKUP] Sprint 17 FIX — frontend/web-next/package.json, frontend/web-next/next.config.ts, frontend/web-next/src/app/providers.tsx, frontend/web-next/src/components/legal/cookie-consent.tsx, compose.yaml
+[2026-04-02 07:19:05] [MODIFICACIÓN] Sprint 17 FIX — estabilizar Next dev para tunnel móvil, ocultar devtools públicos y aligerar healthcheck frontend
+[2026-04-02 07:30:18] [BACKUP] frontend/web-next/src/app/(main)/cuenta/convert-to-seller/page.tsx — Backup before fixing react-hook-form watch typing for Sprint 17
+[2026-04-02 07:30:46] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/convert-to-seller/page.tsx — Reemplacé watch() suscrito por useWatch para corregir TypeScript y compatibilidad con React Compiler
+[2026-04-02 07:33:20] [EJECUCIÓN] GATE — Iniciando validación backend Sprint 17
+[2026-04-02 08:09:19] [MODIFICACIÓN] plugin-vscode/extension.js + package.json — applyModel reescrito con workbench.action.chat.changeModel + vscode.lm.selectChatModels; nuevo comando pickFromLive; versión 4.6.0
+[2026-04-02 09:12:14] [MODIFICACIÓN] copilot-agent-monitor v1.2.0 — upgrade model filtering + VALIDATE_ZERO_X health check flow installed
+[2026-04-02 10:14:59] [GATE] Iniciando validación Sprint 17 FIX...
+[2026-04-02 10:31:58] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts — Bug fix: 1x model switch es gate duro; ok:false si applyBestOneX falla
+[2026-04-02 10:39:18] [EJECUCIÓN] Reinstalada extensión okla-dev.copilot-agent-monitor v1.2.3 con bug fix de 1x model gate
+[2026-04-02 11:02:17] [MODIFICACIÓN] .prompts/copilot-agent-monitor — v1.2.4: 5 bugs fixed (GENERATING stall interrupt, ModelManager startup race, lazy refresh, Getting chat ready vision prompt, verify timeout)
+[2026-04-02 11:36:35] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts — v1.2.7: Bug fix: validateZeroX ahora verifica que el switch a 0x y 1x realmente se aplicó (changeModel puede silenciosamente no cambiar el modelo)
+[2026-04-02 12:26:03] [MODIFICACIÓN] .prompts/copilot-agent-monitor — Auditoría seguridad: fix premium gate OCR-fail bypass, CostGuard double-token VALIDATE_ZERO_X, silent clipboard warning, dynamic model commands audit trail. v1.2.8
+[2026-04-02 12:34:19] [MODIFICACIÓN] .prompts/copilot-agent-monitor v1.2.9 — Política 0x-only: brain nunca usa modelos 1x. Eliminado applyBestOneX de validateZeroX. Premium guard bloquea _sendToChat si hay 1x activo. Sentinel NO_ZERO_X_MODEL_AVAILABLE para de monitor con modal de error.
+[2026-04-02 13:19:55] [MODIFICACIÓN] ModelManager.ts + package.json + ScreenAnalyzer.ts — Reordenado ZERO_X_VISION_FAMILIES: gpt-4.1 primary, gpt-5-mini secondary, gpt-4o legacy. Empírico: gpt-4o no está en /models API. v1.3.1 instalada.
+[2026-04-02 13:23:24] [MODIFICACIÓN] ModelManager.ts — Eliminado gpt-4o de ZERO_X_VISION_FAMILIES. Brain solo usa gpt-4.1 y gpt-5-mini. v1.3.2 instalada.
+[2026-04-02 14:10:46] [GATE] Iniciando pre-commit Gate S17-FIX-1 — cookie banner z-index fix
+[2026-04-02 14:17:22] [GATE] ✅ Completo — S17-FIX-1 cookie banner z-index fix
+[2026-04-02 14:22:12] [MODIFICACIÓN] frontend/web-next/Dockerfile — NODE_OPTIONS max-old-space-size=2048 para evitar OOM en Docker build CI
+[2026-04-02 14:43:23] [EJECUCIÓN] Sprint 17 FIX-1 — CI/CD success 2455d627, READ escrito a prompt_1.md
+[2026-04-02 14:43:35] [AUDIT-SPRINT] Sprint 17 [reaudit] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 15:59:23] [MODIFICACIÓN] .prompts/copilot-agent-monitor/src/ActionExecutor.ts — Fix: trust applyModel() success when settings stale + CDP unavailable. Bug: changeModel({vendor,id,family}) updates session in memory but NOT github.copilot.chat.languageModel in settings.json → verification always timed out → all model switches blocked. v1.3.3 installed.
+[2026-04-02 16:34:06] [AUDIT-SPRINT] Sprint 17 [fix] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 16:34:37] [AUDIT-SPRINT] Sprint 17 [reaudit] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 16:47:37] [AUDIT-SPRINT] Sprint 17 [fix] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 16:47:48] [REAUDIT] Sprint 17 Mobile (intento 2/3) — COMPLETADO. UF-105 a UF-113 ALL PASS. 0 bugs.
+[2026-04-02 16:55:01] [FIX] Sprint 17 Mobile (intento 3/3) — No bugs to fix. Gate PASS. READ written.
+[2026-04-02 16:55:08] [AUDIT-SPRINT] Sprint 17 [reaudit] [LOCAL] despachado: Mobile — OKLA en el iPhone (375px)
+[2026-04-02 16:59:02] [REAUDIT] Sprint 17 Mobile FINAL (3/3) — COMPLETADO. ALL PASS.
+[2026-04-02 16:59:08] [AUDIT-SPRINT] Sprint 17 completado (ciclo completo)
+[2026-04-02 16:59:08] [AUDIT-SPRINT] Sprint 18 [audit] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 17:13:09] [AUDIT-SPRINT] Sprint 18 [fix] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 17:13:13] [EJECUCIÓN] Sprint 18 AUDIT — OKLA vs Corotos side-by-side comparison COMPLETADO. OKLA wins UX/trust/features, Corotos wins inventory/specs. 0 bugs. All 16 steps + 3 UF validations PASS.
+[2026-04-02 17:21:22] [EJECUCIÓN] Sprint 18 FIX — 0 bugs to fix (AUDIT was competitive analysis). Gate Pre-Commit ALL PASS. READ written.
+[2026-04-02 17:21:39] [AUDIT-SPRINT] Sprint 18 [reaudit] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 17:30:03] [EJECUCIÓN] Sprint 18 REAUDIT 1/3 — OKLA vs Corotos re-verification. 0 bugs. UF-114/115/116 ALL PASS. READ written.
+[2026-04-02 17:30:10] [AUDIT-SPRINT] Sprint 18 [fix] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 17:37:40] [AUDIT-SPRINT] Sprint 18 [reaudit] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 17:37:44] [EJECUCIÓN] Sprint 18 FIX 2/3 — 0 bugs (observational sprint). Gate Pre-Commit ALL PASS. READ written.
+[2026-04-02 17:46:07] [EJECUCIÓN] Sprint 18 REAUDIT 2/3 — 0 bugs. UF-114/115/116 ALL PASS. Competitive comparison OKLA vs Corotos re-verified. READ written.
+[2026-04-02 17:46:11] [AUDIT-SPRINT] Sprint 18 [fix] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 18:06:16] [MODIFICACIÓN] MCP: No se pudo automatizar la búsqueda en Corotos ni OKLA por timeout en el campo de búsqueda. Se requiere ajuste de selectores o espera manual.
+[2026-04-02 18:15:15] [MODIFICACIÓN] copilot-agent-monitor v1.3.4→v1.3.5 — 3 fixes: GENERATING window 5s→30s, pre-action visual gate, gate integration in _runCycle
+
+[2026-04-02 17:55:00] [AUDITORÍA] LIMPIEZA DE DISCO
+[2026-04-02 17:55:00] [AUDIT] Espacio antes: 475 GB
+[2026-04-02 17:55:00] [AUDIT] Issues encontradas:
+[2026-04-02 17:55:00]   - 80 hangdump files (.dmp): ~460 GB
+[2026-04-02 17:55:00]   - .bak_ files redundantes: ~500 MB
+[2026-04-02 17:55:00]   - Logs antiguos sin usar: ~20 MB
+[2026-04-02 17:55:00] [AUDIT] Acciones completadas:
+[2026-04-02 17:55:00]   ✅ Truncados todos los .bak_
+[2026-04-02 17:55:00]   ✅ Truncados logs: nohup.out, chat-reader.log, etc.
+[2026-04-02 17:55:00]   ✅ Ejecutado: dotnet clean (Debug + Release)
+[2026-04-02 17:55:00]   ✅ Eliminado: node_modules frontend
+[2026-04-02 17:55:00]   ✅ Eliminado: backend/**/TestResults (80 hangdump .dmp files)
+[2026-04-02 17:55:00] [AUDIT] Espacio después: 8.7 GB
+[2026-04-02 17:55:00] [AUDIT] Liberado: ~466 GB (98.2%)
+[2026-04-02 17:55:00] [AUDIT] ✅ Auditoría completada
+
+[2026-04-02 18:22:42] [AUDIT-SPRINT] Sprint 18 [reaudit] [LOCAL] despachado: Competencia — OKLA vs Corotos (Misma Búsqueda)
+[2026-04-02 18:47:30] [MODIFICACIÓN] copilot-agent-monitor — v1.3.6: fix brain usa 1x models. _switchChatModel/_cycleModel ahora solo usan 0x live models. showModelPicker solo muestra 0x. Stale comment removido.
+[2026-04-02 18:56:23] [CREACIÓN] copilot-agent-monitor-1.3.7.vsix — real-time fswatch + cancellable sleeps
+[2026-04-02 19:36:34] [MODIFICACIÓN] .prompts/copilot-agent-monitor v1.3.9 — 4 fixes: (1) LogEvent.ACTIVE para log no-terminal, (2) ventana GENERATING 30s→90s + soporte ACTIVE, (3) _lastConfirmedGeneratingMs trazado en _observeState/_onLogDelta, (4) pre-action gate bloquea durante safety hold (1.5x screenshotMinInterval) cuando GENERATING fue confirmado reciente y quota agotada
+[2026-04-02 19:46:48] [EJECUCIÓN] Sprint 18 REAUDIT — OKLA vs Corotos comparison documented
+[2026-04-02 19:50:13] [AUDIT-SPRINT] Sprint 18 completado (ciclo completo)
+[2026-04-02 19:50:13] [AUDIT-SPRINT] Sprint 19 [audit] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-02 20:04:31] [AUDIT] Sprint 19 Checkout/Subscription AUDIT — 6 bugs found: BUG-S19-001 ITBIS no mencionado (ALTA), BUG-S19-002 sin selector moneda (MEDIA), BUG-S19-003 sin link sidebar (MEDIA), BUG-S19-004 Sin Plan default (BAJA), BUG-S19-005 botón Libre confuso (BAJA), BUG-S19-006 pricing anual confuso (BAJA). Commit: bfdcc95b
+[2026-04-02 20:05:50] [CREACIÓN] ChatDOMWatcher.ts — DOM real-time detection via CDP MutationObserver
+[2026-04-02 20:05:50] [MODIFICACIÓN] types.ts — DOMEvent/DOMDelta types
+[2026-04-02 20:05:50] [MODIFICACIÓN] CDPClient.ts — public evaluate()
+[2026-04-02 20:05:50] [MODIFICACIÓN] Monitor.ts — ChatDOMWatcher integration
+[2026-04-02 20:07:44] [AUDIT-SPRINT] Sprint 19 [fix] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-02 20:31:15] [GIT] Sprint 19 FIX — commit 7f8ec944 pushed to main, CI/CD run 23928096484 success. 6 bugs fixed in 3 frontend files.
+[2026-04-02 20:34:45] [MODIFICACIÓN] ChatDOMWatcher.ts — Fix Bug1(isCompleted race) Bug3(TEXT_CHANGE falso positivo) Bug4(NEW_RESPONSE en isGenerating) Bug5(characterData TextNode sin .closest)
+[2026-04-02 20:34:45] [MODIFICACIÓN] Monitor.ts — Fix Bug2(_onDOMDelta no limpiaba ventana 90s) + StatusBar duplication fix
+[2026-04-02 20:39:12] [CREACIÓN] copilot-agent-monitor v1.3.9 generado y instalado (5 bugs DOM corregidos, StatusBar duplication fixed, CostGuard restored)
+[2026-04-02 20:50:32] [EJECUCIÓN] VS Code reiniciado con CDP --remote-debugging-port=9222. Monitor extension escaneará actividad del chat (Thinking, Processing, Working, etc)
+[2026-04-02 21:10:11] [MODIFICACIÓN] Monitor.ts — Task completion timer reset fix: OPEN_NEW_CHAT + STOP_AND_NEW_CHAT NO longer reset _lastActivityMs. Grace counter now continuous across task boundaries.
+[2026-04-02 22:04:40] [MODIFICACIÓN] ActionExecutor.ts — Fix fallback paths en _sendContinue/_openNewChat para validar sí/no con _askYesNoFallback() antes de enviar cualquier comando
+[2026-04-02 22:17:07] [BACKUP] copilot-agent-monitor — Backup ActionExecutor.ts, ModelManager.ts, scenario-audit.test.ts y package.json antes de fix UI-only 1x recovery
+[2026-04-02 22:17:07] [MODIFICACIÓN] copilot-agent-monitor — Cambiar recovery para seleccionar 1x desde la UI del chat y autorizar solo el siguiente envío premium
+[2026-04-02 22:22:21] [EJECUCIÓN] copilot-agent-monitor — npm run compile y empaquetado copilot-agent-monitor-1.3.10.vsix completados
+[2026-04-02 22:28:16] [AUDIT-SPRINT] Sprint 19 [reaudit] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-02 22:59:47] [AUDIT-SPRINT] Sprint 19 [fix] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-02 23:13:13] [BACKUP] frontend/web-next/src/app/(main)/cuenta/upgrade/page.tsx — backup before adding checkout currency selector
+[2026-04-02 23:17:46] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/upgrade/page.tsx — selector RD$/USD en checkout seller + conversión compartida sin hardcode 58
+[2026-04-02 23:23:31] [EJECUCIÓN] Sprint 19 FIX gate — frontend OK (typecheck/lint/tests/build), backend restore/build OK, dotnet test blocked by pre-existing failing suites: ContactService, KYCService, Gateway, UserService, AuditService, IntegrationTests, MediaService, NotificationService
+[2026-04-02 23:29:47] [AUDIT-SPRINT] Sprint 19 [reaudit] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-02 23:31:50] [EJECUCIÓN] MCP browser error: Page not found al abrir https://changed-offered-exact-craig.trycloudflare.com en REAUDIT Sprint 19. Esperando 30s y reintentando.
+[2026-04-02 23:32:28] [EJECUCIÓN] MCP browser error: Page not found (3er intento) al abrir https://changed-offered-exact-craig.trycloudflare.com en REAUDIT Sprint 19. Esperando 30s y reintentando.
+[2026-04-02 23:33:06] [EJECUCIÓN] MCP browser error: Page not found (4to intento) al abrir https://changed-offered-exact-craig.trycloudflare.com en REAUDIT Sprint 19. Esperando 30s y reintentando.
+[2026-04-02 23:33:44] [EJECUCIÓN] MCP browser error: Page not found (5to intento) al abrir https://changed-offered-exact-craig.trycloudflare.com en REAUDIT Sprint 19. Esperando 30s y reintentando.
+[2026-04-02 23:57:59] [CREACIÓN] copilot-agent-monitor-1.3.11.vsix — v1.3.11: inactividad 5min, status bar DOM visible, reset completo en DOM, validación 1x antes de work prompts
+[2026-04-03 00:03:22] [CREACIÓN] _select_model_correct.py — Nueva versión del script de selección de modelos con modelos reales del plan (Claude 3.5 Sonnet, etc.)
+[2026-04-03 00:07:07] [MODIFICACIÓN] _select_model_correct.py — Actualizado TARGET a 'Claude Sonnet 4.6', búsquedas para modelos específicos: 'Claude Haiku 4.5', 'Claude Sonnet 4.6', 'Claude Sonnet 4.5', 'Claude Sonnet 4', 'GPT-5.4', y verificación ajustada
+[2026-04-03 00:08:57] [CREACIÓN] .prompts/copilot-agent-monitor/copilot-agent-monitor-1.3.12.vsix — Nueva versión de la extensión con modelos actualizados (Claude Haiku 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Sonnet 4, GPT-5.4)
+[2026-04-03 00:09:36] [EJECUCIÓN] Instalación exitosa de copilot-agent-monitor-1.3.12.vsix en VS Code — Extensión activada con modelos actualizados
+[2026-04-03 00:13:14] [EJECUCIÓN] Actualización a copilot-agent-monitor-1.3.13.vsix — UI por defecto de Copilot mantenida, modelos internos configurados (Claude Haiku 4.5, Sonnet 4.6, Sonnet 4.5, Sonnet 4, GPT-5.4)
+[2026-04-03 00:48:18] [MODIFICACIÓN] copilot-agent-monitor v1.3.14 — Fix USER_TYPING cancellation race + CancellationToken gate before execute() + _sendToChat abort guard
+[2026-04-03 00:59:19] [AUDIT-SPRINT] Sprint 19 [fix] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-03 01:38:38] [GIT] fix(S19-3) 3278a09d — badge Sin Plan, /api/pricing Caddy BFF, ITBIS breakdown. CI: success
+[2026-04-03 01:38:50] [AUDIT-SPRINT] Sprint 19 [reaudit] [LOCAL] despachado: Checkout — Pagar un Plan de Suscripción
+[2026-04-03 02:11:12] [REAUDIT] S19-3 COMPLETADO — badge Libre OK, /api/pricing 200, ITBIS 18% breakdown visible. CI/CD 23935263169 success
+[2026-04-03 02:11:20] [AUDIT-SPRINT] Sprint 19 completado (ciclo completo)
+[2026-04-03 02:11:21] [AUDIT-SPRINT] Sprint 20 [audit] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 02:26:51] [AUDIT-SPRINT] Sprint 20 [fix] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 02:26:57] [AUDIT] S20 Reviews/Dealers — UF121-124 auditados. 1 bug menor (broken images), 1 backlog (purchase gate reviews)
+[2026-04-03 02:50:01] [MODIFICACIÓN] .prompts/prompt_1.md — S20 FIX completado, broken images corregidas
+[2026-04-03 02:50:22] [AUDIT-SPRINT] Sprint 20 [reaudit] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 03:00:03] [EJECUCIÓN] S20 REAUDIT — hallazgos verificados en browser, fix OK, brokenImages:[]
+[2026-04-03 03:00:23] [AUDIT-SPRINT] Sprint 20 [fix] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 03:07:53] [AUDIT-SPRINT] Sprint 20 [reaudit] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 03:18:00] [EJECUCIÓN] S20 REAUDIT 2/3 — brokenImages:[] verificado, reviews + formulario OK
+[2026-04-03 03:18:24] [AUDIT-SPRINT] Sprint 20 [fix] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 03:25:24] [AUDIT-SPRINT] Sprint 20 [reaudit] [LOCAL] despachado: Reviews — Reputación de Dealers
+[2026-04-03 03:26:55] [AUDIT-SPRINT] Sprint 20 completado (ciclo completo)
+[2026-04-03 03:26:55] [AUDIT-SPRINT] Sprint 21 [audit] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 03:57:42] [EJECUCIÓN] S21 AUDIT — Favoritos/Alertas/Busquedas/Notificaciones auditados. Sin bugs código. Infra dependencias: vehiclessaleservice(502), notificationservice(502)
+[2026-04-03 03:57:56] [AUDIT-SPRINT] Sprint 21 [fix] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:01:15] [GATE] S21 FIX - Iniciando...
+[2026-04-03 04:04:09] [GATE] S21 FIX - Gate completo: 0 errores, 576 tests passed, build OK
+[2026-04-03 04:04:26] [AUDIT-SPRINT] Sprint 21 [reaudit] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:12:29] [EJECUCIÓN] S21 REAUDIT 1/3 — confirmado 0 bugs, sin regresiones
+[2026-04-03 04:12:57] [AUDIT-SPRINT] Sprint 21 [fix] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:16:25] [EJECUCIÓN] S21 FIX 2/3 — cerrado, sin bugs, gate OK
+[2026-04-03 04:16:27] [AUDIT-SPRINT] Sprint 21 [reaudit] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:22:25] [EJECUCIÓN] S21 REAUDIT 2/3 — 0 bugs, sin regresiones
+[2026-04-03 04:22:28] [AUDIT-SPRINT] Sprint 21 [fix] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:27:08] [EJECUCIÓN] S21 FIX 3/3 — cerrado sin cambios, gate OK 576/576
+[2026-04-03 04:27:28] [AUDIT-SPRINT] Sprint 21 [reaudit] [LOCAL] despachado: Favoritos y Alertas — Sistema de Guardado
+[2026-04-03 04:33:02] [EJECUCIÓN] S21 REAUDIT 3/3 — 0 bugs, sprint 21 cerrado
+[2026-04-03 04:33:29] [AUDIT-SPRINT] Sprint 21 completado (ciclo completo)
+[2026-04-03 04:33:29] [AUDIT-SPRINT] Sprint 22 [audit] [LOCAL] despachado: Mensajería — Negociar por Chat
+[2026-04-03 06:32:31] [AUDIT-SPRINT] Sprint 22 [fix] [LOCAL] despachado: Mensajería — Negociar por Chat
+[2026-04-03 06:34:25] [MODIFICACIÓN] frontend/web-next/src/services/contact.ts — BUG-S22-1: fix ApiResponse wrapper unwrapping (response.data → response.data.data)
+[2026-04-03 06:34:25] [EJECUCIÓN] S22 AUDIT completado: 1 bug encontrado y corregido (BUG-S22-1 contact.ts ApiResponse)

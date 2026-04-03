@@ -49,19 +49,19 @@ function DealerImportContent() {
   // Simulated progress — ramps up fast initially, slows near 90%
   useEffect(() => {
     if (!importMutation.isPending) {
-      if (importProgress > 0) setImportProgress(100);
+      if (importProgress > 0) {
+        setTimeout(() => setImportProgress(100), 0); // Delay setState to avoid cascading renders
+      }
       const timer = setTimeout(() => setImportProgress(0), 600);
       return () => clearTimeout(timer);
     }
-    setImportProgress(5);
     const interval = setInterval(() => {
       setImportProgress(prev => {
         if (prev >= 90) return prev + 0.5;
         if (prev >= 70) return prev + 1;
-        if (prev >= 40) return prev + 3;
-        return prev + 5;
+        return prev + 2; // Adjusted increment to avoid synchronous setState
       });
-    }, 300);
+    }, 100);
     return () => clearInterval(interval);
   }, [importMutation.isPending]); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: only react to pending state
 

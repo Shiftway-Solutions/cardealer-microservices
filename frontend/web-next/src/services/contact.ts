@@ -70,6 +70,14 @@ export interface UnreadCountResponse {
   count: number;
 }
 
+// ContactService wraps all responses in ApiResponse<T>
+interface ContactApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string | null;
+  error?: string | null;
+}
+
 // ============================================================================
 // API Functions
 // ============================================================================
@@ -78,44 +86,54 @@ export interface UnreadCountResponse {
  * Get my inquiries (buyer perspective)
  */
 export async function getMyInquiries(): Promise<ContactRequestSummary[]> {
-  const response = await apiClient.get<ContactRequestSummary[]>(
+  const response = await apiClient.get<ContactApiResponse<ContactRequestSummary[]>>(
     '/api/contactrequests/my-inquiries'
   );
-  return response.data;
+  return response.data.data ?? [];
 }
 
 /**
  * Get received inquiries (seller/dealer perspective)
  */
 export async function getReceivedInquiries(): Promise<ReceivedInquiry[]> {
-  const response = await apiClient.get<ReceivedInquiry[]>('/api/contactrequests/received');
-  return response.data;
+  const response = await apiClient.get<ContactApiResponse<ReceivedInquiry[]>>(
+    '/api/contactrequests/received'
+  );
+  return response.data.data ?? [];
 }
 
 /**
  * Get contact request detail with messages
  */
 export async function getContactRequest(id: string): Promise<ContactRequestDetail> {
-  const response = await apiClient.get<ContactRequestDetail>(`/api/contactrequests/${id}`);
-  return response.data;
+  const response = await apiClient.get<ContactApiResponse<ContactRequestDetail>>(
+    `/api/contactrequests/${id}`
+  );
+  return response.data.data;
 }
 
 /**
  * Create a new contact request (inquiry about a vehicle)
  */
 export async function createContactRequest(dto: CreateContactRequestDto): Promise<{ id: string }> {
-  const response = await apiClient.post<{ id: string }>('/api/contactrequests', dto);
-  return response.data;
+  const response = await apiClient.post<ContactApiResponse<{ id: string }>>(
+    '/api/contactrequests',
+    dto
+  );
+  return response.data.data;
 }
 
 /**
  * Reply to a contact request
  */
 export async function replyToContactRequest(id: string, message: string): Promise<ContactMessage> {
-  const response = await apiClient.post<ContactMessage>(`/api/contactrequests/${id}/reply`, {
-    message,
-  });
-  return response.data;
+  const response = await apiClient.post<ContactApiResponse<ContactMessage>>(
+    `/api/contactrequests/${id}/reply`,
+    {
+      message,
+    }
+  );
+  return response.data.data;
 }
 
 /**
@@ -129,8 +147,10 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
  * Get unread message count
  */
 export async function getUnreadCount(): Promise<number> {
-  const response = await apiClient.get<UnreadCountResponse>('/api/contactmessages/unread-count');
-  return response.data.count;
+  const response = await apiClient.get<ContactApiResponse<UnreadCountResponse>>(
+    '/api/contactmessages/unread-count'
+  );
+  return response.data.data?.count ?? 0;
 }
 
 // ============================================================================

@@ -91,11 +91,11 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4"
+      className="fixed inset-x-0 bottom-0 z-[9998] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="border-border bg-card pointer-events-auto mx-auto max-w-4xl rounded-xl border shadow-2xl">
+      <div className="border-border bg-card pointer-events-auto mx-auto max-h-[78vh] max-w-4xl overflow-y-auto rounded-xl border shadow-2xl">
         {/* Main banner */}
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
@@ -287,7 +287,7 @@ export function CookieSettingsButton() {
   return (
     <button
       onClick={handleReopen}
-      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed bottom-4 left-4 z-30 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
+      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-20 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors sm:left-4"
       aria-label="Configurar cookies"
     >
       <Cookie className="h-3.5 w-3.5" />
@@ -336,11 +336,11 @@ function ReopenedBanner({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4"
+      className="fixed inset-x-0 bottom-0 z-[9998] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
       role="dialog"
       aria-label="Configuración de cookies"
     >
-      <div className="border-border bg-card pointer-events-auto mx-auto max-w-4xl rounded-xl border shadow-2xl">
+      <div className="border-border bg-card pointer-events-auto mx-auto max-h-[78vh] max-w-4xl overflow-y-auto rounded-xl border shadow-2xl">
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="bg-primary/10 rounded-lg p-2">

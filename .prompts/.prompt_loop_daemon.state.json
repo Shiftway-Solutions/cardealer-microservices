@@ -1,0 +1,11 @@
+{
+  "started_at": 1775027308.441188,
+  "updated_at": 1775187862.366555,
+  "status": "sleeping",
+  "sleep_seconds": 60,
+  "last_line": "_Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la \u00faltima tarea: `.prompts/AGENT_LOOP_PROMPT.md`._",
+  "last_hash": "68c2117d01e8ba2db8528e3c3010ac1a",
+  "last_dispatch_hash": "68c2117d01e8ba2db8528e3c3010ac1a",
+  "last_dispatch_ts": 1775187620.790742,
+  "delivery_mode": "chat"
+}

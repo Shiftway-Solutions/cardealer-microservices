@@ -262,7 +262,7 @@ function VehicleCard({
             {formatPrice(vehicle.price, vehicle.currency)}
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
-            {vehicle.mileage?.toLocaleString() ?? '—'}{' '}km · {location}
+            {vehicle.mileage?.toLocaleString() ?? '—'} km · {location}
           </p>
         </CardContent>
       </Card>

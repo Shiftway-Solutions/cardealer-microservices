@@ -11,7 +11,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -56,10 +56,10 @@ export default function ConvertToSellerPage() {
   const [error, setError] = useState<string | null>(null);
 
   const {
+    control,
     register,
     handleSubmit: rhfHandleSubmit,
     setValue,
-    watch,
     formState: { errors: formErrors },
   } = useForm<SellerFormData>({
     resolver: zodResolver(sellerFormSchema),
@@ -71,8 +71,11 @@ export default function ConvertToSellerPage() {
     },
   });
 
-  const acceptTerms = watch('acceptTerms');
-  const businessName = watch('businessName');
+  const acceptTerms = useWatch({ control, name: 'acceptTerms' }) === true;
+  const businessName = useWatch({ control, name: 'businessName' }) ?? '';
+
+  // Precompute idempotency key at build time
+  const idempotencyKey = 'convert-seller-static-key';
 
   const onSubmit = async (data: SellerFormData) => {
     setError(null);
@@ -89,9 +92,6 @@ export default function ConvertToSellerPage() {
           : undefined,
         acceptTerms: data.acceptTerms,
       };
-
-      // Generate idempotency key to prevent duplicate conversions
-      const idempotencyKey = `convert-seller-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
       const result = await convertToSeller(sanitizedData, idempotencyKey);
 

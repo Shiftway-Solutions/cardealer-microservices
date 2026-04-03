@@ -23,6 +23,7 @@ public interface IVehicleRepository
     Task<IEnumerable<Vehicle>> SearchAsync(VehicleSearchParameters parameters);
     Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetBySellerAsync(Guid sellerId, int page = 1, int pageSize = 12, VehicleStatus? status = null);
     Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetByDealerAsync(Guid dealerId, int page = 1, int pageSize = 12);
+    Task<(IEnumerable<Vehicle> Items, int TotalCount)> GetPagedVehiclesAsync(int page, int pageSize, VehicleSearchParameters parameters);
     Task<SellerVehicleStatsResult> GetSellerStatsAsync(Guid sellerId);
     Task<IEnumerable<Vehicle>> GetFeaturedAsync(int take = 10);
     Task<IEnumerable<Vehicle>> GetByIdsAsync(IEnumerable<Guid> ids);

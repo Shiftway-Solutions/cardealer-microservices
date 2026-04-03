@@ -227,7 +227,17 @@ try
         }
     }
 
+    // Added logging for debugging 502 errors
     Log.Information("Starting {ServiceName} v{ServiceVersion} — AI Vehicle Recommendation Engine", ServiceName, ServiceVersion);
+
+    // Ensure CORS policies are applied correctly
+    Log.Information("Allowed Origins: {AllowedOrigins}", allowedOrigins);
+
+    // Debugging rate limiter policies
+    Log.Information("Rate Limiter Policies: Fixed - {FixedPolicy}, Recommend - {RecommendPolicy}",
+        new { PermitLimit = 60, Window = "1 minute", QueueLimit = 5 },
+        new { PermitLimit = 10, Window = "1 minute", QueueLimit = 2 });
+
     app.Run();
 }
 catch (Exception ex)

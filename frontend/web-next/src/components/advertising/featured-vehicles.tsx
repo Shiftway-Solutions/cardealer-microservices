@@ -12,7 +12,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { RotatedVehicle } from '@/types/advertising';
 import { formatPrice } from '@/lib/format';
-import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { normalizeLocationName } from '@/lib/utils';
 
 function FeaturedVehicleCard({
@@ -29,12 +28,7 @@ function FeaturedVehicleCard({
   const recordClick = useRecordClick();
   const [imageError, setImageError] = useState(false);
 
-  // Use Unsplash fallback when primary image URL is missing or fails
-  const fallbackImage = getVehicleFallbackImage(
-    vehicle.vehicleId || '',
-    vehicle.title?.split(' ')[1], // extract make from title like "2023 Ford Explorer"
-    undefined
-  );
+  const fallbackImage = '/images/car-placeholder.svg';
   const effectiveImageUrl = imageError || !vehicle.imageUrl ? fallbackImage : vehicle.imageUrl;
 
   // Record impression once when visible

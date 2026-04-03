@@ -5,9 +5,15 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
+const allowedDevOrigins = ['localhost', '127.0.0.1', 'okla.local', '*.trycloudflare.com'];
+
 const nextConfig: NextConfig = {
   // Output standalone for Docker deployment
   output: 'standalone',
+
+  // Tunnel/mobile audits should not expose Next.js dev badges or block dev assets.
+  allowedDevOrigins,
+  devIndicators: false,
 
   // Security: remove X-Powered-By header
   poweredByHeader: false,

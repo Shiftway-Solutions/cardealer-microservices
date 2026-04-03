@@ -1007,8 +1007,6 @@ services:
       Logging__Seq__ServerUrl: "http://seq:80"
       Observability__Otlp__Endpoint: "http://jaeger:4317"
       Observability__SamplingRatio: "1.0"
-      Observability__Prometheus__Enabled: "true"
-      ErrorHandling__PublishToErrorService: "true"
     ports:
       - "15107:80"
     depends_on:
@@ -2059,12 +2057,12 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1",
+          "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1",
         ]
       interval: 10s
-      timeout: 10s
+      timeout: 15s
       retries: 5
-      start_period: 45s
+      start_period: 60s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🔒 TLS / REVERSE PROXY (equivalente al nginx ingress de K8s)

@@ -86,6 +86,7 @@ import { useSponsoredSearch } from '@/hooks/use-ads';
 import { RecentSearchesDropdown } from '@/components/search/recent-searches-dropdown';
 import type { RecentSearch } from '@/stores/search-store';
 import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
+import { usePublicMarketplaceStats } from '@/hooks/use-public-marketplace-stats';
 import {
   SponsoredVehicleCard,
   SidebarAdUnit,
@@ -93,7 +94,6 @@ import {
 } from '@/components/advertising/native-ads';
 import type { VehicleCardData } from '@/types';
 import type { SponsoredVehicle } from '@/types/ads';
-import { PLATFORM_STATS } from '@/lib/platform-stats';
 
 // =============================================================================
 // CONSTANTS
@@ -425,12 +425,24 @@ export default function VehiculosClient() {
 
   // Sponsored search results (native ads)
   const { topSponsored, inlineSponsored } = useSponsoredSearch(filters.query);
+  const { data: publicStats } = usePublicMarketplaceStats();
 
   // Derived
   const vehicles = React.useMemo(() => results?.vehicles ?? [], [results]);
   const totalResults = results?.total ?? 0;
   const currentPage = filters.page ?? 1;
   const totalPages = results?.totalPages ?? 1;
+  const publicVehicleCountLabel = React.useMemo(() => {
+    if (publicStats?.formattedVehicleCount) {
+      return `${publicStats.formattedVehicleCount} vehículos publicados`;
+    }
+
+    if (totalResults > 0) {
+      return `${totalResults.toLocaleString('es-DO')} vehículos publicados`;
+    }
+
+    return 'Conteo público en tiempo real';
+  }, [publicStats, totalResults]);
 
   // ── Pagination ───────────────────────────────────────────────────────────
   const handlePageChange = React.useCallback(
@@ -830,8 +842,8 @@ export default function VehiculosClient() {
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
               <Star className="h-3 w-3 text-amber-500" />
-              <span title="Cifra proyectada. Plataforma en crecimiento activo.">
-                {PLATFORM_STATS.vehiclesPublished}* vehículos
+              <span title="Conteo público actual de vehículos publicados.">
+                {publicVehicleCountLabel}
               </span>
             </div>
             <span className="text-border shrink-0">·</span>

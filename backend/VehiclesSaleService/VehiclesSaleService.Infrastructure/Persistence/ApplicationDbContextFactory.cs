@@ -14,7 +14,8 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
         // Connection string para desarrollo (migraciones)
-        var connectionString = "Host=localhost;Port=5432;Database=productservice_db;Username=postgres;Password=";
+        var connectionString = Environment.GetEnvironmentVariable("VEHICLES_DB_CONNECTION")
+            ?? throw new InvalidOperationException("Environment variable VEHICLES_DB_CONNECTION is not set.");
 
         optionsBuilder.UseNpgsql(connectionString);
 

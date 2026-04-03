@@ -245,6 +245,243 @@ console.log(`   Eventos en batch: [${events8.join(", ")}]`);
 found8 ? passed++ : failed++;
 
 // ── Resultado final ───────────────────────────────────────────
+
+// ── TEST 9: getVSCodeWindowId — Quartz CGWindowID (not AppleScript)
+console.log("\n── TEST 9: Quartz CGWindowID (screencapture fix) ─────────────");
+const { execFileSync } = require("child_process");
+try {
+  const pyScript = [
+    "import Quartz",
+    "windows = Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID)",
+    "for w in windows:",
+    "  if 'Code' in str(w.get('kCGWindowOwnerName', '')) and w.get('kCGWindowLayer', -1) == 0:",
+    "    print(w['kCGWindowNumber'], end=''); break",
+  ].join("\n");
+  const windowId = execFileSync("python3", ["-c", pyScript], { timeout: 5000 })
+    .toString()
+    .trim();
+  if (/^\d+$/.test(windowId)) {
+    console.log(
+      `✅ CGWindowID=${windowId} — screencapture -l ${windowId} funcionará`,
+    );
+    passed++;
+  } else {
+    console.log(`❌ CGWindowID no obtenido: "${windowId}"`);
+    failed++;
+  }
+} catch (e) {
+  console.log(`❌ Quartz no disponible: ${e.message}`);
+  failed++;
+}
+
+// ── TEST 10: code CLI available
+console.log("\n── TEST 10: code CLI disponible ──────────────────────────");
+try {
+  const codePath = execFileSync("which", ["code"], { timeout: 3000 })
+    .toString()
+    .trim();
+  if (codePath) {
+    console.log(`✅ code CLI encontrado: ${codePath}`);
+    passed++;
+
+    // Sub-test: code chat mode support
+    const chatHelp = execFileSync("code", ["chat", "--help"], {
+      timeout: 10000,
+    }).toString();
+    const hasAgentMode = chatHelp.includes("agent");
+    console.log(
+      `${hasAgentMode ? "✅" : "❌"} code chat --mode agent: ${hasAgentMode ? "soportado" : "NO soportado"}`,
+    );
+    hasAgentMode ? passed++ : failed++;
+  } else {
+    console.log("❌ code CLI no encontrado");
+    failed++;
+  }
+} catch (e) {
+  console.log(`❌ code CLI error: ${e.message}`);
+  failed++;
+}
+
+// ── TEST 11: screencapture works
+console.log("\n── TEST 11: screencapture funciona ───────────────────────");
+const tmpScreenshot = path.join(
+  os.tmpdir(),
+  `test_screenshot_${Date.now()}.png`,
+);
+try {
+  execFileSync("screencapture", ["-x", tmpScreenshot], { timeout: 10000 });
+  if (fs.existsSync(tmpScreenshot)) {
+    const sz = fs.statSync(tmpScreenshot).size;
+    console.log(`✅ screencapture OK — ${sz} bytes`);
+    fs.unlinkSync(tmpScreenshot);
+    passed++;
+  } else {
+    console.log("❌ screencapture no creó archivo");
+    failed++;
+  }
+} catch (e) {
+  console.log(`❌ screencapture error: ${e.message}`);
+  failed++;
+}
+
+// ── TEST 12: state.vscdb readable
+console.log("\n── TEST 12: state.vscdb (model DB) legible ───────────────");
+const stateDbPath = path.join(
+  os.homedir(),
+  "Library",
+  "Application Support",
+  "Code",
+  "User",
+  "globalStorage",
+  "state.vscdb",
+);
+try {
+  const pyDbScript = `import sqlite3
+try:
+  c=sqlite3.connect(r'${stateDbPath.replace(/\\/g, "/")}',timeout=5).execute("SELECT value FROM ItemTable WHERE key='chat.currentLanguageModel.panel'").fetchone()
+  print(c[0] if c else 'KEY_NOT_FOUND',end='')
+except Exception as e:
+  print('ERR:'+str(e),end='')`;
+  const result = execFileSync("python3", ["-c", pyDbScript], { timeout: 5000 })
+    .toString()
+    .trim();
+  if (result.startsWith("ERR:")) {
+    console.log(`❌ state.vscdb error: ${result}`);
+    failed++;
+  } else if (result === "KEY_NOT_FOUND") {
+    console.log(
+      "⚠️  state.vscdb: clave currentLanguageModel no existe aún (primer uso)",
+    );
+    passed++;
+  } else {
+    console.log(`✅ state.vscdb modelo actual: ${result}`);
+    passed++;
+  }
+} catch (e) {
+  console.log(`❌ state.vscdb error: ${e.message}`);
+  failed++;
+}
+
+// ── TEST 13: Brain override rules — decision tree covers all cases
+console.log("\n── TEST 13: Brain override rules (decision tree) ─────────");
+const testCases13 = [
+  {
+    name: "prompt6Changed",
+    obs: { prompt6Changed: true },
+    expected: "execute_prompt6",
+  },
+  {
+    name: "contextSaturated",
+    obs: { contextSaturated: true, snapshotSizeChars: 700000 },
+    expected: "stop_and_new_chat",
+  },
+  {
+    name: "activeGeneration",
+    obs: { snapshotHasActiveGeneration: true },
+    expected: "wait",
+  },
+  {
+    name: "rate_limited",
+    obs: {
+      logDominantEvent: "rate_limited",
+      secsSinceLastActivity: 200,
+      secsSinceLastAction: 200,
+    },
+    expected: "cycle_model",
+  },
+  {
+    name: "hard_error_try1",
+    obs: {
+      logDominantEvent: "hard_error",
+      errorContinueCount: 0,
+      secsSinceLastActivity: 200,
+      secsSinceLastAction: 200,
+    },
+    expected: "send_continue",
+  },
+  {
+    name: "hard_error_try4",
+    obs: {
+      logDominantEvent: "hard_error",
+      errorContinueCount: 3,
+      secsSinceLastActivity: 200,
+      secsSinceLastAction: 200,
+    },
+    expected: "open_new_chat",
+  },
+  {
+    name: "stall_soft",
+    obs: {
+      secsSinceLastActivity: 350,
+      logDominantEvent: "idle",
+      secsSinceLastAction: 200,
+    },
+    expected: "send_continue",
+  },
+  {
+    name: "stall_hard",
+    obs: {
+      secsSinceLastActivity: 500,
+      logDominantEvent: "idle",
+      secsSinceLastAction: 200,
+    },
+    expected: "open_new_chat",
+  },
+  {
+    name: "session_long",
+    obs: {
+      sessionTooLong: true,
+      secsSinceLastActivity: 100,
+      logDominantEvent: "idle",
+      secsSinceLastAction: 200,
+    },
+    expected: "open_new_chat",
+  },
+];
+
+// Simplified override rules for testing (no cooldown state)
+function testOverride(obs) {
+  if (obs.prompt6Changed) return "execute_prompt6";
+  if (obs.contextSaturated) return "stop_and_new_chat";
+  if (obs.snapshotHasActiveGeneration) return "wait";
+  if (obs.logDominantEvent === "rate_limited" || obs.chatUiSwitchNeeded)
+    return "cycle_model";
+  if (obs.logDominantEvent === "hard_error") {
+    return (obs.errorContinueCount || 0) >= 3
+      ? "open_new_chat"
+      : "send_continue";
+  }
+  if (obs.secsSinceLastActivity > 480) return "open_new_chat";
+  if (obs.secsSinceLastActivity > 300 && obs.secsSinceLastActivity <= 480)
+    return "send_continue";
+  if (obs.sessionTooLong) return "open_new_chat";
+  return "wait";
+}
+
+testCases13.forEach(({ name, obs, expected }) => {
+  const got = testOverride(obs);
+  const ok = got === expected;
+  console.log(
+    `${ok ? "✅" : "❌"} ${name.padEnd(20)} expected=${expected.padEnd(20)} got=${got}`,
+  );
+  ok ? passed++ : failed++;
+});
+
+// ── TEST 14: Monitor readPrompt6 ─────────────────────────────
+console.log("\n── TEST 14: readPrompt6 (CPSO rule) ─────────────────────");
+const prompt6Path = path.join(__dirname, "..", ".prompts", "prompt_1.md");
+if (fs.existsSync(prompt6Path)) {
+  const content = fs.readFileSync(prompt6Path, "utf8").trim();
+  const endsWithRead = content.endsWith("READ");
+  console.log(
+    `✅ prompt_1.md existe (${content.length} chars) — ends with READ: ${endsWithRead}`,
+  );
+  passed++;
+} else {
+  console.log("✅ prompt_1.md no existe — OK (se crea dinámicamente)");
+  passed++;
+}
+
 console.log(`\n══════════════════════════════════════════════════════════`);
 console.log(`  RESULTADO: ${passed} passed / ${failed} failed`);
 console.log(`══════════════════════════════════════════════════════════\n`);

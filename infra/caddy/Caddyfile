@@ -22,6 +22,11 @@ https://okla.local {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	}
 
+	# BFF routes: Next.js API routes que deben servirse desde el frontend, no el gateway
+	handle /api/pricing* {
+		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
+	}
+
 	# API → Gateway (BFF pattern: misma ruta que en producción)
 	handle /api/* {
 		reverse_proxy gateway:80
@@ -42,6 +47,11 @@ https://okla.local {
 # ── HTTP — Endpoint para cloudflared tunnel ──────────────────────────────────
 :80 {
 	# Mismas rutas, sin TLS (cloudflared provee HTTPS al exterior)
+	# BFF routes: Next.js API routes que deben servirse desde el frontend, no el gateway
+	handle /api/pricing* {
+		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
+	}
+
 	handle /api/* {
 		reverse_proxy gateway:80
 	}
