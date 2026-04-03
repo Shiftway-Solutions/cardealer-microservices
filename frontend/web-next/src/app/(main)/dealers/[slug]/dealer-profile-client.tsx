@@ -176,6 +176,10 @@ export default function DealerProfileClient({ params }: PageProps) {
     dealerData?.id || ''
   );
 
+  // Image error states for graceful fallback when CDN images fail to load
+  const [coverError, setCoverError] = React.useState(false);
+  const [logoError, setLogoError] = React.useState(false);
+
   // Loading state
   if (dealerLoading) {
     return <DealerProfileSkeleton />;
@@ -252,14 +256,17 @@ export default function DealerProfileClient({ params }: PageProps) {
     <div className="bg-muted/50 min-h-screen">
       {/* Cover Image */}
       <div className="bg-muted-foreground/30 relative h-48 md:h-64 lg:h-80">
-        <Image
-          src={dealer.coverImage}
-          alt={`${dealer.name} cover`}
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
+        {!coverError && (
+          <Image
+            src={dealer.coverImage}
+            alt={`${dealer.name} cover`}
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+            onError={() => setCoverError(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
@@ -269,13 +276,20 @@ export default function DealerProfileClient({ params }: PageProps) {
           <div className="flex flex-col gap-6 md:flex-row">
             {/* Logo */}
             <div className="relative -mt-16 h-24 w-24 overflow-hidden rounded-xl border-4 border-white bg-white shadow-lg md:-mt-20 md:h-32 md:w-32">
-              <Image
-                src={dealer.logo}
-                alt={dealer.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 96px, 128px"
-              />
+              {!logoError ? (
+                <Image
+                  src={dealer.logo}
+                  alt={dealer.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 96px, 128px"
+                  onError={() => setLogoError(true)}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary text-2xl font-bold">
+                  {dealer.name.charAt(0)}
+                </div>
+              )}
             </div>
 
             {/* Info */}
