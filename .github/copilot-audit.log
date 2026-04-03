@@ -2992,3 +2992,29 @@ test
 [2026-04-03 10:44:04] [MODIFICACIÓN] mensajes/page.tsx — BUG-S22-2: markConversationAsRead not called when conversation opened
 [2026-04-03 10:52:54] [GATE] ✅ Completo — Frontend: 0 errors, 576 tests passed, build OK. Backend: 0 unit failures (integration failures pre-existing)
 [2026-04-03 11:07:20] [MODIFICACIÓN] .github/copilot-instructions.md — Actualizado flujo a development como rama principal por defecto; main solo con indicación explícita del usuario. CI/CD automático para development hacia staging. Cambios: 1) Flujo obligatorio, 2) GESTIÓN DE RAMAS (tabla y flujo), 3) Mapa de Workflows (triggers), 4) Commit bloqueado
+[2026-04-03 11:09:34] [GIT] CI/CD detenidos, rama development actualizada y sincronizada con main — HEAD: b6ea5f27
+[2026-04-03 11:11:45] [GIT] GitHub Runner detenido — problema: runner.sh no estaba ejecutándose. Reiniciado con: cd ~/actions-runner && nohup ./run.sh > runner.log 2>&1 & — Estado: ✅ Conectado, tomando jobs
+
+[$(date '+%Y-%m-%d %H:%M:%S')] [ANÁLISIS] development-deploy.yml Health Check — DIAGNÓSTICO COMPLETO
+
+**VERIFICACIÓN B - Configuración Actual:**
+✅ frontend-next SÍ está en compose.yaml con profiles: [frontend]
+✅ Dockerfile.dev EXISTE con start_period: 60s y /api/health endpoint
+✅ Workflow detecta cambios en frontend/web-next/**: true → agrega "frontend-next" a lista
+✅ Workflow usa COMPOSE_PROFILES=core,frontend,vehicles,ai,business (incluye frontend)
+
+**PROBLEMA IDENTIFICADO (A - Ajuste):**
+❌ Health check timeout era 30s (curl -m 30), pero frontend start_period es 60s
+   → Resultado: TIMEOUT en health check del frontend mientras estaba inicializándose
+
+**SOLUCIÓN APLICADA:**
+✅ Aumentado timeout de 30s → 60s en health check (curl -m 60)
+✅ Aumentado sleep inicial de 8s → 10s para dar más tiempo
+✅ Ahora timeouts son idénticos: 60s esperan a frontend que tiene start_period: 60s
+
+**Arquitectura Verificada:**
+- compose.yaml: frontend-next [profile: frontend] ✅
+- Dockerfile.dev: CMD pnpm dev ✅  
+- Health endpoint: /api/health ✅
+- Networking: depends_on gateway (condition: service_healthy) ✅
+- Port mapping: 3000:3000 ✅

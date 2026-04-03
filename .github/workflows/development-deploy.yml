@@ -438,15 +438,15 @@ jobs:
 
       - name: "🔥 Health check post-deploy"
         run: |
-          echo "=== Health Checks (30s timeout por endpoint) ==="
-          sleep 8  # Dar tiempo a los containers para arrangue inicial
+          echo "=== Health Checks (60s timeout por endpoint) ==="
+          sleep 10  # Dar tiempo a los containers para arrangue inicial
 
           check() {
             local name="$1"
             local url="$2"
             local expected="${3:-200}"
             local code
-            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || code="000"
+            code=$(curl -s -m 60 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || code="000"
             if [ "$code" = "$expected" ]; then
               echo "  ✅ $name — HTTP $code"
             else
