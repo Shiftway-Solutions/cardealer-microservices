@@ -92,3 +92,81 @@ public class GetConversationOverageReportQueryHandler
         };
     }
 }
+
+// ============================================================================
+// GET MONTHLY CONVERSATION USAGE COUNT
+// ============================================================================
+
+/// <summary>
+/// Query to get the current-month conversation usage for a dealer.
+/// Returns the count, plan limit, and usage percentage.
+/// Used by the dealer dashboard to display real-time usage vs. plan limit.
+/// </summary>
+public record GetMonthlyConversationUsageQuery : IRequest<MonthlyConversationUsageDto>
+{
+    /// <summary>Dealer whose usage is being queried.</summary>
+    public Guid DealerId { get; init; }
+}
+
+public class GetMonthlyConversationUsageQueryHandler
+    : IRequestHandler<GetMonthlyConversationUsageQuery, MonthlyConversationUsageDto>
+{
+    private readonly IConversationUsageTracker _usageTracker;
+    private readonly IDealerPlanResolver _planResolver;
+    private readonly ILogger<GetMonthlyConversationUsageQueryHandler> _logger;
+
+    public GetMonthlyConversationUsageQueryHandler(
+        IConversationUsageTracker usageTracker,
+        IDealerPlanResolver planResolver,
+        ILogger<GetMonthlyConversationUsageQueryHandler> logger)
+    {
+        _usageTracker = usageTracker;
+        _planResolver = planResolver;
+        _logger = logger;
+    }
+
+    public async Task<MonthlyConversationUsageDto> Handle(
+        GetMonthlyConversationUsageQuery request,
+        CancellationToken cancellationToken)
+    {
+        var dealerPlan = await _planResolver.GetDealerPlanAsync(request.DealerId, cancellationToken);
+        var limits = PlanFeatureLimits.GetLimits(dealerPlan);
+        var maxAllowed = limits.ChatAgentMonthlyMessages;
+
+        var currentCount = await _usageTracker.GetCurrentMonthCountAsync(request.DealerId, cancellationToken);
+
+        int remaining;
+        double usagePercent;
+        int overageCount;
+
+        if (maxAllowed < 0)
+        {
+            // Unlimited plan
+            remaining = -1;
+            usagePercent = 0;
+            overageCount = 0;
+        }
+        else
+        {
+            remaining = Math.Max(0, maxAllowed - currentCount);
+            usagePercent = maxAllowed > 0 ? (double)currentCount / maxAllowed * 100.0 : 0;
+            overageCount = currentCount > maxAllowed ? currentCount - maxAllowed : 0;
+        }
+
+        var billingPeriod = DateTime.UtcNow.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+
+        _logger.LogInformation(
+            "[MonthlyUsage] Dealer={DealerId} Plan={Plan} Count={Count}/{Max} Usage={Pct:F1}%",
+            request.DealerId, dealerPlan, currentCount, maxAllowed, usagePercent);
+
+        return new MonthlyConversationUsageDto
+        {
+            CurrentCount = currentCount,
+            MaxAllowed = maxAllowed,
+            Remaining = remaining,
+            UsagePercent = usagePercent,
+            OverageCount = overageCount,
+            BillingPeriod = billingPeriod
+        };
+    }
+}

@@ -158,6 +158,26 @@ public class ContactRequestsController : ControllerBase
     }
 
     // ========================================================================
+    // MONTHLY USAGE — CONTRA #5 / OVERAGE BILLING FIX
+    // ========================================================================
+
+    /// <summary>
+    /// Get the current-month conversation usage for the authenticated dealer.
+    /// Returns the count, plan limit, remaining quota, and usage percentage.
+    /// Used by the dealer dashboard to display real-time ChatAgent usage.
+    /// </summary>
+    [HttpGet("usage/monthly-count")]
+    public async Task<IActionResult> GetMonthlyUsageCount()
+    {
+        var dealerId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetMonthlyConversationUsageQuery
+        {
+            DealerId = dealerId
+        });
+        return Ok(result);
+    }
+
+    // ========================================================================
     // OVERAGE REPORT — CONTRA #5 / OVERAGE BILLING FIX
     // ========================================================================
 
