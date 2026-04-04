@@ -1,5 +1,5 @@
-# CORRECCIÓN (Intento 1/3) — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
-**Fecha:** 2026-04-04 08:40:41
+# CORRECCIÓN (Intento 3/3) — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
+**Fecha:** 2026-04-04 09:27:20
 **Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Buyer + Dealer
@@ -49,20 +49,19 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [x] Fix bugs de S31-T01: No code fix (AWS Bedrock IAM infra pre-existente — sin cambios de código)
+- [ ] Fix bugs de S31-T01: SearchAgent: 20+ queries de calibración
 
-- [x] Gate Pre-Commit: AdminService 159/159 ✅ BillingService 87/87 ✅ SearchAgent 152/152 ✅ pnpm 576/576 ✅
-- [x] READ escrito + AGENT_LOOP_PROMPT ejecutado 
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
 - Sprint: 31 — SearchAgent — Profesionalización y Ajuste Fino
 - Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
-- Estado: COMPLETADO ✅
-- Bugs encontrados: 1 pre-existente (AWS Bedrock IAM)
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
-READ
