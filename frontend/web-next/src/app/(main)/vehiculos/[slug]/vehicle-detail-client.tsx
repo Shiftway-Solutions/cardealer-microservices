@@ -15,6 +15,7 @@ import {
   VehicleTabs,
   SimilarVehicles,
 } from '@/components/vehicle-detail';
+import { VehicleChatWidget } from '@/components/vehicle-detail/VehicleChatWidget';
 import { VehicleCardSkeleton } from '@/components/ui/vehicle-card';
 import { ReviewsSection } from '@/components/reviews';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
@@ -307,6 +308,16 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
         vehicleTitle={title}
         onPurchaseComplete={handlePurchaseComplete}
       />
+
+      {/* ── DealerChatAgent Widget (buyer-facing) ───────────────────────── */}
+      {/* Only shown for dealer vehicles that have a ChatAgent. */}
+      {vehicle.sellerType === 'dealer' && (
+        <VehicleChatWidget
+          vehicle={vehicle}
+          dealerId={vehicle.sellerId}
+          dealerName={(vehicle as VehicleWithSeller).seller?.name}
+        />
+      )}
     </div>
   );
 }

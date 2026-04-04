@@ -178,7 +178,7 @@ export async function getDealerAppointments(
 
   const response = await apiClient.get<{ items: Appointment[] } | Appointment[]>(url);
   const data = response.data;
-  return Array.isArray(data) ? data : (data as { items: Appointment[] }).items ?? [];
+  return Array.isArray(data) ? data : ((data as { items: Appointment[] }).items ?? []);
 }
 
 /**

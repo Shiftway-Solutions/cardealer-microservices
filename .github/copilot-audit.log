@@ -118,3 +118,4 @@
 [2026-04-04 15:16:30] [MODIFICACIÓN] frontend/web-next/src/services/appointments.ts — BUG-14 fix: getDealerAppointments extrae items del paginated response
 [2026-04-04 15:28:58] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
 [2026-04-04 15:33:58] [AUDIT-SPRINT] Sprint 32 [reaudit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 15:35:11] [GIT] staging — fix(sprint-32): BUG-5 privacy URL, BUG-14 dashboard crash — push OK

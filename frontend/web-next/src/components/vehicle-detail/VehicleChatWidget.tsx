@@ -1,11 +1,14 @@
 'use client';
 
 /**
- * VehicleChatWidget — OKLA Support AI assistant for vehicle detail pages.
+ * VehicleChatWidget — DealerChatAgent AI assistant for vehicle detail pages.
  *
- * Uses ChatbotService (Claude Sonnet 4.5) in global OKLA support mode (no dealer scoping).
- * Opens when user clicks the OKLA support bubble.
- * Provides platform-level support: questions about the vehicle, help buying, contact info.
+ * Uses ChatbotService (Claude Sonnet 4.5) scoped to the specific dealer's ChatAgent.
+ * Opens when buyer clicks the chat bubble on a vehicle detail page.
+ * Connects buyer directly to the dealer's AI: inventory, pricing, test drives, etc.
+ *
+ * When dealerId is provided: dealer-scoped mode (DealerChatAgent).
+ * When dealerId is absent: falls back to global OKLA support mode.
  */
 
 import { useRef, useEffect } from 'react';
@@ -17,6 +20,10 @@ import type { Vehicle } from '@/types';
 
 interface VehicleChatWidgetProps {
   vehicle: Vehicle;
+  /** Dealer ID to scope chat to the specific dealer's ChatAgent */
+  dealerId?: string;
+  /** Dealer display name shown in the chat header */
+  dealerName?: string;
   /** Whether the chat panel should be open initially */
   isOpenInitial?: boolean;
   /** Callback when state changes */
@@ -25,12 +32,15 @@ interface VehicleChatWidgetProps {
 
 export function VehicleChatWidget({
   vehicle,
+  dealerId,
+  dealerName,
   isOpenInitial = false,
   onOpenChange,
 }: VehicleChatWidgetProps) {
-  // No dealerId — global OKLA support mode (not dealer-specific)
   const { isAuthenticated } = useAuth();
   const chat = useChatbot({
+    dealerId,
+    dealerName,
     maxRetries: 2,
     onLeadGenerated: _leadId => {
       // TODO: track with analytics service
@@ -72,25 +82,29 @@ export function VehicleChatWidget({
     }
   }, [chat.isConnected, chat.messages.length, vehicle, chat]);
 
+  const displayBotName =
+    chat.botName || (dealerName ? `Asistente de ${dealerName}` : 'Soporte OKLA');
+  const bubbleLabel = dealerName ? `Chat con ${dealerName}` : 'Soporte OKLA';
+
   return (
     <>
-      {/* OKLA Support floating bubble — green branded */}
+      {/* Floating chat bubble — branded per dealer or global OKLA */}
       <button
         onClick={chat.toggle}
-        className={`fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none ${
+        className={`focus:ring-primary fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:outline-none ${
           chat.isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
-            : 'bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-700'
+            : 'from-primary hover:from-primary/90 bg-gradient-to-r to-emerald-600 hover:to-emerald-700'
         }`}
-        aria-label={chat.isOpen ? 'Cerrar soporte OKLA' : 'Abrir asistente de soporte OKLA'}
+        aria-label={chat.isOpen ? `Cerrar chat` : `Abrir chat con ${bubbleLabel}`}
       >
         {chat.isOpen ? (
           <X className="h-5 w-5 text-white" />
         ) : (
           <>
             <Bot className="h-5 w-5 text-white" />
-            <span className="text-sm font-semibold text-white max-sm:hidden">Soporte OKLA</span>
-            <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-20" />
+            <span className="text-sm font-semibold text-white max-sm:hidden">{bubbleLabel}</span>
+            <span className="bg-primary absolute inset-0 animate-ping rounded-full opacity-20" />
           </>
         )}
       </button>
@@ -109,7 +123,7 @@ export function VehicleChatWidget({
         isLoading={chat.isLoading}
         isConnected={chat.isConnected}
         isLimitReached={chat.isLimitReached}
-        botName="Soporte OKLA"
+        botName={displayBotName}
         botAvatarUrl={chat.botAvatarUrl}
         remainingInteractions={chat.remainingInteractions}
         error={chat.error}

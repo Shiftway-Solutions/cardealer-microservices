@@ -1688,6 +1688,7 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      Redis__ConnectionString: "redis:6379"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
       LlmService__ApiKey: "${CLAUDE_API_KEY:-${ANTHROPIC_API_KEY:-}}"
       OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
@@ -1697,6 +1698,8 @@ services:
       postgres_db:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - okla-net
