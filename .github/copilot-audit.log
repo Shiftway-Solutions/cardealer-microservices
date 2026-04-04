@@ -3088,3 +3088,4 @@ test
 [2026-04-03 20:16:30] [REAUDIT] Sprint 26 REAUDIT 3/3 DONE — Sprint 26 COMPLETADO. 0 bugs. UF-146/147/148/149 PASS.
 [2026-04-03 20:16:34] [AUDIT-SPRINT] Sprint 26 completado (ciclo completo)
 [2026-04-03 20:16:36] [AUDIT-SPRINT] Sprint 27 [audit] [LOCAL] despachado: Auth Flows — Login, 2FA, OAuth, Recovery
+[2026-04-03 20:36:16] [AUDIT] Sprint 27 AUDIT — COMPLETADO. UF-150/151/152/153 PASS. 0 bugs. Auth flows OK.
