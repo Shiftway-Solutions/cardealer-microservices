@@ -119,7 +119,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
                 {
                     Confianza = 1.0f,
                     ResultadoMinimoGarantizado = 0,
-                    MensajeUsuario = "¡Hola! 👋 Para comunicarte con el equipo de OKLA visítanos en **okla.com.do/contacto**. ¿Te ayudo a buscar un vehículo? 🚗",
+                    MensajeUsuario = "¡Hola! 👋 Para comunicarte con el equipo de OKLA o agendar un test drive, visítanos en **okla.com.do/contacto**. ¿Te ayudo a buscar un vehículo? 🚗",
                     Advertencias = new List<string>()
                 },
                 WasCached = false,
@@ -549,7 +549,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
 
     /// <summary>
     /// Detects contact/support queries that should be answered instantly without calling Claude.
-    /// Examples: "Quiero hablar con alguien de OKLA", "¿Tienen soporte?", "número de teléfono".
+    /// Examples: "Quiero hablar con alguien de OKLA", "¿Tienen soporte?", "test drive", "número de teléfono".
     /// </summary>
     private static bool IsContactOrSupportIntent(string query)
     {
@@ -562,6 +562,8 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
                lower.Contains("atención al cliente") ||
                lower.Contains("atencion al cliente") ||
                lower.Contains("whatsapp") ||
+               lower.Contains("test drive") ||
+               lower.Contains("testdrive") ||
                (lower.Contains("comunicar") && lower.Contains("okla")) ||
                (lower.Contains("llamar") && lower.Contains("okla"));
     }

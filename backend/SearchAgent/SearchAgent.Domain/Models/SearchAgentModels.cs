@@ -1,6 +1,44 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SearchAgent.Domain.Models;
+
+/// <summary>
+/// Defensive JSON converter that handles cases where Claude returns an array instead of a
+/// single string for filter fields (e.g., combustible: ["hibrido", "electrico"]).
+/// Takes the first element of any array, preserves plain strings, maps null → null.
+/// </summary>
+public sealed class StringOrArrayConverter : JsonConverter<string?>
+{
+    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return reader.TokenType switch
+        {
+            JsonTokenType.String => reader.GetString(),
+            JsonTokenType.Null => null,
+            JsonTokenType.StartArray => ReadFirstArrayElement(ref reader),
+            _ => reader.GetString()
+        };
+    }
+
+    private static string? ReadFirstArrayElement(ref Utf8JsonReader reader)
+    {
+        string? first = null;
+        while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+        {
+            if (first == null && reader.TokenType == JsonTokenType.String)
+                first = reader.GetString();
+            // Skip any remaining elements
+        }
+        return first;
+    }
+
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+    {
+        if (value is null) writer.WriteNullValue();
+        else writer.WriteStringValue(value);
+    }
+}
 
 /// <summary>
 /// Complete response from SearchAgent following the v2.0 schema.
@@ -48,9 +86,11 @@ public class SearchAgentResponse
 public class SearchFilters
 {
     [JsonPropertyName("marca")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Marca { get; set; }
 
     [JsonPropertyName("modelo")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Modelo { get; set; }
 
     [JsonPropertyName("anio_desde")]
@@ -66,33 +106,42 @@ public class SearchFilters
     public decimal? PrecioMax { get; set; }
 
     [JsonPropertyName("moneda")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Moneda { get; set; }
 
     [JsonPropertyName("tipo_vehiculo")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? TipoVehiculo { get; set; }
 
     [JsonPropertyName("transmision")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Transmision { get; set; }
 
     [JsonPropertyName("combustible")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Combustible { get; set; }
 
     [JsonPropertyName("condicion")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Condicion { get; set; }
 
     [JsonPropertyName("kilometraje_max")]
     public int? KilometrajeMax { get; set; }
 
     [JsonPropertyName("provincia")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Provincia { get; set; }
 
     [JsonPropertyName("ciudad")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Ciudad { get; set; }
 
     [JsonPropertyName("color")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Color { get; set; }
 
     [JsonPropertyName("traccion")]
+    [JsonConverter(typeof(StringOrArrayConverter))]
     public string? Traccion { get; set; }
 }
 
