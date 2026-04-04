@@ -79,3 +79,5 @@
 [2026-04-04 08:57:19] [AUDIT-SPRINT] Sprint 31 [reaudit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
 [2026-04-04 09:27:20] [AUDIT-SPRINT] Sprint 31 [fix] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
 [2026-04-04 09:27:36] [REAUDIT] S31-T01 SearchAgent 20 queries — AI Bedrock IAM bug confirmado, fallback UX OK, batch timeout observado
+[2026-04-04 09:47:21] [AUDIT-SPRINT] Sprint 31 [reaudit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 09:47:28] [FIX] S31 fix intento 3/3 — KNOWN BUG AWS Bedrock IAM, gate passed, no code changes
