@@ -1,0 +1,364 @@
+{
+  "config": {
+    "configFile": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/playwright.config.ts",
+    "rootDir": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-mobile",
+        "name": "chromium-mobile",
+        "testDir": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/junit.xml"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "cmd": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "s24-comparador.spec.ts",
+      "file": "s24-comparador.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Sprint 24 - Comparador Side by Side",
+          "file": "s24-comparador.spec.ts",
+          "line": 21,
+          "column": 6,
+          "specs": [
+            {
+              "title": "S24-01: Homepage carga correctamente",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3440,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "📍 Navegando a: https://biological-robinson-videos-ward.trycloudflare.com\n"
+                        },
+                        {
+                          "text": "✅ [1/6] Homepage capturada\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:25.485Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-75222ec1a6926b2b1d20",
+              "file": "s24-comparador.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "S24-02: Login con buyer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 874,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ [2/6] Home pre-login capturada\n"
+                        },
+                        {
+                          "text": "ℹ️  Botón de login no encontrado, saltando\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:30.234Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-3b8cdcfcbeac0b387895",
+              "file": "s24-comparador.spec.ts",
+              "line": 45,
+              "column": 7
+            },
+            {
+              "title": "S24-03: Búsqueda de vehículos",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5073,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ [4/6] Sección de búsqueda capturada\n"
+                        },
+                        {
+                          "text": "✅ [5/6] Búsqueda rellenada capturada\n"
+                        },
+                        {
+                          "text": "✅ [6/6] Resultados de búsqueda capturados\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:31.115Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-81db2b947b7c90330e35",
+              "file": "s24-comparador.spec.ts",
+              "line": 73,
+              "column": 7
+            },
+            {
+              "title": "S24-04: Comparador - Seleccionar vehículos",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 442,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🔎 Encontrados 0 botones de comparación\n"
+                        },
+                        {
+                          "text": "ℹ️  No se encontraron botones de comparación\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:36.193Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-995daae7e12b6ec08a7d",
+              "file": "s24-comparador.spec.ts",
+              "line": 111,
+              "column": 7
+            },
+            {
+              "title": "S24-05: Vista de Comparación Side-by-Side",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 418,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "ℹ️  Enlace de comparación no encontrado\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:36.641Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-3e8e19e778ba6603b4e1",
+              "file": "s24-comparador.spec.ts",
+              "line": 156,
+              "column": 7
+            },
+            {
+              "title": "S24-06: Detalles de Vehículo desde Comparador",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 457,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "ℹ️  Enlace de vehículo no encontrado\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-03T21:50:37.063Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c1b08ca402eb2e1d3c56-f435ed8a52011811fc2b",
+              "file": "s24-comparador.spec.ts",
+              "line": 189,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-03T21:50:14.643Z",
+    "duration": 22911.184,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

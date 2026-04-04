@@ -1,0 +1,45 @@
+<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="22.911184000000002">
+<testsuite name="s24-comparador.spec.ts" timestamp="2026-04-03T21:50:25.147Z" hostname="chromium" tests="6" failures="0" skipped="0" time="10.704" errors="0">
+<testcase name="Sprint 24 - Comparador Side by Side › S24-01: Homepage carga correctamente" classname="s24-comparador.spec.ts" time="3.44">
+<system-out>
+<![CDATA[📍 Navegando a: https://biological-robinson-videos-ward.trycloudflare.com
+✅ [1/6] Homepage capturada
+]]>
+</system-out>
+</testcase>
+<testcase name="Sprint 24 - Comparador Side by Side › S24-02: Login con buyer" classname="s24-comparador.spec.ts" time="0.874">
+<system-out>
+<![CDATA[✅ [2/6] Home pre-login capturada
+ℹ️  Botón de login no encontrado, saltando
+]]>
+</system-out>
+</testcase>
+<testcase name="Sprint 24 - Comparador Side by Side › S24-03: Búsqueda de vehículos" classname="s24-comparador.spec.ts" time="5.073">
+<system-out>
+<![CDATA[✅ [4/6] Sección de búsqueda capturada
+✅ [5/6] Búsqueda rellenada capturada
+✅ [6/6] Resultados de búsqueda capturados
+]]>
+</system-out>
+</testcase>
+<testcase name="Sprint 24 - Comparador Side by Side › S24-04: Comparador - Seleccionar vehículos" classname="s24-comparador.spec.ts" time="0.442">
+<system-out>
+<![CDATA[🔎 Encontrados 0 botones de comparación
+ℹ️  No se encontraron botones de comparación
+]]>
+</system-out>
+</testcase>
+<testcase name="Sprint 24 - Comparador Side by Side › S24-05: Vista de Comparación Side-by-Side" classname="s24-comparador.spec.ts" time="0.418">
+<system-out>
+<![CDATA[ℹ️  Enlace de comparación no encontrado
+]]>
+</system-out>
+</testcase>
+<testcase name="Sprint 24 - Comparador Side by Side › S24-06: Detalles de Vehículo desde Comparador" classname="s24-comparador.spec.ts" time="0.457">
+<system-out>
+<![CDATA[ℹ️  Enlace de vehículo no encontrado
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>
