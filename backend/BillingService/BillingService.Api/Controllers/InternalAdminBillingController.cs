@@ -44,15 +44,15 @@ public class InternalAdminBillingController : ControllerBase
             .Take(limit)
             .Select(p => new
             {
-                id          = p.Id,
-                dealerId    = p.DealerId,
-                dealerName  = p.DealerId.ToString("N").Substring(0, 8),
-                plan        = p.Subscription != null ? p.Subscription.Plan.ToString() : string.Empty,
-                amount      = p.Amount,
-                currency    = p.Currency,
-                status      = p.Status.ToString(),
-                date        = p.CreatedAt,
-                method      = p.Method.ToString()
+                id = p.Id,
+                dealerId = p.DealerId,
+                dealerName = p.DealerId.ToString("N").Substring(0, 8),
+                plan = p.Subscription != null ? p.Subscription.Plan.ToString() : string.Empty,
+                amount = p.Amount,
+                currency = p.Currency,
+                status = p.Status.ToString(),
+                date = p.CreatedAt,
+                method = p.Method.ToString()
             })
             .ToListAsync(ct);
 
@@ -79,12 +79,12 @@ public class InternalAdminBillingController : ControllerBase
             .Take(50)
             .Select(i => new
             {
-                id          = i.Id,
-                dealerId    = i.DealerId,
-                dealerName  = i.DealerId.ToString("N").Substring(0, 8),
-                amount      = i.TotalAmount - i.PaidAmount,
-                currency    = i.Currency,
-                dueDate     = i.DueDate,
+                id = i.Id,
+                dealerId = i.DealerId,
+                dealerName = i.DealerId.ToString("N").Substring(0, 8),
+                amount = i.TotalAmount - i.PaidAmount,
+                currency = i.Currency,
+                dueDate = i.DueDate,
                 daysOverdue = i.DueDate < now ? (int)(now - i.DueDate).TotalDays : 0
             })
             .ToListAsync(ct);

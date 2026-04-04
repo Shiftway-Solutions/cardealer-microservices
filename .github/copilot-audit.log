@@ -102,3 +102,8 @@
 [2026-04-04 10:57:18] [AUDIT-SPRINT] Sprint 31 [fix] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
 [2026-04-04 11:07:00] [MODIFICACIÓN] FIX 2/3 — warmup retry loop (3 intentos con 15s delay) para DB not-ready
 [2026-04-04 11:22:13] [MODIFICACIÓN] FIX 2/3 product behavior — solo filtros existentes, 0 results out-of-scope, no mensajes conversacionales
+[2026-04-04 11:23:20] [AUDIT-SPRINT] Sprint 31 [reaudit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 11:30:52] [AUDIT-SPRINT] Sprint 31 [fix] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 11:42:33] [GATE] FIX 3/3 — Iniciando gate pre-commit
+[2026-04-04 11:49:22] [GIT] FIX 3/3 Sprint 31 — Gate PASS: 0 build errors, 576 frontend tests, 152 SearchAgent tests, spot check 6 queries OK
+[2026-04-04 11:49:23] [AUDIT-SPRINT] Sprint 31 [reaudit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
