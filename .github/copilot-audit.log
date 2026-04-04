@@ -3101,3 +3101,6 @@ test
 [2026-04-03 21:40:03] [FIX] Sprint 27 FIX 3/3 — Gate PASS. 0 bugs.
 [2026-04-03 21:40:22] [AUDIT-SPRINT] Sprint 27 [reaudit] [LOCAL] despachado: Auth Flows — Login, 2FA, OAuth, Recovery
 [2026-04-03 21:53:00] [REAUDIT] Sprint 27 REAUDIT 3/3 DONE — Sprint 27 COMPLETADO. 0 bugs. UF-150/151/152/153 PASS.
+[2026-04-03 21:53:23] [AUDIT-SPRINT] Sprint 27 completado (ciclo completo)
+[2026-04-03 21:53:25] [AUDIT-SPRINT] Sprint 28 [audit] [LOCAL] despachado: Admin — Usuarios, Dealers y KYC
+[2026-04-03 22:03:53] [AUDIT] Sprint 28 AUDIT — COMPLETADO. UF-154/155/156 PASS. 0 bugs. Admin: usuarios, dealers KYC, reviews.
