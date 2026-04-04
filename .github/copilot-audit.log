@@ -17,3 +17,6 @@
 [2026-04-04 01:57:19] [EJECUCIÓN] RUNNER FINAL CLEANUP — Nuevo runner creado exitosamente. ID: 23, Status: Online & Listening. Runner antiguo será auto-limpiado por GitHub.
 [2026-04-04 02:03:01] [GIT] S28 FIX 2/3 — 0 bugs, Gate PASS, CI restored
 [2026-04-04 02:03:05] [AUDIT-SPRINT] Sprint 28 [reaudit] [LOCAL] despachado: Admin — Usuarios, Dealers y KYC
+[2026-04-04 02:27:59] [EJECUCIÓN] Tunnel cloudflared — Levantado con éxito. URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
+[2026-04-04 02:37:05] [AUDIT-SPRINT] Sprint 28 [fix] [LOCAL] despachado: Admin — Usuarios, Dealers y KYC
+[2026-04-04 02:37:40] [EJECUCION] REAUDIT S28 — UF-154/155/156 verificados, 0 bugs — postgres perms fix, adminservice levantado

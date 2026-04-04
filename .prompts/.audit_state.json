@@ -30,8 +30,8 @@
   ],
   "sprint_actual": 28,
   "inicio": "2026-03-28T00:00:00.000000",
-  "phase": "reaudit",
-  "fix_attempt": 2,
+  "phase": "fix",
+  "fix_attempt": 3,
   "use_local": true,
   "force_tunnel": false
 }
