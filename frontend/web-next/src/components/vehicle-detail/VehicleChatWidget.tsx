@@ -9,13 +9,19 @@
  *
  * When dealerId is provided: dealer-scoped mode (DealerChatAgent).
  * When dealerId is absent: falls back to global OKLA support mode.
+ *
+ * Vehicle context: vehicleId is passed to the session so the backend uses
+ * SingleVehicleStrategy and loads all vehicle data into the system prompt.
+ *
+ * Plan gate: if dealer is on LIBRE/VISIBLE plan (chatAgentWeb=0), isAiEnabled=false
+ * and the widget shows a "direct message to dealer" form instead of AI chat.
  */
 
 import { useRef, useEffect } from 'react';
 import { useChatbot } from '@/hooks/useChatbot';
 import { useAuth } from '@/hooks/use-auth';
 import { ChatPanel } from '@/components/chat/ChatPanel';
-import { X, Bot, Info } from 'lucide-react';
+import { X, Bot, Info, MessageCircle } from 'lucide-react';
 import type { Vehicle } from '@/types';
 
 interface VehicleChatWidgetProps {
@@ -41,6 +47,7 @@ export function VehicleChatWidget({
   const chat = useChatbot({
     dealerId,
     dealerName,
+    vehicleId: vehicle.id,
     maxRetries: 2,
     onLeadGenerated: _leadId => {
       // TODO: track with analytics service
@@ -66,25 +73,18 @@ export function VehicleChatWidget({
     onOpenChange?.(chat.isOpen);
   }, [chat.isOpen, onOpenChange]);
 
-  // Send vehicle context when session starts so OKLA support knows which vehicle the user is viewing
-  const sentContextRef = useRef(false);
-  useEffect(() => {
-    if (chat.isConnected && !sentContextRef.current && chat.messages.length <= 1) {
-      sentContextRef.current = true;
-      const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-      const price =
-        vehicle.currency === 'USD'
-          ? `US$${vehicle.price.toLocaleString()}`
-          : `RD$${vehicle.price.toLocaleString()}`;
-      chat.sendMessage(
-        `Hola, estoy viendo el ${vehicleTitle} (${price}) en OKLA. ¿Me pueden ayudar con información sobre este vehículo?`
-      );
-    }
-  }, [chat.isConnected, chat.messages.length, vehicle, chat]);
+  // NOTE: Vehicle context is now passed via vehicleId in startChatSession.
+  // The backend uses SingleVehicleStrategy which fetches full vehicle data from DB
+  // and builds a rich system prompt. The manual context message is no longer needed.
+  const _sentContextRef = useRef(false);
 
   const displayBotName =
     chat.botName || (dealerName ? `Asistente de ${dealerName}` : 'Soporte OKLA');
-  const bubbleLabel = dealerName ? `Chat con ${dealerName}` : 'Soporte OKLA';
+  const bubbleLabel = dealerName
+    ? chat.isAiEnabled
+      ? `Chat con ${dealerName}`
+      : `Mensaje a ${dealerName}`
+    : 'Soporte OKLA';
 
   return (
     <>
@@ -102,7 +102,12 @@ export function VehicleChatWidget({
           <X className="h-5 w-5 text-white" />
         ) : (
           <>
-            <Bot className="h-5 w-5 text-white" />
+            {/* Use MessageCircle icon when AI is disabled (human-only messaging) */}
+            {chat.isAiEnabled ? (
+              <Bot className="h-5 w-5 text-white" />
+            ) : (
+              <MessageCircle className="h-5 w-5 text-white" />
+            )}
             <span className="text-sm font-semibold text-white max-sm:hidden">{bubbleLabel}</span>
             <span className="bg-primary absolute inset-0 animate-ping rounded-full opacity-20" />
           </>
@@ -115,6 +120,13 @@ export function VehicleChatWidget({
         <div className="fixed right-4 bottom-[calc(100vh-120px)] z-[9999] flex w-[380px] items-center gap-2 rounded-t-xl border border-b-0 border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700 max-sm:right-0 max-sm:w-full dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
           <Info className="h-4 w-4 shrink-0" />
           <span>Inicia sesión para guardar esta conversación</span>
+        </div>
+      )}
+      {/* Non-AI mode banner: inform buyer that messages go to human dealer */}
+      {chat.isOpen && !chat.isAiEnabled && (
+        <div className="fixed right-4 bottom-[calc(100vh-160px)] z-[9999] flex w-[380px] items-center gap-2 rounded-t-xl border border-b-0 border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700 max-sm:right-0 max-sm:w-full dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+          <MessageCircle className="h-4 w-4 shrink-0" />
+          <span>El vendedor responde directamente — no hay asistente automático</span>
         </div>
       )}
       <ChatPanel

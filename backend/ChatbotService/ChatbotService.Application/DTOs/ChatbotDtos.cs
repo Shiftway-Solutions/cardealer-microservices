@@ -63,6 +63,13 @@ public record StartSessionResponse
     /// El frontend debe mostrar un botón "Acepto" y llamar POST /api/chat/accept-disclosure.
     /// </summary>
     public bool RequiresConsent { get; init; }
+
+    /// <summary>
+    /// Si true, el dealer tiene AI chat activo en su plan (STARTER+).
+    /// Si false, el dealer está en plan LIBRE/VISIBLE — los mensajes se guardan para
+    /// respuesta humana. El frontend debe mostrar UI de "mensaje al dealer" en vez de bot.
+    /// </summary>
+    public bool IsAiEnabled { get; init; } = true;
 }
 
 /// <summary>

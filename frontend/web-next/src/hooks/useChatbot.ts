@@ -30,6 +30,8 @@ export interface UseChatbotOptions {
   dealerId?: string;
   /** Dealer display name — stored in localStorage so the /mensajes sidebar can list it */
   dealerName?: string;
+  /** Vehicle ID when opening chat from a vehicle detail page — enables SingleVehicle mode */
+  vehicleId?: string;
   /** Whether to auto-start session when hook mounts */
   autoStart?: boolean;
   /** Max retries for failed messages */
@@ -55,6 +57,8 @@ export interface UseChatbotReturn {
   isLimitReached: boolean;
   error: string | null;
   quickReplies: QuickReply[];
+  /** False when dealer's plan does not include AI chat (LIBRE/VISIBLE). Messages go to human dealer. */
+  isAiEnabled: boolean;
 
   // Actions
   open: () => void;
@@ -83,6 +87,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   const {
     dealerId,
     dealerName,
+    vehicleId,
     autoStart = false,
     maxRetries: _maxRetries = 2,
     onLeadGenerated,
@@ -118,6 +123,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
+  // isAiEnabled: true by default; becomes false if backend indicates dealer is on LIBRE/VISIBLE plan
+  const [isAiEnabled, setIsAiEnabled] = useState(true);
 
   // Refs
   const retryCountRef = useRef(0);
@@ -245,6 +252,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         channel: 'web',
         language: 'es',
         dealerId: dealerId,
+        vehicleId: vehicleId,
+        chatMode: vehicleId ? 'single_vehicle' : dealerId ? 'dealer_inventory' : 'general',
         deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
         userAgent: navigator.userAgent,
         ...utmFields,
@@ -256,6 +265,8 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       setBotAvatarUrl(result.botAvatarUrl || null);
       setRemainingInteractions(result.remainingInteractions);
       setIsConnected(true);
+      // Track whether AI is active for this dealer's plan
+      setIsAiEnabled(result.isAiEnabled ?? true);
       saveSession(result.sessionToken, resolvedBotName);
 
       // REMARKETING FIX: Fire pixel events on chat session start.
@@ -560,6 +571,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     isLimitReached,
     error,
     quickReplies,
+    isAiEnabled,
 
     // Actions
     open,

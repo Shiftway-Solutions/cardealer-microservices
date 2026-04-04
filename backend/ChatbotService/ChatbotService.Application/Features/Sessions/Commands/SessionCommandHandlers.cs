@@ -54,6 +54,16 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         // Determinar el modo de chat
         var chatMode = ParseChatMode(request.ChatMode, request.VehicleId, request.DealerId);
 
+        // ── PLAN GATE: Verificar si el dealer tiene AI chat habilitado ──────
+        // Un dealer tiene AI activo si:
+        //   (a) Tiene su propia ChatbotConfiguration (config.DealerId != null) Y
+        //   (b) EnableWebChat = true en esa configuración
+        // Si el dealer usa el config global por defecto (config.DealerId == null
+        // pero request.DealerId.HasValue), significa que no tiene un plan con AI chat
+        // (LIBRE/VISIBLE). En ese caso los mensajes se guardan para respuesta humana.
+        bool isAiEnabled = config.EnableWebChat &&
+            !(request.DealerId.HasValue && config.DealerId == null);
+
         // Crear nueva sesión
         var session = new ChatSession
         {
@@ -71,7 +81,10 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             ChatMode = chatMode,
             VehicleId = request.VehicleId,
             DealerId = request.DealerId ?? config.DealerId,
-            HandoffStatus = HandoffStatus.BotActive,
+            // Si AI no está habilitado por plan, arrancar en modo humano.
+            // SendMessageCommandHandler ya maneja IsBotActive=false: guarda el mensaje
+            // sin llamar al LLM, lo que lo pone en cola para respuesta del dealer.
+            HandoffStatus = isAiEnabled ? HandoffStatus.BotActive : HandoffStatus.HumanActive,
             MessageCount = 0,
             InteractionCount = 0,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
@@ -111,6 +124,13 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         var disclosureMessage = $"🤖 Soy un asistente virtual de OKLA, al servicio de {dealerName}. " +
             $"Al continuar esta conversación, aceptas nuestra política de privacidad: {privacyUrl}";
 
+        // Si AI no está habilitado, ajustar el mensaje de bienvenida y deshabilitar disclosure
+        if (!isAiEnabled)
+        {
+            welcomeMessage = $"Hola 👋 El vendedor {dealerName} no tiene asistente virtual activo. " +
+                "Dejame tu mensaje y te contactará directamente a la brevedad.";
+        }
+
         return new StartSessionResponse
         {
             SessionId = session.Id,
@@ -126,9 +146,10 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
             RemainingInteractions = config.MaxInteractionsPerSession,
             ChatMode = chatMode.ToString(),
-            DisclosureMessage = disclosureMessage,
+            DisclosureMessage = isAiEnabled ? disclosureMessage : string.Empty,
             PrivacyPolicyUrl = privacyUrl,
-            RequiresConsent = config.RequireDisclosureConsent
+            RequiresConsent = isAiEnabled && config.RequireDisclosureConsent,
+            IsAiEnabled = isAiEnabled
         };
     }
 

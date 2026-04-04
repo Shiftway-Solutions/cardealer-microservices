@@ -72,6 +72,8 @@ export interface StartSessionRequest {
   deviceType?: string;
   language?: string;
   dealerId?: string;
+  vehicleId?: string;
+  chatMode?: string;
   // SEM FIX: UTM attribution so chat-generated leads can be traced to campaigns
   utmSource?: string;
   utmMedium?: string;
@@ -113,6 +115,12 @@ export interface StartSessionResponse {
   disclosureMessage?: string;
   privacyPolicyUrl?: string;
   requiresConsent?: boolean;
+  /**
+   * If false, the dealer's plan does not include AI chat (LIBRE/VISIBLE).
+   * Messages are queued for human dealer response instead of AI auto-reply.
+   * Frontend should show a "direct message to dealer" UI in this case.
+   */
+  isAiEnabled: boolean;
 }
 
 export interface ChatbotResponse {

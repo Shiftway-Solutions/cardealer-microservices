@@ -119,3 +119,7 @@
 [2026-04-04 15:28:58] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
 [2026-04-04 15:33:58] [AUDIT-SPRINT] Sprint 32 [reaudit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
 [2026-04-04 15:35:11] [GIT] staging — fix(sprint-32): BUG-5 privacy URL, BUG-14 dashboard crash — push OK
+[2026-04-04 17:52:28] [EJECUCIÓN] REAUDIT Sprint 32 — S32-T01 buyer audit completado, S32-T02 bloqueado por FREE plan. Bugs: BUG-1 (inventory context), BUG-2 (empty msg post-handoff), BUG-3 (system msg OKLA vs dealer name). Redis fix committed + pushed.
+[2026-04-04 17:53:00] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 18:05:57] [MODIFICACIÓN] S32 FIX - ChatbotService plan gate + vehicle context — Arrancando implementación
+[2026-04-04 18:18:59] [GIT] S32 FIX — Plan gate + vehicle context commit
