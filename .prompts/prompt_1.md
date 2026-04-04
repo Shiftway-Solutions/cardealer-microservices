@@ -49,19 +49,23 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S30-T01: Admin: billing y sistema
+- [x] Fix bugs de S30-T01: Admin: billing y sistema
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
+- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
 - Sprint: 30 — Admin — Facturación, Billing y Sistema
 - Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO
+- Bugs corregidos:
+  - ✅ GET /api/admin/billing/transactions → 200 OK (era 404)
+  - ✅ GET /api/admin/billing/pending → 200 OK (era 404)
+  - ✅ SearchAgent /api/search-agent/config → 200 OK (era 502, faltaba perfil `ai` en docker compose up)
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+READ
