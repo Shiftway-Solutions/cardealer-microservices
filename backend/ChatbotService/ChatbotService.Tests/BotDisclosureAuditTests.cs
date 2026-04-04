@@ -585,7 +585,7 @@ public class BotDisclosureAuditTests
     public void ChatbotConfiguration_DefaultPrivacyPolicyUrl_IsOklaPrivacidad()
     {
         var config = new ChatbotConfiguration();
-        config.PrivacyPolicyUrl.Should().Be("https://okla.do/privacidad");
+        config.PrivacyPolicyUrl.Should().Be("https://okla.com.do/privacidad");
     }
 
     [Fact]

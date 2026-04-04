@@ -176,8 +176,9 @@ export async function getDealerAppointments(
   const queryString = params.toString();
   const url = `/api/appointments/dealer/${dealerId}${queryString ? `?${queryString}` : ''}`;
 
-  const response = await apiClient.get<Appointment[]>(url);
-  return response.data;
+  const response = await apiClient.get<{ items: Appointment[] } | Appointment[]>(url);
+  const data = response.data;
+  return Array.isArray(data) ? data : (data as { items: Appointment[] }).items ?? [];
 }
 
 /**

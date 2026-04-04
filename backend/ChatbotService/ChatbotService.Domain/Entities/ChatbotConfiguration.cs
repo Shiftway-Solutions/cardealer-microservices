@@ -71,7 +71,7 @@ public class ChatbotConfiguration
     /// <summary>
     /// URL de la política de privacidad. Se incluye en el mensaje de disclosure.
     /// </summary>
-    public string PrivacyPolicyUrl { get; set; } = "https://okla.do/privacidad";
+    public string PrivacyPolicyUrl { get; set; } = "https://okla.com.do/privacidad";
 
     /// <summary>
     /// Si true, el comprador debe aceptar el disclosure antes de enviar mensajes.

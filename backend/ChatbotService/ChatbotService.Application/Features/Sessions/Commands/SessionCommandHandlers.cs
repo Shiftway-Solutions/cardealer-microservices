@@ -107,7 +107,7 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         // enlace a política de privacidad, y flag de consentimiento.
         // ══════════════════════════════════════════════════════════════
         var dealerName = config.DealerDisplayName ?? "OKLA";
-        var privacyUrl = config.PrivacyPolicyUrl ?? "https://okla.do/privacidad";
+        var privacyUrl = config.PrivacyPolicyUrl ?? "https://okla.com.do/privacidad";
         var disclosureMessage = $"🤖 Soy un asistente virtual de OKLA, al servicio de {dealerName}. " +
             $"Al continuar esta conversación, aceptas nuestra política de privacidad: {privacyUrl}";
 

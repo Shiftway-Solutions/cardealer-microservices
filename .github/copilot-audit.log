@@ -107,3 +107,14 @@
 [2026-04-04 11:42:33] [GATE] FIX 3/3 — Iniciando gate pre-commit
 [2026-04-04 11:49:22] [GIT] FIX 3/3 Sprint 31 — Gate PASS: 0 build errors, 576 frontend tests, 152 SearchAgent tests, spot check 6 queries OK
 [2026-04-04 11:49:23] [AUDIT-SPRINT] Sprint 31 [reaudit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 13:04:22] [GIT] REAUDIT Sprint 31 — Commit and push to staging (59b337b0)
+[2026-04-04 13:08:25] [AUDIT-SPRINT] Sprint 31 completado (ciclo completo)
+[2026-04-04 13:08:25] [AUDIT-SPRINT] Sprint 32 [audit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 13:09:56] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 14:18:03] [MODIFICACIÓN] VehicleChatWidget.tsx — Add dealerId/dealerName props for dealer-scoped chat
+[2026-04-04 14:20:31] [GATE] Iniciando Gate Pre-Commit S32...
+[2026-04-04 14:39:27] [AUDIT-SPRINT] Sprint 32 [audit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 15:09:28] [MODIFICACIÓN] .prompts/prompt_1.md — S32-T01 hallazgos BUG-1 a BUG-9 documentados, pasos 1-5, 9-10 marcados completados
+[2026-04-04 15:16:30] [MODIFICACIÓN] frontend/web-next/src/services/appointments.ts — BUG-14 fix: getDealerAppointments extrae items del paginated response
+[2026-04-04 15:28:58] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 15:33:58] [AUDIT-SPRINT] Sprint 32 [reaudit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
