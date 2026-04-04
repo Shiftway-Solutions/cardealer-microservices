@@ -99,3 +99,5 @@
 [2026-04-04 10:31:39] [EJECUCIÓN] RESOLVER CI/CD ESTANCADO — Cancelado workflow 23980683583 (SearchAgent timeout). Nuevo workflow triggereado en staging. Script de monitoreo ejecutándose.
 [2026-04-04 10:33:04] [GIT] S31 FIX 1/3 — commit d3e2baac pushing staging; CI/CD run 23980895894 conclusion=success
 [2026-04-04 10:55:30] [MODIFICACIÓN] REAUDIT 1/3 — StringOrArrayConverter combustible + Q06 test drive pre-LLM
+[2026-04-04 10:57:18] [AUDIT-SPRINT] Sprint 31 [fix] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 11:07:00] [MODIFICACIÓN] FIX 2/3 — warmup retry loop (3 intentos con 15s delay) para DB not-ready

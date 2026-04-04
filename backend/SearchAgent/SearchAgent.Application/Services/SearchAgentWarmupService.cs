@@ -17,11 +17,19 @@ namespace SearchAgent.Application.Services;
 /// By sending a trivial warmup query 12 seconds after startup, real user requests
 /// always hit a pre-cached system prompt and a live TCP connection, keeping P99
 /// latency under 3 s instead of 5–14 s on cold first call.
+///
+/// Retry strategy: retries up to 3 times with 15 s intervals.
+/// This handles the common case where the DB (SearchAgentConfig) is not ready
+/// when the container first starts (EF Core migration may still be running).
 /// </summary>
 public class SearchAgentWarmupService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<SearchAgentWarmupService> _logger;
+
+    private const int MaxAttempts = 3;
+    private static readonly TimeSpan InitialDelay = TimeSpan.FromSeconds(12);
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(15);
 
     public SearchAgentWarmupService(
         IServiceProvider serviceProvider,
@@ -34,38 +42,54 @@ public class SearchAgentWarmupService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Wait for the application to be fully initialized before making external calls
-        await Task.Delay(TimeSpan.FromSeconds(12), stoppingToken);
+        await Task.Delay(InitialDelay, stoppingToken);
 
         if (stoppingToken.IsCancellationRequested)
             return;
 
         _logger.LogInformation("[Warmup] Pre-warming Claude API connection and system-prompt cache...");
 
-        try
+        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-            await sender.Send(new ProcessSearchQuery(
-                Query: "Toyota",
-                SessionId: "warmup",
-                Page: 1,
-                PageSize: 8,
-                UserId: null,
-                IpAddress: "127.0.0.1"
-            ), stoppingToken);
+                await sender.Send(new ProcessSearchQuery(
+                    Query: "Toyota",
+                    SessionId: "warmup",
+                    Page: 1,
+                    PageSize: 8,
+                    UserId: null,
+                    IpAddress: "127.0.0.1"
+                ), stoppingToken);
 
-            _logger.LogInformation("[Warmup] Claude API warm-up completed — system prompt cached, TCP connection live.");
-        }
-        catch (OperationCanceledException)
-        {
-            // Service is stopping — normal shutdown, not an error
-        }
-        catch (Exception ex)
-        {
-            // Non-critical: warmup failure does NOT prevent service from serving requests.
-            // First real user request will still work, with higher latency.
-            _logger.LogWarning(ex, "[Warmup] Could not pre-warm Claude API (non-critical). First real request may be slower.");
+                _logger.LogInformation(
+                    "[Warmup] Claude API warm-up completed on attempt {Attempt} — system prompt cached, TCP connection live.",
+                    attempt);
+                return; // Success — exit retry loop
+            }
+            catch (OperationCanceledException)
+            {
+                // Service is stopping — normal shutdown, not an error
+                return;
+            }
+            catch (Exception ex) when (attempt < MaxAttempts)
+            {
+                _logger.LogWarning(ex,
+                    "[Warmup] Attempt {Attempt}/{Max} failed (likely DB not ready). Retrying in {Delay}s...",
+                    attempt, MaxAttempts, RetryDelay.TotalSeconds);
+
+                await Task.Delay(RetryDelay, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                // All attempts exhausted — non-critical, first real user request will be slower
+                _logger.LogWarning(ex,
+                    "[Warmup] All {Max} warmup attempts failed. First real request may be slower.",
+                    MaxAttempts);
+            }
         }
     }
 }
