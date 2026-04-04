@@ -84,6 +84,51 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
         }
 
         // ══════════════════════════════════════════════════════════════
+        // PRE-LLM: Contact / Support Intent (instant response, no Claude call)
+        // Handles queries like "Quiero hablar con alguien de OKLA" without
+        // invoking the LLM, eliminating cold-start timeout on first call.
+        // ══════════════════════════════════════════════════════════════
+        if (IsContactOrSupportIntent(request.Query))
+        {
+            _logger.LogInformation("Contact intent detected — returning instant response. Query: {Query}", request.Query);
+            sw.Stop();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _queryRepo.SaveAsync(new SearchQuery
+                    {
+                        OriginalQuery = request.Query,
+                        ReformulatedQuery = request.Query,
+                        UserId = request.UserId,
+                        SessionId = request.SessionId,
+                        IpAddress = request.IpAddress,
+                        FiltersJson = "{}",
+                        Confidence = 1.0f,
+                        FilterLevel = 0,
+                        LatencyMs = (int)sw.ElapsedMilliseconds,
+                        WasCached = false
+                    }, CancellationToken.None);
+                }
+                catch (Exception ex) { _logger.LogWarning(ex, "Failed to save contact intent query log"); }
+            }, CancellationToken.None);
+
+            return new SearchAgentResultDto
+            {
+                AiFilters = new SearchAgentResponse
+                {
+                    Confianza = 1.0f,
+                    ResultadoMinimoGarantizado = 0,
+                    MensajeUsuario = "¡Hola! 👋 Para comunicarte con el equipo de OKLA visítanos en **okla.com.do/contacto**. ¿Te ayudo a buscar un vehículo? 🚗",
+                    Advertencias = new List<string>()
+                },
+                WasCached = false,
+                LatencyMs = (int)sw.ElapsedMilliseconds,
+                IsAiSearchEnabled = true
+            };
+        }
+
+        // ══════════════════════════════════════════════════════════════
         // SAFETY LAYER: Prompt Injection Detection (pre-LLM)
         // RED TEAM v2: Now supports Medium threat sanitization path
         // ══════════════════════════════════════════════════════════════
@@ -372,6 +417,13 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             - "chivo" / "ganga" / "buen deal" (sin número) → precio_max = 1,200,000 (buenos deals)
             Moneda por defecto: DOP. Solo usar USD si el usuario lo especifica explícitamente ("dólares", "USD", "US$").
 
+            INTERPRETACIÓN DE COMBUSTIBLE Y EFICIENCIA:
+            - "no gastar gasolina" / "poco consumo" / "económico en combustible" / "ahorra gasolina" / "eficiente en gasolina" → combustible: "hibrido"
+            - "híbrido" / "hybrid" / "no gasta mucha gasolina" / "consume poca gasolina" → combustible: "hibrido"
+            - "eléctrico" / "electric" / "EV" / "no usa gasolina" / "carga con electricidad" / "enchufable" → combustible: "electrico"
+            - "gas" / "GLP" / "gas licuado" / "gas natural" → combustible: "glp"
+            - "diesel" / "gasoil" → combustible: "diesel"
+
             INTERPRETACIÓN DE MILLAJE Y CONDICIÓN:
             - "bajo millaje" / "poco uso" / "poco rodaje" → kilometraje_max = 50000
             - "de paquete" / "como nuevo" / "casi nuevo" → kilometraje_max = 30000, condicion = "usado"
@@ -402,6 +454,8 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
                → precio_max: 1200000, kilometraje_max: 30000, condicion: "usado", provincia: "Santiago", moneda: "DOP"
             12. "Hilux diesel doble cabina doble tracción"
                → marca: "Toyota", modelo: "Hilux", combustible: "diesel", tipo_vehiculo: "pickup", traccion: "4x4", moneda: "DOP"
+            13. "Un carro que no gaste gasolina por menos de 2 millones"
+               → combustible: "hibrido", precio_max: 2000000, moneda: "DOP"
 
             MARCAS POR SEGMENTO (para afinidad de patrocinados):
             - Económicos: Toyota, Honda, Hyundai, Kia, Nissan, Mitsubishi, Suzuki
@@ -491,6 +545,25 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(bytes)[..16].ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Detects contact/support queries that should be answered instantly without calling Claude.
+    /// Examples: "Quiero hablar con alguien de OKLA", "¿Tienen soporte?", "número de teléfono".
+    /// </summary>
+    private static bool IsContactOrSupportIntent(string query)
+    {
+        var lower = query.ToLowerInvariant();
+        return (lower.Contains("hablar") && (lower.Contains("okla") || lower.Contains("alguien") || lower.Contains("persona"))) ||
+               lower.Contains("soporte") ||
+               lower.Contains("contactar") ||
+               lower.Contains("número de teléfono") ||
+               lower.Contains("servicio al cliente") ||
+               lower.Contains("atención al cliente") ||
+               lower.Contains("atencion al cliente") ||
+               lower.Contains("whatsapp") ||
+               (lower.Contains("comunicar") && lower.Contains("okla")) ||
+               (lower.Contains("llamar") && lower.Contains("okla"));
     }
 
     /// <summary>
