@@ -1,5 +1,5 @@
-# CORRECCIÓN (Intento 1/3) — Sprint 28: Admin — Usuarios, Dealers y KYC
-**Fecha:** 2026-04-03 22:03:56
+# CORRECCIÓN (Intento 2/3) — Sprint 28: Admin — Usuarios, Dealers y KYC
+**Fecha:** 2026-04-04 00:54:31
 **Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://biological-robinson-videos-ward.trycloudflare.com)
 **Usuario:** Admin (admin@okla.local / Admin123!@#)
@@ -49,20 +49,19 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [x] Fix bugs de S28-T01: Admin: gestión de usuarios y dealers (0 bugs — S28 AUDIT PASS)
+- [ ] Fix bugs de S28-T01: Admin: gestión de usuarios y dealers
 
-- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
 - Sprint: 28 — Admin — Usuarios, Dealers y KYC
 - Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://biological-robinson-videos-ward.trycloudflare.com)
 - URL: https://biological-robinson-videos-ward.trycloudflare.com
-- Estado: ✅ COMPLETADO
-- Bugs encontrados: 0 (S28 AUDIT PASS — UF-154/155/156 OK)
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
-READ

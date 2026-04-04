@@ -1,3 +1,13 @@
 [2026-04-03 22:15:07] [DOCKER CLEANUP] ✅ Completada - ~23GB potencialmente liberados
 [2026-04-03 22:20:11] [GATE] S28 FIX Iniciando Gate Pre-Commit — 0 bugs en audit
 [2026-04-03 22:26:21] [GIT] S28 FIX 1/3 — 0 bugs, Gate PASS
+[2026-04-04 00:54:33] [AUDIT-SPRINT] Sprint 28 [fix] [LOCAL] despachado: Admin — Usuarios, Dealers y KYC
+
+[2026-04-04 04:59:00] [DECISION] CI/CD RUNNER STRATEGY — Opción 1 Seleccionada
+  • Mantener runners: ubuntu-latest (GitHub Actions oficial)
+  • Razón: Mayor estabilidad, mejor soporte, sin mantenimiento local
+  • Runner local: Kept as backup (actions.runner... still active in launchctl)
+  • Workflow file: smart-cicd.yml actualizado (ci, deploy, cleanup → ubuntu-latest)
+  • Beneficio: Paridad con runners en producción (DigitalOcean DOKS)
+[2026-04-04 01:23:29] [EJECUCIÓN] RUNNERS RESTART — Reiniciados action runners locales. Status: OK (PID 97663)
+[2026-04-04 01:35:38] [EJECUCIÓN] RUNNER RESTART & RE-REGISTRATION — Hiniciado proceso de reinicio y reinregistración. Status actual: Esperando nuevo PAT con permisos admin:repo_hook
