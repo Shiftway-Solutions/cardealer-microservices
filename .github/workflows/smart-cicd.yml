@@ -424,7 +424,7 @@ jobs:
         with:
           context: backend
           file: backend/AuthService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/authservice:cache
@@ -439,7 +439,7 @@ jobs:
         with:
           context: backend
           file: backend/ErrorService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/errorservice:cache
@@ -454,7 +454,7 @@ jobs:
         with:
           context: backend
           file: backend/NotificationService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/notificationservice:cache
@@ -469,7 +469,7 @@ jobs:
         with:
           context: backend
           file: backend/VehiclesSaleService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/vehiclessaleservice:cache
@@ -484,7 +484,7 @@ jobs:
         with:
           context: backend
           file: backend/MediaService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/mediaservice:cache
@@ -499,7 +499,7 @@ jobs:
         with:
           context: backend
           file: backend/AdminService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/adminservice:cache
@@ -514,7 +514,7 @@ jobs:
         with:
           context: backend
           file: backend/ContactService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/contactservice:cache
@@ -529,7 +529,7 @@ jobs:
         with:
           context: backend
           file: backend/BillingService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/billingservice:cache
@@ -544,7 +544,7 @@ jobs:
         with:
           context: backend
           file: backend/ReviewService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/reviewservice:cache
@@ -559,7 +559,7 @@ jobs:
         with:
           context: backend
           file: backend/Gateway/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/gateway:cache
@@ -574,7 +574,7 @@ jobs:
         with:
           context: backend
           file: backend/ChatbotService/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/chatbotservice:cache
@@ -588,7 +588,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: backend/ChatbotService/LlmServer
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/llm-server:cache
@@ -603,7 +603,7 @@ jobs:
         with:
           context: backend
           file: backend/SearchAgent/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/searchagent:cache
@@ -618,7 +618,7 @@ jobs:
         with:
           context: backend
           file: backend/RecoAgent/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/recoagent:cache
@@ -633,7 +633,7 @@ jobs:
         with:
           context: backend
           file: backend/SupportAgent/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/supportagent:cache
@@ -648,7 +648,7 @@ jobs:
         with:
           context: backend
           file: backend/PricingAgent/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/pricingagent:cache
@@ -662,7 +662,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: frontend/web-next
-          platforms: linux/amd64
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:${{ github.sha }},ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:latest
           cache-from: type=registry,ref=ghcr.io/${{ env.REGISTRY_OWNER }}/frontend-web:cache
