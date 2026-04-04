@@ -84,13 +84,14 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
         }
 
         // ══════════════════════════════════════════════════════════════
-        // PRE-LLM: Contact / Support Intent (instant response, no Claude call)
-        // Handles queries like "Quiero hablar con alguien de OKLA" without
-        // invoking the LLM, eliminating cold-start timeout on first call.
+        // PRE-LLM: Contact / Support / Test Drive Intent (instant 0-results response)
+        // Handles queries like "Quiero hablar con alguien de OKLA" and "Quiero test drive"
+        // PRODUCT RULE: SearchAgent returns FILTERS ONLY — no conversational messages.
+        // Contact/support queries = no vehicle filters → 0 results, no mensaje_usuario.
         // ══════════════════════════════════════════════════════════════
         if (IsContactOrSupportIntent(request.Query))
         {
-            _logger.LogInformation("Contact intent detected — returning instant response. Query: {Query}", request.Query);
+            _logger.LogInformation("Contact/support intent detected — returning 0-results response. Query: {Query}", request.Query);
             sw.Stop();
             _ = Task.Run(async () =>
             {
@@ -104,7 +105,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
                         SessionId = request.SessionId,
                         IpAddress = request.IpAddress,
                         FiltersJson = "{}",
-                        Confidence = 1.0f,
+                        Confidence = 0.0f,
                         FilterLevel = 0,
                         LatencyMs = (int)sw.ElapsedMilliseconds,
                         WasCached = false
@@ -117,9 +118,9 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             {
                 AiFilters = new SearchAgentResponse
                 {
-                    Confianza = 1.0f,
+                    Confianza = 0.0f,
                     ResultadoMinimoGarantizado = 0,
-                    MensajeUsuario = "¡Hola! 👋 Para comunicarte con el equipo de OKLA o agendar un test drive, visítanos en **okla.com.do/contacto**. ¿Te ayudo a buscar un vehículo? 🚗",
+                    MensajeUsuario = null,
                     Advertencias = new List<string>()
                 },
                 WasCached = false,
@@ -522,10 +523,19 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
               "mensaje_usuario": str|null (solo para consultas fuera de contexto)
             }
 
-            Para consultas fuera de contexto (no relacionadas con vehículos):
+            Para consultas fuera de contexto (no relacionadas con vehículos o sin filtros válidos):
             - filtros_exactos: null, filtros_relajados: null, patrocinados_config: null
             - confianza: 0.0, resultado_minimo_garantizado: 0
-            - mensaje_usuario: sugerencia amable de cómo buscar vehículos
+            - mensaje_usuario: null ← OBLIGATORIO, SIEMPRE null para out-of-scope
+            ⛔ PROHIBIDO responder con texto conversacional. NUNCA expliques por qué no puedes ayudar.
+            ⛔ PROHIBIDO incluir "No puedo", "Lo siento", "Entiendo que", ni ninguna respuesta narrativa.
+            El frontend maneja la experiencia de "Sin resultados" automáticamente.
+            EJEMPLOS DE OUT-OF-SCOPE → SIEMPRE retornar: {"filtros_exactos":null,"confianza":0,"resultado_minimo_garantizado":0,"mensaje_usuario":null}
+            - "Cuánto vale un Corolla?" → out-of-scope (pricing)
+            - "Tienen financiamiento?" → out-of-scope (financing question)
+            - "RAV4 vs CRV cuál es mejor?" → out-of-scope (comparison)
+            - "Me robaron, verificar placa" → out-of-scope (legal/security)
+            - "Quiero test drive" → out-of-scope (contact intent)
 
             ⛔ ANTI-ALUCINACIÓN (OBLIGATORIO):
             - NUNCA inventes datos de vehículos, precios ni estadísticas del mercado.

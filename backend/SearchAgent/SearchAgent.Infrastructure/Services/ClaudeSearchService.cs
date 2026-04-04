@@ -181,24 +181,21 @@ public class ClaudeSearchService : IClaudeSearchService
 
     private static SearchAgentResponse CreateFallbackResponse(string query)
     {
+        // Per product requirements: if no valid vehicle filters can be extracted,
+        // return zero results — not a broad "all used vehicles" fallback.
         return new SearchAgentResponse
         {
-            FiltrosExactos = new SearchFilters { Condicion = "usado" },
-            FiltrosRelajados = new SearchFilters(),
-            ResultadoMinimoGarantizado = 8,
-            NivelFiltrosActivo = 5,
-            PatrocinadosConfig = new SponsoredConfig
-            {
-                UmbralAfinidad = 0.45f,
-                MaxPorcentajeResultados = 0.25f,
-                PosicionesFijas = [1, 5, 10],
-                Etiqueta = "Patrocinado"
-            },
+            FiltrosExactos = null,
+            FiltrosRelajados = null,
+            ResultadoMinimoGarantizado = 0,
+            NivelFiltrosActivo = 0,
+            PatrocinadosConfig = null,
             OrdenarPor = "okla_score",
-            Confianza = 0.1f,
+            Confianza = 0.0f,
             QueryReformulada = query,
-            Advertencias = ["No se pudo procesar la consulta con IA. Mostrando resultados generales."],
-            MensajeRelajamiento = "Mostrando los vehículos mejor puntuados disponibles."
+            Advertencias = [],
+            MensajeUsuario = null,
+            MensajeRelajamiento = null
         };
     }
 }
