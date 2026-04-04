@@ -216,3 +216,37 @@ public sealed class DailyFinancialEntryDto
     /// <summary>Net margin for the day.</summary>
     public decimal NetMargin { get; set; }
 }
+
+// ===========================================================================
+// BILLING TRANSACTIONS & PENDING PAYMENTS
+// ===========================================================================
+
+/// <summary>
+/// A billing transaction visible to platform admins.
+/// Corresponds to a payment processed by any dealer.
+/// </summary>
+public sealed class AdminBillingTransactionDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string DealerName { get; set; } = string.Empty;
+    public string Plan { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Currency { get; set; } = "USD";
+    /// <summary>completed | pending | failed | refunded</summary>
+    public string Status { get; set; } = string.Empty;
+    public string Date { get; set; } = string.Empty;
+    public string Method { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// A pending / overdue payment visible to platform admins.
+/// </summary>
+public sealed class AdminPendingPaymentDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string DealerName { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string Currency { get; set; } = "USD";
+    public string DueDate { get; set; } = string.Empty;
+    public int DaysOverdue { get; set; }
+}

@@ -338,3 +338,59 @@ public sealed class GetRevenueByPlanQueryHandler : IRequestHandler<GetRevenueByP
         };
     }
 }
+
+/// <summary>
+/// Handler for recent billing transactions query.
+/// Delegates to IFinancialDataProvider which calls BillingService internal admin endpoint.
+/// Returns empty list on failure (graceful degradation — same pattern as marketing-spend).
+/// </summary>
+public sealed class GetBillingTransactionsQueryHandler
+    : IRequestHandler<GetBillingTransactionsQuery, List<AdminBillingTransactionDto>>
+{
+    private readonly IFinancialDataProvider _financialData;
+    private readonly ILogger<GetBillingTransactionsQueryHandler> _logger;
+
+    public GetBillingTransactionsQueryHandler(
+        IFinancialDataProvider financialData,
+        ILogger<GetBillingTransactionsQueryHandler> logger)
+    {
+        _financialData = financialData;
+        _logger = logger;
+    }
+
+    public async Task<List<AdminBillingTransactionDto>> Handle(
+        GetBillingTransactionsQuery request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Admin requested recent billing transactions (limit={Limit})", request.Limit);
+        return await _financialData.GetRecentTransactionsAsync(request.Limit, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Handler for pending payments query.
+/// Delegates to IFinancialDataProvider which calls BillingService internal admin endpoint.
+/// Returns empty list on failure (graceful degradation).
+/// </summary>
+public sealed class GetPendingPaymentsQueryHandler
+    : IRequestHandler<GetPendingPaymentsQuery, List<AdminPendingPaymentDto>>
+{
+    private readonly IFinancialDataProvider _financialData;
+    private readonly ILogger<GetPendingPaymentsQueryHandler> _logger;
+
+    public GetPendingPaymentsQueryHandler(
+        IFinancialDataProvider financialData,
+        ILogger<GetPendingPaymentsQueryHandler> logger)
+    {
+        _financialData = financialData;
+        _logger = logger;
+    }
+
+    public async Task<List<AdminPendingPaymentDto>> Handle(
+        GetPendingPaymentsQuery request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Admin requested pending payments");
+        return await _financialData.GetPendingPaymentsAsync(cancellationToken);
+    }
+}

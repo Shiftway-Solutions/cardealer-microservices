@@ -48,4 +48,31 @@ public class BillingController : ControllerBase
         var result = await _mediator.Send(new GetRevenueByPlanQuery(period));
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get recent billing transactions across all dealers.
+    /// Returns empty list when BillingService data is unavailable.
+    /// </summary>
+    [HttpGet("transactions")]
+    [ProducesResponseType(typeof(List<AdminBillingTransactionDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AdminBillingTransactionDto>>> GetTransactions(
+        [FromQuery] int limit = 10)
+    {
+        _logger.LogInformation("Admin requested billing transactions (limit={Limit})", limit);
+        var result = await _mediator.Send(new GetBillingTransactionsQuery(limit));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get pending / overdue payments across all dealers.
+    /// Returns empty list when BillingService data is unavailable.
+    /// </summary>
+    [HttpGet("pending")]
+    [ProducesResponseType(typeof(List<AdminPendingPaymentDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<AdminPendingPaymentDto>>> GetPendingPayments()
+    {
+        _logger.LogInformation("Admin requested pending payments");
+        var result = await _mediator.Send(new GetPendingPaymentsQuery());
+        return Ok(result);
+    }
 }

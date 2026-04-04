@@ -59,4 +59,18 @@ public interface IFinancialDataProvider
     /// Sources: Platform configuration setting.
     /// </summary>
     Task<decimal> GetCashBalanceAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Get recent billing transactions across all dealers.
+    /// Sources: BillingService internal admin endpoint.
+    /// Returns empty list on failure (graceful degradation).
+    /// </summary>
+    Task<List<AdminBillingTransactionDto>> GetRecentTransactionsAsync(int limit = 10, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get pending / overdue payments across all dealers.
+    /// Sources: BillingService internal admin endpoint.
+    /// Returns empty list on failure (graceful degradation).
+    /// </summary>
+    Task<List<AdminPendingPaymentDto>> GetPendingPaymentsAsync(CancellationToken ct = default);
 }

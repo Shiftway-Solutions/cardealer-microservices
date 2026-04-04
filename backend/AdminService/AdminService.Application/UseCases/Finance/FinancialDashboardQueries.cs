@@ -16,3 +16,13 @@ public record GetFinancialDashboardQuery(
 /// Returns MRR, dealer count, and unit revenue per plan (libre/visible/pro/elite).
 /// </summary>
 public record GetRevenueByPlanQuery(string? Period = null) : IRequest<RevenueBreakdownDto>;
+
+/// <summary>
+/// Query to get recent billing transactions across all dealers.
+/// </summary>
+public record GetBillingTransactionsQuery(int Limit = 10) : IRequest<List<AdminBillingTransactionDto>>;
+
+/// <summary>
+/// Query to get pending / overdue payments across all dealers.
+/// </summary>
+public record GetPendingPaymentsQuery() : IRequest<List<AdminPendingPaymentDto>>;

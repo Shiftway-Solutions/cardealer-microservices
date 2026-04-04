@@ -319,6 +319,56 @@ public sealed class FinancialDataProvider : IFinancialDataProvider
         return Task.FromResult(0m);
     }
 
+    public async Task<List<AdminBillingTransactionDto>> GetRecentTransactionsAsync(
+        int limit = 10, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("BillingService");
+            var response = await client.GetAsync(
+                $"/api/internal/admin/transactions?limit={limit}", ct);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync(ct);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var items = JsonSerializer.Deserialize<List<AdminBillingTransactionDto>>(json, options);
+                if (items != null)
+                    return items;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[FinancialData] Failed to fetch billing transactions — returning empty list");
+        }
+
+        return [];
+    }
+
+    public async Task<List<AdminPendingPaymentDto>> GetPendingPaymentsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("BillingService");
+            var response = await client.GetAsync("/api/internal/admin/pending", ct);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync(ct);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var items = JsonSerializer.Deserialize<List<AdminPendingPaymentDto>>(json, options);
+                if (items != null)
+                    return items;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[FinancialData] Failed to fetch pending payments — returning empty list");
+        }
+
+        return [];
+    }
+
     // ── PRIVATE RESPONSE DTOs ────────────────────────────────────────────
 
     private static string CapitalizeFirst(string s) =>
