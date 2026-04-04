@@ -17,19 +17,22 @@ public class ChatController : ControllerBase
     private readonly IChatSessionRepository _sessionRepository;
     private readonly IChatMessageRepository _messageRepository;
     private readonly IPromptCacheStats _promptCacheStats;
+    private readonly IChatbotConfigurationRepository _configRepository;
 
     public ChatController(
         IMediator mediator,
         ILogger<ChatController> logger,
         IChatSessionRepository sessionRepository,
         IChatMessageRepository messageRepository,
-        IPromptCacheStats promptCacheStats)
+        IPromptCacheStats promptCacheStats,
+        IChatbotConfigurationRepository configRepository)
     {
         _mediator = mediator;
         _logger = logger;
         _sessionRepository = sessionRepository;
         _messageRepository = messageRepository;
         _promptCacheStats = promptCacheStats;
+        _configRepository = configRepository;
     }
 
     /// <summary>
@@ -67,6 +70,41 @@ public class ChatController : ControllerBase
         {
             _logger.LogError(ex, "Error starting session");
             return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Lightweight probe: returns isAiEnabled and botName for a dealer without starting a session.
+    /// Used by vehicle detail page to conditionally show the AI chat button in the seller card.
+    /// </summary>
+    [HttpGet("dealer-status/{dealerId:guid}")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetDealerChatStatus(Guid dealerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var config = await _configRepository.GetByDealerIdAsync(dealerId, cancellationToken)
+                      ?? await _configRepository.GetDefaultAsync(cancellationToken);
+
+            if (config == null)
+            {
+                return Ok(new { isAiEnabled = false, botName = string.Empty });
+            }
+
+            // Same plan gate logic as StartSession: AI is enabled only when dealer has their own config
+            bool isAiEnabled = config.EnableWebChat && config.DealerId.HasValue;
+
+            return Ok(new
+            {
+                isAiEnabled,
+                botName = isAiEnabled ? (config.BotName ?? string.Empty) : string.Empty
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking dealer chat status for {DealerId}", dealerId);
+            return Ok(new { isAiEnabled = false, botName = string.Empty });
         }
     }
 

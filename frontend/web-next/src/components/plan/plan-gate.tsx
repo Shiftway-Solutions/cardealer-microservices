@@ -120,6 +120,31 @@ const FEATURE_LABELS: Record<PlanFeatureKey, { title: string; description: strin
     title: 'ChatAgent IA',
     description: 'Asistente de chat con IA que responde automáticamente a compradores potenciales.',
   },
+  autoScheduling: {
+    title: 'Agendamiento Automático',
+    description:
+      'Gestiona citas y test drives de forma automática con calendar inteligente. Disponible desde plan PRO.',
+  },
+  canExportAnalytics: {
+    title: 'Exportar Reportes',
+    description:
+      'Descarga tus reportes de rendimiento en PDF y Excel para análisis externo. Disponible desde plan ÉLITE.',
+  },
+  videoTour: {
+    title: 'Video Tour',
+    description:
+      'Añade videos de recorrido del vehículo para más engagement. Disponible desde plan ÉLITE.',
+  },
+  view360Available: {
+    title: 'Vista 360°',
+    description:
+      'Ofrece experiencia de vista 360° interactiva en tus vehículos. Disponible desde plan PRO.',
+  },
+  pricingAgent: {
+    title: 'Agente de Precios IA',
+    description:
+      'Obtén análisis de precios mensuales con IA para optimizar márgenes. Disponible desde plan VISIBLE.',
+  },
   searchPriority: {
     title: 'Prioridad en Búsquedas',
     description: 'Tus publicaciones aparecen primero en los resultados de búsqueda.',
@@ -252,8 +277,10 @@ const PLAN_STYLES: Record<string, { bg: string; text: string; icon: typeof Zap }
   // Dealer plans
   libre: { bg: 'bg-gray-100', text: 'text-gray-700', icon: Zap },
   visible: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Eye },
+  starter: { bg: 'bg-green-100', text: 'text-green-700', icon: Sparkles },
   pro: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Star },
   elite: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Crown },
+  enterprise: { bg: 'bg-rose-100', text: 'text-rose-700', icon: Crown },
   // Seller plans
   libre_seller: { bg: 'bg-gray-100', text: 'text-gray-700', icon: Zap },
   estandar: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Sparkles },
@@ -263,8 +290,10 @@ const PLAN_STYLES: Record<string, { bg: string; text: string; icon: typeof Zap }
 const ALL_PLAN_LABELS: Record<string, string> = {
   libre: 'Libre',
   visible: 'Visible',
+  starter: 'Starter',
   pro: 'PRO',
   elite: 'Élite',
+  enterprise: 'Enterprise',
   libre_seller: 'Libre',
   estandar: 'Estándar',
   verificado: 'Verificado',

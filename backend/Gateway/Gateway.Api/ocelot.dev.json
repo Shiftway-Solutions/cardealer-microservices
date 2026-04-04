@@ -4819,8 +4819,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -4839,8 +4839,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -4859,8 +4859,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -4879,8 +4879,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -4899,8 +4899,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -4908,6 +4908,21 @@
         "DurationOfBreak": 10,
         "TimeoutValue": 30000
       }
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/dealer-status/{dealerId}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ],
+      "DownstreamPathTemplate": "/api/chat/dealer-status/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 5060
+        }
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/chat/session",
@@ -4919,8 +4934,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ]
     },
@@ -4934,8 +4949,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ]
     },
@@ -4949,8 +4964,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "AuthenticationOptions": {
@@ -4966,8 +4981,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ]
     },
@@ -4980,8 +4995,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ]
     },
@@ -4994,8 +5009,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "AuthenticationOptions": {
@@ -5015,8 +5030,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -5035,8 +5050,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "AuthenticationOptions": {
@@ -5061,8 +5076,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "AuthenticationOptions": {
@@ -5084,8 +5099,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {
@@ -5107,8 +5122,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "chatbotservice",
-          "Port": 80
+          "Host": "host.docker.internal",
+          "Port": 5060
         }
       ],
       "QoSOptions": {

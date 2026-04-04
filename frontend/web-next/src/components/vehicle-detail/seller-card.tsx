@@ -35,6 +35,10 @@ interface SellerCardProps {
   className?: string;
   /** Callback to open the ChatbotService chat widget */
   onChatClick?: () => void;
+  /** Whether this dealer has AI chat enabled (from dealer-status probe) */
+  dealerHasAI?: boolean;
+  /** The dealer's bot name (e.g. "Ana", "Carlos") */
+  dealerBotName?: string;
 }
 
 // Extended vehicle type with seller info (to be enhanced)
@@ -57,7 +61,13 @@ interface VehicleWithSeller extends Vehicle {
   };
 }
 
-export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: SellerCardProps) {
+export function SellerCard({
+  vehicle,
+  className,
+  onChatClick: _onChatClick,
+  dealerHasAI = false,
+  dealerBotName,
+}: SellerCardProps) {
   const [showPhone, setShowPhone] = React.useState(false);
   const [loginPromptSource, setLoginPromptSource] = React.useState<'chat' | 'ana' | null>(null);
   const { isAuthenticated } = useAuth();
@@ -347,7 +357,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
         )}
 
         {/* Dealer-specific extras */}
-        {isDealer && (
+        {isDealer && dealerHasAI && (
           <>
             <Button
               variant="outline"
@@ -367,16 +377,18 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
               }}
             >
               <Bot className="h-4 w-4" />
-              Chatear con Ana (IA)
+              {dealerBotName ? `Chatear con ${dealerBotName} (IA)` : 'Chatear con Asistente IA'}
             </Button>
-            {/* Login prompt for unauthenticated users — Ana (IA) */}
+            {/* Login prompt for unauthenticated users — AI assistant */}
             {loginPromptSource === 'ana' && !isAuthenticated && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                      Inicia sesión para chatear con Ana
+                      {dealerBotName
+                        ? `Inicia sesión para chatear con ${dealerBotName}`
+                        : 'Inicia sesión para chatear con el asistente IA'}
                     </p>
                     <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                       Necesitas una cuenta para usar el asistente IA. Es gratis y toma menos de un

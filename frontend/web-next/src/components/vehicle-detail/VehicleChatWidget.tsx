@@ -34,6 +34,8 @@ interface VehicleChatWidgetProps {
   isOpenInitial?: boolean;
   /** Callback when state changes */
   onOpenChange?: (isOpen: boolean) => void;
+  /** Pre-probed AI status — avoids showing "Chat con..." for LIBRE plan dealers before session starts */
+  initialAiEnabled?: boolean;
 }
 
 export function VehicleChatWidget({
@@ -42,6 +44,7 @@ export function VehicleChatWidget({
   dealerName,
   isOpenInitial = false,
   onOpenChange,
+  initialAiEnabled,
 }: VehicleChatWidgetProps) {
   const { isAuthenticated } = useAuth();
   const chat = useChatbot({
@@ -80,8 +83,12 @@ export function VehicleChatWidget({
 
   const displayBotName =
     chat.botName || (dealerName ? `Asistente de ${dealerName}` : 'Soporte OKLA');
-  const bubbleLabel = dealerName
+  // Use initialAiEnabled as pre-session signal to avoid showing "Chat con..." for non-AI dealers
+  const effectiveAiEnabled = chat.isConnected
     ? chat.isAiEnabled
+    : (initialAiEnabled ?? chat.isAiEnabled);
+  const bubbleLabel = dealerName
+    ? effectiveAiEnabled
       ? `Chat con ${dealerName}`
       : `Mensaje a ${dealerName}`
     : 'Soporte OKLA';
@@ -103,7 +110,7 @@ export function VehicleChatWidget({
         ) : (
           <>
             {/* Use MessageCircle icon when AI is disabled (human-only messaging) */}
-            {chat.isAiEnabled ? (
+            {effectiveAiEnabled ? (
               <Bot className="h-5 w-5 text-white" />
             ) : (
               <MessageCircle className="h-5 w-5 text-white" />

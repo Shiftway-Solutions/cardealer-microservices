@@ -146,6 +146,21 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const [showPurchaseModal, setShowPurchaseModal] = React.useState(false);
   const { isPurchased, markPurchased } = useReportPurchase(vehicle.id);
 
+  // Dealer AI status: probe once on mount to decide whether to show AI chat button in SellerCard
+  const [dealerChatInfo, setDealerChatInfo] = React.useState<{
+    isAiEnabled: boolean;
+    botName: string;
+  } | null>(null);
+  React.useEffect(() => {
+    if (vehicle.sellerType !== 'dealer' || !vehicle.sellerId) return;
+    fetch(`/api/chat/dealer-status/${vehicle.sellerId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (d) setDealerChatInfo({ isAiEnabled: d.isAiEnabled, botName: d.botName ?? '' });
+      })
+      .catch(() => {}); // silently fail — defaults to dealerHasAI=false (safe fallback)
+  }, [vehicle.sellerId, vehicle.sellerType]);
+
   // Open purchase modal for OKLA Score report
   const handlePurchaseReportClick = React.useCallback(() => {
     if (isPurchased) return; // Already purchased — report is unlocked
@@ -209,7 +224,11 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Mobile: Seller Card */}
             <div className="lg:hidden">
-              <SellerCard vehicle={vehicle} />
+              <SellerCard
+                vehicle={vehicle}
+                dealerHasAI={dealerChatInfo?.isAiEnabled ?? false}
+                dealerBotName={dealerChatInfo?.botName}
+              />
             </div>
 
             {/* Tabs - Description, Specs, Features */}
@@ -223,7 +242,11 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
               <VehicleHeader vehicle={vehicle} onPurchaseReportClick={handlePurchaseReportClick} />
 
               {/* Seller info */}
-              <SellerCard vehicle={vehicle} />
+              <SellerCard
+                vehicle={vehicle}
+                dealerHasAI={dealerChatInfo?.isAiEnabled ?? false}
+                dealerBotName={dealerChatInfo?.botName}
+              />
             </div>
           </div>
         </div>
@@ -316,6 +339,7 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           vehicle={vehicle}
           dealerId={vehicle.sellerId}
           dealerName={(vehicle as VehicleWithSeller).seller?.name}
+          initialAiEnabled={dealerChatInfo?.isAiEnabled}
         />
       )}
     </div>

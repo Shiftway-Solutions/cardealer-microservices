@@ -33,6 +33,11 @@ export type PlanFeatureKey =
   | 'prioritySupport'
   | 'whatsappIntegration'
   | 'chatAgentWeb'
+  | 'autoScheduling'
+  | 'canExportAnalytics'
+  | 'videoTour'
+  | 'view360Available'
+  | 'pricingAgent'
   // Seller features
   | 'searchPriority'
   | 'verifiedBadge'
@@ -76,8 +81,10 @@ const DEALER_PLAN_LABELS: Record<string, string> = {
   none: 'Sin Plan',
   libre: 'LIBRE',
   visible: 'VISIBLE',
+  starter: 'STARTER',
   pro: 'PRO',
   elite: 'ÉLITE',
+  enterprise: 'ENTERPRISE',
 };
 
 const SELLER_PLAN_LABELS: Record<string, string> = {
@@ -106,13 +113,19 @@ function dealerCanAccess(plan: string, feature: PlanFeatureKey): boolean {
     prioritySupport: limits.prioritySupport,
     whatsappIntegration: limits.whatsappIntegration,
     chatAgentWeb: limits.chatAgentWeb !== 0,
+    autoScheduling: limits.autoScheduling,
+    canExportAnalytics: limits.canExportAnalytics,
+    videoTour: limits.videoTour,
+    view360Available: limits.view360Available,
+    pricingAgent: limits.pricingAgentMonthly !== 0,
     // Seller features mapped for dealers (always available for pro+)
     searchPriority: dp !== DealerPlan.LIBRE,
     verifiedBadge: dp !== DealerPlan.LIBRE,
     detailedStats: limits.analyticsAccess,
     boostAvailable: dp !== DealerPlan.LIBRE,
     socialSharing: true,
-    priceDropAlerts: dp === DealerPlan.PRO || dp === DealerPlan.ELITE,
+    priceDropAlerts:
+      dp === DealerPlan.PRO || dp === DealerPlan.ELITE || dp === DealerPlan.ENTERPRISE,
   };
 
   return map[feature] ?? false;
@@ -122,8 +135,10 @@ function dealerMinPlanFor(feature: PlanFeatureKey): string {
   const planOrder: DealerPlan[] = [
     DealerPlan.LIBRE,
     DealerPlan.VISIBLE,
+    DealerPlan.STARTER,
     DealerPlan.PRO,
     DealerPlan.ELITE,
+    DealerPlan.ENTERPRISE,
   ];
 
   for (const plan of planOrder) {

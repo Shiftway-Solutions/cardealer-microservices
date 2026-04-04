@@ -29,7 +29,8 @@ import {
 import { toast } from 'sonner';
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useTrends, useExportReport, useMonthlyReport } from '@/hooks/use-dealer-analytics';
-import { PlanGate } from '@/components/plan/plan-gate';
+import { PlanGate, UpgradePrompt } from '@/components/plan/plan-gate';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import { formatPrice } from '@/lib/format';
 
@@ -111,6 +112,7 @@ function DealerReportsContent() {
   const { data: stats, isLoading: isStatsLoading } = useDealerStats(dealer?.id);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const dealerId = dealer?.id || '';
+  const { canAccess } = usePlanAccess();
 
   const exportMutation = useExportReport(dealerId);
   const { data: viewsTrend, isError: isTrendsError } = useTrends(dealerId, 'views');
@@ -199,18 +201,22 @@ function DealerReportsContent() {
             <option value="year">Este Año</option>
             <option value="custom">Personalizado</option>
           </select>
-          <Button
-            className="bg-primary hover:bg-primary/90"
-            onClick={handleExportPDF}
-            disabled={exportMutation.isPending}
-          >
-            {exportMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            Exportar PDF
-          </Button>
+          {canAccess('canExportAnalytics') ? (
+            <Button
+              className="bg-primary hover:bg-primary/90"
+              onClick={handleExportPDF}
+              disabled={exportMutation.isPending}
+            >
+              {exportMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Exportar PDF
+            </Button>
+          ) : (
+            <UpgradePrompt feature="canExportAnalytics" variant="inline" />
+          )}
         </div>
       </div>
 
@@ -494,25 +500,27 @@ function DealerReportsContent() {
                   <Badge variant="outline">
                     {report.type === 'monthly' ? 'Mensual' : 'Trimestral'}
                   </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={async () => {
-                      try {
-                        await exportMutation.mutateAsync('pdf');
-                        toast.success('Reporte descargado');
-                      } catch {
-                        toast.error('Error al descargar');
-                      }
-                    }}
-                    disabled={exportMutation.isPending}
-                  >
-                    {exportMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                  </Button>
+                  {canAccess('canExportAnalytics') && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={async () => {
+                        try {
+                          await exportMutation.mutateAsync('pdf');
+                          toast.success('Reporte descargado');
+                        } catch {
+                          toast.error('Error al descargar');
+                        }
+                      }}
+                      disabled={exportMutation.isPending}
+                    >
+                      {exportMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

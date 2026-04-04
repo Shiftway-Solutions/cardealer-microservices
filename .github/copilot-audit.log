@@ -124,3 +124,51 @@
 [2026-04-04 18:05:57] [MODIFICACIÓN] S32 FIX - ChatbotService plan gate + vehicle context — Arrancando implementación
 [2026-04-04 18:18:59] [GIT] S32 FIX — Plan gate + vehicle context commit
 [2026-04-04 18:30:19] [MODIFICACIÓN] smart-cicd.yml — Fix cross-compilation: platforms linux/amd64 → condicional arm64(staging)/amd64(main) en 17 steps Docker build
+[2026-04-04 18:33:31] [AUDIT-SPRINT] Sprint 32 [reaudit] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+
+[2026-04-04 18:34:15] [AUDIT] deploy-local.sh Bug Investigation — Root Cause Analysis Completed
+
+## PROBLEMA
+Reportado: "Core services (gateway, auth, user) are not running. Starting them..."
+Estado: Microservicios colapsaban después de ejecutar `./deploy-local.sh`
+Impacto: 🔴 CRÍTICO — Impide iteración local de desarrollo
+
+## CAUSAS RAÍZ (4 encontradas)
+
+1. PASO 2 - Infra levantada SIN --profile core
+   Efecto: Los servicios nunca se comenzaban a levantar
+   Fix: Agregar `docker compose --profile core up -d` después de infra
+
+2. PASO 4 - Flag `--no-deps` en restart
+   Efecto: Race condition — servicios intentaban start sin deps completamente ready
+   Fix: Remover flag `--no-deps`, dejar que compose gestione deps automáticamente
+
+3. PASO 5 - Health check insuficiente (8s fixed)
+   Efecto: Servicios nunca alcanzaban "healthy" state antes de que check termine
+   Fix: Implementar `wait_for_healthy()` con exponential backoff (max 10 min)
+
+4. PASO 5 - Solo chequea `running`, no `healthy`
+   Efecto: Servicios podían estar "Up" pero "unhealthy" sin detectarse
+   Fix: Chequear `docker compose ps --format "{{.Status}}"` para detectar estado real
+
+## SOLUCIÓN IMPLEMENTADA
+
+Archivos creados:
+  ✅ deploy-local-v2.1.sh (script mejorado)
+  ✅ .github/DEPLOY_LOCAL_AUDIT.md (análisis detallado)
+  ✅ DEPLOY_LOCAL_V2-1_QUICKSTART.md (guía rápida)
+
+Cambios clave:
+  ✅ PASO 2: Espera a deps healthy, levanta core profile
+  ✅ PASO 4: Quita --no-deps, usa --force-recreate solo
+  ✅ PASO 5: Implementa wait_for_healthy() con retry y logs
+  ✅ Todo: Mejor logging y detección de errores
+
+## PRÓXIMOS PASOS
+  1. Reemplazar deploy-local.sh con v2.1 en producción
+  2. Testear con full stack (--all flag)
+  3. Documentar en GUIA-DESARROLLO-RAPIDO.md
+
+[2026-04-04 18:50:10] [MODIFICACIÓN] deploy-local.sh — Reemplazado con v2.1: fix --profile core, removed --no-deps, wait_for_healthy(), postgres_db name
+[2026-04-04 19:03:43] [MODIFICACIÓN] Plan enforcement S32-PASO14 — Added autoScheduling/canExportAnalytics/videoTour/view360Available/pricingAgent feature keys; fixed dealerMinPlanFor STARTER gap; gated citas/calendar pages (PRO+); gated vehicle stats page (analytics); gated export buttons (ELITE+)
+[2026-04-04 19:35:33] [GIT] PASO14+S32-FIX — seller-card AI gate, dealer-status endpoint, gateway host routing, VehicleChatWidget initialAiEnabled

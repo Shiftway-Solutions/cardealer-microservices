@@ -3535,12 +3535,12 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/api/chat/session",
+      "UpstreamPathTemplate": "/api/chat/dealer-status/{dealerId}",
       "UpstreamHttpMethod": [
         "GET",
         "OPTIONS"
       ],
-      "DownstreamPathTemplate": "/api/chat/session",
+      "DownstreamPathTemplate": "/api/chat/dealer-status/{dealerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -3550,9 +3550,11 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
+      "UpstreamPathTemplate": "/api/chat/session",
       "UpstreamHttpMethod": [
         "GET",
+        "OPTIONS"
+      ],
         "OPTIONS"
       ],
       "DownstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
