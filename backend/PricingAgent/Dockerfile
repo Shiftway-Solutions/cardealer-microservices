@@ -50,6 +50,8 @@ USER appuser
 
 COPY --from=publish --chown=appuser:appuser /app/publish .
 
+ENTRYPOINT ["dotnet", "PricingAgent.Api.dll"]
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/pricing-agent/health || exit 1
 

@@ -1,6 +1,6 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
-**Fecha:** 2026-04-04 09:47:21
-**Fase:** REAUDIT
+# AUDITORÍA — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
+**Fecha:** 2026-04-04 09:52:15
+**Fase:** AUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Buyer + Dealer
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
@@ -19,15 +19,20 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 31 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -235,7 +240,7 @@ _(documentar aquí lo encontrado)_
 
 ## Resultado
 - Sprint: 31 — SearchAgent — Profesionalización y Ajuste Fino
-- Fase: REAUDIT
+- Fase: AUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
 - Estado: EN PROGRESO
