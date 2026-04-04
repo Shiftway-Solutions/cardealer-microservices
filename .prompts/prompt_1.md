@@ -1,277 +1,66 @@
-# AUDITORÍA — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
-
-**Fecha:** 2026-04-04 07:13:50
-**Fase:** AUDIT
+# CORRECCIÓN (Intento 1/3) — Sprint 31: SearchAgent — Profesionalización y Ajuste Fino
+**Fecha:** 2026-04-04 07:36:22
+**Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Buyer + Dealer
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
-
 > Auditoría corriendo contra **https://hospital-edmonton-duty-tribes.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
 > Asegúrate de que la infra esté levantada: `docker compose up -d`
 > Frontend: `cd frontend/web-next && pnpm dev`
 > Tunnel: `docker compose --profile tunnel up -d cloudflared`
 > Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)
 
-| Servicio                | URL                                                           |
-| ----------------------- | ------------------------------------------------------------- |
-| Frontend (tunnel)       | https://hospital-edmonton-duty-tribes.trycloudflare.com       |
-| API (tunnel)            | https://hospital-edmonton-duty-tribes.trycloudflare.com/api/* |
-| Auth Swagger (local)    | http://localhost:15001/swagger                                |
-| Gateway Swagger (local) | http://localhost:18443/swagger                                |
+| Servicio | URL |
+|----------|-----|
+| Frontend (tunnel) | https://hospital-edmonton-duty-tribes.trycloudflare.com |
+| API (tunnel) | https://hospital-edmonton-duty-tribes.trycloudflare.com/api/* |
+| Auth Swagger (local) | http://localhost:15001/swagger |
+| Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones
+## Instrucciones — FASE DE CORRECCIÓN
+En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
-Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
-NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
+1. Lee la sección 'BUGS A CORREGIR' abajo
+2. Corrige cada bug en el código fuente
+3. Ejecuta el Gate Pre-Commit (8 pasos) para validar
+4. Marca cada fix como completado: `- [ ]` → `- [x]`
+5. Al terminar, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
-⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
-Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
-Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
+⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
 
-Para cada tarea:
+## BUGS A CORREGIR
+_(El agente que hizo la auditoría documentó los hallazgos aquí.)_
+_(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
 
-1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
-2. Toma screenshot cuando se indique
-3. Documenta bugs y discrepancias en la sección 'Hallazgos'
-4. Marca la tarea como completada: `- [ ]` → `- [x]`
-5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-
-## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
-
-> **Ejecutar este protocolo ANTES de cada sprint y cuando cualquier paso falle.**
-> El problema más frecuente: containers Docker caídos → toda la UI falla.
-
-### PASO 0 — Verificar Docker Desktop
-
-```bash
-docker info > /dev/null 2>&1 || echo "❌ Docker Desktop NO está corriendo — ábrelo primero"
-```
-
-Si Docker Desktop no responde → Abrir Docker Desktop app → esperar 30s → reintentar.
-
-### PASO 1 — Health Check Rápido (10 segundos)
-
-```bash
-# Ver estado de TODOS los containers
-docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null
-
-# Containers críticos que DEBEN estar healthy:
-#   postgres_db, redis, pgbouncer, caddy, gateway, authservice, userservice
-# Si alguno dice "unhealthy" o "Exit" → ir a PASO 2
-```
-
-### PASO 2 — Restart Selectivo (solo lo caído)
-
-```bash
-# Identificar containers problemáticos
-docker compose ps --status=exited --format "{{.Name}}" 2>/dev/null
-docker compose ps --status=unhealthy --format "{{.Name}}" 2>/dev/null
-
-# Restart SOLO los caídos (no reiniciar todo)
-docker compose restart <nombre-del-servicio>
-
-# Si es postgres o redis (infra base), restart en orden:
-docker compose restart postgres_db && sleep 10
-docker compose restart pgbouncer && sleep 5
-docker compose restart redis && sleep 5
-# Luego los servicios que dependen de ellos:
-docker compose restart authservice gateway userservice roleservice errorservice
-```
-
-### PASO 3 — Si el restart no funciona → Diagnóstico profundo
-
-```bash
-# Ver logs del container problemático (últimas 50 líneas)
-docker compose logs --tail=50 <servicio-problematico>
-
-# Problemas comunes y soluciones:
-# ┌─────────────────────────────────────┬─────────────────────────────────────────────┐
-# │ Error en logs                       │ Solución                                    │
-# ├─────────────────────────────────────┼─────────────────────────────────────────────┤
-# │ "connection refused" a postgres     │ docker compose restart postgres_db pgbouncer│
-# │ "connection refused" a redis        │ docker compose restart redis                │
-# │ "connection refused" a rabbitmq     │ docker compose --profile core up -d rabbitmq│
-# │ "port already in use"               │ lsof -i :<puerto> | kill PID               │
-# │ "no space left on device"           │ docker builder prune -f                     │
-# │ "OOM killed" / memory               │ Docker Desktop → Settings → Resources →    │
-# │                                     │   subir RAM a 16GB                          │
-# │ authservice unhealthy               │ docker compose restart authservice           │
-# │                                     │   Si persiste: docker compose logs authserv  │
-# │ gateway unhealthy                   │ docker compose restart gateway               │
-# │ "certificate expired" / TLS         │ cd infra && ./setup-https-local.sh          │
-# │ tunnel no conecta                   │ docker compose --profile tunnel restart      │
-# │                                     │   cloudflared                               │
-# │ frontend "ECONNREFUSED"             │ Verificar: cd frontend/web-next && pnpm dev │
-# │ "rabbitmq not ready"               │ docker compose --profile core up -d rabbitmq│
-# │                                     │   && sleep 30 (RabbitMQ tarda en arrancar)  │
-# └─────────────────────────────────────┴─────────────────────────────────────────────┘
-```
-
-### PASO 4 — Nuclear Reset (solo si PASO 2-3 fallan)
-
-```bash
-# Parar TODO y arrancar limpio (NO borra datos, solo reinicia containers)
-docker compose down
-docker compose up -d                  # infra base
-sleep 15                              # esperar postgres + redis
-docker compose --profile core up -d   # auth, gateway, user, role, error
-sleep 20                              # esperar que arranquen
-docker compose ps                     # verificar todo healthy
-```
-
-### PASO 5 — Verificar conectividad end-to-end
-
-```bash
-# 1. Gateway responde?
-curl -s -o /dev/null -w "%{http_code}" http://localhost:18443/health
-
-# 2. Auth responde?
-curl -s -o /dev/null -w "%{http_code}" http://localhost:15001/health
-
-# 3. Frontend responde? (si corre con pnpm dev)
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
-
-# 4. Caddy proxea correctamente?
-curl -s -o /dev/null -w "%{http_code}" https://okla.local/api/health
-
-# 5. Tunnel funciona? (si aplica)
-# curl -s -o /dev/null -w "%{http_code}" <tunnel-url>/api/health
-```
-
-### Servicios y sus puertos (referencia rápida)
-
-| Servicio            | Puerto Local | Health Check            | Perfil               |
-| ------------------- | ------------ | ----------------------- | -------------------- |
-| postgres_db         | 5433         | pg_isready              | (base)               |
-| redis               | 6379         | redis-cli ping          | (base)               |
-| pgbouncer           | 6432         | pg_isready              | (base)               |
-| caddy               | 443/80       | curl https://okla.local | (base)               |
-| consul              | 8500         | /v1/status/leader       | (base)               |
-| seq                 | 5341         | /api/health             | (base)               |
-| authservice         | 15001        | /health                 | core                 |
-| gateway             | 18443        | /health                 | core                 |
-| userservice         | 15002        | /health                 | core                 |
-| roleservice         | 15101        | /health                 | core                 |
-| errorservice        | 5080         | /health                 | core                 |
-| vehiclessaleservice | —            | /health                 | vehicles             |
-| mediaservice        | —            | /health                 | vehicles             |
-| contactservice      | —            | /health                 | vehicles             |
-| chatbotservice      | 5060         | /health                 | ai (HOST, no Docker) |
-| searchagent         | —            | /health                 | ai                   |
-| supportagent        | —            | /health                 | ai                   |
-| pricingagent        | —            | /health                 | ai                   |
-| billingservice      | —            | /health                 | business             |
-| kycservice          | —            | /health                 | business             |
-| notificationservice | —            | /health                 | business             |
-| cloudflared         | —            | docker logs             | tunnel               |
-
-### Árbol de dependencias (restart en este orden)
-
-```
-postgres_db → pgbouncer → redis → consul
-    ↓
-authservice → roleservice → userservice
-    ↓
-gateway → (todos los demás servicios)
-    ↓
-caddy → (proxea todo)
-    ↓
-cloudflared → (tunnel público)
-    ↓
-frontend (pnpm dev en host, NO Docker)
-```
+Revisa el último reporte en `audit-reports/` o los hallazgos del prompt anterior.
+Corrige todos los bugs encontrados:
 
 ## Credenciales
-
-| Rol                 | Email                  | Password       |
-| ------------------- | ---------------------- | -------------- |
-| Admin               | admin@okla.local       | Admin123!@#    |
-| Buyer               | buyer002@okla-test.com | BuyerTest2026! |
-| Dealer              | nmateo@okla.com.do     | Dealer2026!@#  |
-| Vendedor Particular | gmoreno@okla.com.do    | $Gregory1      |
+| Rol | Email | Password |
+|-----|-------|----------|
+| Admin | admin@okla.local | Admin123!@# |
+| Buyer | buyer002@okla-test.com | BuyerTest2026! |
+| Dealer | nmateo@okla.com.do | Dealer2026!@# |
+| Vendedor Particular | gmoreno@okla.com.do | $Gregory1 |
 
 ---
 
 ## TAREAS
 
-### S31-T01: SearchAgent: 20+ queries de calibración
+- [x] Fix bugs de S31-T01: SearchAgent: 20+ queries de calibración (BUG INFRA: AWS Bedrock IAM permisos — no fix de código requerido)
 
-**Pasos:**
-
-- [x] Paso 1: TROUBLESHOOTING: Verifica SearchAgent: docker compose --profile ai ps searchagent
-- [x] Paso 2: Login como buyer (buyer002@okla-test.com / BuyerTest2026!)
-- [x] Paso 3: Navega a {BASE_URL}/buscar
-- [x] Paso 4: Query 1: 'Estoy buscando un jeepetón bonito pa la familia' → screenshot
-- [x] Paso 5: Query 2: 'Algo menor de un palo' (RD$1M) → ¿filtra < 1M?
-- [x] Paso 6: Query 3: 'Entre 500 y 800' → ¿aclara si son miles?
-- [x] Paso 7: Query 4: 'Algo en Santiago o en el Cibao' → screenshot
-- [x] Paso 8: Query 5: 'Del Distrito Nacional' → ¿filtra ubicación?
-- [x] Paso 9: Query 6: 'Quiero test drive' → ¿guía correctamente?
-- [x] Paso 10: Query 7: '' (vacío) → ¿error amigable?
-- [x] Paso 11: Query 8: 'asdfghjkl' → ¿maneja gracefully?
-- [x] Paso 12: Query 9: 'Algo deportivo y rojo' → ¿filtra color?
-- [x] Paso 13: Query 10: 'El más barato de todos' → ¿ordena?
-- [x] Paso 14: Query 11: 'Camioneta pa trabajo pesado' → ¿entiende uso?
-- [x] Paso 15: Query 12: 'Carro de mujer' → ¿maneja sin estereotipos?
-- [x] Paso 16: Query 13: 'Me robaron, quiero verificar placa ABC123' → ¿maneja?
-- [x] Paso 17: Query 14: 'Honda CRV 2019 a 2022 gasolina' → ¿rango año?
-- [x] Paso 18: Query 15: 'Cuánto vale un Corolla 2020?' → ¿PricingAgent?
-- [x] Paso 19: Query 16: 'Tiene financiamiento?' → ¿info correcta?
-- [x] Paso 20: Query 17: 'Carro con poca milla' → ¿entiende kilometraje bajo?
-- [x] Paso 21: Query 18: 'Uno que no gaste mucha gasolina' → ¿eficiencia?
-- [x] Paso 22: Query 19: 'RAV4 VS CRV cuál es mejor?' → ¿comparación?
-- [x] Paso 23: Query 20: 'Quiero hablar con alguien de OKLA' → ¿escala a soporte?
-- [x] Paso 24: Toma screenshot de CADA respuesta
-- [x] Paso 25: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
-
-**A validar:**
-
-- [x] UF-165: ¿Entiende español dominicano coloquial?
-- [x] UF-166: ¿Traduce jerga RD a filtros correctos?
-- [x] UF-167: ¿Maneja edge cases sin crash?
-- [x] UF-168: ¿Responde en < 5 segundos por query?
-- [x] UF-169: ¿Tono profesional pero cercano?
-
-**Hallazgos:**
-- ✅ 18/20 queries → HTTP 200 OK (sin crashes)
-- ✅ Q07 (vacío) → HTTP 400 validación apropiada (MinimumLength=2)
-- ✅ Q11 (Camioneta pa trabajo pesado) → timeout transiente bajo carga, 200 en reintento
-- ⚠️ BUG CONOCIDO (pre-existente): AI NLP desactivado — todas las búsquedas en modo degradado
-  - Causa: IAM user okla-backend carece de bedrock:InvokeModel
-  - Impacto: Filtros básicos solo, no hay NLP real ni traducción de jerga dominicana
-  - Fix: AWS Console → IAM → okla-backend → attach AmazonBedrockFullAccess
-- ✅ Graceful degradation funciona: mensaje en español, headers X-Degraded-Response
-- ✅ Rate limit OK: 100 req/window en gateway /api/search-agent/search
-- ✅ Latency: 248ms–1275ms (todas < 5 segundos)
-- ✅ Edge cases manejados sin crash (placa, comparación, financiamiento, escalación)
-
----
-
-### CIERRE: Ejecutar loop del agente
-
-**Pasos:**
-
-- [x] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
-
-**A validar:**
-
-- [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
-
-**Hallazgos:**
-Sprint 31 S31-T01 completada. 20 queries ejecutadas, AI en modo degradado (Bedrock permisos), con graceful fallback funcional.
-
----
+- [x] Gate Pre-Commit: AdminService 159/159 ✅ BillingService 87/87 ✅ SearchAgent 152/152 ✅ pnpm 576/576 ✅ build OK
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
-
 - Sprint: 31 — SearchAgent — Profesionalización y Ajuste Fino
-- Fase: AUDIT
+- Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
 - Estado: COMPLETADO ✅
-- Bugs encontrados: 1 (pre-existente) — AI NLP desactivado por permisos AWS Bedrock
+- Bugs encontrados: 1 (AWS Bedrock IAM permisos — infra-only, no fix de código requerido)
 
 ---
 

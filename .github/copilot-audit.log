@@ -58,3 +58,6 @@
 [2026-04-04 07:13:50] [AUDIT-SPRINT] Sprint 30 completado (ciclo completo)
 [2026-04-04 07:13:51] [AUDIT-SPRINT] Sprint 31 [audit] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
 [2026-04-04 07:36:11] [AUDIT] S31 SearchAgent 20 queries ejecutadas — AI degraded (Bedrock perms), graceful fallback OK
+[2026-04-04 07:36:23] [AUDIT-SPRINT] Sprint 31 [fix] [LOCAL] despachado: SearchAgent — Profesionalización y Ajuste Fino
+[2026-04-04 07:38:35] [GATE] S31 FIX - Iniciando gate pre-commit
+[2026-04-04 08:10:40] [GATE] S31 FIX - Gate passed: AdminService 159/159, BillingService 87/87, SearchAgent 152/152, pnpm 576/576
