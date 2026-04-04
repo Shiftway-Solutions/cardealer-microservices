@@ -26,12 +26,14 @@
     24,
     25,
     26,
-    27
+    27,
+    28,
+    29
   ],
-  "sprint_actual": 28,
+  "sprint_actual": 30,
   "inicio": "2026-03-28T00:00:00.000000",
-  "phase": "fix",
-  "fix_attempt": 3,
+  "phase": "audit",
+  "fix_attempt": 0,
   "use_local": true,
   "force_tunnel": false
 }
