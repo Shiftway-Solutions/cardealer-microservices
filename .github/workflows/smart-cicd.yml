@@ -50,7 +50,7 @@ jobs:
   # ============================================================
   ci:
     name: "🔨 CI — Build, Test & Push Images"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 65 # Reduced from 120: prevent docker build hangs
     outputs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
@@ -763,7 +763,7 @@ jobs:
     name: "🚀 Deploy to Production"
     needs: ci
     if: github.ref == 'refs/heads/main' && needs.ci.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 30 # Fail fast if kubectl stuck (reduced from no limit)
     environment: staging
 
@@ -857,7 +857,7 @@ jobs:
     name: "🧹 Cleanup Runner"
     needs: [ci]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 15
 
     steps:
