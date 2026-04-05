@@ -198,3 +198,6 @@ Cambios clave:
 [2026-04-04 22:03:11] [AUDIT-SPRINT] Sprint 34 [fix] [LOCAL] despachado: E2E Buyer — Buscar → Comparar → Contactar → Favoritos
 [2026-04-04 22:08:54] [GATE] Iniciando Gate Pre-Commit S34 FIX 3/3...
 [2026-04-04 22:14:49] [GATE] ✅ Gate completo — 0 unit test failures, integration tests pre-existentes ignorados
+[2026-04-04 22:15:42] [AUDIT-SPRINT] Sprint 34 [reaudit] [LOCAL] despachado: E2E Buyer — Buscar → Comparar → Contactar → Favoritos
+[2026-04-04 22:23:33] [AUDIT] S34 REAUDIT 3/3 — Browser audit iniciado, frontend en http://localhost:3000
+[2026-04-04 22:36:19] [AUDIT] S34 REAUDIT 3/3 COMPLETE — 0 bugs, UF-181/182/183 verified
