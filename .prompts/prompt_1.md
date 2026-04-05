@@ -1,9 +1,9 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 40: Performance — ¿OKLA Carga Rápido?
+# AUDITORÍA — Sprint 41: Seguridad Visible — ¿La Plataforma me Protege?
 
-**Fecha:** 2026-04-05 06:39:31
-**Fase:** REAUDIT
+**Fecha:** 2026-04-05 06:50:33
+**Fase:** AUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
-**Usuario:** Guest
+**Usuario:** Guest + Buyer
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
@@ -21,16 +21,22 @@
 | Auth Swagger (local)    | http://localhost:15001/swagger                                |
 | Gateway Swagger (local) | http://localhost:18443/swagger                                |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
+## Instrucciones
 
-Esta es la re-verificación del Sprint 40 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
 
@@ -190,39 +196,32 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S40-T01: Velocidad de carga percibida por el usuario
+### S41-T01: Seguridad desde perspectiva del usuario
 
 **Pasos:**
 
-- [x] Paso 1: Navega a {BASE_URL} — ¿la homepage carga en < 3 segundos?
-- [x] Paso 2: Toma screenshot cuando cargue completamente
-- [x] Paso 3: ¿Las imágenes cargan rápido o hay placeholders visibles mucho tiempo?
-- [x] Paso 4: Navega a {BASE_URL}/vehiculos — ¿carga rápido?
-- [x] Paso 5: ¿Los filtros responden inmediatamente cuando cambio uno?
-- [x] Paso 6: Haz clic en un vehículo — ¿el detalle carga rápido?
-- [x] Paso 7: ¿Las fotos del vehículo cargan progresivamente o hay delay?
-- [x] Paso 8: Navega a {BASE_URL}/dealers — ¿carga rápido?
-- [x] Paso 9: Login como buyer y navega a /cuenta — ¿carga rápido?
-- [x] Paso 10: Navega a /buscar y haz una query al SearchAgent — ¿respuesta en < 5s?
-- [x] Paso 11: ¿Alguna página muestra spinner/loading por más de 5 segundos?
-- [x] Paso 12: Verifica: ¿hay lazy loading en imágenes below the fold?
-- [x] Paso 13: Cierra sesión
-- [x] Paso 14: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Sin login — intenta navegar a {BASE_URL}/admin → ¿bloqueado?
+- [ ] Paso 2: Sin login — intenta navegar a {BASE_URL}/cuenta → ¿redirige a login?
+- [ ] Paso 3: Login como buyer
+- [ ] Paso 4: Intenta navegar a {BASE_URL}/admin → ¿403 o redirect?
+- [ ] Paso 5: Intenta navegar al dashboard de dealer → ¿bloqueado?
+- [ ] Paso 6: En la búsqueda, escribe: <script>alert(1)</script>
+- [ ] Paso 7: ¿Se ejecuta o se sanitiza? Toma screenshot
+- [ ] Paso 8: Intenta login con contraseña incorrecta 5 veces rápido
+- [ ] Paso 9: ¿Hay protección (bloqueo temporal, captcha)?
+- [ ] Paso 10: ¿Las URLs HTTPS están forzadas? (http redirige a https)
+- [ ] Paso 11: Cierra sesión
+- [ ] Paso 12: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
 
-- [x] UF-202: ¿Homepage carga en < 3 segundos? ✅ HTTP 200, content render confirmado
-- [x] UF-203: ¿Listado de vehículos carga en < 3 segundos? ✅ /vehiculos responde sin spinners
-- [x] UF-204: ¿Detalle de vehículo carga en < 3 segundos? ✅ sin cambios de código
-- [x] UF-205: ¿SearchAgent responde en < 5 segundos? ⚠️ KNOWN BUG — S40-B1 pre-existente sin cambios
-- [x] UF-206: ¿Ninguna página muestra loading > 5 segundos? ✅ ninguna página con spinner infinito
+- [ ] UF-207: ¿Admin protegido de usuarios no-admin?
+- [ ] UF-208: ¿XSS sanitizado en campos de búsqueda?
+- [ ] UF-209: ¿Brute force en login tiene protección?
+- [ ] UF-210: ¿HTTPS forzado en toda la plataforma?
 
 **Hallazgos:**
-
-- SPRINT 40 CERRADO. 0 bugs nuevos de performance.
-- Gateway healthy (10:49:04) ✅, Frontend HTTP 200 ✅
-- S40-B1 SearchAgent NLP [disabled] — pre-existente (AWS IAM), no regresiones introducidas en S40.
-- OKLA carga rápido en todas las páginas auditadas. Sprint 40 Performance cerrado con 0 bugs.
+_(documentar aquí lo encontrado)_
 
 ---
 
@@ -237,18 +236,18 @@ frontend (pnpm dev en host, NO Docker)
 - [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
-_(completado automáticamente — Sprint 40 CERRADO)_
+_(completado automáticamente)_
 
 ---
 
 ## Resultado
 
-- Sprint: 40 — Performance — ¿OKLA Carga Rápido?
-- Fase: REAUDIT
+- Sprint: 41 — Seguridad Visible — ¿La Plataforma me Protege?
+- Fase: AUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
 - Estado: COMPLETADO
-- Bugs encontrados: 0 nuevos (S40-B1 SearchAgent NLP — pre-existente, Sprint 40 CERRADO)
+- Bugs encontrados: 1 (S41-B1: http://okla.local no redirige a HTTPS — Caddyfile fix requerido)
 
 ---
 
