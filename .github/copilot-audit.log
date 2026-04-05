@@ -201,3 +201,8 @@ Cambios clave:
 [2026-04-04 22:15:42] [AUDIT-SPRINT] Sprint 34 [reaudit] [LOCAL] despachado: E2E Buyer — Buscar → Comparar → Contactar → Favoritos
 [2026-04-04 22:23:33] [AUDIT] S34 REAUDIT 3/3 — Browser audit iniciado, frontend en http://localhost:3000
 [2026-04-04 22:36:19] [AUDIT] S34 REAUDIT 3/3 COMPLETE — 0 bugs, UF-181/182/183 verified
+[2026-04-04 22:36:42] [AUDIT-SPRINT] Sprint 34 completado (ciclo completo)
+[2026-04-04 22:36:42] [AUDIT-SPRINT] Sprint 35 [audit] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-04 22:40:41] [AUDIT] S35 AUDIT — Iniciando E2E Seller journey
+[2026-04-04 23:13:09] [EJECUCIÓN] S35 AUDIT — E2E Seller journey completo. Bugs: S35-B1 (upload stuck), S35-B2 (guardar 400), S35-B3 (mis-vehiculos fallback port 8080→80). UF-184 PARCIAL, UF-185 PARCIAL, UF-186 ✅
+[2026-04-04 23:13:13] [AUDIT-SPRINT] Sprint 35 [fix] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
