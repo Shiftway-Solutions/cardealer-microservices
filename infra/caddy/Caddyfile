@@ -44,6 +44,13 @@ https://okla.local {
 	}
 }
 
+# ── HTTP → HTTPS redirect for okla.local (S41-B1 security fix) ─────────────
+# Redirects http://okla.local to https://okla.local (OWASP A05: Security Misconfiguration)
+# Note: generic :80 block below is retained for cloudflared tunnel (different Host header)
+http://okla.local {
+        redir https://okla.local{uri} permanent
+}
+
 # ── HTTP — Endpoint para cloudflared tunnel ──────────────────────────────────
 :80 {
 	# Mismas rutas, sin TLS (cloudflared provee HTTPS al exterior)
