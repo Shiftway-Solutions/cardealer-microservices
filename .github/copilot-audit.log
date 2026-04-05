@@ -326,3 +326,4 @@ Cambios clave:
 [2026-04-05 09:15:46] [GIT] SPRINT42-REAUDIT CI/CD — run 24002116317 conclusion=success en staging
 [2026-04-05 09:22:49] [BACKUP] vehicle-detail-client.tsx — agregar PricingAgent deal rating fetch
 [2026-04-05 09:26:50] [MODIFICACIÓN] vehicle-detail-client.tsx + types/index.ts — deal rating badge via PricingAgent fetch
+[2026-04-05 09:29:26] [EJECUCIÓN] SPRINT42-FIX2 — DealRatingBadge visible en vehicle detail: badge SOBREPRECIADO mostrado para Kia Sportage 2023 via PricingAgent API

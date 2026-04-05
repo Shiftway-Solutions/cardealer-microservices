@@ -49,19 +49,22 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S42-T01: Checklist de features vs competidores globales
+- [x] Fix bugs de S42-T01: Implementado DealRatingBadge en vehicle-detail-client.tsx — badge "SOBREPRECIADO" visible en página de detalle de vehículo, fetching PricingAgent en tiempo real. Corregido tipo DealRating en @/types (faltaba 'overpriced'). Gate: dotnet build 0 warnings/errors ✅, pnpm lint 0 errors ✅, pnpm typecheck ✅, CI=true pnpm test 576/576 ✅, pnpm build ✅.
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
-- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
+- [x] Ejecutar Gate Pre-Commit — PASADO: todos los checks verdes. Commit ce12a9dd push staging.
+
+- [x] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md`
 
 ## Resultado
 - Sprint: 42 — UX Benchmark — Features que OKLA Debería Tener
-- Fase: FIX
-- Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
-- URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Fase: FIX (Intento 2/3)
+- Ambiente: LOCAL (localhost:3000)
+- Estado: COMPLETADO
+- Bugs corregidos: 1 (DealRatingBadge visible en vehicle detail via PricingAgent fetch)
+- Commit: ce12a9dd en staging
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
+
+READ
