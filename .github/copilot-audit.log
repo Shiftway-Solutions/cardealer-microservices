@@ -303,3 +303,5 @@ Cambios clave:
 [2026-04-05 07:10:12] [EJECUCIÓN] S41 AUDIT — 1 bug encontrado. S41-B1: http://okla.local no redirige a HTTPS (Caddyfile). UF-207/208/209 pasan. UF-210 parcial.
 [2026-04-05 07:10:37] [AUDIT-SPRINT] Sprint 41 [fix] [LOCAL] despachado: Seguridad Visible — ¿La Plataforma me Protege?
 [2026-04-05 07:18:49] [MODIFICACIÓN] infra/caddy/Caddyfile — S41-B1: HTTP→HTTPS redirect para http://okla.local. Gate 576/576.
+[2026-04-05 07:19:08] [AUDIT-SPRINT] Sprint 41 [reaudit] [LOCAL] despachado: Seguridad Visible — ¿La Plataforma me Protege?
+[2026-04-05 07:24:59] [EJECUCIÓN] S41 REAUDIT 1/3 — S41-B1 fix vérificado. http://okla.local 301 → HTTPS. UF-207/208/209/210 todos pasan.
