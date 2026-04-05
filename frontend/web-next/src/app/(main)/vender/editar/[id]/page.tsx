@@ -97,9 +97,8 @@ export default function EditVehiclePage() {
         // NOTE: v.fuelType comes from transformVehicle() which maps backend enum to Spanish
         // display labels (e.g. "Gasolina"). The Select value must use the catalog key (e.g.
         // "gasoline") for the option to be selected and for toEnum() to map it correctly on save.
-        const fuelTypeKey = fuels.find(f => f.label === v.fuelType)?.value
-          || v.fuelType?.toLowerCase()
-          || '';
+        const fuelTypeKey =
+          fuels.find(f => f.label === v.fuelType)?.value || v.fuelType?.toLowerCase() || '';
         setForm({
           price: v.price,
           currency: v.currency || 'DOP',

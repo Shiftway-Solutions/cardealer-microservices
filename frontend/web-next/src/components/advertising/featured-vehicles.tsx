@@ -234,7 +234,9 @@ export default function FeaturedVehicles({
         // Generate slug matching backend format ({year}-{make}-{model}-{shortId8})
         // when the API doesn't return one — avoids trim being included in the title-based fallback
         const shortId = (v.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
-        const generatedSlug = v.slug || `${v.year}-${(v.make || '').toLowerCase().replace(/\s+/g, '-')}-${(v.model || '').toLowerCase().replace(/\s+/g, '-')}-${shortId}`;
+        const generatedSlug =
+          v.slug ||
+          `${v.year}-${(v.make || '').toLowerCase().replace(/\s+/g, '-')}-${(v.model || '').toLowerCase().replace(/\s+/g, '-')}-${shortId}`;
         return {
           vehicleId: v.id,
           campaignId: '',
