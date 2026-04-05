@@ -1,6 +1,6 @@
-# AUDITORÍA — Sprint 37: E2E Admin — Jornada de Trabajo Completa
-**Fecha:** 2026-04-05 02:01:22
-**Fase:** AUDIT
+# RE-AUDITORÍA (Verificación de fixes, intento 1/3) — Sprint 37: E2E Admin — Jornada de Trabajo Completa
+**Fecha:** 2026-04-05 02:17:23
+**Fase:** REAUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Admin (admin@okla.local / Admin123!@#)
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
@@ -19,20 +19,15 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones
-Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
-NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
+## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
+Esta es la re-verificación del Sprint 37 (intento 1/3).
+Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
 
-⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
-Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
-Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
+- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
+  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
 
-Para cada tarea:
-1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
-2. Toma screenshot cuando se indique
-3. Documenta bugs y discrepancias en la sección 'Hallazgos'
-4. Marca la tarea como completada: `- [ ]` → `- [x]`
-5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -187,47 +182,37 @@ frontend (pnpm dev en host, NO Docker)
 ### S37-T01: E2E Journey del admin (jornada diaria)
 
 **Pasos:**
-- [x] Paso 1: Login como admin (admin@okla.local / Admin123!@#)
-- [x] Paso 2: Paso 1: Dashboard → KPIs: 1,250 usuarios, 1 dealer, RD$0 MRR, Claude API $0.00/$800 budget ✅
-- [x] Paso 3: Paso 2: Cola KYC → 0 pendientes, 0 en progreso, 0 aprobados, 0 rechazados ✅
-- [x] Paso 4: Paso 3: Contenido → 4 banners, 4 páginas, 3 artículos, 24,580 vistas totales ✅
-- [x] Paso 5: Paso 4: Reseñas → 0 pendientes, 0 reportados ✅
-- [x] Paso 6: Paso 5: Facturación → RD$0 MRR, 0 suscripciones, carga graceful ✅
-- [x] Paso 7: Paso 6: Nuevos dealers → 1 dealer (Auto Mateo RD, LIBRE, Activo) ✅
-- [x] Paso 8: Paso 7: Usuarios → 1,250 total, 1,100 activos, 45 suspendidos, +120 este mes ✅
-- [x] Paso 9: Paso 8: Costos LLM → visibles en dashboard: Claude API $0.00 / $800 budget, gráfico de tendencia diaria ✅
-- [x] Paso 10: Paso 9: Logs del sistema → S37-B1: AuditService requiere --profile business, error con mensaje claro ⚠️
-- [x] Paso 11: Paso 10: SearchAgent config → S37-B2: 502 (--profile ai no corriendo, bug conocido) ⚠️
-- [x] Paso 12: Cierra sesión → redirect a /login ✅
-- [x] Paso 13: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Login como admin (admin@okla.local / Admin123!@#)
+- [ ] Paso 2: Paso 1: Dashboard → KPIs del día — screenshot
+- [ ] Paso 3: Paso 2: Cola KYC → aprobar/rechazar un dealer — screenshot
+- [ ] Paso 4: Paso 3: Contenido reportado → moderar un listado — screenshot
+- [ ] Paso 5: Paso 4: Reseñas pendientes → aprobar/rechazar una — screenshot
+- [ ] Paso 6: Paso 5: Facturación → ingresos de la semana — screenshot
+- [ ] Paso 7: Paso 6: Nuevos dealers → ¿todos verificados? — screenshot
+- [ ] Paso 8: Paso 7: Usuarios nuevos hoy → revisar lista — screenshot
+- [ ] Paso 9: Paso 8: Costos LLM → ¿cuánto gastamos hoy en IA? — screenshot
+- [ ] Paso 10: Paso 9: Logs del sistema → ¿errores recientes? — screenshot
+- [ ] Paso 11: Paso 10: SearchAgent config → ¿está respondiendo bien? — screenshot
+- [ ] Paso 12: Cierra sesión
+- [ ] Paso 13: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] UF-190: ¿El admin puede completar su jornada sin trabas? → ✅ 10/10 secciones funcionales (S37-B1/B2 son infra, no bloquean al admin)
-- [x] UF-191: ¿KYC aprobación/rechazo funcional? → ✅ página KYC carga, cola vacía (0 solicitudes), UI de aprobación/rechazo visible
-- [x] UF-192: ¿Métricas y costos visibles y útiles? → ✅ Dashboard con KPIs reales, Claude API $0.00/$800, gráfico tendencia diaria
+- [ ] UF-190: ¿El admin puede completar su jornada sin trabas?
+- [ ] UF-191: ¿KYC aprobación/rechazo funcional?
+- [ ] UF-192: ¿Métricas y costos visibles y útiles?
 
 **Hallazgos:**
-- ✅ Dashboard (/admin): 1,250 usuarios totales, 1 dealer activo (Auto Mateo RD), RD$0 MRR, Claude API $0.00/$800 budget
-- ✅ KYC: 0 solicitudes pendientes (cola vacía, UI funcional)
-- ✅ Contenido: 4 banners, 4 páginas, 24,580 vistas totales
-- ✅ Reseñas: 0 pendientes, 0 reportados
-- ✅ Facturación: RD$0 MRR, empty state graceful (billingservice 502 manejado)
-- ✅ Dealers: 1 dealer (Auto Mateo RD, LIBRE, Activo, nmateo@okla.com.do)
-- ✅ Usuarios: 1,250 total, 1,100 activos, 45 suspendidos, +120 este mes
-- ✅ Costos LLM: visibles en dashboard, Claude API $0.00 este mes vs $800 presupuesto
-- ⚠️ S37-B1 (INFRA): /admin/logs → "AuditService puerto 15112" error. auditservice requiere --profile business
-- ⚠️ S37-B2 (INFRA/KNOWN BUG): /admin/search-agent → 502, searchagent requiere --profile ai (bug conocido en instrucciones)
-- ✅ Logout: /login redirect OK
+_(documentar aquí lo encontrado)_
 
 ---
 
 ### CIERRE: Ejecutar loop del agente
 
 **Pasos:**
-- [x] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
+- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
 _(documentar aquí lo encontrado)_
@@ -236,14 +221,12 @@ _(documentar aquí lo encontrado)_
 
 ## Resultado
 - Sprint: 37 — E2E Admin — Jornada de Trabajo Completa
-- Fase: AUDIT
+- Fase: REAUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
-- Estado: COMPLETADO
-- Bugs encontrados: S37-B1 (INFRA — AuditService requires --profile business), S37-B2 (INFRA/KNOWN — SearchAgent requires --profile ai)
+- Estado: EN PROGRESO
+- Bugs encontrados: _(completar)_
 
 ---
 
 _Cuando termines las tareas, agrega la palabra READ al final de este archivo y luego ejecuta la última tarea: `.prompts/AGENT_LOOP_PROMPT.md`._
-
-READ
