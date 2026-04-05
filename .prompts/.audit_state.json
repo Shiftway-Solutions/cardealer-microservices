@@ -31,12 +31,15 @@
     29,
     30,
     31,
-    32
+    32,
+    33,
+    34,
+    35
   ],
-  "sprint_actual": 33,
+  "sprint_actual": 36,
   "inicio": "2026-03-28T00:00:00.000000",
-  "phase": "fix",
-  "fix_attempt": 1,
+  "phase": "audit",
+  "fix_attempt": 0,
   "use_local": true,
   "force_tunnel": false
 }

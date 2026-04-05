@@ -213,3 +213,15 @@ Cambios clave:
 [2026-04-04 23:40:22] [GATE] ✅ S35 FIX 1/3 COMPLETO — bf859ce9, CI/CD success
 [2026-04-04 23:40:44] [AUDIT-SPRINT] Sprint 35 [reaudit] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
 [2026-04-05 00:08:20] [MODIFICACIÓN] vehicles.ts + editar/page.tsx — S35-B2b: CONDITION_TO_ENUM missing certified key
+[2026-04-05 00:19:15] [AUDIT-SPRINT] Sprint 35 [fix] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-05 00:21:19] [GATE] S35 FIX 2/3 — iniciando (no code changes, all bugs fixed)
+[2026-04-05 00:23:04] [GATE] S35 FIX 2/3 — completado, no code changes needed
+[2026-04-05 00:23:15] [AUDIT-SPRINT] Sprint 35 [reaudit] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-05 00:32:25] [EJECUCIÓN] S35 REAUDIT 2/3 — completado, todos los fixes verificados, 0 bugs nuevos
+[2026-04-05 00:32:46] [AUDIT-SPRINT] Sprint 35 [fix] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-05 00:35:45] [GATE] S35 FIX 3/3 — completado, no code changes, gate green
+[2026-04-05 00:35:47] [AUDIT-SPRINT] Sprint 35 [reaudit] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-05 00:40:11] [EJECUCIÓN] S35 REAUDIT 3/3 — completado, todos los fixes verificados 3 veces, 0 bugs
+[2026-04-05 00:40:17] [AUDIT-SPRINT] Sprint 35 completado (ciclo completo)
+[2026-04-05 00:40:17] [AUDIT-SPRINT] Sprint 36 [audit] [LOCAL] despachado: E2E Dealer — Dashboard → Inventario → Leads → Analytics
+[2026-04-05 00:54:26] [EJECUCIÓN] S36 AUDIT — Completado. UF-187/188/189 ✅. S36-B1 infra (notifications 502). READ escrito.
