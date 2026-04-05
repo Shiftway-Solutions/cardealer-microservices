@@ -38,12 +38,12 @@ public class VehiclesSaleServiceClient : IVehiclesSaleServiceClient
         try
         {
             var instance = await _serviceDiscovery.FindServiceInstanceAsync("VehiclesSaleService");
-            return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://vehiclessaleservice:8080";
+            return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://vehiclessaleservice:80";
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error resolving VehiclesSaleService from Consul, using fallback");
-            return "http://vehiclessaleservice:8080";
+            return "http://vehiclessaleservice:80";
         }
     }
 

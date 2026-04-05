@@ -206,3 +206,7 @@ Cambios clave:
 [2026-04-04 22:40:41] [AUDIT] S35 AUDIT — Iniciando E2E Seller journey
 [2026-04-04 23:13:09] [EJECUCIÓN] S35 AUDIT — E2E Seller journey completo. Bugs: S35-B1 (upload stuck), S35-B2 (guardar 400), S35-B3 (mis-vehiculos fallback port 8080→80). UF-184 PARCIAL, UF-185 PARCIAL, UF-186 ✅
 [2026-04-04 23:13:13] [AUDIT-SPRINT] Sprint 35 [fix] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-04 23:26:18] [GATE] Iniciando S35 FIX 1/3...
+[2026-04-04 23:34:30] [MODIFICACIÓN] VehiclesSaleServiceClient.cs — S35-B3: port 8080→80
+[2026-04-04 23:34:30] [MODIFICACIÓN] vender/editar/page.tsx — S35-B2: fuelType catalog key fix
+[2026-04-04 23:34:30] [MODIFICACIÓN] photo-upload-manager.tsx — S35-B1: upload spinner stuck when all fail

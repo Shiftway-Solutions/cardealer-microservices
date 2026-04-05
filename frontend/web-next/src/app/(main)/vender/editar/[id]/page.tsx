@@ -93,13 +93,19 @@ export default function EditVehiclePage() {
         setTransmissions(trans);
         setBodyTypes(bodies);
 
-        // Populate form with current vehicle data
+        // Populate form with current vehicle data.
+        // NOTE: v.fuelType comes from transformVehicle() which maps backend enum to Spanish
+        // display labels (e.g. "Gasolina"). The Select value must use the catalog key (e.g.
+        // "gasoline") for the option to be selected and for toEnum() to map it correctly on save.
+        const fuelTypeKey = fuels.find(f => f.label === v.fuelType)?.value
+          || v.fuelType?.toLowerCase()
+          || '';
         setForm({
           price: v.price,
           currency: v.currency || 'DOP',
           mileage: v.mileage,
           transmission: v.transmission || '',
-          fuelType: v.fuelType || '',
+          fuelType: fuelTypeKey,
           bodyType: v.bodyType || '',
           exteriorColor: v.exteriorColor || '',
           interiorColor: v.interiorColor || '',

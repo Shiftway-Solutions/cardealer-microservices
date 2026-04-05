@@ -207,9 +207,15 @@ export function PhotoUploadManager({
         );
       },
       onQueueProgress: (completed: number, total: number) => {
-        if (completed === total && total > 0) {
+        const status = queueRef.current?.getStatus();
+        // BUG S35-B1 FIX: include failed files in "done" check.
+        // Previously only fired when completed===total, which meant all-error
+        // scenarios (completed=0, total=N) never cleared isUploading.
+        const allDone = status
+          ? status.total > 0 && status.completed + status.failed >= status.total
+          : completed === total && total > 0;
+        if (allDone) {
           setIsUploading(false);
-          const status = queueRef.current?.getStatus();
           if (status && status.failed > 0) {
             toast.warning(`${status.completed} fotos subidas, ${status.failed} con error`);
           } else {
