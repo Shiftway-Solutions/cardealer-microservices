@@ -1,6 +1,6 @@
-# AUDITORÍA — Sprint 33: Consistencia de Datos — Planes Coinciden en Todas las Páginas
-**Fecha:** 2026-04-04 20:57:34
-**Fase:** AUDIT
+# CORRECCIÓN (Intento 1/3) — Sprint 33: Consistencia de Datos — Planes Coinciden en Todas las Páginas
+**Fecha:** 2026-04-04 21:06:35
+**Fase:** FIX
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Guest + Seller + Dealer
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
@@ -19,158 +19,23 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones
-Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
-NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
+## Instrucciones — FASE DE CORRECCIÓN
+En la auditoría anterior se encontraron bugs. Tu trabajo ahora es:
 
-⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
-Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
-Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
+1. Lee la sección 'BUGS A CORREGIR' abajo
+2. Corrige cada bug en el código fuente
+3. Ejecuta el Gate Pre-Commit (8 pasos) para validar
+4. Marca cada fix como completado: `- [ ]` → `- [x]`
+5. Al terminar, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
-Para cada tarea:
-1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
-2. Toma screenshot cuando se indique
-3. Documenta bugs y discrepancias en la sección 'Hallazgos'
-4. Marca la tarea como completada: `- [ ]` → `- [x]`
-5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+⚠️ NO hagas commit aún — primero el sprint debe pasar RE-AUDITORÍA
 
+## BUGS A CORREGIR
+_(El agente que hizo la auditoría documentó los hallazgos aquí.)_
+_(Lee el archivo de reporte del sprint anterior para ver los bugs.)_
 
-## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
-
-> **Ejecutar este protocolo ANTES de cada sprint y cuando cualquier paso falle.**
-> El problema más frecuente: containers Docker caídos → toda la UI falla.
-
-### PASO 0 — Verificar Docker Desktop
-```bash
-docker info > /dev/null 2>&1 || echo "❌ Docker Desktop NO está corriendo — ábrelo primero"
-```
-Si Docker Desktop no responde → Abrir Docker Desktop app → esperar 30s → reintentar.
-
-### PASO 1 — Health Check Rápido (10 segundos)
-```bash
-# Ver estado de TODOS los containers
-docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null
-
-# Containers críticos que DEBEN estar healthy:
-#   postgres_db, redis, pgbouncer, caddy, gateway, authservice, userservice
-# Si alguno dice "unhealthy" o "Exit" → ir a PASO 2
-```
-
-### PASO 2 — Restart Selectivo (solo lo caído)
-```bash
-# Identificar containers problemáticos
-docker compose ps --status=exited --format "{{.Name}}" 2>/dev/null
-docker compose ps --status=unhealthy --format "{{.Name}}" 2>/dev/null
-
-# Restart SOLO los caídos (no reiniciar todo)
-docker compose restart <nombre-del-servicio>
-
-# Si es postgres o redis (infra base), restart en orden:
-docker compose restart postgres_db && sleep 10
-docker compose restart pgbouncer && sleep 5
-docker compose restart redis && sleep 5
-# Luego los servicios que dependen de ellos:
-docker compose restart authservice gateway userservice roleservice errorservice
-```
-
-### PASO 3 — Si el restart no funciona → Diagnóstico profundo
-```bash
-# Ver logs del container problemático (últimas 50 líneas)
-docker compose logs --tail=50 <servicio-problematico>
-
-# Problemas comunes y soluciones:
-# ┌─────────────────────────────────────┬─────────────────────────────────────────────┐
-# │ Error en logs                       │ Solución                                    │
-# ├─────────────────────────────────────┼─────────────────────────────────────────────┤
-# │ "connection refused" a postgres     │ docker compose restart postgres_db pgbouncer│
-# │ "connection refused" a redis        │ docker compose restart redis                │
-# │ "connection refused" a rabbitmq     │ docker compose --profile core up -d rabbitmq│
-# │ "port already in use"               │ lsof -i :<puerto> | kill PID               │
-# │ "no space left on device"           │ docker builder prune -f                     │
-# │ "OOM killed" / memory               │ Docker Desktop → Settings → Resources →    │
-# │                                     │   subir RAM a 16GB                          │
-# │ authservice unhealthy               │ docker compose restart authservice           │
-# │                                     │   Si persiste: docker compose logs authserv  │
-# │ gateway unhealthy                   │ docker compose restart gateway               │
-# │ "certificate expired" / TLS         │ cd infra && ./setup-https-local.sh          │
-# │ tunnel no conecta                   │ docker compose --profile tunnel restart      │
-# │                                     │   cloudflared                               │
-# │ frontend "ECONNREFUSED"             │ Verificar: cd frontend/web-next && pnpm dev │
-# │ "rabbitmq not ready"               │ docker compose --profile core up -d rabbitmq│
-# │                                     │   && sleep 30 (RabbitMQ tarda en arrancar)  │
-# └─────────────────────────────────────┴─────────────────────────────────────────────┘
-```
-
-### PASO 4 — Nuclear Reset (solo si PASO 2-3 fallan)
-```bash
-# Parar TODO y arrancar limpio (NO borra datos, solo reinicia containers)
-docker compose down
-docker compose up -d                  # infra base
-sleep 15                              # esperar postgres + redis
-docker compose --profile core up -d   # auth, gateway, user, role, error
-sleep 20                              # esperar que arranquen
-docker compose ps                     # verificar todo healthy
-```
-
-### PASO 5 — Verificar conectividad end-to-end
-```bash
-# 1. Gateway responde?
-curl -s -o /dev/null -w "%{http_code}" http://localhost:18443/health
-
-# 2. Auth responde?
-curl -s -o /dev/null -w "%{http_code}" http://localhost:15001/health
-
-# 3. Frontend responde? (si corre con pnpm dev)
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
-
-# 4. Caddy proxea correctamente?
-curl -s -o /dev/null -w "%{http_code}" https://okla.local/api/health
-
-# 5. Tunnel funciona? (si aplica)
-# curl -s -o /dev/null -w "%{http_code}" <tunnel-url>/api/health
-```
-
-### Servicios y sus puertos (referencia rápida)
-| Servicio | Puerto Local | Health Check | Perfil |
-|----------|-------------|--------------|--------|
-| postgres_db | 5433 | pg_isready | (base) |
-| redis | 6379 | redis-cli ping | (base) |
-| pgbouncer | 6432 | pg_isready | (base) |
-| caddy | 443/80 | curl https://okla.local | (base) |
-| consul | 8500 | /v1/status/leader | (base) |
-| seq | 5341 | /api/health | (base) |
-| authservice | 15001 | /health | core |
-| gateway | 18443 | /health | core |
-| userservice | 15002 | /health | core |
-| roleservice | 15101 | /health | core |
-| errorservice | 5080 | /health | core |
-| vehiclessaleservice | — | /health | vehicles |
-| mediaservice | — | /health | vehicles |
-| contactservice | — | /health | vehicles |
-| chatbotservice | 5060 | /health | ai (HOST, no Docker) |
-| searchagent | — | /health | ai |
-| supportagent | — | /health | ai |
-| pricingagent | — | /health | ai |
-| billingservice | — | /health | business |
-| kycservice | — | /health | business |
-| notificationservice | — | /health | business |
-| cloudflared | — | docker logs | tunnel |
-
-### Árbol de dependencias (restart en este orden)
-```
-postgres_db → pgbouncer → redis → consul
-    ↓
-authservice → roleservice → userservice
-    ↓
-gateway → (todos los demás servicios)
-    ↓
-caddy → (proxea todo)
-    ↓
-cloudflared → (tunnel público)
-    ↓
-frontend (pnpm dev en host, NO Docker)
-```
-
+Revisa el último reporte en `audit-reports/` o los hallazgos del prompt anterior.
+Corrige todos los bugs encontrados:
 
 ## Credenciales
 | Rol | Email | Password |
@@ -184,53 +49,14 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S33-T01: Verificar planes seller en todas las páginas
+- [ ] Fix bugs de S33-T01: Verificar planes seller en todas las páginas
 
-**Pasos:**
-- [ ] Paso 1: Navega a {BASE_URL}/vender como guest
-- [ ] Paso 2: Anota TODOS los planes de seller y precios (Libre, Estándar, Verificado)
-- [ ] Paso 3: Toma screenshot
-- [ ] Paso 4: Login como seller (gmoreno@okla.com.do / $Gregory1)
-- [ ] Paso 5: Navega a {BASE_URL}/cuenta/suscripcion
-- [ ] Paso 6: Anota los planes y precios que aparecen aquí
-- [ ] Paso 7: Toma screenshot
-- [ ] Paso 8: ¿Los planes en /vender == /cuenta/suscripcion? Si difieren → BUG
-- [ ] Paso 9: Cierra sesión
-- [ ] Paso 10: Navega a {BASE_URL}/dealers como guest
-- [ ] Paso 11: Anota TODOS los planes de dealer y precios
-- [ ] Paso 12: Login como dealer (nmateo@okla.com.do / Dealer2026!@#)
-- [ ] Paso 13: Navega a suscripción del dealer
-- [ ] Paso 14: ¿Los planes coinciden con lo de /dealers?
-- [ ] Paso 15: ¿La tasa de cambio RD$/USD es la misma en todas las páginas?
-- [ ] Paso 16: Cierra sesión
-- [ ] Paso 17: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
-
-**A validar:**
-- [ ] UF-178: ¿Planes seller consistentes entre /vender y /cuenta/suscripcion?
-- [ ] UF-179: ¿Planes dealer consistentes entre /dealers y dashboard?
-- [ ] UF-180: ¿Tasa de cambio consistente en toda la plataforma?
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
-
-### CIERRE: Ejecutar loop del agente
-
-**Pasos:**
-- [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
-
-**A validar:**
-- [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
-
-**Hallazgos:**
-_(documentar aquí lo encontrado)_
-
----
+- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [ ] Agregar `READ` al final de este archivo y luego ejecutar `.prompts/AGENT_LOOP_PROMPT.md` 
 
 ## Resultado
 - Sprint: 33 — Consistencia de Datos — Planes Coinciden en Todas las Páginas
-- Fase: AUDIT
+- Fase: FIX
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
 - Estado: EN PROGRESO

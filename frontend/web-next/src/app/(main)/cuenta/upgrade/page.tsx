@@ -442,7 +442,7 @@ function buildSellerComparisonAll(): ComparisonRow3[] {
     {
       label: 'Renovación listing',
       libre: '—',
-      estandar: 'RD$406/listing',
+      estandar: 'RD$579/listing',
       verificado: 'Incluida',
     },
     {

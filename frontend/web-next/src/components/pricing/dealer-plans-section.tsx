@@ -40,7 +40,7 @@ export function DealerPlansSection() {
     },
     {
       name: 'VISIBLE',
-      price: formatPrice(pricing.dealerVisible || 1699),
+      price: formatPrice(pricing.dealerVisible || 1682),
       period: '/mes',
       icon: Zap,
       description: 'Más visibilidad y herramientas',
@@ -61,7 +61,7 @@ export function DealerPlansSection() {
     },
     {
       name: 'STARTER',
-      price: formatPrice(pricing.dealerStarter || 3499),
+      price: formatPrice(pricing.dealerStarter || 3422),
       period: '/mes',
       icon: Star,
       description: 'Primer paso con ChatAgent',
@@ -82,7 +82,7 @@ export function DealerPlansSection() {
     },
     {
       name: 'PRO',
-      price: formatPrice(pricing.dealerPro || 5799),
+      price: formatPrice(pricing.dealerPro || 5742),
       period: '/mes',
       icon: Sparkles,
       description: 'Herramientas avanzadas de venta',
@@ -105,7 +105,7 @@ export function DealerPlansSection() {
     },
     {
       name: 'ÉLITE',
-      price: formatPrice(pricing.dealerElite || 20299),
+      price: formatPrice(pricing.dealerElite || 20242),
       period: '/mes',
       icon: Crown,
       description: 'Para grandes concesionarios',

@@ -590,7 +590,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'visible',
     name: 'VISIBLE',
-    price: 1699,
+    price: 1682,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
@@ -607,7 +607,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'starter',
     name: 'STARTER',
-    price: 3499,
+    price: 3422,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
@@ -626,7 +626,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'pro',
     name: 'PRO',
-    price: 5799,
+    price: 5742,
     maxListings: -1, // unlimited
     isPopular: true,
     features: [
@@ -647,7 +647,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'elite',
     name: 'ÉLITE',
-    price: 20299,
+    price: 20242,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
@@ -667,7 +667,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'enterprise',
     name: 'ENTERPRISE',
-    price: 34999,
+    price: 34742,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
