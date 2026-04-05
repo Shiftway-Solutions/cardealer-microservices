@@ -397,6 +397,7 @@ export default function EditVehiclePage() {
                 <SelectContent>
                   <SelectItem value="new">Nuevo</SelectItem>
                   <SelectItem value="like-new">Casi Nuevo</SelectItem>
+                  <SelectItem value="certified">Certificado Pre-Owned</SelectItem>
                   <SelectItem value="excellent">Excelente</SelectItem>
                   <SelectItem value="good">Bueno</SelectItem>
                   <SelectItem value="fair">Aceptable</SelectItem>

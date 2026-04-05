@@ -210,3 +210,6 @@ Cambios clave:
 [2026-04-04 23:34:30] [MODIFICACIÓN] VehiclesSaleServiceClient.cs — S35-B3: port 8080→80
 [2026-04-04 23:34:30] [MODIFICACIÓN] vender/editar/page.tsx — S35-B2: fuelType catalog key fix
 [2026-04-04 23:34:30] [MODIFICACIÓN] photo-upload-manager.tsx — S35-B1: upload spinner stuck when all fail
+[2026-04-04 23:40:22] [GATE] ✅ S35 FIX 1/3 COMPLETO — bf859ce9, CI/CD success
+[2026-04-04 23:40:44] [AUDIT-SPRINT] Sprint 35 [reaudit] [LOCAL] despachado: E2E Seller — Publicar → Gestionar → Estadísticas
+[2026-04-05 00:08:20] [MODIFICACIÓN] vehicles.ts + editar/page.tsx — S35-B2b: CONDITION_TO_ENUM missing certified key

@@ -1139,6 +1139,7 @@ export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
 const CONDITION_TO_ENUM: Record<string, string> = {
   new: 'New',
   'like-new': 'CertifiedPreOwned',
+  certified: 'CertifiedPreOwned', // FIX S35-B2b: mapCondition returns 'certified' for CertifiedPreOwned
   excellent: 'Used',
   good: 'Used',
   fair: 'Used',
