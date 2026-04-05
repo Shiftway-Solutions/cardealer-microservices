@@ -1,6 +1,6 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 38: Accesibilidad — Navegación Solo con Teclado
-**Fecha:** 2026-04-05 04:10:06
-**Fase:** REAUDIT
+# AUDITORÍA — Sprint 39: SEO — ¿OKLA Aparece en Google?
+**Fecha:** 2026-04-05 04:24:08
+**Fase:** AUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 **Usuario:** Guest
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
@@ -19,15 +19,20 @@
 | Auth Swagger (local) | http://localhost:15001/swagger |
 | Gateway Swagger (local) | http://localhost:18443/swagger |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
-Esta es la re-verificación del Sprint 38 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+## Instrucciones
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
 
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
@@ -179,28 +184,33 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S38-T01: Navegación completa con Tab (sin mouse)
+### S39-T01: Verificar SEO técnico desde el usuario
 
 **Pasos:**
-- [x] Paso 1: Navega a http://localhost:3000
-- [x] Paso 2: Presiona Tab repetidamente
-- [x] Paso 3: ¿Hay 'Skip to content' link? ✅ "Ir al contenido principal" + "Saltar al contenido principal"
-- [x] Paso 4: ¿Cada elemento interactivo tiene focus visible? ✅ Botón "Buscar" [active] confirmado en snapshot
-- [x] Paso 5: ¿Puedo llegar a la barra de búsqueda con Tab? ✅
-- [x] Paso 6: ¿Puedo llegar al primer vehículo destacado con Tab? ✅ /vehiculos/2023-kia-sportage-004b6c94
-- [x] Paso 7: Presiona Enter en un link → ¿navega correctamente? ✅ Página vehiculo carga OK
-- [x] Paso 8–14: Sin tab traps, sin focus perdido
-- [x] Paso 15: READ agregado
+- [x] Paso 1: Navega a http://localhost:3000/sitemap.xml
+- [x] Paso 2: ✅ 177 URLs, incluye 4 vehículos con slugs correctos
+- [x] Paso 3: Navega a http://localhost:3000/robots.txt
+- [x] Paso 4: ✅ Bien configurado — /vehiculos permitido, /api /admin bloqueados
+- [x] Paso 5: Navega a http://localhost:3000 — view-source
+- [x] Paso 6: ✅ title, description, og:title, og:description, og:image todos presentes
+- [x] Paso 7: Navega a /vehiculos/2023-kia-sportage-004b6c94
+- [x] Paso 8: ✅ "2023 Kia Sportage LX - RD$1,680,000 | OKLA" — único por vehículo
+- [x] Paso 9: ✅ 4 JSON-LD scripts (Vehicle, Organization, etc.)
+- [x] Paso 10: ✅ /vehiculos/2023-kia-sportage-004b6c94 — slug amigable
+- [x] Paso 11: ¿Hay canonical URL configurada? ✅ http://localhost:3000/vehiculos/2023-kia-sportage-004b6c94
+- [x] Paso 12: ¿Las imágenes tienen alt text descriptivo? ✅ "2023 Kia Sportage", "2023 Kia Sportage - Imagen N"
+- [x] Paso 13: READ agregado
 
 **A validar:**
-- [x] UF-193: ¿Skip to content existe? ✅ 2 skip links
-- [x] UF-194: ¿Focus visible en todos los elementos interactivos? ✅
-- [x] UF-195: ¿Formularios navegables por teclado? ✅
-- [x] UF-196: ¿Sin tab traps? ✅
+- [x] UF-197: ¿Sitemap.xml existe y tiene vehículos? ✅ 177 URLs, 4 vehicle detail pages incluidas
+- [x] UF-198: ¿Robots.txt correcto? ✅ /vehiculos permitido, /api /admin bloqueados
+- [x] UF-199: ¿Meta title y description en cada página? ✅ Únicos por vehículo cuando gateway activo
+- [x] UF-200: ¿Structured data (JSON-LD) en vehículos? ✅ 4 scripts JSON-LD
+- [x] UF-201: ¿URLs amigables con slugs? ✅ /vehiculos/2023-kia-sportage-004b6c94
 
 **Hallazgos:**
-- S38-B1 CORREGIDO: slug `/vehiculos/2023-kia-sportage-004b6c94` (sin trim "LX") — página carga con título "2023 Kia Sportage LX - RD$1,680,000 | OKLA" ✅
-- Sin bugs nuevos detectados
+- Sin bugs SEO detectados
+- Observación (no bug): SSR metadata depende de gateway activo — en producción INTERNAL_API_URL garantiza acceso
 
 ---
 
@@ -213,16 +223,16 @@ frontend (pnpm dev en host, NO Docker)
 - [x] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
-- Sprint 38 completamente cerrado ✅
+- Sprint 39 completado — sin bugs
 
 ---
 
 ## Resultado
-- Sprint: 38 — Accesibilidad — Navegación Solo con Teclado
-- Fase: REAUDIT
-- Ambiente: LOCAL (http://localhost:3000)
-- Estado: COMPLETADO (3/3) ✅
-- Bugs encontrados: S38-B1 CORREGIDO (fix en FIX 1/3)
+- Sprint: 39 — SEO — ¿OKLA Aparece en Google?
+- Fase: AUDIT
+- Ambiente: LOCAL (http://localhost:3000 con gateway activo)
+- Estado: COMPLETADO ✅
+- Bugs encontrados: 0 (sin bugs SEO)
 
 ---
 
