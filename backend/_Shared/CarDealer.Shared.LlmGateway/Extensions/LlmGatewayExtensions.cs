@@ -30,6 +30,16 @@ namespace CarDealer.Shared.LlmGateway.Extensions;
 
 public static class LlmGatewayExtensions
 {
+    // Polly requires timeout to be between 10ms and 24h. Clamp to avoid startup failures
+    // caused by misconfigured appsettings (e.g. integer 500 parsed as 500 ticks = ~0.05ms).
+    private static readonly TimeSpan _minPollyTimeout = TimeSpan.FromMilliseconds(100);
+
+    private static TimeSpan SafeTimeout(TimeSpan? overrideValue, TimeSpan defaultValue)
+    {
+        var t = overrideValue ?? defaultValue;
+        return t < _minPollyTimeout ? _minPollyTimeout : t;
+    }
+
     /// <summary>
     /// Register the LLM Gateway with cascade fallback and all configured providers.
     /// </summary>
@@ -73,7 +83,7 @@ public static class LlmGatewayExtensions
                 {
                     builder.AddTimeout(new TimeoutStrategyOptions
                     {
-                        Timeout = options.Claude.Timeout ?? options.ProviderTimeout
+                        Timeout = SafeTimeout(options.Claude.Timeout, options.ProviderTimeout)
                     });
                 });
 
@@ -100,7 +110,7 @@ public static class LlmGatewayExtensions
                 {
                     builder.AddTimeout(new TimeoutStrategyOptions
                     {
-                        Timeout = options.Gemini.Timeout ?? options.ProviderTimeout
+                        Timeout = SafeTimeout(options.Gemini.Timeout, options.ProviderTimeout)
                     });
                 });
 
@@ -127,7 +137,7 @@ public static class LlmGatewayExtensions
                 {
                     builder.AddTimeout(new TimeoutStrategyOptions
                     {
-                        Timeout = options.Llama.Timeout ?? TimeSpan.FromSeconds(15)
+                        Timeout = SafeTimeout(options.Llama.Timeout, TimeSpan.FromSeconds(15))
                     });
                 });
 
