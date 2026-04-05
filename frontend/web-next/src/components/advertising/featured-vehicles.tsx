@@ -231,13 +231,17 @@ export default function FeaturedVehicles({
         const primaryImg = v.images
           ?.filter(img => img.url && !img.url.startsWith('blob:'))
           .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url;
+        // Generate slug matching backend format ({year}-{make}-{model}-{shortId8})
+        // when the API doesn't return one — avoids trim being included in the title-based fallback
+        const shortId = (v.id || '').replace(/-/g, '').slice(0, 8).toLowerCase();
+        const generatedSlug = v.slug || `${v.year}-${(v.make || '').toLowerCase().replace(/\s+/g, '-')}-${(v.model || '').toLowerCase().replace(/\s+/g, '-')}-${shortId}`;
         return {
           vehicleId: v.id,
           campaignId: '',
           position: i,
           qualityScore: 0,
           title: v.title || `${v.year} ${v.make} ${v.model}`,
-          slug: v.slug,
+          slug: generatedSlug,
           imageUrl: primaryImg,
           price: v.price,
           currency: v.currency || 'DOP',
