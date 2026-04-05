@@ -258,3 +258,5 @@ Cambios clave:
 [2026-04-05 03:07:44] [EJECUCIÓN] S38 AUDIT — accesibilidad teclado 100% OK, 0 focus issues, S38-B1 featured vehicle sin datos
 [2026-04-05 03:08:00] [AUDIT-SPRINT] Sprint 38 [fix] [LOCAL] despachado: Accesibilidad — Navegación Solo con Teclado
 [2026-04-05 03:26:24] [MODIFICACIÓN] featured-vehicles.tsx — S38-B1 fix: slug fallback usa {year}-{make}-{model}-{shortId8} en lugar de title con trim
+[2026-04-05 03:26:31] [AUDIT-SPRINT] Sprint 38 [reaudit] [LOCAL] despachado: Accesibilidad — Navegación Solo con Teclado
+[2026-04-05 03:50:32] [EJECUCIÓN] S38 REAUDIT 1/3 — S38-B1 FIXED, vehicle page carga OK, keyboard 100%, 0 focus issues
