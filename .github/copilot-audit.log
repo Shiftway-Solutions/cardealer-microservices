@@ -225,3 +225,6 @@ Cambios clave:
 [2026-04-05 00:40:17] [AUDIT-SPRINT] Sprint 35 completado (ciclo completo)
 [2026-04-05 00:40:17] [AUDIT-SPRINT] Sprint 36 [audit] [LOCAL] despachado: E2E Dealer — Dashboard → Inventario → Leads → Analytics
 [2026-04-05 00:54:26] [EJECUCIÓN] S36 AUDIT — Completado. UF-187/188/189 ✅. S36-B1 infra (notifications 502). READ escrito.
+[2026-04-05 00:54:48] [AUDIT-SPRINT] Sprint 36 [fix] [LOCAL] despachado: E2E Dealer — Dashboard → Inventario → Leads → Analytics
+[2026-04-05 00:58:11] [GATE] S36 FIX — Iniciando...
+[2026-04-05 01:06:43] [GATE] S36 FIX ✅ — Unit: 0 Failed. Integration pre-existentes ignorados.
