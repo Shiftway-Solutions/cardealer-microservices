@@ -1,39 +1,36 @@
-# AUDITORÍA — Sprint 33: Consistencia de Datos — Planes Coinciden en Todas las Páginas
-**Fecha:** 2026-04-04 20:57:34
-**Fase:** AUDIT
+# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 29: Admin — Contenido, Homepage, Banners, Promociones
+
+**Fecha:** 2026-04-04 03:47:38
+**Fase:** REAUDIT
 **Ambiente:** LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
-**Usuario:** Guest + Seller + Dealer
+**Usuario:** Admin (admin@okla.local / Admin123!@#)
 **URL Base:** https://hospital-edmonton-duty-tribes.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
+
 > Auditoría corriendo contra **https://hospital-edmonton-duty-tribes.trycloudflare.com** (cloudflared tunnel → Caddy → servicios).
 > Asegúrate de que la infra esté levantada: `docker compose up -d`
 > Frontend: `cd frontend/web-next && pnpm dev`
 > Tunnel: `docker compose --profile tunnel up -d cloudflared`
 > Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)
 
-| Servicio | URL |
-|----------|-----|
-| Frontend (tunnel) | https://hospital-edmonton-duty-tribes.trycloudflare.com |
-| API (tunnel) | https://hospital-edmonton-duty-tribes.trycloudflare.com/api/* |
-| Auth Swagger (local) | http://localhost:15001/swagger |
-| Gateway Swagger (local) | http://localhost:18443/swagger |
+| Servicio                | URL                                                           |
+| ----------------------- | ------------------------------------------------------------- |
+| Frontend (tunnel)       | https://hospital-edmonton-duty-tribes.trycloudflare.com       |
+| API (tunnel)            | https://hospital-edmonton-duty-tribes.trycloudflare.com/api/* |
+| Auth Swagger (local)    | http://localhost:15001/swagger                                |
+| Gateway Swagger (local) | http://localhost:18443/swagger                                |
 
-## Instrucciones
-Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
-NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
+## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
 
-⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://hospital-edmonton-duty-tribes.trycloudflare.com` en vez de producción.
-Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
-Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
+Esta es la re-verificación del Sprint 29 (intento 3/3).
+Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
 
-Para cada tarea:
-1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
-2. Toma screenshot cuando se indique
-3. Documenta bugs y discrepancias en la sección 'Hallazgos'
-4. Marca la tarea como completada: `- [ ]` → `- [x]`
-5. Al terminar TODAS las tareas, agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+- Si TODOS los bugs están corregidos → agrega `READ` al final de este archivo y luego ejecuta `.prompts/AGENT_LOOP_PROMPT.md`
+- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
+  luego agrega `READ` al final de este archivo y ejecuta `.prompts/AGENT_LOOP_PROMPT.md`. El script enviará otra ronda de fixes.
 
+IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
 
@@ -41,12 +38,15 @@ Para cada tarea:
 > El problema más frecuente: containers Docker caídos → toda la UI falla.
 
 ### PASO 0 — Verificar Docker Desktop
+
 ```bash
 docker info > /dev/null 2>&1 || echo "❌ Docker Desktop NO está corriendo — ábrelo primero"
 ```
+
 Si Docker Desktop no responde → Abrir Docker Desktop app → esperar 30s → reintentar.
 
 ### PASO 1 — Health Check Rápido (10 segundos)
+
 ```bash
 # Ver estado de TODOS los containers
 docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null
@@ -57,6 +57,7 @@ docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/nul
 ```
 
 ### PASO 2 — Restart Selectivo (solo lo caído)
+
 ```bash
 # Identificar containers problemáticos
 docker compose ps --status=exited --format "{{.Name}}" 2>/dev/null
@@ -74,6 +75,7 @@ docker compose restart authservice gateway userservice roleservice errorservice
 ```
 
 ### PASO 3 — Si el restart no funciona → Diagnóstico profundo
+
 ```bash
 # Ver logs del container problemático (últimas 50 líneas)
 docker compose logs --tail=50 <servicio-problematico>
@@ -102,6 +104,7 @@ docker compose logs --tail=50 <servicio-problematico>
 ```
 
 ### PASO 4 — Nuclear Reset (solo si PASO 2-3 fallan)
+
 ```bash
 # Parar TODO y arrancar limpio (NO borra datos, solo reinicia containers)
 docker compose down
@@ -113,6 +116,7 @@ docker compose ps                     # verificar todo healthy
 ```
 
 ### PASO 5 — Verificar conectividad end-to-end
+
 ```bash
 # 1. Gateway responde?
 curl -s -o /dev/null -w "%{http_code}" http://localhost:18443/health
@@ -131,32 +135,34 @@ curl -s -o /dev/null -w "%{http_code}" https://okla.local/api/health
 ```
 
 ### Servicios y sus puertos (referencia rápida)
-| Servicio | Puerto Local | Health Check | Perfil |
-|----------|-------------|--------------|--------|
-| postgres_db | 5433 | pg_isready | (base) |
-| redis | 6379 | redis-cli ping | (base) |
-| pgbouncer | 6432 | pg_isready | (base) |
-| caddy | 443/80 | curl https://okla.local | (base) |
-| consul | 8500 | /v1/status/leader | (base) |
-| seq | 5341 | /api/health | (base) |
-| authservice | 15001 | /health | core |
-| gateway | 18443 | /health | core |
-| userservice | 15002 | /health | core |
-| roleservice | 15101 | /health | core |
-| errorservice | 5080 | /health | core |
-| vehiclessaleservice | — | /health | vehicles |
-| mediaservice | — | /health | vehicles |
-| contactservice | — | /health | vehicles |
-| chatbotservice | 5060 | /health | ai (HOST, no Docker) |
-| searchagent | — | /health | ai |
-| supportagent | — | /health | ai |
-| pricingagent | — | /health | ai |
-| billingservice | — | /health | business |
-| kycservice | — | /health | business |
-| notificationservice | — | /health | business |
-| cloudflared | — | docker logs | tunnel |
+
+| Servicio            | Puerto Local | Health Check            | Perfil               |
+| ------------------- | ------------ | ----------------------- | -------------------- |
+| postgres_db         | 5433         | pg_isready              | (base)               |
+| redis               | 6379         | redis-cli ping          | (base)               |
+| pgbouncer           | 6432         | pg_isready              | (base)               |
+| caddy               | 443/80       | curl https://okla.local | (base)               |
+| consul              | 8500         | /v1/status/leader       | (base)               |
+| seq                 | 5341         | /api/health             | (base)               |
+| authservice         | 15001        | /health                 | core                 |
+| gateway             | 18443        | /health                 | core                 |
+| userservice         | 15002        | /health                 | core                 |
+| roleservice         | 15101        | /health                 | core                 |
+| errorservice        | 5080         | /health                 | core                 |
+| vehiclessaleservice | —            | /health                 | vehicles             |
+| mediaservice        | —            | /health                 | vehicles             |
+| contactservice      | —            | /health                 | vehicles             |
+| chatbotservice      | 5060         | /health                 | ai (HOST, no Docker) |
+| searchagent         | —            | /health                 | ai                   |
+| supportagent        | —            | /health                 | ai                   |
+| pricingagent        | —            | /health                 | ai                   |
+| billingservice      | —            | /health                 | business             |
+| kycservice          | —            | /health                 | business             |
+| notificationservice | —            | /health                 | business             |
+| cloudflared         | —            | docker logs             | tunnel               |
 
 ### Árbol de dependencias (restart en este orden)
+
 ```
 postgres_db → pgbouncer → redis → consul
     ↓
@@ -171,44 +177,43 @@ cloudflared → (tunnel público)
 frontend (pnpm dev en host, NO Docker)
 ```
 
-
 ## Credenciales
-| Rol | Email | Password |
-|-----|-------|----------|
-| Admin | admin@okla.local | Admin123!@# |
-| Buyer | buyer002@okla-test.com | BuyerTest2026! |
-| Dealer | nmateo@okla.com.do | Dealer2026!@# |
-| Vendedor Particular | gmoreno@okla.com.do | $Gregory1 |
+
+| Rol                 | Email                  | Password       |
+| ------------------- | ---------------------- | -------------- |
+| Admin               | admin@okla.local       | Admin123!@#    |
+| Buyer               | buyer002@okla-test.com | BuyerTest2026! |
+| Dealer              | nmateo@okla.com.do     | Dealer2026!@#  |
+| Vendedor Particular | gmoreno@okla.com.do    | $Gregory1      |
 
 ---
 
 ## TAREAS
 
-### S33-T01: Verificar planes seller en todas las páginas
+### S29-T01: Admin: gestión de contenido
 
 **Pasos:**
-- [ ] Paso 1: Navega a {BASE_URL}/vender como guest
-- [ ] Paso 2: Anota TODOS los planes de seller y precios (Libre, Estándar, Verificado)
-- [ ] Paso 3: Toma screenshot
-- [ ] Paso 4: Login como seller (gmoreno@okla.com.do / $Gregory1)
-- [ ] Paso 5: Navega a {BASE_URL}/cuenta/suscripcion
-- [ ] Paso 6: Anota los planes y precios que aparecen aquí
-- [ ] Paso 7: Toma screenshot
-- [ ] Paso 8: ¿Los planes en /vender == /cuenta/suscripcion? Si difieren → BUG
-- [ ] Paso 9: Cierra sesión
-- [ ] Paso 10: Navega a {BASE_URL}/dealers como guest
-- [ ] Paso 11: Anota TODOS los planes de dealer y precios
-- [ ] Paso 12: Login como dealer (nmateo@okla.com.do / Dealer2026!@#)
-- [ ] Paso 13: Navega a suscripción del dealer
-- [ ] Paso 14: ¿Los planes coinciden con lo de /dealers?
-- [ ] Paso 15: ¿La tasa de cambio RD$/USD es la misma en todas las páginas?
-- [ ] Paso 16: Cierra sesión
-- [ ] Paso 17: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
+
+- [ ] Paso 1: Login como admin (admin@okla.local / Admin123!@#)
+- [ ] Paso 2: Navega a gestión de secciones de homepage
+- [ ] Paso 3: Toma screenshot — ¿puedo editar qué se muestra en el homepage?
+- [ ] Paso 4: Navega a gestión de banners/promociones
+- [ ] Paso 5: ¿Puedo crear/editar/activar banners?
+- [ ] Paso 6: Navega a gestión de FAQs
+- [ ] Paso 7: ¿Puedo agregar/editar preguntas frecuentes?
+- [ ] Paso 8: Navega a gestión de testimonios
+- [ ] Paso 9: ¿Los testimonios son editables? ¿Hay disclaimer de que son reales?
+- [ ] Paso 10: Navega a gestión de vehículos reportados
+- [ ] Paso 11: ¿Puedo ver y moderar reportes de listados?
+- [ ] Paso 12: Cierra sesión
+- [ ] Paso 13: Agrega `READ` al final de este archivo .prompts/prompt_1.md y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
-- [ ] UF-178: ¿Planes seller consistentes entre /vender y /cuenta/suscripcion?
-- [ ] UF-179: ¿Planes dealer consistentes entre /dealers y dashboard?
-- [ ] UF-180: ¿Tasa de cambio consistente en toda la plataforma?
+
+- [ ] UF-157: ¿Secciones de homepage editables?
+- [ ] UF-158: ¿Banners y promociones gestionables?
+- [ ] UF-159: ¿FAQs editables desde admin?
+- [ ] UF-160: ¿Reportes de listados moderables?
 
 **Hallazgos:**
 _(documentar aquí lo encontrado)_
@@ -218,9 +223,11 @@ _(documentar aquí lo encontrado)_
 ### CIERRE: Ejecutar loop del agente
 
 **Pasos:**
+
 - [ ] Paso 1: Agrega `READ` al final de este archivo y luego ejecuta el prompt `.prompts/AGENT_LOOP_PROMPT.md`
 
 **A validar:**
+
 - [ ] ¿Se agregó `READ` al final del archivo y luego se ejecutó `.prompts/AGENT_LOOP_PROMPT.md`?
 
 **Hallazgos:**
@@ -229,8 +236,9 @@ _(documentar aquí lo encontrado)_
 ---
 
 ## Resultado
-- Sprint: 33 — Consistencia de Datos — Planes Coinciden en Todas las Páginas
-- Fase: AUDIT
+
+- Sprint: 29 — Admin — Contenido, Homepage, Banners, Promociones
+- Fase: REAUDIT
 - Ambiente: LOCAL (Docker Desktop + cloudflared tunnel: https://hospital-edmonton-duty-tribes.trycloudflare.com)
 - URL: https://hospital-edmonton-duty-tribes.trycloudflare.com
 - Estado: EN PROGRESO
