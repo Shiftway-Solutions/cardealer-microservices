@@ -253,3 +253,6 @@ Cambios clave:
 [2026-04-05 02:49:22] [EJECUCIÓN] S37 FIX 3/3 — gate OK, S37-B1/B2 infra-only confirmados, sin cambios de codigo
 [2026-04-05 02:49:27] [AUDIT-SPRINT] Sprint 37 [reaudit] [LOCAL] despachado: E2E Admin — Jornada de Trabajo Completa
 [2026-04-05 03:00:51] [EJECUCIÓN] S37 REAUDIT 3/3 — 10/10 admin OK, S37-B1/B2 infra confirmados 3/3, sprint completado
+[2026-04-05 03:00:58] [AUDIT-SPRINT] Sprint 37 completado (ciclo completo)
+[2026-04-05 03:00:59] [AUDIT-SPRINT] Sprint 38 [audit] [LOCAL] despachado: Accesibilidad — Navegación Solo con Teclado
+[2026-04-05 03:07:44] [EJECUCIÓN] S38 AUDIT — accesibilidad teclado 100% OK, 0 focus issues, S38-B1 featured vehicle sin datos
