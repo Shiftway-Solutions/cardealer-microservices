@@ -61,7 +61,8 @@ public class ChatController : ControllerBase
                 request.Language ?? "es",
                 request.DealerId,
                 request.ChatMode,
-                request.VehicleId);
+                request.VehicleId,
+                request.DealerName);
 
             var result = await _mediator.Send(command, cancellationToken);
             return Ok(result);
@@ -333,6 +334,36 @@ public class ChatController : ControllerBase
         {
             _logger.LogError(ex, "Error getting active sessions count");
             return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Get this month's conversation count for a specific dealer.
+    /// Used by the dealer ChatAgent dashboard to display usage vs plan limit.
+    /// Does not require Admin role — any caller can query a dealer's count (non-sensitive data).
+    /// </summary>
+    [HttpGet("dealer-session-count/{dealerId:guid}")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetDealerSessionCount(Guid dealerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var config = await _configRepository.GetByDealerIdAsync(dealerId, cancellationToken);
+            if (config == null)
+            {
+                // Dealer has no dedicated config (FREE plan) → no AI sessions
+                return Ok(new { count = 0 });
+            }
+
+            var now = DateTime.UtcNow;
+            var count = await _sessionRepository.GetMonthSessionCountAsync(config.Id, now.Year, now.Month, cancellationToken);
+            return Ok(new { count });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting dealer session count for {DealerId}", dealerId);
+            return Ok(new { count = 0 });
         }
     }
 

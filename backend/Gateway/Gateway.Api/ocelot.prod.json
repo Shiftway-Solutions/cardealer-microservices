@@ -3550,11 +3550,39 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/chat/dealer-session-count/{dealerId}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ],
+      "DownstreamPathTemplate": "/api/chat/dealer-session-count/{dealerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatbotservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/api/chat/session",
       "UpstreamHttpMethod": [
         "GET",
         "OPTIONS"
       ],
+      "DownstreamPathTemplate": "/api/chat/session",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatbotservice",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
+      "UpstreamHttpMethod": [
+        "GET",
         "OPTIONS"
       ],
       "DownstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",

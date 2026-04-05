@@ -252,6 +252,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         channel: 'web',
         language: 'es',
         dealerId: dealerId,
+        dealerName: dealerName,
         vehicleId: vehicleId,
         chatMode: vehicleId ? 'single_vehicle' : dealerId ? 'dealer_inventory' : 'general',
         deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',

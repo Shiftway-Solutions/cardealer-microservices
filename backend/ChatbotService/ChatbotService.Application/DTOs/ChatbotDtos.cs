@@ -21,6 +21,11 @@ public record StartSessionRequest
     public string? DeviceType { get; init; }
     public string? Language { get; init; } = "es";
     public Guid? DealerId { get; init; }
+    /// <summary>
+    /// Dealer display name passed by the frontend (from vehicle detail / seller card).
+    /// Used as fallback when the dealer has no dedicated ChatbotConfiguration (FREE/VISIBLE plan).
+    /// </summary>
+    public string? DealerName { get; init; }
 
     // Dual-mode support
     public string? ChatMode { get; init; }

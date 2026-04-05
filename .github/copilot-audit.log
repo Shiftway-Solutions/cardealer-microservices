@@ -172,3 +172,6 @@ Cambios clave:
 [2026-04-04 18:50:10] [MODIFICACIÓN] deploy-local.sh — Reemplazado con v2.1: fix --profile core, removed --no-deps, wait_for_healthy(), postgres_db name
 [2026-04-04 19:03:43] [MODIFICACIÓN] Plan enforcement S32-PASO14 — Added autoScheduling/canExportAnalytics/videoTour/view360Available/pricingAgent feature keys; fixed dealerMinPlanFor STARTER gap; gated citas/calendar pages (PRO+); gated vehicle stats page (analytics); gated export buttons (ELITE+)
 [2026-04-04 19:35:33] [GIT] PASO14+S32-FIX — seller-card AI gate, dealer-status endpoint, gateway host routing, VehicleChatWidget initialAiEnabled
+[2026-04-04 19:37:02] [AUDIT-SPRINT] Sprint 32 [fix] [LOCAL] despachado: DealerChatAgent — Profesionalización del Chat de Vehículos
+[2026-04-04 19:52:31] [MODIFICACIÓN] S32 FIX Intento 3/3 — BUG-2 (empty msg post-handoff), BUG-3 (OKLA vs dealer name), BUG-4 (sessions count admin-only)
+[2026-04-04 20:14:45] [GIT] S32 FIX 3/3 — BUG-2 empty msg handoff, BUG-3 OKLA name, BUG-4 dealer session count, gateway JSON fix

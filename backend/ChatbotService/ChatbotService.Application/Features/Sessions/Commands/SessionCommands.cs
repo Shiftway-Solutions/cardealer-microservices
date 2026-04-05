@@ -24,7 +24,9 @@ public record StartSessionCommand(
     /// <summary>Modo de chat: "single_vehicle", "dealer_inventory", "general"</summary>
     string? ChatMode = null,
     /// <summary>ID del vehículo específico (requerido para modo SingleVehicle)</summary>
-    Guid? VehicleId = null
+    Guid? VehicleId = null,
+    /// <summary>Nombre del dealer enviado por el frontend (fallback cuando el config global no tiene nombre del dealer real)</summary>
+    string? DealerName = null
 ) : IRequest<StartSessionResponse>;
 
 /// <summary>

@@ -46,7 +46,7 @@ import { useCurrentDealer } from '@/hooks/use-dealers';
 import { usePlanAccess } from '@/hooks/use-plan-access';
 import {
   getChatbotConfigByDealer,
-  getActiveSessionsCount,
+  getDealerSessionCount,
   type ChatbotConfigurationDto,
 } from '@/services/chatbot';
 import { DEALER_PLAN_LIMITS, type DealerPlan } from '@/lib/plan-config';
@@ -67,10 +67,11 @@ function useChatbotConfig(dealerId: string | undefined) {
   });
 }
 
-function useChatbotSessionCount() {
+function useChatbotSessionCount(dealerId: string | undefined) {
   return useQuery<number>({
-    queryKey: ['chatbot-sessions-count'],
-    queryFn: () => getActiveSessionsCount(),
+    queryKey: ['chatbot-sessions-count', dealerId],
+    queryFn: () => getDealerSessionCount(dealerId!),
+    enabled: !!dealerId,
     staleTime: 2 * 60 * 1000,
     retry: 1,
   });
@@ -407,7 +408,7 @@ function ChatAgentPageContent() {
     isLoading: isConfigLoading,
     error: configError,
   } = useChatbotConfig(dealer?.id);
-  const { data: sessionCount = 0 } = useChatbotSessionCount();
+  const { data: sessionCount = 0 } = useChatbotSessionCount(dealer?.id);
 
   const planLimits = DEALER_PLAN_LIMITS[currentPlan as DealerPlan];
   const rawChatAgentLimit = planLimits?.chatAgentWeb ?? 0;

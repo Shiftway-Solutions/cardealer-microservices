@@ -73,6 +73,8 @@ export interface StartSessionRequest {
   language?: string;
   dealerId?: string;
   vehicleId?: string;
+  /** Dealer display name — used as fallback in welcome message when dealer is on FREE/VISIBLE plan */
+  dealerName?: string;
   chatMode?: string;
   // SEM FIX: UTM attribution so chat-generated leads can be traced to campaigns
   utmSource?: string;
@@ -140,6 +142,8 @@ export interface ChatbotResponse {
   limitReachedMessage?: string;
   leadGenerated: boolean;
   leadId?: string;
+  /** True when dealer is on FREE/VISIBLE plan — message queued for human response, not AI-generated */
+  isHumanMode?: boolean;
 }
 
 export interface ChatSessionDto {
@@ -292,6 +296,17 @@ export async function getSessionMessages(sessionToken: string): Promise<ChatMess
  */
 export async function getActiveSessionsCount(): Promise<number> {
   const response = await apiClient.get<{ count: number }>('/api/chat/sessions/active/count');
+  return response.data.count;
+}
+
+/**
+ * Get this month's conversation count for a specific dealer.
+ * Used by the dealer ChatAgent dashboard to show real usage vs plan limit.
+ */
+export async function getDealerSessionCount(dealerId: string): Promise<number> {
+  const response = await apiClient.get<{ count: number }>(
+    `/api/chat/dealer-session-count/${dealerId}`
+  );
   return response.data.count;
 }
 

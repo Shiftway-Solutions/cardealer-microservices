@@ -119,7 +119,12 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
         // Incluye: nombre del dealer, "Soy un asistente virtual de OKLA",
         // enlace a política de privacidad, y flag de consentimiento.
         // ══════════════════════════════════════════════════════════════
-        var dealerName = config.DealerDisplayName ?? "OKLA";
+        // BUG-3 FIX: When dealer is on FREE/VISIBLE plan and uses the global fallback config
+        // (config.DealerId == null), fall back to the dealer name sent by the frontend.
+        // This prevents "El vendedor OKLA" appearing instead of the real dealer's name.
+        var dealerName = (config.DealerId.HasValue && !string.IsNullOrWhiteSpace(config.DealerDisplayName))
+            ? config.DealerDisplayName
+            : (!string.IsNullOrWhiteSpace(request.DealerName) ? request.DealerName : (config.DealerDisplayName ?? "OKLA"));
         var privacyUrl = config.PrivacyPolicyUrl ?? "https://okla.com.do/privacidad";
         var disclosureMessage = $"🤖 Soy un asistente virtual de OKLA, al servicio de {dealerName}. " +
             $"Al continuar esta conversación, aceptas nuestra política de privacidad: {privacyUrl}";
@@ -268,7 +273,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
             return new ChatbotResponse
             {
                 MessageId = humanModeMsg.Id,
-                Response = "",
+                Response = "✉️ Tu mensaje ha sido enviado. El vendedor lo revisará y te responderá directamente a la brevedad.",
                 IsFallback = false,
                 IsHumanMode = true,
                 RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
