@@ -323,3 +323,6 @@ Cambios clave:
 [2026-04-05 08:39:43] [AUDIT-SPRINT] Sprint 42 [reaudit] [LOCAL] despachado: UX Benchmark — Features que OKLA Debería Tener
 [2026-04-05 09:04:43] [AUDIT-SPRINT] Sprint 42 [fix] [LOCAL] despachado: UX Benchmark — Features que OKLA Debería Tener
 [2026-04-05 09:04:46] [EJECUCIÓN] SPRINT42-REAUDIT — 17 features verificados, PricingAgent fix confirmado HTTP 200, 8 gaps UX documentados como feature requests
+[2026-04-05 09:15:46] [GIT] SPRINT42-REAUDIT CI/CD — run 24002116317 conclusion=success en staging
+[2026-04-05 09:22:49] [BACKUP] vehicle-detail-client.tsx — agregar PricingAgent deal rating fetch
+[2026-04-05 09:26:50] [MODIFICACIÓN] vehicle-detail-client.tsx + types/index.ts — deal rating badge via PricingAgent fetch

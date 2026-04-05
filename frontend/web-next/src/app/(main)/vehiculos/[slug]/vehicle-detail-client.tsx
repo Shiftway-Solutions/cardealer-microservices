@@ -24,6 +24,7 @@ import { ReportPurchaseModal } from '@/components/okla-score/report-purchase-mod
 import { useReportPurchase } from '@/hooks/use-report-purchase';
 import { formatPrice } from '@/lib/format';
 import { trackContactDealer, trackVehicleView } from '@/lib/retargeting-pixels';
+import { calculateDealRating, type DealRating } from '@/components/ui/deal-rating-badge';
 import type { Vehicle } from '@/types';
 
 // Extended type to access seller nested object
@@ -146,6 +147,33 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
   const [showPurchaseModal, setShowPurchaseModal] = React.useState(false);
   const { isPurchased, markPurchased } = useReportPurchase(vehicle.id);
 
+  // PricingAgent deal rating: fetch market price on mount and compute badge
+  const [dealRating, setDealRating] = React.useState<DealRating | undefined>(vehicle.dealRating);
+  React.useEffect(() => {
+    if (vehicle.dealRating) return; // already have rating from API
+    const params = new URLSearchParams({
+      vehicleId: vehicle.id,
+      year: String(vehicle.year),
+      make: vehicle.make,
+      model: vehicle.model,
+      price: String(vehicle.price),
+    });
+    fetch(`/api/pricing-agent/quick-check?${params}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { precioSugeridoDop?: number } | null) => {
+        if (d?.precioSugeridoDop) {
+          setDealRating(calculateDealRating(vehicle.price, d.precioSugeridoDop));
+        }
+      })
+      .catch(() => {}); // silently fail — show no badge rather than break the page
+  }, [vehicle.id, vehicle.year, vehicle.make, vehicle.model, vehicle.price, vehicle.dealRating]);
+
+  // Enrich vehicle with computed deal rating for VehicleHeader
+  const enrichedVehicle = React.useMemo(
+    () => (dealRating ? { ...vehicle, dealRating } : vehicle),
+    [vehicle, dealRating]
+  );
+
   // Dealer AI status: probe once on mount to decide whether to show AI chat button in SellerCard
   const [dealerChatInfo, setDealerChatInfo] = React.useState<{
     isAiEnabled: boolean;
@@ -219,7 +247,10 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
 
             {/* Mobile: Header (hidden on desktop) */}
             <div className="lg:hidden">
-              <VehicleHeader vehicle={vehicle} onPurchaseReportClick={handlePurchaseReportClick} />
+              <VehicleHeader
+                vehicle={enrichedVehicle}
+                onPurchaseReportClick={handlePurchaseReportClick}
+              />
             </div>
 
             {/* Mobile: Seller Card */}
@@ -239,7 +270,10 @@ export function VehicleDetailClient({ vehicle }: VehicleDetailClientProps) {
           <div className="hidden lg:block">
             <div className="sticky top-[112px] space-y-4 lg:top-[120px]">
               {/* Header with price */}
-              <VehicleHeader vehicle={vehicle} onPurchaseReportClick={handlePurchaseReportClick} />
+              <VehicleHeader
+                vehicle={enrichedVehicle}
+                onPurchaseReportClick={handlePurchaseReportClick}
+              />
 
               {/* Seller info */}
               <SellerCard

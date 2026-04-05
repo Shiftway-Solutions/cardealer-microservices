@@ -103,7 +103,7 @@ export type VehicleStatus =
   | 'rejected'
   | 'pending_media';
 
-export type DealRating = 'great' | 'good' | 'fair' | 'high' | 'uncertain';
+export type DealRating = 'great' | 'good' | 'fair' | 'high' | 'overpriced' | 'uncertain';
 
 export interface VehicleImage {
   id: string;
