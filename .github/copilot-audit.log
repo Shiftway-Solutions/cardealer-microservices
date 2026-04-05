@@ -230,3 +230,5 @@ Cambios clave:
 [2026-04-05 01:06:43] [GATE] S36 FIX ✅ — Unit: 0 Failed. Integration pre-existentes ignorados.
 [2026-04-05 01:06:49] [AUDIT-SPRINT] Sprint 36 [reaudit] [LOCAL] despachado: E2E Dealer — Dashboard → Inventario → Leads → Analytics
 [2026-04-05 01:20:43] [EJECUCIÓN] S36 REAUDIT 1/3 — Completado. UF-187/188/189 ✅. S36-B1 infra confirmado sin fix de código.
+[2026-04-05 01:20:49] [AUDIT-SPRINT] Sprint 36 [fix] [LOCAL] despachado: E2E Dealer — Dashboard → Inventario → Leads → Analytics
+[2026-04-05 01:25:47] [GATE] S36 FIX 2/3 ✅ — Gate OK, sin cambios de código.
